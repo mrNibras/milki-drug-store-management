@@ -1,0 +1,207 @@
+import React, { useState } from 'react';
+import { Save, Building2, Bell, Database, Globe, Shield, Download, Upload } from 'lucide-react';
+import { useAppStore } from '../store/appStore';
+import { useThemeStore } from '../store/themeStore';
+import { Button } from '../components/ui/Button';
+
+export const SettingsPage: React.FC = () => {
+  const { settings, updateSettings, addAuditLog, currentUser } = useAppStore();
+  const { theme } = useThemeStore();
+  const isDark = theme === 'dark';
+  const [formData, setFormData] = useState({ ...settings });
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  const handleSave = () => {
+    updateSettings(formData);
+    addAuditLog({
+      id: Math.random().toString(36).substr(2, 9),
+      userId: currentUser?.id || '',
+      userName: currentUser?.fullName || '',
+      action: 'Updated system settings',
+      tableName: 'Settings',
+      recordId: '1',
+      createdAt: new Date().toISOString(),
+    });
+    setShowSuccess(true);
+    setTimeout(() => setShowSuccess(false), 3000);
+  };
+
+  const inputClass = `w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm ${
+    isDark ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-300 text-gray-900'
+  }`;
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Settings</h1>
+          <p className={`${isDark ? 'text-gray-400' : 'text-gray-500'} mt-1`}>Manage system configuration</p>
+        </div>
+        <Button onClick={handleSave}>
+          <Save className="h-4 w-4" /> Save Changes
+        </Button>
+      </div>
+
+      {showSuccess && (
+        <div className={`rounded-xl p-4 flex items-center gap-3 ${isDark ? 'bg-emerald-900/20 border border-emerald-800' : 'bg-emerald-50 border border-emerald-200'}`}>
+          <div className={`flex h-8 w-8 items-center justify-center rounded-full ${isDark ? 'bg-emerald-900/30 text-emerald-400' : 'bg-emerald-100 text-emerald-600'}`}>✓</div>
+          <p className={`text-sm font-medium ${isDark ? 'text-emerald-400' : 'text-emerald-700'}`}>Settings saved successfully!</p>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Pharmacy Information */}
+        <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl border p-6`}>
+          <div className="flex items-center gap-3 mb-6">
+            <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${isDark ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-100 text-blue-600'}`}>
+              <Building2 className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>Pharmacy Information</h3>
+              <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Basic pharmacy details</p>
+            </div>
+          </div>
+          <div className="space-y-4">
+            <div>
+              <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Pharmacy Name</label>
+              <input type="text" value={formData.pharmacyName} onChange={e => setFormData({ ...formData, pharmacyName: e.target.value })} className={inputClass} />
+            </div>
+            <div>
+              <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Address</label>
+              <input type="text" value={formData.address} onChange={e => setFormData({ ...formData, address: e.target.value })} className={inputClass} />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Phone</label>
+                <input type="text" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} className={inputClass} />
+              </div>
+              <div>
+                <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Email</label>
+                <input type="email" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} className={inputClass} />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Inventory Settings */}
+        <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl border p-6`}>
+          <div className="flex items-center gap-3 mb-6">
+            <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${isDark ? 'bg-emerald-900/30 text-emerald-400' : 'bg-emerald-100 text-emerald-600'}`}>
+              <Bell className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>Inventory Settings</h3>
+              <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Alert thresholds and preferences</p>
+            </div>
+          </div>
+          <div className="space-y-4">
+            <div>
+              <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Low Stock Threshold</label>
+              <input type="number" value={formData.lowStockThreshold} onChange={e => setFormData({ ...formData, lowStockThreshold: Number(e.target.value) })} className={inputClass} />
+              <p className={`text-xs mt-1 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>Alert when stock falls below this number</p>
+            </div>
+            <div>
+              <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Expiry Alert (Months)</label>
+              <input type="number" value={formData.expiryAlertMonths} onChange={e => setFormData({ ...formData, expiryAlertMonths: Number(e.target.value) })} className={inputClass} />
+              <p className={`text-xs mt-1 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>Alert months before expiry date</p>
+            </div>
+            <div>
+              <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Currency</label>
+              <select value={formData.currency} onChange={e => setFormData({ ...formData, currency: e.target.value })} className={inputClass}>
+                <option value="ETB">ETB (Ethiopian Birr)</option>
+                <option value="USD">USD (US Dollar)</option>
+                <option value="EUR">EUR (Euro)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {/* Database Management */}
+        <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl border p-6`}>
+          <div className="flex items-center gap-3 mb-6">
+            <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${isDark ? 'bg-violet-900/30 text-violet-400' : 'bg-violet-100 text-violet-600'}`}>
+              <Database className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>Database Management</h3>
+              <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Backup and restore data</p>
+            </div>
+          </div>
+          <div className="space-y-3">
+            <button className={`w-full flex items-center gap-3 px-4 py-3 border rounded-lg transition-colors ${
+              isDark ? 'border-gray-600 hover:bg-gray-700' : 'border-gray-200 hover:bg-gray-50'
+            }`}>
+              <Download className="h-5 w-5 text-blue-500" />
+              <div className="text-left">
+                <p className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>Backup Database</p>
+                <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Download a full backup of the database</p>
+              </div>
+            </button>
+            <button className={`w-full flex items-center gap-3 px-4 py-3 border rounded-lg transition-colors ${
+              isDark ? 'border-gray-600 hover:bg-gray-700' : 'border-gray-200 hover:bg-gray-50'
+            }`}>
+              <Upload className="h-5 w-5 text-emerald-500" />
+              <div className="text-left">
+                <p className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>Restore Database</p>
+                <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Restore from a backup file</p>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        {/* System Info */}
+        <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl border p-6`}>
+          <div className="flex items-center gap-3 mb-6">
+            <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${isDark ? 'bg-amber-900/30 text-amber-400' : 'bg-amber-100 text-amber-600'}`}>
+              <Globe className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>System Information</h3>
+              <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Application details</p>
+            </div>
+          </div>
+          <div className="space-y-3">
+            {[
+              { label: 'Version', value: '1.0.0' },
+              { label: 'Architecture', value: 'Clean Architecture' },
+              { label: 'Inventory Method', value: 'FEFO' },
+              { label: 'Authentication', value: 'JWT' },
+              { label: 'Database', value: 'SQL Server' },
+            ].map(item => (
+              <div key={item.label} className={`flex items-center justify-between py-2 border-b ${isDark ? 'border-gray-700' : 'border-gray-100'}`}>
+                <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{item.label}</span>
+                <span className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{item.value}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Security */}
+        <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl border p-6 lg:col-span-2`}>
+          <div className="flex items-center gap-3 mb-6">
+            <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${isDark ? 'bg-red-900/30 text-red-400' : 'bg-red-100 text-red-600'}`}>
+              <Shield className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>Security Settings</h3>
+              <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Password and authentication settings</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Current Password</label>
+              <input type="password" className={inputClass} />
+            </div>
+            <div>
+              <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>New Password</label>
+              <input type="password" className={inputClass} />
+            </div>
+          </div>
+          <div className="mt-4">
+            <Button variant="secondary">Change Password</Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};

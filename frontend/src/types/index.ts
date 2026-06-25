@@ -1,0 +1,161 @@
+export interface User {
+  id: string;
+  fullName: string;
+  email: string;
+  role: 'admin' | 'pharmacist';
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface Category {
+  id: string;
+  name: string;
+}
+
+export interface Medicine {
+  id: string;
+  name: string;
+  genericName: string;
+  categoryId: string;
+  categoryName: string;
+  unitType: string;
+  lowStockThreshold: number;
+  createdAt: string;
+  batches: MedicineBatch[];
+}
+
+export interface MedicineBatch {
+  id: string;
+  medicineId: string;
+  batchNumber: string;
+  purchasePrice: number;
+  sellingPrice: number;
+  quantity: number;
+  expiryDate: string;
+  createdAt: string;
+}
+
+export interface Supplier {
+  id: string;
+  name: string;
+  phone: string;
+  email: string;
+  address: string;
+  contactPerson: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface Purchase {
+  id: string;
+  purchaseNumber: string;
+  supplierId: string;
+  supplierName: string;
+  purchaseDate: string;
+  totalAmount: number;
+  paymentStatus: 'paid' | 'partial' | 'unpaid';
+  paymentMethod: 'cash' | 'bank_transfer' | 'mobile_money' | 'credit';
+  amountPaid: number;
+  remainingDebt: number;
+  items: PurchaseItem[];
+}
+
+export interface PurchaseItem {
+  id: string;
+  purchaseId: string;
+  medicineId: string;
+  medicineName: string;
+  batchNumber: string;
+  quantity: number;
+  purchasePrice: number;
+  expiryDate: string;
+}
+
+export interface Sale {
+  id: string;
+  saleNumber: string;
+  saleDate: string;
+  totalAmount: number;
+  totalDiscount: number;
+  discountReason: string;
+  approvedBy: string | null;
+  profit: number;
+  userId: string;
+  userName: string;
+  items: SaleItem[];
+}
+
+export interface SaleItem {
+  id: string;
+  saleId: string;
+  medicineId: string;
+  medicineName: string;
+  batchId: string;
+  quantity: number;
+  unitPrice: number;
+  standardUnitPrice: number;
+  actualUnitPrice: number;
+  discountAmount: number;
+  totalPrice: number;
+}
+
+export interface Notification {
+  id: string;
+  title: string;
+  message: string;
+  type: 'low_stock' | 'out_of_stock' | 'expiry' | 'info';
+  isRead: boolean;
+  createdAt: string;
+}
+
+export interface AuditLog {
+  id: string;
+  userId: string;
+  userName: string;
+  action: string;
+  tableName: string;
+  recordId: string;
+  createdAt: string;
+}
+
+export interface CartItem {
+  medicineId: string;
+  medicineName: string;
+  batchId: string;
+  batchNumber: string;
+  quantity: number;
+  unitPrice: number;
+  sellingPrice: number;
+  standardPrice: number;
+  discountAmount: number;
+  expiryDate: string;
+  availableQuantity: number;
+}
+
+export interface DashboardStats {
+  totalMedicines: number;
+  totalInventoryValue: number;
+  todaySales: number;
+  monthlySales: number;
+  lowStockCount: number;
+  expiringMedicinesCount: number;
+  totalProfit: number;
+  totalSuppliers: number;
+}
+
+export interface SalesReportData {
+  date: string;
+  sales: number;
+  profit: number;
+  transactions: number;
+}
+
+export interface PharmacySettings {
+  pharmacyName: string;
+  lowStockThreshold: number;
+  expiryAlertMonths: number;
+  currency: string;
+  address: string;
+  phone: string;
+  email: string;
+}
