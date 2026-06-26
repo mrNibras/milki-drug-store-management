@@ -156,9 +156,9 @@ export const POSPage: React.FC = () => {
   };
 
   return (
-    <div className="flex gap-6 h-[calc(100vh-7rem)]">
+    <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 h-auto lg:h-[calc(100vh-7rem)]">
       {/* Left Side - Product Search & Results */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-h-0">
         <div className="mb-4">
           <h1 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Point of Sale</h1>
           <p className={`${isDark ? 'text-gray-400' : 'text-gray-500'} text-sm`}>Search and add medicines to cart</p>
@@ -249,7 +249,7 @@ export const POSPage: React.FC = () => {
       </div>
 
       {/* Right Side - Cart */}
-      <div className={`w-96 flex flex-col rounded-xl border shadow-sm ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+      <div className={`w-full lg:w-96 flex flex-col rounded-xl border shadow-sm ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
         {/* Cart Header */}
         <div className={`px-5 py-4 border-b ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
           <div className="flex items-center justify-between">

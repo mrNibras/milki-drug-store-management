@@ -295,7 +295,7 @@ export const PurchasesPage: React.FC = () => {
     setTimeout(() => setShowSuccess(false), 5000);
   };
 
-  const inputClass = `w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
+  const inputClass = `w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-base ${
     isDark 
       ? 'bg-gray-800 border-gray-600 text-white placeholder-gray-500 focus:bg-gray-700' 
       : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
@@ -538,14 +538,14 @@ export const PurchasesPage: React.FC = () => {
                     {items.map((item, index) => (
                       <tr key={item.id} className={`${isDark ? 'hover:bg-gray-700/30' : 'hover:bg-gray-50'} ${item.errors.length > 0 ? isDark ? 'bg-red-900/10' : 'bg-red-50/50' : ''}`}>
                         <td className={`px-3 py-2 text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{index + 1}</td>
-                        <td className="px-3 py-2 min-w-[200px]">
+                        <td className="px-3 py-2">
                           <div className="relative">
                             <input
                               type="text"
                               value={item.medicineName}
                               onChange={(e) => handleItemChange(item.id, 'medicineName', e.target.value)}
                               placeholder="Medicine name"
-                              className={smallInputClass}
+                              className={`${smallInputClass} min-w-[140px] sm:min-w-[180px]`}
                               list={`medicines-${item.id}`}
                             />
                             <datalist id={`medicines-${item.id}`}>
@@ -569,7 +569,7 @@ export const PurchasesPage: React.FC = () => {
                             />
                           )}
                         </td>
-                        <td className="px-3 py-2 min-w-[130px]">
+                        <td className="px-3 py-2">
                           <select
                             value={item.categoryId}
                             onChange={(e) => handleItemChange(item.id, 'categoryId', e.target.value)}
@@ -581,7 +581,7 @@ export const PurchasesPage: React.FC = () => {
                             ))}
                           </select>
                         </td>
-                        <td className="px-3 py-2 min-w-[100px]">
+                        <td className="px-3 py-2">
                           <input
                             type="text"
                             value={item.batchNumber}
@@ -590,7 +590,7 @@ export const PurchasesPage: React.FC = () => {
                             className={`${smallInputClass} font-mono ${!item.batchNumber ? 'border-red-400' : ''}`}
                           />
                         </td>
-                        <td className="px-3 py-2 min-w-[80px]">
+                        <td className="px-3 py-2">
                           <input
                             type="number"
                             value={item.quantity}
@@ -599,7 +599,7 @@ export const PurchasesPage: React.FC = () => {
                             className={`${smallInputClass} ${!item.quantity ? 'border-red-400' : ''}`}
                           />
                         </td>
-                        <td className="px-3 py-2 min-w-[100px]">
+                        <td className="px-3 py-2">
                           <input
                             type="number"
                             value={item.purchasePrice}
@@ -608,7 +608,7 @@ export const PurchasesPage: React.FC = () => {
                             className={`${smallInputClass} ${!item.purchasePrice ? 'border-red-400' : ''}`}
                           />
                         </td>
-                        <td className="px-3 py-2 min-w-[100px]">
+                        <td className="px-3 py-2">
                           <input
                             type="number"
                             value={item.sellingPrice}
@@ -617,7 +617,7 @@ export const PurchasesPage: React.FC = () => {
                             className={`${smallInputClass} ${!item.sellingPrice ? 'border-red-400' : ''}`}
                           />
                         </td>
-                        <td className="px-3 py-2 min-w-[130px]">
+                        <td className="px-3 py-2">
                           <input
                             type="date"
                             value={item.expiryDate}
@@ -670,7 +670,7 @@ export const PurchasesPage: React.FC = () => {
               💳 Payment Information
             </h4>
             
-            <div className="grid grid-cols-2 gap-4 mb-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
               {/* Payment Method */}
               <div>
                 <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Payment Method</label>
@@ -703,15 +703,13 @@ export const PurchasesPage: React.FC = () => {
                       }}
                       className={`px-3 py-2.5 rounded-lg text-xs font-medium transition-all ${
                         paymentStatus === status
-                          ? status === 'paid' ? 'bg-emerald-600 text-white shadow-md' :
-                            status === 'partial' ? 'bg-amber-600 text-white shadow-md' :
-                            'bg-red-600 text-white shadow-md'
+                          ? status === 'paid' ? 'bg-emerald-600 text-white shadow-md' : status === 'partial' ? 'bg-amber-600 text-white shadow-md' : 'bg-red-600 text-white shadow-md'
                           : isDark ? 'bg-gray-800 text-gray-300 border border-gray-600' : 'bg-white text-gray-600 border border-gray-300'
                       }`}
                     >
                       {status === 'paid' ? '✅ Paid' : status === 'partial' ? '🔶 Partial' : '❌ Unpaid'}
                     </button>
-                  ))}
+                 ))}
                 </div>
               </div>
             </div>
@@ -746,7 +744,7 @@ export const PurchasesPage: React.FC = () => {
 
             {/* Payment Summary */}
             <div className={`mt-4 p-4 rounded-lg ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
-              <div className="grid grid-cols-3 gap-4 text-center">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
                 <div>
                   <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Total Amount</p>
                   <p className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{formatCurrency(totalAmount)}</p>

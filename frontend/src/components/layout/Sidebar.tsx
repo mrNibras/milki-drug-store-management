@@ -62,10 +62,18 @@ export const Sidebar: React.FC = () => {
 
   return (
     <>
+      {/* Mobile overlay */}
+      {sidebarOpen && (
+        <div
+          className="lg:hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
+          onClick={toggleSidebar}
+        />
+      )}
+
       {/* Sidebar */}
       <aside
-        className={`fixed left-0 top-0 z-40 h-screen bg-gradient-to-b from-slate-900 to-slate-800 dark:from-slate-950 dark:to-slate-900 text-white transition-all duration-300 ease-in-out ${
-          sidebarOpen ? 'w-64' : 'w-[72px]'
+        className={`fixed left-0 top-0 z-50 h-screen bg-gradient-to-b from-slate-900 to-slate-800 dark:from-slate-950 dark:to-slate-900 text-white transition-all duration-300 ease-in-out ${
+          sidebarOpen ? 'w-64 translate-x-0' : '-translate-x-full lg:translate-x-0 lg:w-[72px]'
         }`}
       >
         {/* Header */}
