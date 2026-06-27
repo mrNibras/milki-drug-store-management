@@ -1,0 +1,47 @@
+using Microsoft.AspNetCore.Mvc;
+using MilkiDrugStore.Application.DTOs.Auth;
+using MilkiDrugStore.Application.Interfaces;
+using MilkiDrugStore.Application.Services;
+
+namespace MilkiDrugStore.Api.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+public class UsersController : ControllerBase
+{
+    private readonly IAuthService _authService;
+
+    public UsersController(IAuthService authService)
+    {
+        _authService = authService;
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetAll()
+    {
+        var users = await _authService.GetAllUsersAsync();
+        return Ok(users);
+    }
+
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(int id, [FromBody] UpdateUserRequest request)
+    {
+        var result = await _authService.UpdateUserAsync(id, request);
+        if (result == null) return NotFound();
+        return Ok(result);
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        await _authService.DeleteUserAsync(id);
+        return NoContent();
+    }
+
+    [HttpPost("{id}/approve")]
+    public async Task<IActionResult> Approve(int id)
+    {
+        var result = await _authService.ApproveUserAsync(id);
+        return Ok(new { message = result });
+    }
+}

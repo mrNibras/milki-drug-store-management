@@ -1,0 +1,190 @@
+using MilkiDrugStore.Application.DTOs.Purchase;
+using MilkiDrugStore.Application.Interfaces;
+using MilkiDrugStore.Domain.Entities;
+using MilkiDrugStore.Domain.Enums;
+using MilkiDrugStore.Domain.Interfaces.Repositories;
+using MilkiDrugStore.Domain.Interfaces;
+using Microsoft.EntityFrameworkCore;
+
+namespace MilkiDrugStore.Application.Services;
+
+public class PurchaseService : IPurchaseService
+{
+    private readonly IRepository<Purchase> _purchaseRepo;
+    private readonly IRepository<PurchaseItem> _purchaseItemRepo;
+    private readonly IRepository<Medicine> _medicineRepo;
+    private readonly IRepository<MedicineBatch> _batchRepo;
+    private readonly IRepository<Supplier> _supplierRepo;
+    private readonly IRepository<InventoryTransaction> _transactionRepo;
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly IAuditLogService _auditLog;
+
+    public PurchaseService(
+        IRepository<Purchase> purchaseRepo,
+        IRepository<PurchaseItem> purchaseItemRepo,
+        IRepository<Medicine> medicineRepo,
+        IRepository<MedicineBatch> batchRepo,
+        IRepository<Supplier> supplierRepo,
+        IRepository<InventoryTransaction> transactionRepo,
+        IUnitOfWork unitOfWork,
+        IAuditLogService auditLog)
+    {
+        _purchaseRepo = purchaseRepo;
+        _purchaseItemRepo = purchaseItemRepo;
+        _medicineRepo = medicineRepo;
+        _batchRepo = batchRepo;
+        _supplierRepo = supplierRepo;
+        _transactionRepo = transactionRepo;
+        _unitOfWork = unitOfWork;
+        _auditLog = auditLog;
+    }
+
+    public async Task<PurchaseResponse> CreateAsync(CreatePurchaseRequest request, int createdBy)
+    {
+        await _unitOfWork.BeginTransactionAsync();
+
+        try
+        {
+            var purchaseCount = (await _purchaseRepo.GetAllAsync()).Count();
+            var purchaseNumber = $"PUR-{DateTime.Now.Year}-{purchaseCount + 1:D5}";
+
+            var supplier = (await _supplierRepo.GetAllAsync()).FirstOrDefault(s => s.SupplierId == request.SupplierId);
+            if (supplier == null) throw new Exception("Supplier not found");
+
+            var totalAmount = request.Items.Sum(i => i.Quantity * i.PurchasePrice);
+
+            var purchase = new Purchase
+            {
+                PurchaseNumber = purchaseNumber,
+                SupplierId = request.SupplierId,
+                PurchaseDate = request.PurchaseDate,
+                TotalAmount = totalAmount,
+                CreatedBy = createdBy
+            };
+
+            await _purchaseRepo.AddAsync(purchase);
+            await _unitOfWork.SaveChangesAsync();
+
+            foreach (var item in request.Items)
+            {
+                var medicines = await _medicineRepo.FindAsync(m => m.MedicineId == item.MedicineId);
+                var medicine = medicines.FirstOrDefault();
+                if (medicine == null) throw new Exception($"Medicine ID {item.MedicineId} not found");
+
+                var batch = new MedicineBatch
+                {
+                    MedicineId = item.MedicineId,
+                    BatchNumber = item.BatchNumber,
+                    QuantityReceived = item.Quantity,
+                    PurchasePrice = item.PurchasePrice,
+                    SellingPrice = item.SellingPrice,
+                    ExpiryDate = item.ExpiryDate ?? DateTime.Now.AddYears(2),
+                    DateReceived = DateTime.Now
+                };
+
+                await _batchRepo.AddAsync(batch);
+                await _unitOfWork.SaveChangesAsync();
+
+                var purchaseItem = new PurchaseItem
+                {
+                    PurchaseId = purchase.PurchaseId,
+                    MedicineId = item.MedicineId,
+                    BatchId = batch.BatchId,
+                    BatchNumber = item.BatchNumber,
+                    Quantity = item.Quantity,
+                    PurchasePrice = item.PurchasePrice,
+                    SubTotal = item.Quantity * item.PurchasePrice,
+                    ExpiryDate = item.ExpiryDate
+                };
+
+                await _purchaseItemRepo.AddAsync(purchaseItem);
+
+                await _unitOfWork.InventoryTransactions.AddAsync(new InventoryTransaction
+                {
+                    MedicineId = item.MedicineId,
+                    BatchId = batch.BatchId,
+                    TransactionType = TransactionType.Purchase.ToString(),
+                    Quantity = item.Quantity,
+                    UnitPrice = item.PurchasePrice,
+                    ReferenceId = purchase.PurchaseId,
+                    ReferenceType = "PURCHASE",
+                    CreatedBy = createdBy
+                });
+            }
+
+            await _unitOfWork.SaveChangesAsync();
+            await _unitOfWork.CommitTransactionAsync();
+
+            await _auditLog.LogAsync(createdBy, "Created Purchase", "Purchases", purchase.PurchaseId);
+
+            var result = await GetByIdAsync(purchase.PurchaseId);
+            return result ?? throw new Exception("Failed to create purchase");
+        }
+        catch
+        {
+            await _unitOfWork.RollbackTransactionAsync();
+            throw;
+        }
+    }
+
+    public async Task<IEnumerable<PurchaseResponse>> GetAllAsync()
+    {
+        var purchases = await _purchaseRepo.GetAllAsync();
+        var result = new List<PurchaseResponse>();
+
+        foreach (var p in purchases.OrderByDescending(p => p.PurchaseDate))
+        {
+            var items = (await _purchaseItemRepo.FindAsync(pi => pi.PurchaseId == p.PurchaseId))
+                .Include(pi => pi.Medicine).ToList();
+
+            result.Add(new PurchaseResponse
+            {
+                PurchaseId = p.PurchaseId,
+                PurchaseNumber = p.PurchaseNumber,
+                SupplierId = p.SupplierId,
+                SupplierName = "",
+                PurchaseDate = p.PurchaseDate,
+                TotalAmount = p.TotalAmount,
+                Items = items.Select(pi => new PurchaseItemResponse
+                {
+                    PurchaseItemId = pi.PurchaseItemId,
+                    MedicineId = pi.MedicineId,
+                    MedicineName = pi.Medicine?.MedicineName ?? "",
+                    BatchNumber = pi.BatchNumber,
+                    Quantity = pi.Quantity,
+                    PurchasePrice = pi.PurchasePrice,
+                    SubTotal = pi.SubTotal
+                }).ToList()
+            });
+        }
+
+        return result;
+    }
+
+    public async Task<PurchaseResponse?> GetByIdAsync(int id)
+    {
+        var purchases = await _purchaseRepo.FindAsync(p => p.PurchaseId == id);
+        var purchase = purchases.Include(p => p.Supplier).Include(p => p.Items).ThenInclude(i => i.Medicine).FirstOrDefault();
+        if (purchase == null) return null;
+
+        return new PurchaseResponse
+        {
+            PurchaseId = purchase.PurchaseId,
+            PurchaseNumber = purchase.PurchaseNumber,
+            SupplierId = purchase.SupplierId,
+            SupplierName = purchase.Supplier?.SupplierName ?? "",
+            PurchaseDate = purchase.PurchaseDate,
+            TotalAmount = purchase.TotalAmount,
+            Items = purchase.Items.Select(pi => new PurchaseItemResponse
+            {
+                PurchaseItemId = pi.PurchaseItemId,
+                MedicineId = pi.MedicineId,
+                MedicineName = pi.Medicine?.MedicineName ?? "",
+                BatchNumber = pi.BatchNumber,
+                Quantity = pi.Quantity,
+                PurchasePrice = pi.PurchasePrice,
+                SubTotal = pi.SubTotal
+            }).ToList()
+        };
+    }
+}
