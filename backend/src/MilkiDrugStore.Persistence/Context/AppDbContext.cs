@@ -24,6 +24,7 @@ public class AppDbContext : DbContext
     public DbSet<Settings> Settings => Set<Settings>();
     public DbSet<DamageRecord> DamageRecords => Set<DamageRecord>();
     public DbSet<ExpiredRecord> ExpiredRecords => Set<ExpiredRecord>();
+    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

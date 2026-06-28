@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { useEffect } from 'react';
 import { MainLayout } from './layouts/MainLayout';
 import { LoginPage } from './pages/LoginPage';
 import { DashboardPage } from './pages/DashboardPage';
@@ -12,13 +13,24 @@ import { NotificationsPage } from './pages/NotificationsPage';
 import { DamageExpiryPage } from './pages/DamageExpiryPage';
 import { UsersPage } from './pages/UsersPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { useAppStore } from './store/appStore';
 
 export default function App() {
+  const isAuthenticated = useAppStore((state) => state.isAuthenticated);
+
+  useEffect(() => {
+    const storedToken = localStorage.getItem('auth_token');
+    const storedUser = localStorage.getItem('current_user');
+    if (storedToken && storedUser) {
+      useAppStore.setState({ token: storedToken, currentUser: JSON.parse(storedUser), isAuthenticated: true });
+    }
+  }, []);
+
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/" element={<MainLayout />}>
+        <Route path="/" element={isAuthenticated ? <MainLayout /> : <Navigate to="/login" replace />}>
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="dashboard" element={<DashboardPage />} />
           <Route path="medicines" element={<MedicinesPage />} />
@@ -32,7 +44,7 @@ export default function App() {
           <Route path="users" element={<UsersPage />} />
           <Route path="settings" element={<SettingsPage />} />
         </Route>
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        <Route path="*" element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />} />
       </Routes>
     </BrowserRouter>
   );

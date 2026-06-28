@@ -3,7 +3,8 @@ import { Search, ShoppingCart, Trash2, Plus, Minus, CreditCard, X, Check, Packag
 import { useAppStore } from '../store/appStore';
 import { useThemeStore } from '../store/themeStore';
 import { formatCurrency, getFefoBatches, generateId, generateSaleNumber } from '../utils/helpers';
-import { Medicine } from '../types';
+import { Medicine, Sale } from '../types';
+import { ReceiptDialog } from '../components/ReceiptDialog';
 
 export const POSPage: React.FC = () => {
   const { 
@@ -21,6 +22,8 @@ export const POSPage: React.FC = () => {
   const [showCheckout, setShowCheckout] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [lastSaleNumber, setLastSaleNumber] = useState('');
+  const [lastSale, setLastSale] = useState<Sale | null>(null);
+  const [showReceipt, setShowReceipt] = useState(false);
   const [showDiscountInput, setShowDiscountInput] = useState<string | null>(null);
   const [tempDiscount, setTempDiscount] = useState('');
   const [showDiscountReason, setShowDiscountReason] = useState(false);
@@ -89,10 +92,9 @@ export const POSPage: React.FC = () => {
     }
   };
 
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
     if (cart.length === 0) return;
 
-    // Check if discount requires reason
     if (cartTotalDiscount > 0 && !cartDiscountReason) {
       setShowDiscountReason(true);
       return;
@@ -126,7 +128,18 @@ export const POSPage: React.FC = () => {
     };
     sale.items.forEach(item => item.saleId = sale.id);
 
-    addSale(sale);
+    try {
+      await addSale(sale);
+      const updatedSales = useAppStore.getState().sales;
+      const newSale = updatedSales.find(s => s.saleNumber === saleNumber);
+      if (newSale) {
+        setLastSale(newSale);
+        setShowReceipt(true);
+      }
+    } catch (e) {
+      return;
+    }
+
     addAuditLog({
       id: generateId(),
       userId: currentUser?.id || '',
@@ -532,6 +545,12 @@ export const POSPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      <ReceiptDialog
+        open={showReceipt}
+        onOpenChange={setShowReceipt}
+        sale={lastSale}
+      />
     </div>
   );
 };

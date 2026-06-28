@@ -50,4 +50,12 @@ public class AuthController : ControllerBase
             return BadRequest(new { message = ex.Message });
         }
     }
+
+    [HttpPost("refresh")]
+    public async Task<IActionResult> Refresh([FromBody] RefreshTokenRequest request)
+    {
+        var result = await _authService.RefreshTokenAsync(request);
+        if (result == null) return Unauthorized(new { message = "Invalid refresh token" });
+        return Ok(result);
+    }
 }

@@ -21,6 +21,7 @@ public interface IUnitOfWork : IDisposable
     IRepository<Settings> Settings { get; }
     IRepository<DamageRecord> DamageRecords { get; }
     IRepository<ExpiredRecord> ExpiredRecords { get; }
+    IRepository<RefreshToken> RefreshTokens { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
     Task BeginTransactionAsync();

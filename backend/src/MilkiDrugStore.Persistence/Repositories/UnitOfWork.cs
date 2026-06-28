@@ -31,6 +31,7 @@ public class UnitOfWork : IUnitOfWork
         Settings = new Repository<Settings>(_context);
         DamageRecords = new Repository<DamageRecord>(_context);
         ExpiredRecords = new Repository<ExpiredRecord>(_context);
+        RefreshTokens = new Repository<RefreshToken>(_context);
     }
 
     public IRepository<Role> Roles { get; }
@@ -49,6 +50,7 @@ public class UnitOfWork : IUnitOfWork
     public IRepository<Settings> Settings { get; }
     public IRepository<DamageRecord> DamageRecords { get; }
     public IRepository<ExpiredRecord> ExpiredRecords { get; }
+    public IRepository<RefreshToken> RefreshTokens { get; }
 
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {

@@ -47,9 +47,22 @@ public class AuthService : IAuthService
         var role = await _roleRepo.GetByIdAsync(user.RoleId);
         var token = _jwtTokenService.GenerateToken(user);
 
+        var refreshToken = new RefreshToken
+        {
+            Token = Guid.NewGuid().ToString(),
+            UserId = user.UserId,
+            ExpiryDate = DateTime.UtcNow.AddDays(7),
+            CreatedAt = DateTime.UtcNow,
+            IsRevoked = false
+        };
+
+        await _unitOfWork.RefreshTokens.AddAsync(refreshToken);
+        await _unitOfWork.SaveChangesAsync();
+
         return new LoginResponse
         {
             Token = token,
+            RefreshToken = refreshToken.Token,
             Role = role?.Name ?? "Pharmacist",
             UserId = user.UserId,
             FullName = user.FullName
@@ -167,5 +180,45 @@ public class AuthService : IAuthService
         await _unitOfWork.Settings.UpdateAsync(settings);
         await _unitOfWork.SaveChangesAsync();
         return settings;
+    }
+
+    public async Task<LoginResponse?> RefreshTokenAsync(RefreshTokenRequest request)
+    {
+        var refreshTokens = await _unitOfWork.RefreshTokens.FindAsync(rt => rt.Token == request.RefreshToken);
+        var refreshToken = refreshTokens.FirstOrDefault();
+
+        if (refreshToken == null || refreshToken.IsRevoked || refreshToken.ExpiryDate < DateTime.UtcNow)
+            return null;
+
+        var user = await _userRepo.GetByIdAsync(refreshToken.UserId);
+        if (user == null || !user.IsActive)
+            return null;
+
+        refreshToken.IsRevoked = true;
+        await _unitOfWork.RefreshTokens.UpdateAsync(refreshToken);
+
+        var role = await _roleRepo.GetByIdAsync(user.RoleId);
+        var newToken = _jwtTokenService.GenerateToken(user);
+
+        var newRefreshToken = new RefreshToken
+        {
+            Token = Guid.NewGuid().ToString(),
+            UserId = user.UserId,
+            ExpiryDate = DateTime.UtcNow.AddDays(7),
+            CreatedAt = DateTime.UtcNow,
+            IsRevoked = false
+        };
+
+        await _unitOfWork.RefreshTokens.AddAsync(newRefreshToken);
+        await _unitOfWork.SaveChangesAsync();
+
+        return new LoginResponse
+        {
+            Token = newToken,
+            RefreshToken = newRefreshToken.Token,
+            Role = role?.Name ?? "Pharmacist",
+            UserId = user.UserId,
+            FullName = user.FullName
+        };
     }
 }
