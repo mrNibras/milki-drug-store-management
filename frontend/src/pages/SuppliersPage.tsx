@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Plus, Search, Edit2, Trash2, Eye, Truck, Phone, Mail, MapPin, User, DollarSign, AlertCircle, CheckCircle } from 'lucide-react';
 import { useAppStore } from '../store/appStore';
 import { useThemeStore } from '../store/themeStore';
@@ -7,19 +7,15 @@ import { Badge } from '../components/ui/Badge';
 import { formatDate, generateId, formatCurrency } from '../utils/helpers';
 import { Supplier } from '../types';
 
-interface SupplierFinancialSummary {
-  supplierId: string;
-  totalPurchases: number;
-  totalPaid: number;
-  totalDebt: number;
-  purchaseCount: number;
-  status: 'cleared' | 'outstanding';
-}
-
 export const SuppliersPage: React.FC = () => {
-  const { suppliers, purchases, addSupplier, updateSupplier, deleteSupplier, addAuditLog, currentUser } = useAppStore();
+  const { suppliers, purchases, fetchSuppliers, fetchPurchases, addSupplier, updateSupplier, deleteSupplier, addAuditLog, currentUser, loading } = useAppStore();
   const { theme } = useThemeStore();
   const isDark = theme === 'dark';
+
+  useEffect(() => {
+    fetchSuppliers();
+    fetchPurchases();
+  }, [fetchSuppliers, fetchPurchases]);
   const [search, setSearch] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);

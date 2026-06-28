@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import {
   Pill, TrendingUp, DollarSign, AlertTriangle, Package, ShoppingCart,
   ArrowUpRight, ArrowDownRight, Clock, Users, Activity, Award
@@ -7,14 +7,20 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { useAppStore } from '../store/appStore';
 import { useThemeStore } from '../store/themeStore';
 import { formatCurrency, formatDate, formatDateTime, getDaysUntilExpiry } from '../utils/helpers';
-import { weeklySalesData } from '../data/mockData';
 
 const COLORS = ['#10B981', '#3B82F6', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#6B7280'];
 
 export const DashboardPage: React.FC = () => {
-  const { medicines, sales, notifications, auditLogs } = useAppStore();
+  const { medicines, sales, notifications, auditLogs, fetchMedicines, fetchSales, fetchNotifications, fetchAuditLogs, loading } = useAppStore();
   const { theme } = useThemeStore();
   const isDark = theme === 'dark';
+
+  useEffect(() => {
+    fetchMedicines();
+    fetchSales();
+    fetchNotifications();
+    fetchAuditLogs();
+  }, [fetchMedicines, fetchSales, fetchNotifications, fetchAuditLogs]);
 
   // Calculate stats
   const totalMedicines = medicines.length;
@@ -147,7 +153,15 @@ export const DashboardPage: React.FC = () => {
             </div>
           </div>
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={weeklySalesData}>
+            <BarChart data={
+              ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map((day, i) => {
+                const daySales = sales.filter(s => {
+                  const d = new Date(s.saleDate);
+                  return d.getDay() === (i === 0 ? 1 : i === 1 ? 2 : i === 2 ? 3 : i === 3 ? 4 : i === 4 ? 5 : i === 5 ? 6 : 0);
+                });
+                return { date: day, sales: daySales.reduce((a, b) => a + b.totalAmount, 0), profit: daySales.reduce((a, b) => a + b.profit, 0) };
+              })
+            }>
               <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#374151' : '#f0f0f0'} />
               <XAxis dataKey="date" stroke={isDark ? '#9ca3af' : '#9ca3af'} fontSize={12} />
               <YAxis stroke={isDark ? '#9ca3af' : '#9ca3af'} fontSize={12} />

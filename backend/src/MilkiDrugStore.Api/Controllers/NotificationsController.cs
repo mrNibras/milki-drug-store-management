@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using MilkiDrugStore.Application.Services;
+using MilkiDrugStore.Application.Interfaces;
 
 namespace MilkiDrugStore.Api.Controllers;
 
@@ -7,9 +7,9 @@ namespace MilkiDrugStore.Api.Controllers;
 [Route("api/[controller]")]
 public class NotificationsController : ControllerBase
 {
-    private readonly NotificationService _notificationService;
+    private readonly INotificationService _notificationService;
 
-    public NotificationsController(NotificationService notificationService)
+    public NotificationsController(INotificationService notificationService)
     {
         _notificationService = notificationService;
     }

@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using MilkiDrugStore.Application.Services;
+using MilkiDrugStore.Application.Interfaces;
 
 namespace MilkiDrugStore.Api.Controllers;
 
@@ -7,9 +7,9 @@ namespace MilkiDrugStore.Api.Controllers;
 [Route("api/[controller]")]
 public class ExpiredController : ControllerBase
 {
-    private readonly InventoryService _inventoryService;
+    private readonly IInventoryService _inventoryService;
 
-    public ExpiredController(InventoryService inventoryService)
+    public ExpiredController(IInventoryService inventoryService)
     {
         _inventoryService = inventoryService;
     }

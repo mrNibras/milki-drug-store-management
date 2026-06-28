@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Plus, Search, Edit2, Trash2, Eye, Package, Pill, Layers, Info } from 'lucide-react';
 import { useAppStore } from '../store/appStore';
 import { useThemeStore } from '../store/themeStore';
@@ -8,7 +8,7 @@ import { formatDate, getExpiryStatus, getExpiryColor, getStockStatus, getStockCo
 import { Medicine } from '../types';
 
 export const MedicinesPage: React.FC = () => {
-  const { medicines, categories, addMedicine, updateMedicine, deleteMedicine } = useAppStore();
+  const { medicines, categories, fetchMedicines, fetchCategories, addMedicine, updateMedicine, deleteMedicine, loading } = useAppStore();
   const { theme } = useThemeStore();
   const isDark = theme === 'dark';
   const [search, setSearch] = useState('');
@@ -21,6 +21,11 @@ export const MedicinesPage: React.FC = () => {
   const [formData, setFormData] = useState({
     name: '', genericName: '', categoryId: '', unitType: 'Tablet', lowStockThreshold: 10,
   });
+
+  useEffect(() => {
+    fetchMedicines();
+    fetchCategories();
+  }, [fetchMedicines, fetchCategories]);
 
   const filteredMedicines = useMemo(() => {
     return medicines.filter(m => {
@@ -231,6 +236,12 @@ export const MedicinesPage: React.FC = () => {
       </div>
 
       {/* Table */}
+      {loading ? (
+        <div className="text-center py-12">
+          <div className="h-8 w-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+          <p className={isDark ? 'text-gray-400' : 'text-gray-500'}>Loading medicines...</p>
+        </div>
+      ) : (
       <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl border overflow-hidden`}>
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -331,6 +342,7 @@ export const MedicinesPage: React.FC = () => {
           </div>
         )}
       </div>
+      )}
 
       {/* ========== ADD MEDICINE MODAL ========== */}
       <Modal isOpen={showAddModal} onClose={() => setShowAddModal(false)} title="Register New Medicine">

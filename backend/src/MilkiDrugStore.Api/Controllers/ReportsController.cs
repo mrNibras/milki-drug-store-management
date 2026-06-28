@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using MilkiDrugStore.Application.Services;
+using MilkiDrugStore.Application.Interfaces;
 
 namespace MilkiDrugStore.Api.Controllers;
 
@@ -7,9 +7,9 @@ namespace MilkiDrugStore.Api.Controllers;
 [Route("api/[controller]")]
 public class ReportsController : ControllerBase
 {
-    private readonly ReportService _reportService;
+    private readonly IReportService _reportService;
 
-    public ReportsController(ReportService reportService)
+    public ReportsController(IReportService reportService)
     {
         _reportService = reportService;
     }

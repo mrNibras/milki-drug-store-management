@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Users, Shield, UserCheck, UserX, Plus, Edit2, Trash2, Mail } from 'lucide-react';
 import { useAppStore } from '../store/appStore';
 import { useThemeStore } from '../store/themeStore';
@@ -9,9 +9,13 @@ import { formatDate, generateId } from '../utils/helpers';
 import { User } from '../types';
 
 export const UsersPage: React.FC = () => {
-  const { users, addUser, updateUser, deleteUser, toggleUserActive, currentUser, addAuditLog } = useAppStore();
+  const { users, fetchUsers, addUser, updateUser, deleteUser, toggleUserActive, currentUser, addAuditLog, loading } = useAppStore();
   const { theme } = useThemeStore();
   const isDark = theme === 'dark';
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);

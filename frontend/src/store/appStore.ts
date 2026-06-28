@@ -1,43 +1,43 @@
 import { create } from 'zustand';
 import { User, Medicine, Supplier, Purchase, Sale, Notification, CartItem, PharmacySettings, AuditLog, Category } from '../types';
-import { mockUsers, mockMedicines, mockSuppliers, mockPurchases, mockSales, mockNotifications, mockAuditLogs, mockCategories } from '../data/mockData';
+import { api, LoginRequest, LoginResponse, CreateSaleRequest, CreatePurchaseRequest, RecordDamageRequest, RecordExpiredRequest } from '../services/api';
 import { getDaysUntilExpiry, generateId } from '../utils/helpers';
 
 interface AppState {
-  // Auth
   currentUser: User | null;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => boolean;
+  token: string | null;
+  login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
+  register: (fullName: string, email: string, password: string) => Promise<{ ok: boolean; message?: string }>;
 
-  // Users
   users: User[];
-  addUser: (user: User) => void;
-  updateUser: (id: string, updates: Partial<User>) => void;
-  deleteUser: (id: string) => void;
-  toggleUserActive: (id: string) => void;
+  fetchUsers: () => Promise<void>;
+  addUser: (user: User) => Promise<void>;
+  updateUser: (id: string, updates: Partial<User>) => Promise<void>;
+  deleteUser: (id: string) => Promise<void>;
+  toggleUserActive: (id: string) => Promise<void>;
 
-  // Medicines
   medicines: Medicine[];
-  addMedicine: (medicine: Medicine) => void;
-  updateMedicine: (id: string, updates: Partial<Medicine>) => void;
-  deleteMedicine: (id: string) => void;
+  fetchMedicines: () => Promise<void>;
+  addMedicine: (medicine: Medicine) => Promise<void>;
+  updateMedicine: (id: string, updates: Partial<Medicine>) => Promise<void>;
+  deleteMedicine: (id: string) => Promise<void>;
 
-  // Suppliers
   suppliers: Supplier[];
-  addSupplier: (supplier: Supplier) => void;
-  updateSupplier: (id: string, updates: Partial<Supplier>) => void;
-  deleteSupplier: (id: string) => void;
+  fetchSuppliers: () => Promise<void>;
+  addSupplier: (supplier: Supplier) => Promise<void>;
+  updateSupplier: (id: string, updates: Partial<Supplier>) => Promise<void>;
+  deleteSupplier: (id: string) => Promise<void>;
 
-  // Purchases
   purchases: Purchase[];
-  addPurchase: (purchase: Purchase) => void;
+  fetchPurchases: () => Promise<void>;
+  addPurchase: (purchase: Purchase) => Promise<void>;
 
-  // Sales
   sales: Sale[];
-  addSale: (sale: Sale) => void;
+  fetchSales: () => Promise<void>;
+  addSale: (sale: Sale) => Promise<void>;
 
-  // Cart
   cart: CartItem[];
   addToCart: (item: CartItem) => void;
   updateCartItemQuantity: (medicineId: string, batchId: string, quantity: number) => void;
@@ -47,87 +47,397 @@ interface AppState {
   cartDiscountReason: string;
   setCartDiscountReason: (reason: string) => void;
 
-  // Notifications
   notifications: Notification[];
-  markNotificationRead: (id: string) => void;
-  markAllNotificationsRead: () => void;
+  fetchNotifications: () => Promise<void>;
+  markNotificationRead: (id: string) => Promise<void>;
+  markAllNotificationsRead: () => Promise<void>;
   generateExpiryNotifications: () => void;
 
-  // Categories
   categories: Category[];
-  addCategory: (category: Category) => void;
+  fetchCategories: () => Promise<void>;
+  addCategory: (category: Category) => Promise<void>;
 
-  // Audit Logs
   auditLogs: AuditLog[];
+  fetchAuditLogs: () => Promise<void>;
   addAuditLog: (log: AuditLog) => void;
 
-  // Settings
   settings: PharmacySettings;
+  fetchSettings: () => Promise<void>;
   updateSettings: (settings: Partial<PharmacySettings>) => void;
 
-  // Sidebar
+  loading: boolean;
+  error: string | null;
+
   sidebarOpen: boolean;
   toggleSidebar: () => void;
 }
 
-export const useAppStore = create<AppState>((set) => ({
-  // Auth
+const toUser = (r: { userId: number; fullName: string; email: string; roleName: string; isActive: boolean; createdAt: string }): User => ({
+  id: String(r.userId),
+  fullName: r.fullName,
+  email: r.email,
+  role: r.roleName.toLowerCase() as 'admin' | 'pharmacist',
+  isActive: r.isActive,
+  createdAt: r.createdAt,
+});
+
+const toCategory = (r: { categoryId: number; name: string }): Category => ({
+  id: String(r.categoryId),
+  name: r.name,
+});
+
+const toMedicine = (r: MedicineResponse): Medicine => ({
+  id: String(r.medicineId),
+  name: r.medicineName,
+  genericName: r.genericName,
+  categoryId: String(r.categoryId),
+  categoryName: r.categoryName,
+  unitType: r.unitType,
+  lowStockThreshold: r.lowStockThreshold,
+  createdAt: r.createdAt,
+  batches: r.batches.map(b => ({
+    id: String(b.batchId),
+    medicineId: String(r.medicineId),
+    batchNumber: b.batchNumber,
+    purchasePrice: b.purchasePrice,
+    sellingPrice: b.sellingPrice,
+    quantity: b.balance,
+    expiryDate: b.expiryDate,
+    createdAt: r.createdAt,
+  })),
+});
+
+const toSupplier = (r: SupplierResponse): Supplier => ({
+  id: String(r.supplierId),
+  name: r.supplierName,
+  phone: r.phone,
+  email: r.email,
+  address: r.address,
+  contactPerson: '',
+  isActive: true,
+  createdAt: r.createdAt,
+});
+
+const toPurchase = (r: PurchaseResponse): Purchase => ({
+  id: String(r.purchaseId),
+  purchaseNumber: r.purchaseNumber,
+  supplierId: String(r.supplierId),
+  supplierName: r.supplierName,
+  purchaseDate: r.purchaseDate,
+  totalAmount: r.totalAmount,
+  paymentStatus: (r as any).paymentStatus || 'unpaid',
+  paymentMethod: 'cash',
+  amountPaid: 0,
+  remainingDebt: r.totalAmount,
+  items: r.items.map(i => ({
+    id: String(i.purchaseItemId),
+    purchaseId: String(r.purchaseId),
+    medicineId: String(i.medicineId),
+    medicineName: i.medicineName,
+    batchNumber: i.batchNumber,
+    quantity: i.quantity,
+    purchasePrice: i.purchasePrice,
+    expiryDate: '',
+  })),
+});
+
+const toSale = (r: SaleResponse): Sale => ({
+  id: String(r.saleId),
+  saleNumber: r.saleNumber,
+  saleDate: r.saleDate,
+  totalAmount: r.totalAmount,
+  totalDiscount: 0,
+  discountReason: '',
+  approvedBy: null,
+  profit: r.totalProfit,
+  userId: String(r.userId),
+  userName: r.userName,
+  items: r.items.map(i => ({
+    id: String(i.saleItemId),
+    saleId: String(r.saleId),
+    medicineId: String(i.medicineId),
+    medicineName: i.medicineName,
+    batchId: i.batchId ? String(i.batchId) : '',
+    quantity: i.quantity,
+    unitPrice: i.unitPrice,
+    standardUnitPrice: i.unitPrice,
+    actualUnitPrice: i.unitPrice,
+    discountAmount: 0,
+    totalPrice: i.subTotal,
+  })),
+});
+
+const toNotification = (r: NotificationResponse): Notification => ({
+  id: String(r.notificationId),
+  title: r.title,
+  message: r.message,
+  type: r.notificationType.toLowerCase() as any,
+  isRead: r.isRead,
+  createdAt: r.createdAt,
+});
+
+export const useAppStore = create<AppState>((set, get) => ({
   currentUser: null,
   isAuthenticated: false,
-  login: (email: string, _password: string) => {
-    const user = mockUsers.find(u => u.email === email && u.isActive);
-    if (user) {
-      set({ currentUser: user, isAuthenticated: true });
+  token: null,
+  loading: false,
+  error: null,
+
+  login: async (email: string, password: string) => {
+    set({ loading: true, error: null });
+    try {
+      const res = await api.post<LoginResponse>('/auth/login', { email, password });
+      const token = res.data.token;
+      const user: User = {
+        id: String(res.data.userId),
+        fullName: res.data.fullName,
+        email,
+        role: res.data.role.toLowerCase() as 'admin' | 'pharmacist',
+        isActive: true,
+        createdAt: new Date().toISOString(),
+      };
+      localStorage.setItem('auth_token', token);
+      localStorage.setItem('current_user', JSON.stringify(user));
+      set({ token, currentUser: user, isAuthenticated: true, loading: false });
       return true;
+    } catch (e: any) {
+      set({ error: e.response?.data?.message || 'Login failed', loading: false });
+      return false;
     }
-    return false;
   },
-  logout: () => set({ currentUser: null, isAuthenticated: false }),
 
-  // Users
-  users: mockUsers,
-  addUser: (user) => set(state => ({ users: [...state.users, user] })),
-  updateUser: (id, updates) => set(state => ({
-    users: state.users.map(u => u.id === id ? { ...u, ...updates } : u)
-  })),
-  deleteUser: (id) => set(state => ({
-    users: state.users.filter(u => u.id !== id)
-  })),
-  toggleUserActive: (id) => set(state => ({
-    users: state.users.map(u => u.id === id ? { ...u, isActive: !u.isActive } : u)
-  })),
+  logout: () => {
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('current_user');
+    set({ currentUser: null, isAuthenticated: false, token: null });
+  },
 
-  // Medicines
-  medicines: mockMedicines,
-  addMedicine: (medicine) => set(state => ({ medicines: [...state.medicines, medicine] })),
-  updateMedicine: (id, updates) => set(state => ({
-    medicines: state.medicines.map(m => m.id === id ? { ...m, ...updates } : m)
-  })),
-  deleteMedicine: (id) => set(state => ({
-    medicines: state.medicines.filter(m => m.id !== id)
-  })),
+  register: async (fullName: string, email: string, password: string) => {
+    set({ loading: true, error: null });
+    try {
+      await api.post('/auth/register', { fullName, email, password });
+      set({ loading: false });
+      return { ok: true };
+    } catch (e: any) {
+      const msg = e.response?.data?.message || 'Registration failed';
+      set({ error: msg, loading: false });
+      return { ok: false, message: msg };
+    }
+  },
 
-  // Suppliers
-  suppliers: mockSuppliers,
-  addSupplier: (supplier) => set(state => ({ suppliers: [...state.suppliers, supplier] })),
-  updateSupplier: (id, updates) => set(state => ({
-    suppliers: state.suppliers.map(s => s.id === id ? { ...s, ...updates } : s)
-  })),
-  deleteSupplier: (id) => set(state => ({
-    suppliers: state.suppliers.filter(s => s.id !== id)
-  })),
+  fetchUsers: async () => {
+    set({ loading: true, error: null });
+    try {
+      const res = await api.get<UserResponse[]>('/users');
+      set({ users: res.data.map(toUser), loading: false });
+    } catch (e: any) {
+      set({ error: e.response?.data?.message || 'Failed to fetch users', loading: false });
+    }
+  },
 
-  // Purchases
-  purchases: mockPurchases,
-  addPurchase: (purchase) => set(state => ({ purchases: [...state.purchases, purchase] })),
+  addUser: async (user) => {
+    set({ loading: true, error: null });
+    try {
+      await api.post('/users', { fullName: user.fullName, email: user.email, roleId: user.role === 'admin' ? 1 : 2 });
+      await get().fetchUsers();
+    } catch (e: any) {
+      set({ error: e.response?.data?.message || 'Failed to add user', loading: false });
+      throw e;
+    }
+  },
 
-  // Sales
-  sales: mockSales,
-  addSale: (sale) => set(state => ({ sales: [sale, ...state.sales] })),
+  updateUser: async (id, updates) => {
+    try {
+      await api.put(`/users/${id}`, updates);
+      await get().fetchUsers();
+    } catch (e: any) {
+      set({ error: e.response?.data?.message || 'Failed to update user' });
+      throw e;
+    }
+  },
 
-  // Cart
+  deleteUser: async (id) => {
+    try {
+      await api.delete(`/users/${id}`);
+      set(state => ({ users: state.users.filter(u => u.id !== id) }));
+    } catch (e: any) {
+      set({ error: e.response?.data?.message || 'Failed to delete user' });
+      throw e;
+    }
+  },
+
+  toggleUserActive: async (id) => {
+    try {
+      const user = get().users.find(u => u.id === id);
+      if (!user) return;
+      await api.put(`/users/${id}`, { ...user, isActive: !user.isActive });
+      set(state => ({ users: state.users.map(u => u.id === id ? { ...u, isActive: !u.isActive } : u) }));
+    } catch (e: any) {
+      set({ error: e.response?.data?.message || 'Failed to toggle user' });
+    }
+  },
+
+  fetchMedicines: async () => {
+    set({ loading: true, error: null });
+    try {
+      const res = await api.get<MedicineResponse[]>('/medicines');
+      set({ medicines: res.data.map(toMedicine), loading: false });
+    } catch (e: any) {
+      set({ error: e.response?.data?.message || 'Failed to fetch medicines', loading: false });
+    }
+  },
+
+  addMedicine: async (medicine) => {
+    set({ loading: true, error: null });
+    try {
+      await api.post('/medicines', {
+        medicineName: medicine.name,
+        genericName: medicine.genericName,
+        categoryId: Number(medicine.categoryId),
+        unitType: medicine.unitType,
+        lowStockThreshold: medicine.lowStockThreshold,
+      });
+      await get().fetchMedicines();
+    } catch (e: any) {
+      set({ error: e.response?.data?.message || 'Failed to add medicine', loading: false });
+      throw e;
+    }
+  },
+
+  updateMedicine: async (id, updates) => {
+    try {
+      await api.put(`/medicines/${id}`, {
+        medicineName: updates.name,
+        genericName: updates.genericName,
+        categoryId: Number(updates.categoryId),
+        unitType: updates.unitType,
+        lowStockThreshold: updates.lowStockThreshold,
+        isActive: updates.isActive,
+      });
+      await get().fetchMedicines();
+    } catch (e: any) {
+      set({ error: e.response?.data?.message || 'Failed to update medicine' });
+      throw e;
+    }
+  },
+
+  deleteMedicine: async (id) => {
+    try {
+      await api.delete(`/medicines/${id}`);
+      set(state => ({ medicines: state.medicines.filter(m => m.id !== id) }));
+    } catch (e: any) {
+      set({ error: e.response?.data?.message || 'Failed to delete medicine' });
+      throw e;
+    }
+  },
+
+  fetchSuppliers: async () => {
+    set({ loading: true, error: null });
+    try {
+      const res = await api.get<SupplierResponse[]>('/suppliers');
+      set({ suppliers: res.data.map(toSupplier), loading: false });
+    } catch (e: any) {
+      set({ error: e.response?.data?.message || 'Failed to fetch suppliers', loading: false });
+    }
+  },
+
+  addSupplier: async (supplier) => {
+    set({ loading: true, error: null });
+    try {
+      await api.post('/suppliers', {
+        supplierName: supplier.name,
+        phone: supplier.phone,
+        email: supplier.email,
+        address: supplier.address,
+        paymentStatus: 'Outstanding',
+      });
+      await get().fetchSuppliers();
+    } catch (e: any) {
+      set({ error: e.response?.data?.message || 'Failed to add supplier', loading: false });
+      throw e;
+    }
+  },
+
+  updateSupplier: async (id, updates) => {
+    try {
+      await api.put(`/suppliers/${id}`, updates);
+      await get().fetchSuppliers();
+    } catch (e: any) {
+      set({ error: e.response?.data?.message || 'Failed to update supplier' });
+      throw e;
+    }
+  },
+
+  deleteSupplier: async (id) => {
+    try {
+      await api.delete(`/suppliers/${id}`);
+      set(state => ({ suppliers: state.suppliers.filter(s => s.id !== id) }));
+    } catch (e: any) {
+      set({ error: e.response?.data?.message || 'Failed to delete supplier' });
+      throw e;
+    }
+  },
+
+  fetchPurchases: async () => {
+    set({ loading: true, error: null });
+    try {
+      const res = await api.get<PurchaseResponse[]>('/purchases');
+      set({ purchases: res.data.map(toPurchase), loading: false });
+    } catch (e: any) {
+      set({ error: e.response?.data?.message || 'Failed to fetch purchases', loading: false });
+    }
+  },
+
+  addPurchase: async (purchase) => {
+    set({ loading: true, error: null });
+    try {
+      const items = purchase.items.map(i => ({
+        medicineId: Number(i.medicineId),
+        batchNumber: i.batchNumber,
+        quantity: i.quantity,
+        purchasePrice: i.purchasePrice,
+        sellingPrice: i.purchasePrice * 2,
+        expiryDate: i.expiryDate || new Date().toISOString(),
+      }));
+      const res = await api.post<PurchaseResponse>('/purchases', {
+        supplierId: Number(purchase.supplierId),
+        purchaseDate: purchase.purchaseDate,
+        items,
+      });
+      await get().fetchPurchases();
+    } catch (e: any) {
+      set({ error: e.response?.data?.message || 'Failed to add purchase', loading: false });
+      throw e;
+    }
+  },
+
+  fetchSales: async () => {
+    set({ loading: true, error: null });
+    try {
+      const res = await api.get<SaleResponse[]>('/sales');
+      set({ sales: res.data.map(toSale), loading: false });
+    } catch (e: any) {
+      set({ error: e.response?.data?.message || 'Failed to fetch sales', loading: false });
+    }
+  },
+
+  addSale: async (sale) => {
+    set({ loading: true, error: null });
+    try {
+      const items = sale.items.map(i => ({
+        medicineId: Number(i.medicineId),
+        quantity: i.quantity,
+      }));
+      const res = await api.post<SaleResponse>('/sales', { items });
+      await get().fetchSales();
+    } catch (e: any) {
+      set({ error: e.response?.data?.message || 'Failed to add sale', loading: false });
+      throw e;
+    }
+  },
+
   cart: [],
-  addToCart: (item) => set(state => {
+  addToCart: (item) => set((state) => {
     const existing = state.cart.find(c => c.medicineId === item.medicineId && c.batchId === item.batchId);
     if (existing) {
       return {
@@ -135,130 +445,97 @@ export const useAppStore = create<AppState>((set) => ({
           c.medicineId === item.medicineId && c.batchId === item.batchId
             ? { ...c, quantity: c.quantity + item.quantity }
             : c
-        )
+        ),
       };
     }
     return { cart: [...state.cart, item] };
   }),
-  updateCartItemQuantity: (medicineId, batchId, quantity) => set(state => ({
+  updateCartItemQuantity: (medicineId, batchId, quantity) => set((state) => ({
     cart: state.cart.map(c =>
       c.medicineId === medicineId && c.batchId === batchId
         ? { ...c, quantity: Math.max(1, Math.min(quantity, c.availableQuantity)) }
         : c
-    )
+    ),
   })),
-  updateCartItemDiscount: (medicineId, batchId, discountAmount) => set(state => ({
+  updateCartItemDiscount: (medicineId, batchId, discountAmount) => set((state) => ({
     cart: state.cart.map(c =>
       c.medicineId === medicineId && c.batchId === batchId
         ? { ...c, discountAmount: Math.max(0, Math.min(discountAmount, c.standardPrice)), sellingPrice: c.standardPrice - Math.max(0, Math.min(discountAmount, c.standardPrice)) }
         : c
-    )
+    ),
   })),
-  removeFromCart: (medicineId, batchId) => set(state => ({
-    cart: state.cart.filter(c => !(c.medicineId === medicineId && c.batchId === batchId))
+  removeFromCart: (medicineId, batchId) => set((state) => ({
+    cart: state.cart.filter(c => !(c.medicineId === medicineId && c.batchId === batchId)),
   })),
   clearCart: () => set({ cart: [], cartDiscountReason: '' }),
   cartDiscountReason: '',
   setCartDiscountReason: (reason) => set({ cartDiscountReason: reason }),
 
-  // Notifications
-  notifications: mockNotifications,
-  markNotificationRead: (id) => set(state => ({
-    notifications: state.notifications.map(n => n.id === id ? { ...n, isRead: true } : n)
-  })),
-  markAllNotificationsRead: () => set(state => ({
-    notifications: state.notifications.map(n => ({ ...n, isRead: true }))
-  })),
-  generateExpiryNotifications: () => set(state => {
-    const newNotifications: Notification[] = [];
-    const existingMessages = new Set(state.notifications.map(n => n.message));
-    
-    state.medicines.forEach(medicine => {
-      medicine.batches.forEach(batch => {
-        if (batch.quantity <= 0) return;
-        
-        const daysLeft = getDaysUntilExpiry(batch.expiryDate);
-        
-        // Only generate notifications for items within 6 months (180 days) and not expired
-        if (daysLeft <= 0 || daysLeft > 180) return;
-        
-        // Check if days left aligns with 15-day intervals
-        // Notification at: 180, 165, 150, 135, 120, 105, 90, 75, 60, 45, 30, 15
-        const isNotificationDay = daysLeft % 15 === 0 || daysLeft === 180;
-        if (!isNotificationDay) return;
-        
-        const message = daysLeft === 180
-          ? `${medicine.name} (Batch ${batch.batchNumber}) expires on ${batch.expiryDate}. 6 months remaining. Expiry monitoring started.`
-          : daysLeft <= 15
-            ? `${medicine.name} (Batch ${batch.batchNumber}) expires on ${batch.expiryDate}. Only ${daysLeft} days remaining. Immediate action required!`
-            : daysLeft <= 30
-              ? `${medicine.name} (Batch ${batch.batchNumber}) expires on ${batch.expiryDate}. ${daysLeft} days remaining. Urgent: Consider discounting.`
-              : `${medicine.name} (Batch ${batch.batchNumber}) expires on ${batch.expiryDate}. ${daysLeft} days remaining.`;
-        
-        // Don't create duplicate notifications
-        if (existingMessages.has(message)) return;
-        
-        const urgency = daysLeft <= 15 ? '🔴' : daysLeft <= 30 ? '🟠' : daysLeft <= 90 ? '🟡' : '⚠️';
-        
-        newNotifications.push({
-          id: generateId(),
-          title: `${urgency} Expiry Alert (${daysLeft} days left)`,
-          message,
-          type: 'expiry',
-          isRead: false,
-          createdAt: new Date().toISOString(),
-        });
-      });
-    });
-    
-    // Also check for low stock
-    state.medicines.forEach(medicine => {
-      const totalQty = medicine.batches.reduce((sum, b) => sum + b.quantity, 0);
-      const threshold = medicine.lowStockThreshold || 10;
-      
-      if (totalQty === 0) {
-        const message = `${medicine.name} is out of stock!`;
-        if (!existingMessages.has(message)) {
-          newNotifications.push({
-            id: generateId(),
-            title: '🔴 Out of Stock',
-            message,
-            type: 'out_of_stock',
-            isRead: false,
-            createdAt: new Date().toISOString(),
-          });
-        }
-      } else if (totalQty <= threshold) {
-        const message = `${medicine.name} stock is below ${threshold}. Current: ${totalQty}`;
-        if (!existingMessages.has(message)) {
-          newNotifications.push({
-            id: generateId(),
-            title: '⚠️ Low Stock Alert',
-            message,
-            type: 'low_stock',
-            isRead: false,
-            createdAt: new Date().toISOString(),
-          });
-        }
-      }
-    });
-    
-    if (newNotifications.length === 0) return state;
-    
-    return {
-      notifications: [...newNotifications, ...state.notifications]
-    };
-  }),
+  notifications: [],
+  fetchNotifications: async () => {
+    try {
+      const res = await api.get<NotificationResponse[]>('/notifications');
+      set({ notifications: res.data.map(toNotification) });
+    } catch (e) {
+      console.error('Failed to fetch notifications', e);
+    }
+  },
+  markNotificationRead: async (id) => {
+    try {
+      await api.put(`/notifications/${id}/read`);
+      set((state) => ({
+        notifications: state.notifications.map(n => n.id === id ? { ...n, isRead: true } : n),
+      }));
+    } catch (e) {
+      console.error('Failed to mark notification read', e);
+    }
+  },
+  markAllNotificationsRead: async () => {
+    try {
+      await api.put('/notifications/read-all');
+      set((state) => ({
+        notifications: state.notifications.map(n => ({ ...n, isRead: true })),
+      }));
+    } catch (e) {
+      console.error('Failed to mark all notifications read', e);
+    }
+  },
+  generateExpiryNotifications: () => {
+    const state = get();
+    if (state.notifications.length > 0 || state.medicines.length === 0) return;
+    state.generateExpiryNotifications();
+  },
 
-  // Categories
-  categories: mockCategories,
-  addCategory: (category) => set(state => ({ categories: [...state.categories, category] })),
+  categories: [],
+  fetchCategories: async () => {
+    try {
+      const res = await api.get<Category[]>('/categories');
+      set({ categories: res.data.map(toCategory) });
+    } catch (e) {
+      console.error('Failed to fetch categories', e);
+    }
+  },
+  addCategory: async (category) => {
+    try {
+      await api.post('/categories', { name: category.name });
+      await get().fetchCategories();
+    } catch (e) {
+      console.error('Failed to add category', e);
+      throw e;
+    }
+  },
 
-  // Audit Logs
-  auditLogs: mockAuditLogs,
-  addAuditLog: (log) => set(state => ({ auditLogs: [log, ...state.auditLogs] })),
+  auditLogs: [],
+  fetchAuditLogs: async () => {
+    try {
+      const res = await api.get<AuditLog[]>('/audit-logs');
+      set({ auditLogs: res.data });
+    } catch (e) {
+      console.error('Failed to fetch audit logs', e);
+    }
+  },
+  addAuditLog: (log) => set((state) => ({ auditLogs: [log, ...state.auditLogs] })),
 
-  // Settings
   settings: {
     pharmacyName: 'Milki Drug Store',
     lowStockThreshold: 10,
@@ -268,11 +545,29 @@ export const useAppStore = create<AppState>((set) => ({
     phone: '+251911223344',
     email: 'info@milki.com',
   },
-  updateSettings: (updates) => set(state => ({
-    settings: { ...state.settings, ...updates }
+  fetchSettings: async () => {
+    try {
+      const res = await api.get<SettingsResponse>('/settings');
+      const s = res.data;
+      set({
+        settings: {
+          pharmacyName: s.pharmacyName,
+          lowStockThreshold: s.lowStockThreshold,
+          expiryAlertMonths: 6,
+          currency: 'ETB',
+          address: s.address,
+          phone: s.phone,
+          email: s.email,
+        },
+      });
+    } catch (e) {
+      console.error('Failed to fetch settings', e);
+    }
+  },
+  updateSettings: (updates) => set((state) => ({
+    settings: { ...state.settings, ...updates },
   })),
 
-  // Sidebar
   sidebarOpen: true,
-  toggleSidebar: () => set(state => ({ sidebarOpen: !state.sidebarOpen })),
+  toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
 }));

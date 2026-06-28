@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Bell, Check, CheckCheck, AlertTriangle, Info, Package, Clock } from 'lucide-react';
 import { useAppStore } from '../store/appStore';
 import { useThemeStore } from '../store/themeStore';
@@ -6,9 +6,13 @@ import { Button } from '../components/ui/Button';
 import { formatDateTime } from '../utils/helpers';
 
 export const NotificationsPage: React.FC = () => {
-  const { notifications, markNotificationRead, markAllNotificationsRead } = useAppStore();
+  const { notifications, fetchNotifications, markNotificationRead, markAllNotificationsRead, loading } = useAppStore();
   const { theme } = useThemeStore();
   const isDark = theme === 'dark';
+
+  useEffect(() => {
+    fetchNotifications();
+  }, [fetchNotifications]);
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
   const getIcon = (type: string) => {

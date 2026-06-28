@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Search, Package, AlertTriangle, CheckCircle, Layers, Tag } from 'lucide-react';
 import { useAppStore } from '../store/appStore';
 import { useThemeStore } from '../store/themeStore';
@@ -6,12 +6,16 @@ import { Badge } from '../components/ui/Badge';
 import { formatDate, getDaysUntilExpiry, getExpiryStatus, getStockStatus, getStockColor, formatCurrency } from '../utils/helpers';
 
 export const InventoryPage: React.FC = () => {
-  const { medicines } = useAppStore();
+  const { medicines, fetchMedicines, loading } = useAppStore();
   const { theme } = useThemeStore();
   const isDark = theme === 'dark';
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
+
+  useEffect(() => {
+    fetchMedicines();
+  }, [fetchMedicines]);
 
   const categories = useMemo(() => {
     const seen = new Set<string>();

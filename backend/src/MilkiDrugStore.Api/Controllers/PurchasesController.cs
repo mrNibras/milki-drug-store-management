@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using MilkiDrugStore.Application.Services;
+using MilkiDrugStore.Application.Interfaces;
 
 namespace MilkiDrugStore.Api.Controllers;
 
@@ -7,9 +7,9 @@ namespace MilkiDrugStore.Api.Controllers;
 [Route("api/[controller]")]
 public class PurchasesController : ControllerBase
 {
-    private readonly PurchaseService _purchaseService;
+    private readonly IPurchaseService _purchaseService;
 
-    public PurchasesController(PurchaseService purchaseService)
+    public PurchasesController(IPurchaseService purchaseService)
     {
         _purchaseService = purchaseService;
     }

@@ -1,32 +1,22 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Search, ShoppingCart, Trash2, Plus, Minus, CreditCard, X, Check, Package, Tag, AlertCircle } from 'lucide-react';
 import { useAppStore } from '../store/appStore';
 import { useThemeStore } from '../store/themeStore';
 import { formatCurrency, getFefoBatches, generateId, generateSaleNumber } from '../utils/helpers';
 import { Medicine } from '../types';
 
-const DISCOUNT_REASONS = [
-  'Family Assistance',
-  'Employee Discount',
-  'Charity Case',
-  'Emergency Assistance',
-  'Promotional Discount',
-  'Senior Citizen',
-  'Bulk Purchase',
-  'Other',
-];
-
-const MAX_PHARMACIST_DISCOUNT_PERCENT = 5;
-const MAX_ADMIN_DISCOUNT_PERCENT = 100;
-
 export const POSPage: React.FC = () => {
   const { 
     medicines, cart, addToCart, removeFromCart, updateCartItemQuantity, 
     updateCartItemDiscount, clearCart, addSale, sales, currentUser, addAuditLog,
-    cartDiscountReason, setCartDiscountReason
+    cartDiscountReason, setCartDiscountReason, fetchMedicines, loading
   } = useAppStore();
   const { theme } = useThemeStore();
   const isDark = theme === 'dark';
+
+  useEffect(() => {
+    fetchMedicines();
+  }, [fetchMedicines]);
   const [search, setSearch] = useState('');
   const [showCheckout, setShowCheckout] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);

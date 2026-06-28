@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using MilkiDrugStore.Application.Services;
+using MilkiDrugStore.Application.Interfaces;
 
 namespace MilkiDrugStore.Api.Controllers;
 
@@ -7,9 +7,9 @@ namespace MilkiDrugStore.Api.Controllers;
 [Route("api/[controller]")]
 public class DamagesController : ControllerBase
 {
-    private readonly InventoryService _inventoryService;
+    private readonly IInventoryService _inventoryService;
 
-    public DamagesController(InventoryService inventoryService)
+    public DamagesController(IInventoryService inventoryService)
     {
         _inventoryService = inventoryService;
     }

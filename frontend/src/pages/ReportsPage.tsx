@@ -1,18 +1,23 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { BarChart3, TrendingUp, Package, Truck, Users, Download, Award } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Legend } from 'recharts';
 import { useAppStore } from '../store/appStore';
 import { useThemeStore } from '../store/themeStore';
 import { formatCurrency, formatDate } from '../utils/helpers';
 import { Button } from '../components/ui/Button';
-import { dailySalesData, weeklySalesData, monthlySalesData, yearlySalesData } from '../data/mockData';
-
-type ReportTab = 'sales' | 'mostSelling' | 'inventory' | 'profit' | 'suppliers' | 'staff';
 
 export const ReportsPage: React.FC = () => {
-  const { sales, medicines, suppliers, purchases, users } = useAppStore();
+  const { sales, medicines, suppliers, purchases, users, fetchSales, fetchMedicines, fetchSuppliers, fetchPurchases, fetchUsers, loading } = useAppStore();
   const { theme } = useThemeStore();
   const isDark = theme === 'dark';
+
+  useEffect(() => {
+    fetchSales();
+    fetchMedicines();
+    fetchSuppliers();
+    fetchPurchases();
+    fetchUsers();
+  }, [fetchSales, fetchMedicines, fetchSuppliers, fetchPurchases, fetchUsers]);
   const [activeTab, setActiveTab] = useState<ReportTab>('sales');
   const [dateRange, setDateRange] = useState('weekly');
 

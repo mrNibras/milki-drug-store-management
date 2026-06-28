@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using MilkiDrugStore.Application.Services;
+using MilkiDrugStore.Application.Interfaces;
 
 namespace MilkiDrugStore.Api.Controllers;
 
@@ -7,9 +7,9 @@ namespace MilkiDrugStore.Api.Controllers;
 [Route("api/[controller]")]
 public class DashboardController : ControllerBase
 {
-    private readonly DashboardService _dashboardService;
+    private readonly IDashboardService _dashboardService;
 
-    public DashboardController(DashboardService dashboardService)
+    public DashboardController(IDashboardService dashboardService)
     {
         _dashboardService = dashboardService;
     }

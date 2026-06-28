@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using MilkiDrugStore.Application.DTOs.Auth;
 using MilkiDrugStore.Application.Interfaces;
-using MilkiDrugStore.Application.Services;
 
 namespace MilkiDrugStore.Api.Controllers;
 

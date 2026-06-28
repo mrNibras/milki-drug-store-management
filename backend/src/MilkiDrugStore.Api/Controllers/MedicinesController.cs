@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using MilkiDrugStore.Application.DTOs.Medicine;
-using MilkiDrugStore.Application.Services;
+using MilkiDrugStore.Application.Interfaces;
 
 namespace MilkiDrugStore.Api.Controllers;
 
@@ -8,9 +8,9 @@ namespace MilkiDrugStore.Api.Controllers;
 [Route("api/[controller]")]
 public class MedicinesController : ControllerBase
 {
-    private readonly MedicineService _medicineService;
+    private readonly IMedicineService _medicineService;
 
-    public MedicinesController(MedicineService medicineService)
+    public MedicinesController(IMedicineService medicineService)
     {
         _medicineService = medicineService;
     }

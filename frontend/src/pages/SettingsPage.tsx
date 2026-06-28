@@ -1,15 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Save, Building2, Bell, Database, Globe, Shield, Download, Upload } from 'lucide-react';
 import { useAppStore } from '../store/appStore';
 import { useThemeStore } from '../store/themeStore';
 import { Button } from '../components/ui/Button';
 
 export const SettingsPage: React.FC = () => {
-  const { settings, updateSettings, addAuditLog, currentUser } = useAppStore();
+  const { settings, updateSettings, addAuditLog, currentUser, fetchSettings, loading } = useAppStore();
   const { theme } = useThemeStore();
   const isDark = theme === 'dark';
   const [formData, setFormData] = useState({ ...settings });
   const [showSuccess, setShowSuccess] = useState(false);
+
+  useEffect(() => {
+    fetchSettings();
+    setFormData({ ...settings });
+  }, [fetchSettings, settings]);
 
   const handleSave = () => {
     updateSettings(formData);

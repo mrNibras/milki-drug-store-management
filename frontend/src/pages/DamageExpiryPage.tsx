@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { AlertTriangle, Plus, Package, Clock, Trash2, Zap, CheckCircle, Layers } from 'lucide-react';
 import { useAppStore } from '../store/appStore';
 import { useThemeStore } from '../store/themeStore';
@@ -17,9 +17,13 @@ interface DamageRecord {
 }
 
 export const DamageExpiryPage: React.FC = () => {
-  const { medicines, addAuditLog, currentUser } = useAppStore();
+  const { medicines, fetchMedicines, addAuditLog, currentUser, loading } = useAppStore();
   const { theme } = useThemeStore();
   const isDark = theme === 'dark';
+
+  useEffect(() => {
+    fetchMedicines();
+  }, [fetchMedicines]);
   const [activeTab, setActiveTab] = useState<'expiring' | 'expired' | 'damages'>('expiring');
   const [showDamageModal, setShowDamageModal] = useState(false);
   const [damages, setDamages] = useState<DamageRecord[]>([]);

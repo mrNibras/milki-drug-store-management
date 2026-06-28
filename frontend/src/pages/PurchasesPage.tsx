@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Plus, Search, Eye, ClipboardList, Truck, Package, X, AlertCircle, Check, ShoppingCart, FileSpreadsheet, Calendar } from 'lucide-react';
 import { useAppStore } from '../store/appStore';
 import { useThemeStore } from '../store/themeStore';
@@ -6,25 +6,8 @@ import { Modal } from '../components/ui/Modal';
 import { formatDate, formatCurrency, generateId, generatePurchaseNumber } from '../utils/helpers';
 import { Medicine, MedicineBatch } from '../types';
 
-interface BulkPurchaseItem {
-  id: string;
-  medicineName: string;
-  genericName: string;
-  categoryId: string;
-  categoryName: string;
-  batchNumber: string;
-  quantity: string;
-  purchasePrice: string;
-  sellingPrice: string;
-  expiryDate: string;
-  unitType: string;
-  isNewMedicine: boolean;
-  existingMedicineId?: string;
-  errors: string[];
-}
-
 export const PurchasesPage: React.FC = () => {
-  const { purchases, suppliers, medicines, categories, addPurchase, addMedicine, updateMedicine, addAuditLog, currentUser } = useAppStore();
+  const { purchases, suppliers, medicines, categories, fetchPurchases, fetchSuppliers, fetchMedicines, fetchCategories, addPurchase, addMedicine, updateMedicine, addAuditLog, currentUser, loading } = useAppStore();
   const { theme } = useThemeStore();
   const isDark = theme === 'dark';
   const [search, setSearch] = useState('');
@@ -38,6 +21,13 @@ export const PurchasesPage: React.FC = () => {
   const [showSuccess, setShowSuccess] = useState(false);
   const [lastPurchaseNumber, setLastPurchaseNumber] = useState('');
   const [paymentStatus, setPaymentStatus] = useState<'paid' | 'partial' | 'unpaid'>('paid');
+
+  useEffect(() => {
+    fetchPurchases();
+    fetchSuppliers();
+    fetchMedicines();
+    fetchCategories();
+  }, [fetchPurchases, fetchSuppliers, fetchMedicines, fetchCategories]);
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'bank_transfer' | 'mobile_money' | 'credit'>('cash');
   const [amountPaid, setAmountPaid] = useState('');
 
