@@ -181,7 +181,7 @@ export const Sidebar: React.FC = () => {
           {/* User Info */}
           <div className={`flex items-center gap-3 mt-2 ${sidebarOpen ? '' : 'justify-center'}`}>
             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 text-sm font-bold flex-shrink-0">
-              {currentUser?.fullName.charAt(0)}
+              {currentUser?.fullName ? currentUser.fullName.charAt(0) : '?'}
             </div>
             {sidebarOpen && (
               <>

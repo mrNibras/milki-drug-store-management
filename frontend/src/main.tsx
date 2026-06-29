@@ -4,9 +4,13 @@ import "./index.css";
 import App from "./App";
 
 // Initialize theme from localStorage
-const savedTheme = localStorage.getItem('mdsms-theme');
-if (savedTheme === 'dark') {
-  document.documentElement.classList.add('dark');
+try {
+  const savedTheme = localStorage.getItem('mdsms-theme');
+  if (savedTheme === 'dark') {
+    document.documentElement.classList.add('dark');
+  }
+} catch (e) {
+  // localStorage unavailable (e.g., private browsing)
 }
 
 createRoot(document.getElementById("root")!).render(

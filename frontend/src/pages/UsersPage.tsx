@@ -205,7 +205,7 @@ export const UsersPage: React.FC = () => {
                       <div className={`flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold text-white ${
                         user.role === 'admin' ? 'bg-gradient-to-br from-purple-500 to-indigo-600' : 'bg-gradient-to-br from-blue-400 to-cyan-500'
                       }`}>
-                        {user.fullName.charAt(0)}
+                         {user.fullName ? user.fullName.charAt(0) : '?'}
                       </div>
                       <div>
                         <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{user.fullName}</p>
@@ -411,7 +411,7 @@ export const UsersPage: React.FC = () => {
               <div className={`flex h-14 w-14 items-center justify-center rounded-xl text-2xl font-bold text-white ${
                 selectedUser.role === 'admin' ? 'bg-gradient-to-br from-purple-500 to-indigo-600' : 'bg-gradient-to-br from-blue-400 to-cyan-500'
               }`}>
-                {selectedUser.fullName.charAt(0)}
+                   {selectedUser.fullName ? selectedUser.fullName.charAt(0) : '?'}
               </div>
               <div>
                 <p className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{selectedUser.fullName}</p>
@@ -541,7 +541,7 @@ export const UsersPage: React.FC = () => {
                 <div className={`flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold text-white ${
                   selectedUser.role === 'admin' ? 'bg-gradient-to-br from-purple-500 to-indigo-600' : 'bg-gradient-to-br from-blue-400 to-cyan-500'
                 }`}>
-                  {selectedUser.fullName.charAt(0)}
+                  {selectedUser.fullName ? selectedUser.fullName.charAt(0) : '?'}
                 </div>
                 <div>
                   <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{selectedUser.fullName}</p>

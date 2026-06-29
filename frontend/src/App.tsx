@@ -19,10 +19,15 @@ export default function App() {
   const isAuthenticated = useAppStore((state) => state.isAuthenticated);
 
   useEffect(() => {
-    const storedToken = localStorage.getItem('auth_token');
-    const storedUser = localStorage.getItem('current_user');
-    if (storedToken && storedUser) {
-      useAppStore.setState({ token: storedToken, currentUser: JSON.parse(storedUser), isAuthenticated: true });
+    try {
+      const storedToken = localStorage.getItem('auth_token');
+      const storedUser = localStorage.getItem('current_user');
+      if (storedToken && storedUser) {
+        useAppStore.setState({ token: storedToken, currentUser: JSON.parse(storedUser), isAuthenticated: true });
+      }
+    } catch (e) {
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('current_user');
     }
   }, []);
 
