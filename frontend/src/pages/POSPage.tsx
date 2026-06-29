@@ -6,6 +6,9 @@ import { formatCurrency, getFefoBatches, generateId, generateSaleNumber } from '
 import { Medicine, Sale } from '../types';
 import { ReceiptDialog } from '../components/ReceiptDialog';
 
+const MAX_ADMIN_DISCOUNT_PERCENT = 100;
+const MAX_PHARMACIST_DISCOUNT_PERCENT = 5;
+
 export const POSPage: React.FC = () => {
   const { 
     medicines, cart, addToCart, removeFromCart, updateCartItemQuantity, 
