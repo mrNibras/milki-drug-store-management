@@ -6,7 +6,7 @@ import { useThemeStore } from '../store/themeStore';
 
 export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('admin@milki.com');
-  const [password, setPassword] = useState('admin123');
+  const [password, setPassword] = useState('Admin123');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -22,7 +22,7 @@ export const LoginPage: React.FC = () => {
 
     await new Promise(resolve => setTimeout(resolve, 800));
 
-    const success = login(email, password);
+    const success = await login(email, password);
     if (success) {
       navigate('/dashboard');
     } else {
