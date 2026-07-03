@@ -78,4 +78,14 @@ public class InventoryService : IInventoryService
 
         await _unitOfWork.SaveChangesAsync();
     }
+
+    public async Task<IEnumerable<DamageRecord>> GetDamagesAsync()
+    {
+        return await _unitOfWork.DamageRecords.GetAllAsync();
+    }
+
+    public async Task<IEnumerable<ExpiredRecord>> GetExpiredAsync()
+    {
+        return await _unitOfWork.ExpiredRecords.GetAllAsync();
+    }
 }

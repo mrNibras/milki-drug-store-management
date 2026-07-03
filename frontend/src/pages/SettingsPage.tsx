@@ -1,34 +1,66 @@
 import React, { useState, useEffect } from 'react';
-import { Save, Building2, Bell, Database, Globe, Shield, Download, Upload } from 'lucide-react';
+import { Save, Building2, Bell, Database, Globe, Shield, Download, Upload, Key } from 'lucide-react';
 import { useAppStore } from '../store/appStore';
 import { useThemeStore } from '../store/themeStore';
 import { Button } from '../components/ui/Button';
+import { api } from '../services/api';
 
 export const SettingsPage: React.FC = () => {
-  const { settings, updateSettings, addAuditLog, currentUser, fetchSettings, loading } = useAppStore();
+  const { settings, updateSettings, addAuditLog, currentUser, fetchSettings, loading, changePassword } = useAppStore();
   const { theme } = useThemeStore();
   const isDark = theme === 'dark';
   const [formData, setFormData] = useState({ ...settings });
   const [showSuccess, setShowSuccess] = useState(false);
+  const [passwordForm, setPasswordForm] = useState({ current: '', newPassword: '', confirm: '' });
+  const [passwordMessage, setPasswordMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
     fetchSettings();
     setFormData({ ...settings });
   }, [fetchSettings, settings]);
 
-  const handleSave = () => {
-    updateSettings(formData);
-    addAuditLog({
-      id: Math.random().toString(36).substr(2, 9),
-      userId: currentUser?.id || '',
-      userName: currentUser?.fullName || '',
-      action: 'Updated system settings',
-      tableName: 'Settings',
-      recordId: '1',
-      createdAt: new Date().toISOString(),
-    });
-    setShowSuccess(true);
-    setTimeout(() => setShowSuccess(false), 3000);
+  const handleSave = async () => {
+    try {
+      await api.put('/settings', formData);
+      await useAppStore.getState().fetchSettings();
+      addAuditLog({
+        id: Math.random().toString(36).substr(2, 9),
+        userId: currentUser?.id || '',
+        userName: currentUser?.fullName || '',
+        action: 'Updated system settings',
+        tableName: 'Settings',
+        recordId: '1',
+        createdAt: new Date().toISOString(),
+      });
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 3000);
+    } catch (e: any) {
+      console.error('Failed to save settings', e);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    setPasswordMessage(null);
+    if (!passwordForm.current || !passwordForm.newPassword) {
+      setPasswordMessage({ type: 'error', text: 'Please fill in all password fields' });
+      return;
+    }
+    if (passwordForm.newPassword !== passwordForm.confirm) {
+      setPasswordMessage({ type: 'error', text: 'New passwords do not match' });
+      return;
+    }
+    if (passwordForm.newPassword.length < 6) {
+      setPasswordMessage({ type: 'error', text: 'New password must be at least 6 characters' });
+      return;
+    }
+
+    const result = await changePassword(passwordForm.current, passwordForm.newPassword);
+    if (result.ok) {
+      setPasswordMessage({ type: 'success', text: 'Password changed successfully' });
+      setPasswordForm({ current: '', newPassword: '', confirm: '' });
+    } else {
+      setPasswordMessage({ type: 'error', text: result.message || 'Failed to change password' });
+    }
   };
 
   const inputClass = `w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm ${
@@ -192,18 +224,50 @@ export const SettingsPage: React.FC = () => {
               <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Password and authentication settings</p>
             </div>
           </div>
+
+          {passwordMessage && (
+            <div className={`mb-4 p-3 rounded-lg text-sm ${
+              passwordMessage.type === 'success'
+                ? isDark ? 'bg-emerald-900/20 border border-emerald-800 text-emerald-400' : 'bg-emerald-50 border border-emerald-200 text-emerald-700'
+                : isDark ? 'bg-red-900/20 border border-red-800 text-red-400' : 'bg-red-50 border border-red-200 text-red-700'
+            }`}>
+              {passwordMessage.text}
+            </div>
+          )}
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Current Password</label>
-              <input type="password" className={inputClass} />
+              <input
+                type="password"
+                value={passwordForm.current}
+                onChange={e => setPasswordForm({ ...passwordForm, current: e.target.value })}
+                className={inputClass}
+              />
             </div>
             <div>
               <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>New Password</label>
-              <input type="password" className={inputClass} />
+              <input
+                type="password"
+                value={passwordForm.newPassword}
+                onChange={e => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Confirm New Password</label>
+              <input
+                type="password"
+                value={passwordForm.confirm}
+                onChange={e => setPasswordForm({ ...passwordForm, confirm: e.target.value })}
+                className={inputClass}
+              />
             </div>
           </div>
           <div className="mt-4">
-            <Button variant="secondary">Change Password</Button>
+            <Button variant="secondary" onClick={handleChangePassword}>
+              <Key className="h-4 w-4" /> Change Password
+            </Button>
           </div>
         </div>
       </div>

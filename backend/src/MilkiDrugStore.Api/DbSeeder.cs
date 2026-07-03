@@ -59,7 +59,9 @@ public static class DbSeeder
                 Phone = "",
                 Email = "",
                 Language = "English",
-                LowStockThreshold = 10
+                LowStockThreshold = 10,
+                ExpiryAlertMonths = 6,
+                Currency = "ETB"
             });
             await context.SaveChangesAsync();
         }

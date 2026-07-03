@@ -9,4 +9,6 @@ public class Settings
     public string Email { get; set; } = string.Empty;
     public string Language { get; set; } = "English";
     public int LowStockThreshold { get; set; } = 10;
+    public int ExpiryAlertMonths { get; set; } = 6;
+    public string Currency { get; set; } = "ETB";
 }

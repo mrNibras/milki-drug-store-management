@@ -22,6 +22,13 @@ public class ExpiredController : ControllerBase
         return Ok(new { message = "Expired record added successfully" });
     }
 
+    [HttpGet]
+    public async Task<IActionResult> GetAll()
+    {
+        var expired = await _inventoryService.GetExpiredAsync();
+        return Ok(expired);
+    }
+
     private int GetUserId()
     {
         var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;

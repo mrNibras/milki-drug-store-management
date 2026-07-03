@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { User, Medicine, Supplier, Purchase, Sale, Notification, CartItem, PharmacySettings, AuditLog, Category } from '../types';
-import { api, LoginRequest, LoginResponse, CreateSaleRequest, CreatePurchaseRequest, RecordDamageRequest, RecordExpiredRequest } from '../services/api';
+import { api, LoginRequest, LoginResponse, CreateSaleRequest, CreatePurchaseRequest, RecordDamageRequest, RecordExpiredRequest, ChangePasswordRequest, DamageResponse, ExpiredResponse } from '../services/api';
 import { getDaysUntilExpiry, generateId } from '../utils/helpers';
 
 interface AppState {
@@ -61,9 +61,18 @@ interface AppState {
   fetchAuditLogs: () => Promise<void>;
   addAuditLog: (log: AuditLog) => void;
 
+  damages: DamageResponse[];
+  fetchDamages: () => Promise<void>;
+  recordDamage: (data: RecordDamageRequest) => Promise<void>;
+
+  expiredRecords: ExpiredResponse[];
+  fetchExpired: () => Promise<void>;
+  recordExpired: (data: RecordExpiredRequest) => Promise<void>;
+
   settings: PharmacySettings;
   fetchSettings: () => Promise<void>;
   updateSettings: (settings: Partial<PharmacySettings>) => void;
+  changePassword: (currentPassword: string, newPassword: string) => Promise<{ ok: boolean; message?: string }>;
 
   loading: boolean;
   error: string | null;
@@ -536,6 +545,46 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
   addAuditLog: (log) => set((state) => ({ auditLogs: [log, ...state.auditLogs] })),
 
+  damages: [],
+  fetchDamages: async () => {
+    try {
+      const res = await api.get<DamageResponse[]>('/damages');
+      set({ damages: res.data });
+    } catch (e) {
+      console.error('Failed to fetch damages', e);
+    }
+  },
+  recordDamage: async (data) => {
+    try {
+      await api.post('/damages', data);
+      await get().fetchDamages();
+      await get().fetchMedicines();
+    } catch (e) {
+      console.error('Failed to record damage', e);
+      throw e;
+    }
+  },
+
+  expiredRecords: [],
+  fetchExpired: async () => {
+    try {
+      const res = await api.get<ExpiredResponse[]>('/expired');
+      set({ expiredRecords: res.data });
+    } catch (e) {
+      console.error('Failed to fetch expired records', e);
+    }
+  },
+  recordExpired: async (data) => {
+    try {
+      await api.post('/expired', data);
+      await get().fetchExpired();
+      await get().fetchMedicines();
+    } catch (e) {
+      console.error('Failed to record expired', e);
+      throw e;
+    }
+  },
+
   settings: {
     pharmacyName: 'Milki Drug Store',
     lowStockThreshold: 10,
@@ -553,8 +602,8 @@ export const useAppStore = create<AppState>((set, get) => ({
         settings: {
           pharmacyName: s.pharmacyName,
           lowStockThreshold: s.lowStockThreshold,
-          expiryAlertMonths: 6,
-          currency: 'ETB',
+          expiryAlertMonths: s.expiryAlertMonths,
+          currency: s.currency,
           address: s.address,
           phone: s.phone,
           email: s.email,
@@ -567,6 +616,15 @@ export const useAppStore = create<AppState>((set, get) => ({
   updateSettings: (updates) => set((state) => ({
     settings: { ...state.settings, ...updates },
   })),
+  changePassword: async (currentPassword, newPassword) => {
+    try {
+      await api.post('/auth/change-password', { currentPassword, newPassword } as ChangePasswordRequest);
+      return { ok: true };
+    } catch (e: any) {
+      const msg = e.response?.data?.message || 'Failed to change password';
+      return { ok: false, message: msg };
+    }
+  },
 
   sidebarOpen: true,
   toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),

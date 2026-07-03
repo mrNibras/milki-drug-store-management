@@ -14,5 +14,6 @@ public class SettingsConfiguration : IEntityTypeConfiguration<Settings>
         builder.Property(s => s.Phone).HasMaxLength(50);
         builder.Property(s => s.Email).HasMaxLength(150);
         builder.Property(s => s.Language).HasMaxLength(20);
+        builder.Property(s => s.Currency).HasMaxLength(10);
     }
 }

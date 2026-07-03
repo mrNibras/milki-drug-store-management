@@ -183,4 +183,43 @@ export interface SettingsResponse {
   email: string;
   language: string;
   lowStockThreshold: number;
+  expiryAlertMonths: number;
+  currency: string;
+}
+
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+}
+
+export interface RecordDamageRequest {
+  batchId: number;
+  quantity: number;
+  reason: string;
+}
+
+export interface RecordExpiredRequest {
+  batchId: number;
+  quantity: number;
+}
+
+export interface DamageResponse {
+  damageId: number;
+  batchId: number;
+  quantity: number;
+  reason: string;
+  recordedBy: number;
+  recordedDate: string;
+  batchNumber?: string;
+  medicineName?: string;
+}
+
+export interface ExpiredResponse {
+  expiredId: number;
+  batchId: number;
+  quantity: number;
+  recordedDate: string;
+  recordedBy: number;
+  batchNumber?: string;
+  medicineName?: string;
 }

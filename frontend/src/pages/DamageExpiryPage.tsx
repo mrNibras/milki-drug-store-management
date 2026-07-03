@@ -5,29 +5,23 @@ import { useThemeStore } from '../store/themeStore';
 import { Badge } from '../components/ui/Badge';
 import { Modal } from '../components/ui/Modal';
 import { formatDate, getDaysUntilExpiry, generateId } from '../utils/helpers';
-
-interface DamageRecord {
-  id: string;
-  medicineId: string;
-  medicineName: string;
-  batchNumber: string;
-  quantity: number;
-  reason: string;
-  date: string;
-}
+import { DamageResponse, ExpiredResponse } from '../types';
 
 export const DamageExpiryPage: React.FC = () => {
-  const { medicines, fetchMedicines, addAuditLog, currentUser, loading } = useAppStore();
+  const { medicines, fetchMedicines, addAuditLog, currentUser, loading, damages, fetchDamages, recordDamage, expiredRecords, fetchExpired, recordExpired } = useAppStore();
   const { theme } = useThemeStore();
   const isDark = theme === 'dark';
 
   useEffect(() => {
     fetchMedicines();
-  }, [fetchMedicines]);
+    fetchDamages();
+    fetchExpired();
+  }, [fetchMedicines, fetchDamages, fetchExpired]);
   const [activeTab, setActiveTab] = useState<'expiring' | 'expired' | 'damages'>('expiring');
   const [showDamageModal, setShowDamageModal] = useState(false);
-  const [damages, setDamages] = useState<DamageRecord[]>([]);
+  const [showExpiredModal, setShowExpiredModal] = useState(false);
   const [damageForm, setDamageForm] = useState({ medicineId: '', batchId: '', quantity: '', reason: '' });
+  const [expiredForm, setExpiredForm] = useState({ medicineId: '', batchId: '', quantity: '' });
 
   // Auto-detect expiring soon items (within 6 months / 180 days)
   const expiringMedicines = useMemo(() => {
@@ -62,33 +56,59 @@ export const DamageExpiryPage: React.FC = () => {
     ).sort((a, b) => b.daysOverdue - a.daysOverdue);
   }, [medicines]);
 
-  const handleRecordDamage = () => {
+  const handleRecordDamage = async () => {
     if (!damageForm.medicineId || !damageForm.batchId || !damageForm.quantity) return;
     const medicine = medicines.find(m => m.id === damageForm.medicineId);
     const batch = medicine?.batches.find(b => b.id === damageForm.batchId);
     if (!medicine || !batch) return;
 
-    const record: DamageRecord = {
-      id: generateId(),
-      medicineId: damageForm.medicineId,
-      medicineName: medicine.name,
-      batchNumber: batch.batchNumber,
-      quantity: Number(damageForm.quantity),
-      reason: damageForm.reason,
-      date: new Date().toISOString(),
-    };
-    setDamages([record, ...damages]);
-    addAuditLog({
-      id: generateId(),
-      userId: currentUser?.id || '',
-      userName: currentUser?.fullName || '',
-      action: `Recorded damage: ${record.quantity} ${medicine.name} - ${record.reason}`,
-      tableName: 'Damage',
-      recordId: record.id,
-      createdAt: new Date().toISOString(),
-    });
-    setShowDamageModal(false);
-    setDamageForm({ medicineId: '', batchId: '', quantity: '', reason: '' });
+    try {
+      await recordDamage({
+        batchId: Number(damageForm.batchId),
+        quantity: Number(damageForm.quantity),
+        reason: damageForm.reason,
+      });
+      addAuditLog({
+        id: generateId(),
+        userId: currentUser?.id || '',
+        userName: currentUser?.fullName || '',
+        action: `Recorded damage: ${damageForm.quantity} ${medicine.name} - ${damageForm.reason}`,
+        tableName: 'Damage',
+        recordId: generateId(),
+        createdAt: new Date().toISOString(),
+      });
+      setShowDamageModal(false);
+      setDamageForm({ medicineId: '', batchId: '', quantity: '', reason: '' });
+    } catch (e) {
+      console.error('Failed to record damage', e);
+    }
+  };
+
+  const handleRecordExpired = async () => {
+    if (!expiredForm.medicineId || !expiredForm.batchId || !expiredForm.quantity) return;
+    const medicine = medicines.find(m => m.id === expiredForm.medicineId);
+    const batch = medicine?.batches.find(b => b.id === expiredForm.batchId);
+    if (!medicine || !batch) return;
+
+    try {
+      await recordExpired({
+        batchId: Number(expiredForm.batchId),
+        quantity: Number(expiredForm.quantity),
+      });
+      addAuditLog({
+        id: generateId(),
+        userId: currentUser?.id || '',
+        userName: currentUser?.fullName || '',
+        action: `Recorded expired: ${expiredForm.quantity} ${medicine.name}`,
+        tableName: 'Expired',
+        recordId: generateId(),
+        createdAt: new Date().toISOString(),
+      });
+      setShowExpiredModal(false);
+      setExpiredForm({ medicineId: '', batchId: '', quantity: '' });
+    } catch (e) {
+      console.error('Failed to record expired', e);
+    }
   };
 
   const inputClass = `w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
@@ -272,16 +292,24 @@ export const DamageExpiryPage: React.FC = () => {
         <div className="space-y-4">
           {/* Alert */}
           <div className={`rounded-xl p-4 border ${isDark ? 'bg-red-900/20 border-red-800' : 'bg-red-50 border-red-200'}`}>
-            <div className="flex items-start gap-3">
-              <AlertTriangle className="h-5 w-5 text-red-500 mt-0.5 flex-shrink-0" />
-              <div>
-                <p className={`text-sm font-medium ${isDark ? 'text-red-300' : 'text-red-700'}`}>
-                  🚨 Auto-Detected: Expired Items
-                </p>
-                <p className={`text-xs mt-1 ${isDark ? 'text-red-400' : 'text-red-600'}`}>
-                  These items have passed their expiry date and should be removed from inventory immediately.
-                </p>
+            <div className="flex items-start gap-3 justify-between">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="h-5 w-5 text-red-500 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className={`text-sm font-medium ${isDark ? 'text-red-300' : 'text-red-700'}`}>
+                    🚨 Auto-Detected: Expired Items
+                  </p>
+                  <p className={`text-xs mt-1 ${isDark ? 'text-red-400' : 'text-red-600'}`}>
+                    These items have passed their expiry date and should be removed from inventory immediately.
+                  </p>
+                </div>
               </div>
+              <button
+                onClick={() => setShowExpiredModal(true)}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-medium transition-colors flex items-center gap-2"
+              >
+                <Plus className="h-4 w-4" /> Record Expired
+              </button>
             </div>
           </div>
 
@@ -370,12 +398,12 @@ export const DamageExpiryPage: React.FC = () => {
                 </thead>
                 <tbody className={`divide-y ${isDark ? 'divide-gray-700' : 'divide-gray-100'}`}>
                   {damages.map(damage => (
-                    <tr key={damage.id} className={isDark ? 'hover:bg-gray-700/50' : 'hover:bg-gray-50'}>
-                      <td className={`px-6 py-3 font-medium text-sm ${isDark ? 'text-white' : ''}`}>{damage.medicineName}</td>
-                      <td className={`px-6 py-3 font-mono text-sm ${isDark ? 'text-gray-300' : ''}`}>{damage.batchNumber}</td>
+                    <tr key={damage.damageId} className={isDark ? 'hover:bg-gray-700/50' : 'hover:bg-gray-50'}>
+                      <td className={`px-6 py-3 font-medium text-sm ${isDark ? 'text-white' : ''}`}>{damage.medicineName || '-'}</td>
+                      <td className={`px-6 py-3 font-mono text-sm ${isDark ? 'text-gray-300' : ''}`}>{damage.batchNumber || '-'}</td>
                       <td className="px-6 py-3 text-sm text-red-500 font-semibold">{damage.quantity}</td>
                       <td className={`px-6 py-3 text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{damage.reason}</td>
-                      <td className={`px-6 py-3 text-sm ${isDark ? 'text-gray-300' : ''}`}>{formatDate(damage.date)}</td>
+                      <td className={`px-6 py-3 text-sm ${isDark ? 'text-gray-300' : ''}`}>{formatDate(damage.recordedDate)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -474,6 +502,83 @@ export const DamageExpiryPage: React.FC = () => {
               className="px-5 py-2.5 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white rounded-xl text-sm font-medium transition-all shadow-lg flex items-center gap-2"
             >
               <Trash2 className="h-4 w-4" /> Record Damage
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* ========== EXPIRED MODAL ========== */}
+      <Modal isOpen={showExpiredModal} onClose={() => setShowExpiredModal(false)} title="Record Expired Stock">
+        <div className="space-y-5">
+          <div className="flex items-center gap-4 pb-2">
+            <div className={`flex h-14 w-14 items-center justify-center rounded-xl ${isDark ? 'bg-red-900/30 text-red-400' : 'bg-red-100 text-red-600'}`}>
+              <AlertTriangle className="h-7 w-7" />
+            </div>
+            <div>
+              <p className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>Record Expired Stock</p>
+              <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Deduct expired items from inventory</p>
+            </div>
+          </div>
+
+          <div className={`p-5 rounded-xl ${isDark ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
+            <div className="space-y-4">
+              <div>
+                <label className={labelClass}>
+                  <Package className="h-4 w-4" /> Medicine <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={expiredForm.medicineId}
+                  onChange={e => setExpiredForm({ ...expiredForm, medicineId: e.target.value, batchId: '' })}
+                  className={inputClass}
+                >
+                  <option value="">Select Medicine</option>
+                  {medicines.filter(m => m.batches.some(b => b.quantity > 0)).map(m => (
+                    <option key={m.id} value={m.id}>{m.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className={labelClass}>
+                  <Layers className="h-4 w-4" /> Batch <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={expiredForm.batchId}
+                  onChange={e => setExpiredForm({ ...expiredForm, batchId: e.target.value })}
+                  className={inputClass}
+                >
+                  <option value="">Select Batch</option>
+                  {medicines.find(m => m.id === expiredForm.medicineId)?.batches.filter(b => b.quantity > 0).map(b => (
+                    <option key={b.id} value={b.id}>{b.batchNumber} (Qty: {b.quantity})</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className={labelClass}>
+                  Quantity <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="number"
+                  value={expiredForm.quantity}
+                  onChange={e => setExpiredForm({ ...expiredForm, quantity: e.target.value })}
+                  placeholder="Enter expired quantity"
+                  className={inputClass}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className={`flex justify-end gap-3 pt-4 border-t ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
+            <button
+              onClick={() => setShowExpiredModal(false)}
+              className={`px-5 py-2.5 rounded-xl text-sm font-medium transition-colors ${isDark ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleRecordExpired}
+              className="px-5 py-2.5 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white rounded-xl text-sm font-medium transition-all shadow-lg flex items-center gap-2"
+            >
+              <AlertTriangle className="h-4 w-4" /> Record Expired
             </button>
           </div>
         </div>

@@ -22,6 +22,13 @@ public class DamagesController : ControllerBase
         return Ok(new { message = "Damage recorded successfully" });
     }
 
+    [HttpGet]
+    public async Task<IActionResult> GetAll()
+    {
+        var damages = await _inventoryService.GetDamagesAsync();
+        return Ok(damages);
+    }
+
     private int GetUserId()
     {
         var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;

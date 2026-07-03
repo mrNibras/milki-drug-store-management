@@ -176,6 +176,8 @@ public class AuthService : IAuthService
         settings.Email = request.Email;
         settings.Language = request.Language;
         settings.LowStockThreshold = request.LowStockThreshold;
+        settings.ExpiryAlertMonths = request.ExpiryAlertMonths;
+        settings.Currency = request.Currency;
 
         await _unitOfWork.Settings.UpdateAsync(settings);
         await _unitOfWork.SaveChangesAsync();

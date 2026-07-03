@@ -159,3 +159,24 @@ export interface PharmacySettings {
   phone: string;
   email: string;
 }
+
+export interface DamageResponse {
+  damageId: number;
+  batchId: number;
+  quantity: number;
+  reason: string;
+  recordedBy: number;
+  recordedDate: string;
+  batchNumber?: string;
+  medicineName?: string;
+}
+
+export interface ExpiredResponse {
+  expiredId: number;
+  batchId: number;
+  quantity: number;
+  recordedDate: string;
+  recordedBy: number;
+  batchNumber?: string;
+  medicineName?: string;
+}
