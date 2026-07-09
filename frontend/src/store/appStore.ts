@@ -162,6 +162,11 @@ const toSale = (r: SaleResponse): Sale => ({
   profit: r.totalProfit,
   userId: String(r.userId),
   userName: r.userName,
+  paymentMethod: r.paymentMethod,
+  paymentStatus: r.paymentStatus,
+  amountPaid: r.amountPaid,
+  amountDue: r.amountDue,
+  referenceNumber: r.referenceNumber,
   items: r.items.map(i => ({
     id: String(i.saleItemId),
     saleId: String(r.saleId),
@@ -438,7 +443,13 @@ export const useAppStore = create<AppState>((set, get) => ({
         medicineId: Number(i.medicineId),
         quantity: i.quantity,
       }));
-      const res = await api.post<SaleResponse>('/sales', { items });
+      const payload = {
+        items,
+        paymentMethod: sale.paymentMethod || 'cash',
+        amountPaid: sale.amountPaid || 0,
+        referenceNumber: sale.referenceNumber || null,
+      };
+      const res = await api.post<SaleResponse>('/sales', payload);
       await get().fetchSales();
     } catch (e: any) {
       set({ error: e.response?.data?.message || 'Failed to add sale', loading: false });

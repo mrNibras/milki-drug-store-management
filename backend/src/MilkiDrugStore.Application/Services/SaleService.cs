@@ -115,8 +115,22 @@ public class SaleService : ISaleService
                 TotalAmount = totalAmount,
                 TotalProfit = totalProfit,
                 UserId = userId,
+                PaymentMethod = string.IsNullOrWhiteSpace(request.PaymentMethod) ? "cash" : request.PaymentMethod.ToLower(),
+                AmountPaid = request.AmountPaid,
+                AmountDue = totalAmount - request.AmountPaid,
+                ReferenceNumber = request.ReferenceNumber,
                 Items = saleItems
             };
+
+            if (sale.AmountPaid <= 0)
+                sale.PaymentStatus = "unpaid";
+            else if (sale.AmountPaid >= totalAmount)
+            {
+                sale.PaymentStatus = "paid";
+                sale.AmountDue = 0;
+            }
+            else
+                sale.PaymentStatus = "partial";
 
             await _saleRepo.AddAsync(sale);
             await _unitOfWork.SaveChangesAsync();
@@ -195,6 +209,11 @@ public class SaleService : ISaleService
             TotalProfit = s.TotalProfit,
             UserId = s.UserId,
             UserName = s.User?.FullName ?? "",
+            PaymentMethod = s.PaymentMethod,
+            PaymentStatus = s.PaymentStatus,
+            AmountPaid = s.AmountPaid,
+            AmountDue = s.AmountDue,
+            ReferenceNumber = s.ReferenceNumber,
             Items = s.Items.Select(i => new SaleItemResponse
             {
                 SaleItemId = i.SaleItemId,

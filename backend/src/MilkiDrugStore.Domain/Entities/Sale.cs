@@ -8,6 +8,11 @@ public class Sale
     public decimal TotalAmount { get; set; }
     public decimal TotalProfit { get; set; }
     public int UserId { get; set; }
+    public string PaymentMethod { get; set; } = "cash";
+    public string PaymentStatus { get; set; } = "paid";
+    public decimal AmountPaid { get; set; }
+    public decimal AmountDue { get; set; }
+    public string? ReferenceNumber { get; set; }
 
     public User? User { get; set; }
     public List<SaleItem> Items { get; set; } = new();

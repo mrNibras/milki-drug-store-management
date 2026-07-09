@@ -123,6 +123,11 @@ export interface SaleResponse {
   totalProfit: number;
   userId: number;
   userName: string;
+  paymentMethod: string;
+  paymentStatus: string;
+  amountPaid: number;
+  amountDue: number;
+  referenceNumber: string | null;
   items: SaleItemResponse[];
 }
 
@@ -142,6 +147,9 @@ export interface CreateSaleRequest {
     medicineId: number;
     quantity: number;
   }[];
+  paymentMethod: string;
+  amountPaid: number;
+  referenceNumber?: string;
 }
 
 export interface DashboardSummaryResponse {

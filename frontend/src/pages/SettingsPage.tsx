@@ -12,6 +12,79 @@ export const SettingsPage: React.FC = () => {
   const [showSuccess, setShowSuccess] = useState(false);
   const [passwordForm, setPasswordForm] = useState({ current: '', newPassword: '', confirm: '' });
   const [passwordMessage, setPasswordMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [dbMessage, setDbMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [isBackingUp, setIsBackingUp] = useState(false);
+  const [isRestoring, setIsRestoring] = useState(false);
+  const restoreFileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleBackup = async () => {
+    setIsBackingUp(true);
+    setDbMessage(null);
+    try {
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch('/api/settings/backup', {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Backup failed');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `MilkiDrugStore_Backup_${new Date().toISOString().split('T')[0]}.db`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+
+      setDbMessage({ type: 'success', text: 'Database backup downloaded successfully' });
+    } catch (e: any) {
+      setDbMessage({ type: 'error', text: e.message || 'Failed to backup database' });
+    } finally {
+      setIsBackingUp(false);
+    }
+  };
+
+  const handleRestoreClick = () => {
+    restoreFileInputRef.current?.click();
+  };
+
+  const handleRestore = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsRestoring(true);
+    setDbMessage(null);
+    try {
+      const formData = new FormData();
+      formData.append('backupFile', file);
+
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch('/api/settings/restore', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData,
+      });
+
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.message || 'Restore failed');
+      }
+
+      setDbMessage({ type: 'success', text: 'Database restored successfully. Please refresh the page.' });
+    } catch (e: any) {
+      setDbMessage({ type: 'error', text: e.message || 'Failed to restore database' });
+    } finally {
+      setIsRestoring(false);
+      if (restoreFileInputRef.current) {
+        restoreFileInputRef.current.value = '';
+      }
+    }
+  };
 
   useEffect(() => {
     fetchSettings();
@@ -72,6 +145,15 @@ export const SettingsPage: React.FC = () => {
         <div className={`rounded-xl p-4 flex items-center gap-3 ${isDark ? 'bg-emerald-900/20 border border-emerald-800' : 'bg-emerald-50 border border-emerald-200'}`}>
           <div className={`flex h-8 w-8 items-center justify-center rounded-full ${isDark ? 'bg-emerald-900/30 text-emerald-400' : 'bg-emerald-100 text-emerald-600'}`}>✓</div>
           <p className={`text-sm font-medium ${isDark ? 'text-emerald-400' : 'text-emerald-700'}`}>Settings saved successfully!</p>
+        </div>
+      )}
+
+      {dbMessage && (
+        <div className={`rounded-xl p-4 flex items-center gap-3 ${dbMessage.type === 'success' ? (isDark ? 'bg-emerald-900/20 border border-emerald-800' : 'bg-emerald-50 border border-emerald-200') : (isDark ? 'bg-red-900/20 border border-red-800' : 'bg-red-50 border border-red-200')}`}>
+          <div className={`flex h-8 w-8 items-center justify-center rounded-full ${dbMessage.type === 'success' ? (isDark ? 'bg-emerald-900/30 text-emerald-400' : 'bg-emerald-100 text-emerald-600') : (isDark ? 'bg-red-900/30 text-red-400' : 'bg-red-100 text-red-600')}`}>
+            {dbMessage.type === 'success' ? '✓' : '✗'}
+          </div>
+          <p className={`text-sm font-medium ${dbMessage.type === 'success' ? (isDark ? 'text-emerald-400' : 'text-emerald-700') : (isDark ? 'text-red-400' : 'text-red-700')}`}>{dbMessage.text}</p>
         </div>
       )}
 
@@ -154,24 +236,39 @@ export const SettingsPage: React.FC = () => {
             </div>
           </div>
           <div className="space-y-3">
-            <button className={`w-full flex items-center gap-3 px-4 py-3 border rounded-lg transition-colors ${
-              isDark ? 'border-gray-600 hover:bg-gray-700' : 'border-gray-200 hover:bg-gray-50'
-            }`}>
+            <button
+              onClick={handleBackup}
+              disabled={isBackingUp}
+              className={`w-full flex items-center gap-3 px-4 py-3 border rounded-lg transition-colors ${
+                isDark ? 'border-gray-600 hover:bg-gray-700' : 'border-gray-200 hover:bg-gray-50'
+              } ${isBackingUp ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
               <Download className="h-5 w-5 text-blue-500" />
               <div className="text-left">
-                <p className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>Backup Database</p>
+                <p className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{isBackingUp ? 'Backing up...' : 'Backup Database'}</p>
                 <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Download a full backup of the database</p>
               </div>
             </button>
-            <button className={`w-full flex items-center gap-3 px-4 py-3 border rounded-lg transition-colors ${
-              isDark ? 'border-gray-600 hover:bg-gray-700' : 'border-gray-200 hover:bg-gray-50'
-            }`}>
+            <button
+              onClick={handleRestoreClick}
+              disabled={isRestoring}
+              className={`w-full flex items-center gap-3 px-4 py-3 border rounded-lg transition-colors ${
+                isDark ? 'border-gray-600 hover:bg-gray-700' : 'border-gray-200 hover:bg-gray-50'
+              } ${isRestoring ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
               <Upload className="h-5 w-5 text-emerald-500" />
               <div className="text-left">
-                <p className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>Restore Database</p>
+                <p className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{isRestoring ? 'Restoring...' : 'Restore Database'}</p>
                 <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Restore from a backup file</p>
               </div>
             </button>
+            <input
+              ref={restoreFileInputRef}
+              type="file"
+              accept=".db"
+              onChange={handleRestore}
+              className="hidden"
+            />
           </div>
         </div>
 

@@ -82,6 +82,11 @@ export interface Sale {
   profit: number;
   userId: string;
   userName: string;
+  paymentMethod: string;
+  paymentStatus: string;
+  amountPaid: number;
+  amountDue: number;
+  referenceNumber: string | null;
   items: SaleItem[];
 }
 

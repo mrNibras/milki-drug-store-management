@@ -3,6 +3,9 @@ namespace MilkiDrugStore.Application.DTOs.Sale;
 public class CreateSaleRequest
 {
     public List<SaleItemRequest> Items { get; set; } = new();
+    public string PaymentMethod { get; set; } = "cash";
+    public decimal AmountPaid { get; set; }
+    public string? ReferenceNumber { get; set; }
 }
 
 public class SaleItemRequest
@@ -20,6 +23,11 @@ public class SaleResponse
     public decimal TotalProfit { get; set; }
     public int UserId { get; set; }
     public string UserName { get; set; } = string.Empty;
+    public string PaymentMethod { get; set; } = string.Empty;
+    public string PaymentStatus { get; set; } = string.Empty;
+    public decimal AmountPaid { get; set; }
+    public decimal AmountDue { get; set; }
+    public string? ReferenceNumber { get; set; }
     public List<SaleItemResponse> Items { get; set; } = new();
 }
 

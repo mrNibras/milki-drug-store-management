@@ -1,10 +1,17 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Search, ShoppingCart, Trash2, Plus, Minus, CreditCard, X, Check, Package, Tag, AlertCircle } from 'lucide-react';
+import { Search, ShoppingCart, Trash2, Plus, Minus, CreditCard, X, Check, Package, Tag, AlertCircle, Wallet, Building2, Smartphone } from 'lucide-react';
 import { useAppStore } from '../store/appStore';
 import { useThemeStore } from '../store/themeStore';
 import { formatCurrency, getFefoBatches, generateId, generateSaleNumber } from '../utils/helpers';
 import { Medicine, Sale } from '../types';
 import { ReceiptDialog } from '../components/ReceiptDialog';
+
+const PAYMENT_METHODS = [
+  { value: 'cash', label: 'Cash', icon: <Wallet className="h-4 w-4" /> },
+  { value: 'bank_transfer', label: 'Bank Transfer', icon: <Building2 className="h-4 w-4" /> },
+  { value: 'mobile_money', label: 'Mobile Money', icon: <Smartphone className="h-4 w-4" /> },
+  { value: 'credit', label: 'Credit', icon: <CreditCard className="h-4 w-4" /> },
+];
 
 const MAX_ADMIN_DISCOUNT_PERCENT = 100;
 const MAX_PHARMACIST_DISCOUNT_PERCENT = 5;
@@ -30,6 +37,10 @@ export const POSPage: React.FC = () => {
   const [showDiscountInput, setShowDiscountInput] = useState<string | null>(null);
   const [tempDiscount, setTempDiscount] = useState('');
   const [showDiscountReason, setShowDiscountReason] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState('cash');
+  const [amountPaid, setAmountPaid] = useState('');
+  const [referenceNumber, setReferenceNumber] = useState('');
+  const [paymentError, setPaymentError] = useState('');
 
   const isAdmin = currentUser?.role === 'admin';
   const maxDiscountPercent = isAdmin ? MAX_ADMIN_DISCOUNT_PERCENT : MAX_PHARMACIST_DISCOUNT_PERCENT;
@@ -103,6 +114,13 @@ export const POSPage: React.FC = () => {
       return;
     }
 
+    const paid = Number(amountPaid) || 0;
+    if (paid < cartTotal) {
+      setPaymentError(`Amount paid (${formatCurrency(paid)}) is less than total (${formatCurrency(cartTotal)})`);
+      return;
+    }
+    setPaymentError('');
+
     const saleNumber = generateSaleNumber(sales.length);
     const sale = {
       id: generateId(),
@@ -115,6 +133,11 @@ export const POSPage: React.FC = () => {
       profit: cartProfit,
       userId: currentUser?.id || '',
       userName: currentUser?.fullName || '',
+      paymentMethod,
+      paymentStatus: paid >= cartTotal ? 'paid' : (paid > 0 ? 'partial' : 'unpaid'),
+      amountPaid: paid,
+      amountDue: Math.max(0, cartTotal - paid),
+      referenceNumber: referenceNumber || null,
       items: cart.map(item => ({
         id: generateId(),
         saleId: '',
@@ -147,6 +170,10 @@ export const POSPage: React.FC = () => {
     clearCart();
     setShowCheckout(false);
     setShowDiscountReason(false);
+    setPaymentMethod('cash');
+    setAmountPaid('');
+    setReferenceNumber('');
+    setPaymentError('');
     setShowSuccess(true);
     setTimeout(() => setShowSuccess(false), 3000);
   };
@@ -507,6 +534,64 @@ export const POSPage: React.FC = () => {
                 <span className={`font-semibold ${isDark ? 'text-white' : ''}`}>Total Amount</span>
                 <span className="text-xl font-bold text-emerald-500">{formatCurrency(cartTotal)}</span>
               </div>
+
+              <div className={`border-t pt-4 space-y-3 ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
+                <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Payment Method</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {PAYMENT_METHODS.map(method => (
+                    <button
+                      key={method.value}
+                      onClick={() => setPaymentMethod(method.value)}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm transition-all ${
+                        paymentMethod === method.value
+                          ? 'border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'
+                          : isDark ? 'border-gray-600 text-gray-300 hover:bg-gray-700' : 'border-gray-200 text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      {method.icon}
+                      {method.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Amount Paid</label>
+                  <input
+                    type="number"
+                    value={amountPaid}
+                    onChange={e => { setAmountPaid(e.target.value); setPaymentError(''); }}
+                    className={`w-full px-3 py-2 border rounded-lg text-sm ${isDark ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
+                    placeholder="0"
+                  />
+                </div>
+                <div>
+                  <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Change / Due</label>
+                  <div className={`w-full px-3 py-2 rounded-lg text-sm font-medium ${isDark ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-700'}`}>
+                    {Number(amountPaid) >= cartTotal
+                      ? `Change: ${formatCurrency(Number(amountPaid) - cartTotal)}`
+                      : `Due: ${formatCurrency(cartTotal - (Number(amountPaid) || 0))}`}
+                  </div>
+                </div>
+              </div>
+
+              {(paymentMethod === 'bank_transfer' || paymentMethod === 'mobile_money') && (
+                <div>
+                  <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Reference Number</label>
+                  <input
+                    type="text"
+                    value={referenceNumber}
+                    onChange={e => setReferenceNumber(e.target.value)}
+                    className={`w-full px-3 py-2 border rounded-lg text-sm ${isDark ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
+                    placeholder="Transaction reference (optional)"
+                  />
+                </div>
+              )}
+
+              {paymentError && (
+                <p className={`text-sm text-red-500`}>{paymentError}</p>
+              )}
             </div>
             <div className="flex gap-3">
               <button
