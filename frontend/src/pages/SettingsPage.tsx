@@ -3,10 +3,9 @@ import { Save, Building2, Bell, Database, Globe, Shield, Download, Upload, Key }
 import { useAppStore } from '../store/appStore';
 import { useThemeStore } from '../store/themeStore';
 import { Button } from '../components/ui/Button';
-import { api } from '../services/api';
 
 export const SettingsPage: React.FC = () => {
-  const { settings, updateSettings, addAuditLog, currentUser, fetchSettings, loading, changePassword } = useAppStore();
+  const { settings, updateSettings, currentUser, fetchSettings, loading, changePassword } = useAppStore();
   const { theme } = useThemeStore();
   const isDark = theme === 'dark';
   const [formData, setFormData] = useState({ ...settings });
@@ -21,17 +20,7 @@ export const SettingsPage: React.FC = () => {
 
   const handleSave = async () => {
     try {
-      await api.put('/settings', formData);
-      await useAppStore.getState().fetchSettings();
-      addAuditLog({
-        id: Math.random().toString(36).substr(2, 9),
-        userId: currentUser?.id || '',
-        userName: currentUser?.fullName || '',
-        action: 'Updated system settings',
-        tableName: 'Settings',
-        recordId: '1',
-        createdAt: new Date().toISOString(),
-      });
+      await updateSettings(formData);
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 3000);
     } catch (e: any) {

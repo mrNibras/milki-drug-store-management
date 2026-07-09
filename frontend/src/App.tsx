@@ -13,6 +13,7 @@ import { NotificationsPage } from './pages/NotificationsPage';
 import { DamageExpiryPage } from './pages/DamageExpiryPage';
 import { UsersPage } from './pages/UsersPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { AuditLogsPage } from './pages/AuditLogsPage';
 import { useAppStore } from './store/appStore';
 
 export default function App() {
@@ -48,6 +49,7 @@ export default function App() {
           <Route path="damages" element={<DamageExpiryPage />} />
           <Route path="users" element={<UsersPage />} />
           <Route path="settings" element={<SettingsPage />} />
+          <Route path="audit-logs" element={<AuditLogsPage />} />
         </Route>
         <Route path="*" element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />} />
       </Routes>

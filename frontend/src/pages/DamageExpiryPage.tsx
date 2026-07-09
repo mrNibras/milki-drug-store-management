@@ -8,7 +8,7 @@ import { formatDate, getDaysUntilExpiry, generateId } from '../utils/helpers';
 import { DamageResponse, ExpiredResponse } from '../types';
 
 export const DamageExpiryPage: React.FC = () => {
-  const { medicines, fetchMedicines, addAuditLog, currentUser, loading, damages, fetchDamages, recordDamage, expiredRecords, fetchExpired, recordExpired } = useAppStore();
+  const { medicines, fetchMedicines, damages, fetchDamages, recordDamage, expiredRecords, fetchExpired, recordExpired, currentUser, loading } = useAppStore();
   const { theme } = useThemeStore();
   const isDark = theme === 'dark';
 
@@ -68,15 +68,6 @@ export const DamageExpiryPage: React.FC = () => {
         quantity: Number(damageForm.quantity),
         reason: damageForm.reason,
       });
-      addAuditLog({
-        id: generateId(),
-        userId: currentUser?.id || '',
-        userName: currentUser?.fullName || '',
-        action: `Recorded damage: ${damageForm.quantity} ${medicine.name} - ${damageForm.reason}`,
-        tableName: 'Damage',
-        recordId: generateId(),
-        createdAt: new Date().toISOString(),
-      });
       setShowDamageModal(false);
       setDamageForm({ medicineId: '', batchId: '', quantity: '', reason: '' });
     } catch (e) {
@@ -94,15 +85,6 @@ export const DamageExpiryPage: React.FC = () => {
       await recordExpired({
         batchId: Number(expiredForm.batchId),
         quantity: Number(expiredForm.quantity),
-      });
-      addAuditLog({
-        id: generateId(),
-        userId: currentUser?.id || '',
-        userName: currentUser?.fullName || '',
-        action: `Recorded expired: ${expiredForm.quantity} ${medicine.name}`,
-        tableName: 'Expired',
-        recordId: generateId(),
-        createdAt: new Date().toISOString(),
       });
       setShowExpiredModal(false);
       setExpiredForm({ medicineId: '', batchId: '', quantity: '' });

@@ -1,7 +1,9 @@
+using MilkiDrugStore.Application.DTOs;
 using MilkiDrugStore.Application.Interfaces;
 using MilkiDrugStore.Domain.Interfaces.Repositories;
 using MilkiDrugStore.Domain.Interfaces;
 using MilkiDrugStore.Domain.Entities;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace MilkiDrugStore.Application.Services;
@@ -41,15 +43,64 @@ public class AuditLogService : IAuditLogService
         }
     }
 
-    public async Task<IEnumerable<AuditLog>> GetByUserAsync(int userId)
+    public async Task<IEnumerable<AuditLogDto>> GetAllAsync()
     {
-        var logs = await _auditLogRepo.FindAsync(al => al.UserId == userId);
-        return logs.OrderByDescending(al => al.CreatedAt);
+        var query = await _auditLogRepo.GetAllAsync();
+        var logs = await query
+            .OrderByDescending(al => al.CreatedAt)
+            .Include(al => al.User)
+            .ToListAsync();
+
+        return logs.Select(al => new AuditLogDto
+        {
+            AuditId = al.AuditId,
+            UserId = al.UserId,
+            UserName = al.User?.FullName ?? "System",
+            Action = al.Action,
+            TableName = al.TableName,
+            RecordId = al.RecordId,
+            CreatedAt = al.CreatedAt
+        }).ToList();
     }
 
-    public async Task<IEnumerable<AuditLog>> GetByDateRangeAsync(DateTime from, DateTime to)
+    public async Task<IEnumerable<AuditLogDto>> GetByUserAsync(int userId)
     {
-        var logs = await _auditLogRepo.GetAllAsync();
-        return logs.Where(al => al.CreatedAt >= from && al.CreatedAt <= to).OrderByDescending(al => al.CreatedAt);
+        var query = await _auditLogRepo.FindAsync(al => al.UserId == userId);
+        var logs = await query
+            .OrderByDescending(al => al.CreatedAt)
+            .Include(al => al.User)
+            .ToListAsync();
+
+        return logs.Select(al => new AuditLogDto
+        {
+            AuditId = al.AuditId,
+            UserId = al.UserId,
+            UserName = al.User?.FullName ?? "System",
+            Action = al.Action,
+            TableName = al.TableName,
+            RecordId = al.RecordId,
+            CreatedAt = al.CreatedAt
+        }).ToList();
+    }
+
+    public async Task<IEnumerable<AuditLogDto>> GetByDateRangeAsync(DateTime from, DateTime to)
+    {
+        var query = await _auditLogRepo.GetAllAsync();
+        var logs = await query
+            .Where(al => al.CreatedAt >= from && al.CreatedAt <= to)
+            .OrderByDescending(al => al.CreatedAt)
+            .Include(al => al.User)
+            .ToListAsync();
+
+        return logs.Select(al => new AuditLogDto
+        {
+            AuditId = al.AuditId,
+            UserId = al.UserId,
+            UserName = al.User?.FullName ?? "System",
+            Action = al.Action,
+            TableName = al.TableName,
+            RecordId = al.RecordId,
+            CreatedAt = al.CreatedAt
+        }).ToList();
     }
 }

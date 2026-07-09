@@ -9,7 +9,7 @@ import { formatDate, generateId } from '../utils/helpers';
 import { User } from '../types';
 
 export const UsersPage: React.FC = () => {
-  const { users, fetchUsers, addUser, updateUser, deleteUser, toggleUserActive, currentUser, addAuditLog, loading } = useAppStore();
+  const { users, fetchUsers, addUser, updateUser, deleteUser, toggleUserActive, currentUser, loading } = useAppStore();
   const { theme } = useThemeStore();
   const isDark = theme === 'dark';
 
@@ -46,15 +46,6 @@ export const UsersPage: React.FC = () => {
       createdAt: new Date().toISOString(),
     };
     addUser(newUser);
-    addAuditLog({
-      id: generateId(),
-      userId: currentUser?.id || '',
-      userName: currentUser?.fullName || '',
-      action: `Created user: ${newUser.fullName} (${newUser.role})`,
-      tableName: 'Users',
-      recordId: newUser.id,
-      createdAt: new Date().toISOString(),
-    });
     setShowAddModal(false);
     resetForm();
   };
@@ -78,15 +69,6 @@ export const UsersPage: React.FC = () => {
       email: formData.email,
       role: formData.role,
     });
-    addAuditLog({
-      id: generateId(),
-      userId: currentUser?.id || '',
-      userName: currentUser?.fullName || '',
-      action: `Updated user: ${formData.fullName}`,
-      tableName: 'Users',
-      recordId: selectedUser.id,
-      createdAt: new Date().toISOString(),
-    });
     setShowEditModal(false);
     setSelectedUser(null);
     resetForm();
@@ -100,15 +82,6 @@ export const UsersPage: React.FC = () => {
   const handleConfirmDelete = () => {
     if (!selectedUser) return;
     deleteUser(selectedUser.id);
-    addAuditLog({
-      id: generateId(),
-      userId: currentUser?.id || '',
-      userName: currentUser?.fullName || '',
-      action: `Deleted user: ${selectedUser.fullName}`,
-      tableName: 'Users',
-      recordId: selectedUser.id,
-      createdAt: new Date().toISOString(),
-    });
     setShowDeleteModal(false);
     setSelectedUser(null);
   };
@@ -117,15 +90,6 @@ export const UsersPage: React.FC = () => {
     const user = users.find(u => u.id === userId);
     if (!user || userId === currentUser?.id) return;
     toggleUserActive(userId);
-    addAuditLog({
-      id: generateId(),
-      userId: currentUser?.id || '',
-      userName: currentUser?.fullName || '',
-      action: `${user.isActive ? 'Deactivated' : 'Activated'} user: ${user.fullName}`,
-      tableName: 'Users',
-      recordId: userId,
-      createdAt: new Date().toISOString(),
-    });
   };
 
   const inputClass = `w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${

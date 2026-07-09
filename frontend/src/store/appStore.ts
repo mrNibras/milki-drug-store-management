@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { User, Medicine, Supplier, Purchase, Sale, Notification, CartItem, PharmacySettings, AuditLog, Category } from '../types';
-import { api, LoginRequest, LoginResponse, CreateSaleRequest, CreatePurchaseRequest, RecordDamageRequest, RecordExpiredRequest, ChangePasswordRequest, DamageResponse, ExpiredResponse } from '../services/api';
+import { api, LoginRequest, LoginResponse, CreateSaleRequest, CreatePurchaseRequest, RecordDamageRequest, RecordExpiredRequest, ChangePasswordRequest, DamageResponse, ExpiredResponse, AuditLogResponse } from '../services/api';
+import { getSettings, updateSettings } from '../services/settingsApi';
 import { getDaysUntilExpiry, generateId } from '../utils/helpers';
 
 interface AppState {
@@ -537,8 +538,18 @@ export const useAppStore = create<AppState>((set, get) => ({
   auditLogs: [],
   fetchAuditLogs: async () => {
     try {
-      const res = await api.get<AuditLog[]>('/audit-logs');
-      set({ auditLogs: res.data });
+      const res = await api.get<AuditLogResponse[]>('/audit-logs');
+      set({
+        auditLogs: res.data.map(l => ({
+          id: String(l.auditId),
+          userId: String(l.userId),
+          userName: l.userName,
+          action: l.action,
+          tableName: l.tableName,
+          recordId: String(l.recordId ?? 0),
+          createdAt: l.createdAt,
+        })),
+      });
     } catch (e) {
       console.error('Failed to fetch audit logs', e);
     }
@@ -596,8 +607,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
   fetchSettings: async () => {
     try {
-      const res = await api.get<SettingsResponse>('/settings');
-      const s = res.data;
+      const s = await getSettings();
       set({
         settings: {
           pharmacyName: s.pharmacyName,
@@ -613,9 +623,15 @@ export const useAppStore = create<AppState>((set, get) => ({
       console.error('Failed to fetch settings', e);
     }
   },
-  updateSettings: (updates) => set((state) => ({
-    settings: { ...state.settings, ...updates },
-  })),
+  updateSettings: async (updates) => {
+    try {
+      await updateSettings(updates);
+      await get().fetchSettings();
+    } catch (e: any) {
+      set({ error: e.response?.data?.message || 'Failed to update settings' });
+      throw e;
+    }
+  },
   changePassword: async (currentPassword, newPassword) => {
     try {
       await api.post('/auth/change-password', { currentPassword, newPassword } as ChangePasswordRequest);

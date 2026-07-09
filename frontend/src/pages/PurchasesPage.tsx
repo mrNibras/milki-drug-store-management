@@ -7,7 +7,7 @@ import { formatDate, formatCurrency, generateId, generatePurchaseNumber } from '
 import { Medicine, MedicineBatch } from '../types';
 
 export const PurchasesPage: React.FC = () => {
-  const { purchases, suppliers, medicines, categories, fetchPurchases, fetchSuppliers, fetchMedicines, fetchCategories, addPurchase, addMedicine, updateMedicine, addAuditLog, currentUser, loading } = useAppStore();
+  const { purchases, suppliers, medicines, categories, fetchPurchases, fetchSuppliers, fetchMedicines, fetchCategories, addPurchase, addMedicine, updateMedicine, currentUser, loading } = useAppStore();
   const { theme } = useThemeStore();
   const isDark = theme === 'dark';
   const [search, setSearch] = useState('');
@@ -264,17 +264,6 @@ export const PurchasesPage: React.FC = () => {
     purchase.items.forEach(item => item.purchaseId = purchase.id);
     
     addPurchase(purchase);
-    
-    // Create audit log
-    addAuditLog({
-      id: generateId(),
-      userId: currentUser?.id || '',
-      userName: currentUser?.fullName || '',
-      action: `Created bulk purchase ${purchaseNumber} - ${items.length} items - Total: ${formatCurrency(totalAmount)}`,
-      tableName: 'Purchases',
-      recordId: purchase.id,
-      createdAt: new Date().toISOString(),
-    });
     
     setLastPurchaseNumber(purchaseNumber);
     setIsProcessing(false);

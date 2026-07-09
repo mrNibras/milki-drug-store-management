@@ -12,7 +12,7 @@ const MAX_PHARMACIST_DISCOUNT_PERCENT = 5;
 export const POSPage: React.FC = () => {
   const { 
     medicines, cart, addToCart, removeFromCart, updateCartItemQuantity, 
-    updateCartItemDiscount, clearCart, addSale, sales, currentUser, addAuditLog,
+    updateCartItemDiscount, clearCart, addSale, sales, currentUser,
     cartDiscountReason, setCartDiscountReason, fetchMedicines, loading
   } = useAppStore();
   const { theme } = useThemeStore();
@@ -142,16 +142,6 @@ export const POSPage: React.FC = () => {
     } catch (e) {
       return;
     }
-
-    addAuditLog({
-      id: generateId(),
-      userId: currentUser?.id || '',
-      userName: currentUser?.fullName || '',
-      action: `Created Sale ${saleNumber} - Total: ${formatCurrency(cartTotal)}${cartTotalDiscount > 0 ? ` - Discount: ${formatCurrency(cartTotalDiscount)} (${cartDiscountReason})` : ''}`,
-      tableName: 'Sales',
-      recordId: sale.id,
-      createdAt: new Date().toISOString(),
-    });
 
     setLastSaleNumber(saleNumber);
     clearCart();

@@ -33,14 +33,16 @@ public class MedicinesController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateMedicineRequest request)
     {
-        var result = await _medicineService.CreateAsync(request);
+        var userId = GetUserId();
+        var result = await _medicineService.CreateAsync(request, userId);
         return Ok(result);
     }
 
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateMedicineRequest request)
     {
-        var result = await _medicineService.UpdateAsync(id, request);
+        var userId = GetUserId();
+        var result = await _medicineService.UpdateAsync(id, request, userId);
         if (result == null) return NotFound();
         return Ok(result);
     }
@@ -48,14 +50,22 @@ public class MedicinesController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
-        await _medicineService.DeleteAsync(id);
+        var userId = GetUserId();
+        await _medicineService.DeleteAsync(id, userId);
         return NoContent();
     }
 
     [HttpPost("batches")]
     public async Task<IActionResult> AddBatch([FromBody] AddBatchRequest request)
     {
-        var result = await _medicineService.AddBatchAsync(request);
+        var userId = GetUserId();
+        var result = await _medicineService.AddBatchAsync(request, userId);
         return Ok(result);
+    }
+
+    private int GetUserId()
+    {
+        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        return int.TryParse(userIdClaim, out var userId) ? userId : 0;
     }
 }

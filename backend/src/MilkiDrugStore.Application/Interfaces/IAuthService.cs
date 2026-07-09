@@ -13,6 +13,6 @@ public interface IAuthService
     Task<User?> UpdateUserAsync(int id, UpdateUserRequest request);
     Task DeleteUserAsync(int id);
     Task<Settings?> GetSettingsAsync();
-    Task<Settings> UpdateSettingsAsync(UpdateSettingsRequest request);
+    Task<Settings> UpdateSettingsAsync(UpdateSettingsRequest request, int userId);
     Task<LoginResponse?> RefreshTokenAsync(RefreshTokenRequest request);
 }

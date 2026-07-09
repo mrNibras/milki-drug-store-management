@@ -17,6 +17,7 @@ import {
   AlertTriangle,
   Sun,
   Moon,
+  Activity,
 } from 'lucide-react';
 import { useAppStore } from '../../store/appStore';
 import { useThemeStore } from '../../store/themeStore';
@@ -41,6 +42,7 @@ const navItems: NavItem[] = [
   { id: 'notifications', label: 'Notifications', icon: <Bell className="h-5 w-5" />, path: '/notifications' },
   { id: 'users', label: 'User Management', icon: <Users className="h-5 w-5" />, path: '/users', adminOnly: true },
   { id: 'settings', label: 'Settings', icon: <Settings className="h-5 w-5" />, path: '/settings', adminOnly: true },
+  { id: 'audit-logs', label: 'Audit Logs', icon: <Activity className="h-5 w-5" />, path: '/audit-logs', adminOnly: true },
 ];
 
 export const Sidebar: React.FC = () => {

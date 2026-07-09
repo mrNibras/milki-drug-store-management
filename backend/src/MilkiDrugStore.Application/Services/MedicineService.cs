@@ -14,14 +14,16 @@ public class MedicineService : IMedicineService
     private readonly IRepository<Category> _categoryRepo;
     private readonly IRepository<MedicineBatch> _batchRepo;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IAuditLogService _auditLog;
 
     public MedicineService(IRepository<Medicine> medicineRepo, IRepository<Category> categoryRepo,
-        IRepository<MedicineBatch> batchRepo, IUnitOfWork unitOfWork)
+        IRepository<MedicineBatch> batchRepo, IUnitOfWork unitOfWork, IAuditLogService auditLog)
     {
         _medicineRepo = medicineRepo;
         _categoryRepo = categoryRepo;
         _batchRepo = batchRepo;
         _unitOfWork = unitOfWork;
+        _auditLog = auditLog;
     }
 
     public async Task<IEnumerable<MedicineResponse>> GetAllAsync(string? search = null, int? categoryId = null)
@@ -51,7 +53,7 @@ public class MedicineService : IMedicineService
         return MapToResponse(medicine);
     }
 
-    public async Task<MedicineResponse> CreateAsync(CreateMedicineRequest request)
+    public async Task<MedicineResponse> CreateAsync(CreateMedicineRequest request, int userId)
     {
         var medicine = new Medicine
         {
@@ -67,10 +69,12 @@ public class MedicineService : IMedicineService
         await _medicineRepo.AddAsync(medicine);
         await _unitOfWork.SaveChangesAsync();
 
+        await _auditLog.LogAsync(userId, $"Created medicine: {medicine.MedicineName}", "Medicines", medicine.MedicineId);
+
         return await GetByIdAsync(medicine.MedicineId) ?? throw new Exception("Failed to create medicine");
     }
 
-    public async Task<MedicineResponse?> UpdateAsync(int id, UpdateMedicineRequest request)
+    public async Task<MedicineResponse?> UpdateAsync(int id, UpdateMedicineRequest request, int userId)
     {
         var medicines = await _medicineRepo.FindAsync(m => m.MedicineId == id);
         var medicine = medicines.FirstOrDefault();
@@ -86,10 +90,12 @@ public class MedicineService : IMedicineService
         await _medicineRepo.UpdateAsync(medicine);
         await _unitOfWork.SaveChangesAsync();
 
+        await _auditLog.LogAsync(userId, $"Updated medicine: {medicine.MedicineName}", "Medicines", medicine.MedicineId);
+
         return await GetByIdAsync(id);
     }
 
-    public async Task DeleteAsync(int id)
+    public async Task DeleteAsync(int id, int userId)
     {
         var medicines = await _medicineRepo.FindAsync(m => m.MedicineId == id);
         var medicine = medicines.FirstOrDefault();
@@ -98,9 +104,11 @@ public class MedicineService : IMedicineService
         medicine.IsActive = false;
         await _medicineRepo.UpdateAsync(medicine);
         await _unitOfWork.SaveChangesAsync();
+
+        await _auditLog.LogAsync(userId, $"Deleted medicine: {medicine.MedicineName}", "Medicines", medicine.MedicineId);
     }
 
-    public async Task<MedicineResponse> AddBatchAsync(AddBatchRequest request)
+    public async Task<MedicineResponse> AddBatchAsync(AddBatchRequest request, int userId)
     {
         var medicines = await _medicineRepo.FindAsync(m => m.MedicineId == request.MedicineId);
         var medicine = medicines.Include(m => m.Batches).FirstOrDefault();
@@ -130,6 +138,8 @@ public class MedicineService : IMedicineService
         });
 
         await _unitOfWork.SaveChangesAsync();
+
+        await _auditLog.LogAsync(userId, $"Added batch {batch.BatchNumber} to {medicine.MedicineName}", "MedicineBatches", batch.BatchId);
 
         return await GetByIdAsync(request.MedicineId) ?? throw new Exception("Failed to add batch");
     }

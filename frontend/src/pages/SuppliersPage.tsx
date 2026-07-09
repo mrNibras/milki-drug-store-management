@@ -8,7 +8,7 @@ import { formatDate, generateId, formatCurrency } from '../utils/helpers';
 import { Supplier } from '../types';
 
 export const SuppliersPage: React.FC = () => {
-  const { suppliers, purchases, fetchSuppliers, fetchPurchases, addSupplier, updateSupplier, deleteSupplier, addAuditLog, currentUser, loading } = useAppStore();
+  const { suppliers, purchases, fetchSuppliers, fetchPurchases, addSupplier, updateSupplier, deleteSupplier, currentUser, loading } = useAppStore();
   const { theme } = useThemeStore();
   const isDark = theme === 'dark';
 
@@ -114,15 +114,6 @@ export const SuppliersPage: React.FC = () => {
       createdAt: new Date().toISOString(),
     };
     addSupplier(newSupplier);
-    addAuditLog({
-      id: generateId(),
-      userId: currentUser?.id || '',
-      userName: currentUser?.fullName || '',
-      action: `Added supplier: ${newSupplier.name}`,
-      tableName: 'Suppliers',
-      recordId: newSupplier.id,
-      createdAt: new Date().toISOString(),
-    });
     setShowAddModal(false);
     resetForm();
   };
@@ -136,15 +127,6 @@ export const SuppliersPage: React.FC = () => {
       address: formData.address,
       contactPerson: formData.contactPerson,
     });
-    addAuditLog({
-      id: generateId(),
-      userId: currentUser?.id || '',
-      userName: currentUser?.fullName || '',
-      action: `Updated supplier: ${formData.name}`,
-      tableName: 'Suppliers',
-      recordId: selectedSupplier.id,
-      createdAt: new Date().toISOString(),
-    });
     setShowEditModal(false);
     setSelectedSupplier(null);
   };
@@ -153,15 +135,6 @@ export const SuppliersPage: React.FC = () => {
     if (window.confirm('Are you sure you want to delete this supplier?')) {
       const supplier = suppliers.find(s => s.id === id);
       deleteSupplier(id);
-      addAuditLog({
-        id: generateId(),
-        userId: currentUser?.id || '',
-        userName: currentUser?.fullName || '',
-        action: `Deleted supplier: ${supplier?.name}`,
-        tableName: 'Suppliers',
-        recordId: id,
-        createdAt: new Date().toISOString(),
-      });
     }
   };
 

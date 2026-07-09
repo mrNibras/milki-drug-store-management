@@ -6,8 +6,8 @@ public interface IMedicineService
 {
     Task<IEnumerable<MedicineResponse>> GetAllAsync(string? search = null, int? categoryId = null);
     Task<MedicineResponse?> GetByIdAsync(int id);
-    Task<MedicineResponse> CreateAsync(CreateMedicineRequest request);
-    Task<MedicineResponse?> UpdateAsync(int id, UpdateMedicineRequest request);
-    Task DeleteAsync(int id);
-    Task<MedicineResponse> AddBatchAsync(AddBatchRequest request);
+    Task<MedicineResponse> CreateAsync(CreateMedicineRequest request, int userId);
+    Task<MedicineResponse?> UpdateAsync(int id, UpdateMedicineRequest request, int userId);
+    Task DeleteAsync(int id, int userId);
+    Task<MedicineResponse> AddBatchAsync(AddBatchRequest request, int userId);
 }

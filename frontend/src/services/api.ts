@@ -187,6 +187,16 @@ export interface SettingsResponse {
   currency: string;
 }
 
+export interface AuditLogResponse {
+  auditId: number;
+  userId: number;
+  userName: string;
+  action: string;
+  tableName: string;
+  recordId: number | null;
+  createdAt: string;
+}
+
 export interface ChangePasswordRequest {
   currentPassword: string;
   newPassword: string;

@@ -12,17 +12,20 @@ public class InventoryService : IInventoryService
     private readonly IRepository<MedicineBatch> _batchRepo;
     private readonly IRepository<Medicine> _medicineRepo;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IAuditLogService _auditLog;
 
     public InventoryService(
         IRepository<InventoryTransaction> transactionRepo,
         IRepository<MedicineBatch> batchRepo,
         IRepository<Medicine> medicineRepo,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        IAuditLogService auditLog)
     {
         _transactionRepo = transactionRepo;
         _batchRepo = batchRepo;
         _medicineRepo = medicineRepo;
         _unitOfWork = unitOfWork;
+        _auditLog = auditLog;
     }
 
     public async Task<int> GetCurrentStockAsync(int medicineId)
@@ -53,6 +56,8 @@ public class InventoryService : IInventoryService
         });
 
         await _unitOfWork.SaveChangesAsync();
+
+        await _auditLog.LogAsync(recordedBy, $"Recorded damage: {quantity} units for batch {batch.BatchNumber}", "DamageRecords", batchId);
     }
 
     public async Task RecordExpiredAsync(int batchId, int quantity, int recordedBy)
@@ -77,6 +82,8 @@ public class InventoryService : IInventoryService
         });
 
         await _unitOfWork.SaveChangesAsync();
+
+        await _auditLog.LogAsync(recordedBy, $"Recorded expired: {quantity} units for batch {batch.BatchNumber}", "ExpiredRecords", batchId);
     }
 
     public async Task<IEnumerable<DamageRecord>> GetDamagesAsync()

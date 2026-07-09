@@ -25,7 +25,11 @@ public class SettingsController : ControllerBase
     [HttpPut]
     public async Task<IActionResult> UpdateSettings([FromBody] UpdateSettingsRequest request)
     {
-        var result = await _authService.UpdateSettingsAsync(request);
+        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (!int.TryParse(userIdClaim, out var userId))
+            return Unauthorized(new { message = "Unauthorized" });
+
+        var result = await _authService.UpdateSettingsAsync(request, userId);
         return Ok(result);
     }
 }

@@ -17,6 +17,7 @@ public class AuthService : IAuthService
     private readonly IEmailService _emailService;
     private readonly IConfiguration _configuration;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IAuditLogService _auditLog;
 
     public AuthService(
         IRepository<User> userRepo,
@@ -24,7 +25,8 @@ public class AuthService : IAuthService
         IJwtTokenService jwtTokenService,
         IEmailService emailService,
         IConfiguration configuration,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        IAuditLogService auditLog)
     {
         _userRepo = userRepo;
         _roleRepo = roleRepo;
@@ -32,6 +34,7 @@ public class AuthService : IAuthService
         _emailService = emailService;
         _configuration = configuration;
         _unitOfWork = unitOfWork;
+        _auditLog = auditLog;
     }
 
     public async Task<LoginResponse?> LoginAsync(LoginRequest request)
@@ -107,6 +110,8 @@ public class AuthService : IAuthService
         await _userRepo.UpdateAsync(user);
         await _unitOfWork.SaveChangesAsync();
 
+        await _auditLog.LogAsync(userId, $"Approved user: {user.FullName}", "Users", user.UserId);
+
         return "User approved successfully.";
     }
 
@@ -122,6 +127,8 @@ public class AuthService : IAuthService
         user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
         await _userRepo.UpdateAsync(user);
         await _unitOfWork.SaveChangesAsync();
+
+        await _auditLog.LogAsync(userId, "Changed password", "Users", user.UserId);
     }
 
     public async Task<IEnumerable<User>> GetAllUsersAsync()
@@ -141,6 +148,9 @@ public class AuthService : IAuthService
 
         await _userRepo.UpdateAsync(user);
         await _unitOfWork.SaveChangesAsync();
+
+        await _auditLog.LogAsync(id, $"Updated user: {user.FullName}", "Users", user.UserId);
+
         return user;
     }
 
@@ -153,6 +163,8 @@ public class AuthService : IAuthService
         user.IsActive = false;
         await _userRepo.UpdateAsync(user);
         await _unitOfWork.SaveChangesAsync();
+
+        await _auditLog.LogAsync(id, $"Deactivated user: {user.FullName}", "Users", user.UserId);
     }
 
     public async Task<Settings?> GetSettingsAsync()
@@ -161,7 +173,7 @@ public class AuthService : IAuthService
         return settings.FirstOrDefault();
     }
 
-    public async Task<Settings> UpdateSettingsAsync(UpdateSettingsRequest request)
+    public async Task<Settings> UpdateSettingsAsync(UpdateSettingsRequest request, int userId)
     {
         var settings = (await _unitOfWork.Settings.GetAllAsync()).FirstOrDefault();
         if (settings == null)
@@ -181,6 +193,9 @@ public class AuthService : IAuthService
 
         await _unitOfWork.Settings.UpdateAsync(settings);
         await _unitOfWork.SaveChangesAsync();
+
+        await _auditLog.LogAsync(userId, "Updated system settings", "Settings", settings.SettingId);
+
         return settings;
     }
 
