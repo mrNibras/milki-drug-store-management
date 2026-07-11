@@ -13,4 +13,15 @@ public class NotificationRepository : Repository<Notification>, INotificationRep
     {
         return await _dbSet.Where(n => !n.IsRead).OrderByDescending(n => n.CreatedAt).ToListAsync();
     }
+
+    public async Task<Notification?> GetRecentExpiryAlertAsync(string medicineName, int days)
+    {
+        var since = DateTime.Now.AddDays(-days);
+        return await _dbSet
+            .Where(n => n.NotificationType == "EXPIRY_ALERT"
+                     && n.Title.Contains(medicineName)
+                     && n.CreatedAt >= since)
+            .OrderByDescending(n => n.CreatedAt)
+            .FirstOrDefaultAsync();
+    }
 }

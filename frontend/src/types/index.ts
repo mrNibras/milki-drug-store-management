@@ -5,6 +5,7 @@ export interface User {
   role: 'admin' | 'pharmacist';
   isActive: boolean;
   createdAt: string;
+  password?: string;
 }
 
 export interface Category {

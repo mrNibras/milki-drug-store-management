@@ -27,25 +27,43 @@ export const UsersPage: React.FC = () => {
     password: '',
     confirmPassword: '',
   });
+  const [passwordError, setPasswordError] = useState('');
 
   const activeUsers = users.filter(u => u.isActive).length;
   const inactiveUsers = users.filter(u => !u.isActive).length;
 
   const resetForm = () => {
     setFormData({ fullName: '', email: '', role: 'pharmacist', password: '', confirmPassword: '' });
+    setPasswordError('');
+  };
+
+  const validatePassword = () => {
+    if (!formData.password) {
+      setPasswordError('Password is required');
+      return false;
+    }
+    if (formData.password.length < 6) {
+      setPasswordError('Password must be at least 6 characters');
+      return false;
+    }
+    if (formData.password !== formData.confirmPassword) {
+      setPasswordError('Passwords do not match');
+      return false;
+    }
+    setPasswordError('');
+    return true;
   };
 
   const handleAddUser = () => {
     if (!formData.fullName || !formData.email) return;
-    const newUser: User = {
-      id: generateId(),
+    if (!validatePassword()) return;
+
+    addUser({
       fullName: formData.fullName,
       email: formData.email,
       role: formData.role,
-      isActive: true,
-      createdAt: new Date().toISOString(),
-    };
-    addUser(newUser);
+      password: formData.password,
+    } as any);
     setShowAddModal(false);
     resetForm();
   };
@@ -276,22 +294,49 @@ export const UsersPage: React.FC = () => {
                   className={inputClass}
                   placeholder="Enter full name"
                 />
-              </div>
-              <div>
-                <label className={`flex items-center gap-2 text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                  <Mail className="h-4 w-4" />
-                  Email Address <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="email"
-                  value={formData.email}
-                  onChange={e => setFormData({ ...formData, email: e.target.value })}
-                  className={inputClass}
-                  placeholder="user@email.com"
-                />
-              </div>
-            </div>
-          </div>
+               </div>
+               <div>
+                 <label className={`flex items-center gap-2 text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                   <Mail className="h-4 w-4" />
+                   Email Address <span className="text-red-500">*</span>
+                 </label>
+                 <input
+                   type="email"
+                   value={formData.email}
+                   onChange={e => setFormData({ ...formData, email: e.target.value })}
+                   className={inputClass}
+                   placeholder="user@email.com"
+                 />
+               </div>
+               <div>
+                 <label className={`flex items-center gap-2 text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                   Password <span className="text-red-500">*</span>
+                 </label>
+                 <input
+                   type="password"
+                   value={formData.password}
+                   onChange={e => setFormData({ ...formData, password: e.target.value })}
+                   className={inputClass}
+                   placeholder="Minimum 6 characters"
+                 />
+               </div>
+               <div>
+                 <label className={`flex items-center gap-2 text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                   Confirm Password <span className="text-red-500">*</span>
+                 </label>
+                 <input
+                   type="password"
+                   value={formData.confirmPassword}
+                   onChange={e => setFormData({ ...formData, confirmPassword: e.target.value })}
+                   className={inputClass}
+                   placeholder="Re-enter password"
+                 />
+                 {passwordError && (
+                   <p className="text-xs text-red-500 mt-1">{passwordError}</p>
+                 )}
+               </div>
+             </div>
+           </div>
 
           <div className={`p-5 rounded-xl ${isDark ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
             <h4 className={`text-sm font-semibold mb-4 ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>Role & Permissions</h4>

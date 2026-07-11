@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MilkiDrugStore.Domain\MilkiDrugStore.Domain.csproj" />
+    <ProjectReference Include="..\MilkiDrugStore.Application\MilkiDrugStore.Application.csproj" />
+    <ProjectReference Include="..\MilkiDrugStore.Persistence\MilkiDrugStore.Persistence.csproj" />
+    <ProjectReference Include="..\MilkiDrugStore.Infrastructure\MilkiDrugStore.Infrastructure.csproj" />
+    <ProjectReference Include="..\MilkiDrugStore.Api\MilkiDrugStore.Api.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+    <PackageReference Include="xunit" Version="2.4.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.5" />
+    <PackageReference Include="coverlet.collector" Version="6.0.0" />
+    <PackageReference Include="Moq" Version="4.20.69" />
+    <PackageReference Include="FluentAssertions" Version="6.12.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.10" />
+    <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+  </ItemGroup>
+
+</Project>

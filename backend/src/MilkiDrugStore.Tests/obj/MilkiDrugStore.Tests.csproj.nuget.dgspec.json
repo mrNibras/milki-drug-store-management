@@ -1,0 +1,481 @@
+{
+  "format": 1,
+  "restore": {
+    "/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/MilkiDrugStore.Tests.csproj": {}
+  },
+  "projects": {
+    "/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Api/MilkiDrugStore.Api.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Api/MilkiDrugStore.Api.csproj",
+        "projectName": "MilkiDrugStore.Api",
+        "projectPath": "/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Api/MilkiDrugStore.Api.csproj",
+        "packagesPath": "/home/mrnibra/.nuget/packages/",
+        "outputPath": "/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Api/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/home/mrnibra/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {
+              "/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Application/MilkiDrugStore.Application.csproj": {
+                "projectPath": "/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Application/MilkiDrugStore.Application.csproj"
+              },
+              "/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Infrastructure/MilkiDrugStore.Infrastructure.csproj": {
+                "projectPath": "/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Infrastructure/MilkiDrugStore.Infrastructure.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "dependencies": {
+            "Swashbuckle.AspNetCore": {
+              "target": "Package",
+              "version": "[6.5.0, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.AspNetCore.App": {
+              "privateAssets": "none"
+            },
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/8.0.128/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Application/MilkiDrugStore.Application.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Application/MilkiDrugStore.Application.csproj",
+        "projectName": "MilkiDrugStore.Application",
+        "projectPath": "/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Application/MilkiDrugStore.Application.csproj",
+        "packagesPath": "/home/mrnibra/.nuget/packages/",
+        "outputPath": "/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Application/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/home/mrnibra/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {
+              "/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Domain/MilkiDrugStore.Domain.csproj": {
+                "projectPath": "/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Domain/MilkiDrugStore.Domain.csproj"
+              },
+              "/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Persistence/MilkiDrugStore.Persistence.csproj": {
+                "projectPath": "/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Persistence/MilkiDrugStore.Persistence.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "dependencies": {
+            "AutoMapper.Extensions.Microsoft.DependencyInjection": {
+              "target": "Package",
+              "version": "[12.0.1, )"
+            },
+            "BCrypt.Net-Next": {
+              "target": "Package",
+              "version": "[4.0.3, )"
+            },
+            "FluentValidation": {
+              "target": "Package",
+              "version": "[11.9.2, )"
+            },
+            "MediatR": {
+              "target": "Package",
+              "version": "[12.4.0, )"
+            },
+            "Microsoft.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[8.0.10, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/8.0.128/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Domain/MilkiDrugStore.Domain.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Domain/MilkiDrugStore.Domain.csproj",
+        "projectName": "MilkiDrugStore.Domain",
+        "projectPath": "/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Domain/MilkiDrugStore.Domain.csproj",
+        "packagesPath": "/home/mrnibra/.nuget/packages/",
+        "outputPath": "/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Domain/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/home/mrnibra/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/8.0.128/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Infrastructure/MilkiDrugStore.Infrastructure.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Infrastructure/MilkiDrugStore.Infrastructure.csproj",
+        "projectName": "MilkiDrugStore.Infrastructure",
+        "projectPath": "/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Infrastructure/MilkiDrugStore.Infrastructure.csproj",
+        "packagesPath": "/home/mrnibra/.nuget/packages/",
+        "outputPath": "/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Infrastructure/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/home/mrnibra/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {
+              "/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Application/MilkiDrugStore.Application.csproj": {
+                "projectPath": "/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Application/MilkiDrugStore.Application.csproj"
+              },
+              "/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Domain/MilkiDrugStore.Domain.csproj": {
+                "projectPath": "/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Domain/MilkiDrugStore.Domain.csproj"
+              },
+              "/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Persistence/MilkiDrugStore.Persistence.csproj": {
+                "projectPath": "/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Persistence/MilkiDrugStore.Persistence.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "dependencies": {
+            "Hangfire.Core": {
+              "target": "Package",
+              "version": "[1.8.14, )"
+            },
+            "Hangfire.SqlServer": {
+              "target": "Package",
+              "version": "[1.8.14, )"
+            },
+            "Microsoft.AspNetCore.Authentication.JwtBearer": {
+              "target": "Package",
+              "version": "[8.0.10, )"
+            },
+            "Microsoft.Extensions.Logging.Abstractions": {
+              "target": "Package",
+              "version": "[8.0.2, )"
+            },
+            "Serilog.AspNetCore": {
+              "target": "Package",
+              "version": "[8.0.2, )"
+            },
+            "System.IdentityModel.Tokens.Jwt": {
+              "target": "Package",
+              "version": "[7.6.2, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/8.0.128/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Persistence/MilkiDrugStore.Persistence.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Persistence/MilkiDrugStore.Persistence.csproj",
+        "projectName": "MilkiDrugStore.Persistence",
+        "projectPath": "/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Persistence/MilkiDrugStore.Persistence.csproj",
+        "packagesPath": "/home/mrnibra/.nuget/packages/",
+        "outputPath": "/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Persistence/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/home/mrnibra/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {
+              "/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Domain/MilkiDrugStore.Domain.csproj": {
+                "projectPath": "/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Domain/MilkiDrugStore.Domain.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "dependencies": {
+            "Microsoft.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[8.0.10, )"
+            },
+            "Microsoft.EntityFrameworkCore.SqlServer": {
+              "target": "Package",
+              "version": "[8.0.10, )"
+            },
+            "Microsoft.EntityFrameworkCore.Sqlite": {
+              "target": "Package",
+              "version": "[8.0.10, )"
+            },
+            "Microsoft.EntityFrameworkCore.Tools": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[8.0.10, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/8.0.128/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/MilkiDrugStore.Tests.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/MilkiDrugStore.Tests.csproj",
+        "projectName": "MilkiDrugStore.Tests",
+        "projectPath": "/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/MilkiDrugStore.Tests.csproj",
+        "packagesPath": "/home/mrnibra/.nuget/packages/",
+        "outputPath": "/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/home/mrnibra/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {
+              "/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Api/MilkiDrugStore.Api.csproj": {
+                "projectPath": "/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Api/MilkiDrugStore.Api.csproj"
+              },
+              "/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Application/MilkiDrugStore.Application.csproj": {
+                "projectPath": "/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Application/MilkiDrugStore.Application.csproj"
+              },
+              "/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Domain/MilkiDrugStore.Domain.csproj": {
+                "projectPath": "/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Domain/MilkiDrugStore.Domain.csproj"
+              },
+              "/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Infrastructure/MilkiDrugStore.Infrastructure.csproj": {
+                "projectPath": "/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Infrastructure/MilkiDrugStore.Infrastructure.csproj"
+              },
+              "/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Persistence/MilkiDrugStore.Persistence.csproj": {
+                "projectPath": "/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Persistence/MilkiDrugStore.Persistence.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "dependencies": {
+            "BCrypt.Net-Next": {
+              "target": "Package",
+              "version": "[4.0.3, )"
+            },
+            "FluentAssertions": {
+              "target": "Package",
+              "version": "[6.12.0, )"
+            },
+            "Microsoft.EntityFrameworkCore.InMemory": {
+              "target": "Package",
+              "version": "[8.0.10, )"
+            },
+            "Microsoft.NET.Test.Sdk": {
+              "target": "Package",
+              "version": "[17.8.0, )"
+            },
+            "Moq": {
+              "target": "Package",
+              "version": "[4.20.69, )"
+            },
+            "coverlet.collector": {
+              "target": "Package",
+              "version": "[6.0.0, )"
+            },
+            "xunit": {
+              "target": "Package",
+              "version": "[2.4.2, )"
+            },
+            "xunit.runner.visualstudio": {
+              "target": "Package",
+              "version": "[2.4.5, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/8.0.128/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}

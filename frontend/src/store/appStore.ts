@@ -253,7 +253,12 @@ export const useAppStore = create<AppState>((set, get) => ({
   addUser: async (user) => {
     set({ loading: true, error: null });
     try {
-      await api.post('/users', { fullName: user.fullName, email: user.email, roleId: user.role === 'admin' ? 1 : 2 });
+      await api.post('/users', {
+        fullName: user.fullName,
+        email: user.email,
+        password: user.password,
+        roleId: user.role === 'admin' ? 1 : 2,
+      });
       await get().fetchUsers();
     } catch (e: any) {
       set({ error: e.response?.data?.message || 'Failed to add user', loading: false });

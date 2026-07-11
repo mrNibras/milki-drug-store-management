@@ -115,6 +115,33 @@ public class AuthService : IAuthService
         return "User approved successfully.";
     }
 
+    public async Task<string> CreateUserAsync(CreateUserRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Password))
+            throw new Exception("Password is required");
+
+        var existing = (await _userRepo.FindAsync(u => u.Email == request.Email)).FirstOrDefault();
+        if (existing != null)
+            throw new Exception("Email already registered");
+
+        var user = new User
+        {
+            FullName = request.FullName,
+            Email = request.Email,
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
+            RoleId = request.RoleId,
+            IsApproved = true,
+            IsActive = true
+        };
+
+        await _userRepo.AddAsync(user);
+        await _unitOfWork.SaveChangesAsync();
+
+        await _auditLog.LogAsync(user.UserId, $"Created user: {user.FullName}", "Users", user.UserId);
+
+        return "User created successfully.";
+    }
+
     public async Task ChangePasswordAsync(int userId, string currentPassword, string newPassword)
     {
         var users = await _userRepo.FindAsync(u => u.UserId == userId);

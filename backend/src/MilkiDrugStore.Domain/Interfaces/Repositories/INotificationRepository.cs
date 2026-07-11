@@ -5,4 +5,5 @@ namespace MilkiDrugStore.Domain.Interfaces.Repositories;
 public interface INotificationRepository : IRepository<Notification>
 {
     Task<IEnumerable<Notification>> GetUnreadAsync();
+    Task<Notification?> GetRecentExpiryAlertAsync(string medicineName, int days);
 }

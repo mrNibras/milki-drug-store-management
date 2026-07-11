@@ -33,8 +33,8 @@ public class ExpiryCheckBackgroundService : BackgroundService
                 var expiringMedicines = await medicineRepo.GetExpiringAsync(6);
                 foreach (var medicine in expiringMedicines)
                 {
-                    var existing = await notificationRepo.GetUnreadAsync();
-                    if (!existing.Any(n => n.Title.Contains(medicine.MedicineName) && n.NotificationType == "EXPIRY_ALERT"))
+                    var recentAlert = await notificationRepo.GetRecentExpiryAlertAsync(medicine.MedicineName, 15);
+                    if (recentAlert == null)
                     {
                         await notificationRepo.AddAsync(new Notification
                         {

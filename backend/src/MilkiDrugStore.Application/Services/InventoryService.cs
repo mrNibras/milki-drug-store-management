@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore;
+using MilkiDrugStore.Application.DTOs.Sale;
 using MilkiDrugStore.Application.Interfaces;
 using MilkiDrugStore.Domain.Entities;
 using MilkiDrugStore.Domain.Enums;
@@ -86,13 +88,44 @@ public class InventoryService : IInventoryService
         await _auditLog.LogAsync(recordedBy, $"Recorded expired: {quantity} units for batch {batch.BatchNumber}", "ExpiredRecords", batchId);
     }
 
-    public async Task<IEnumerable<DamageRecord>> GetDamagesAsync()
+    public async Task<IEnumerable<DamageRecordResponse>> GetDamagesAsync()
     {
-        return await _unitOfWork.DamageRecords.GetAllAsync();
+        var query = await _unitOfWork.DamageRecords.GetAllAsync();
+        var damages = await query
+            .Include(d => d.Batch)
+            .ThenInclude(b => b.Medicine)
+            .ToListAsync();
+
+        return damages.Select(d => new DamageRecordResponse
+        {
+            DamageId = d.DamageId,
+            BatchId = d.BatchId,
+            BatchNumber = d.Batch?.BatchNumber ?? string.Empty,
+            MedicineName = d.Batch?.Medicine?.MedicineName ?? string.Empty,
+            Quantity = d.Quantity,
+            Reason = d.Reason,
+            RecordedBy = d.RecordedBy,
+            RecordedDate = d.RecordedDate
+        }).ToList();
     }
 
-    public async Task<IEnumerable<ExpiredRecord>> GetExpiredAsync()
+    public async Task<IEnumerable<ExpiredRecordResponse>> GetExpiredAsync()
     {
-        return await _unitOfWork.ExpiredRecords.GetAllAsync();
+        var query = await _unitOfWork.ExpiredRecords.GetAllAsync();
+        var expired = await query
+            .Include(e => e.Batch)
+            .ThenInclude(b => b.Medicine)
+            .ToListAsync();
+
+        return expired.Select(e => new ExpiredRecordResponse
+        {
+            ExpiredId = e.ExpiredId,
+            BatchId = e.BatchId,
+            BatchNumber = e.Batch?.BatchNumber ?? string.Empty,
+            MedicineName = e.Batch?.Medicine?.MedicineName ?? string.Empty,
+            Quantity = e.Quantity,
+            RecordedDate = e.RecordedDate,
+            RecordedBy = e.RecordedBy
+        }).ToList();
     }
 }
