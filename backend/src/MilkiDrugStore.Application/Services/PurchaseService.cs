@@ -10,24 +10,26 @@ namespace MilkiDrugStore.Application.Services;
 
 public class PurchaseService : IPurchaseService
 {
-    private readonly IRepository<Purchase> _purchaseRepo;
-    private readonly IRepository<PurchaseItem> _purchaseItemRepo;
-    private readonly IRepository<Medicine> _medicineRepo;
-    private readonly IRepository<MedicineBatch> _batchRepo;
-    private readonly IRepository<Supplier> _supplierRepo;
-    private readonly IRepository<InventoryTransaction> _transactionRepo;
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly IAuditLogService _auditLog;
+        private readonly IRepository<Purchase> _purchaseRepo;
+        private readonly IRepository<PurchaseItem> _purchaseItemRepo;
+        private readonly IRepository<Medicine> _medicineRepo;
+        private readonly IRepository<MedicineBatch> _batchRepo;
+        private readonly IRepository<Supplier> _supplierRepo;
+        private readonly IRepository<Category> _categoryRepo;
+        private readonly IRepository<InventoryTransaction> _transactionRepo;
+        private readonly IUnitOfWork _unitOfWork;
+        private readonly IAuditLogService _auditLog;
 
-    public PurchaseService(
-        IRepository<Purchase> purchaseRepo,
-        IRepository<PurchaseItem> purchaseItemRepo,
-        IRepository<Medicine> medicineRepo,
-        IRepository<MedicineBatch> batchRepo,
-        IRepository<Supplier> supplierRepo,
-        IRepository<InventoryTransaction> transactionRepo,
-        IUnitOfWork unitOfWork,
-        IAuditLogService auditLog)
+        public PurchaseService(
+            IRepository<Purchase> purchaseRepo,
+            IRepository<PurchaseItem> purchaseItemRepo,
+            IRepository<Medicine> medicineRepo,
+            IRepository<MedicineBatch> batchRepo,
+            IRepository<Supplier> supplierRepo,
+            IRepository<Category> categoryRepo,
+            IRepository<InventoryTransaction> transactionRepo,
+            IUnitOfWork unitOfWork,
+            IAuditLogService auditLog)
     {
         _purchaseRepo = purchaseRepo;
         _purchaseItemRepo = purchaseItemRepo;
@@ -59,6 +61,12 @@ public class PurchaseService : IPurchaseService
                 SupplierId = request.SupplierId,
                 PurchaseDate = request.PurchaseDate,
                 TotalAmount = totalAmount,
+                AmountPaid = request.AmountPaid,
+                AmountDue = totalAmount - request.AmountPaid,
+                PaymentStatus = request.AmountPaid <= 0
+                    ? "unpaid"
+                    : (request.AmountPaid >= totalAmount ? "paid" : "partial"),
+                PaymentMethod = string.IsNullOrWhiteSpace(request.PaymentMethod) ? "cash" : request.PaymentMethod.ToLower(),
                 CreatedBy = createdBy
             };
 
@@ -67,13 +75,41 @@ public class PurchaseService : IPurchaseService
 
             foreach (var item in request.Items)
             {
-                var medicines = await _medicineRepo.FindAsync(m => m.MedicineId == item.MedicineId);
-                var medicine = medicines.FirstOrDefault();
-                if (medicine == null) throw new Exception($"Medicine ID {item.MedicineId} not found");
+                var medicine = (await _medicineRepo.FindAsync(m => m.MedicineId == item.MedicineId)).FirstOrDefault();
+
+                // Auto-create the medicine if it does not exist yet.
+                if (medicine == null)
+                {
+                    if (string.IsNullOrWhiteSpace(item.MedicineName))
+                        throw new Exception($"Medicine ID {item.MedicineId} not found and no name was provided to create it");
+
+                    var categoryId = item.CategoryId;
+                    if (categoryId == null || (await _categoryRepo.GetByIdAsync(categoryId.Value)) == null)
+                    {
+                        categoryId = (await _categoryRepo.GetAllAsync()).FirstOrDefault()?.CategoryId;
+                        if (categoryId == null)
+                            throw new Exception("No category exists to assign the new medicine");
+                    }
+
+                    medicine = new Medicine
+                    {
+                        MedicineName = item.MedicineName,
+                        GenericName = item.GenericName ?? item.MedicineName,
+                        CategoryId = categoryId.Value,
+                        UnitType = item.UnitType ?? "unit",
+                        LowStockThreshold = item.LowStockThreshold > 0 ? item.LowStockThreshold : 10,
+                        IsActive = true,
+                        CreatedAt = DateTime.Now
+                    };
+                    await _medicineRepo.AddAsync(medicine);
+                    await _unitOfWork.SaveChangesAsync();
+
+                    await _auditLog.LogAsync(createdBy, $"Auto-created medicine: {medicine.MedicineName}", "Medicines", medicine.MedicineId);
+                }
 
                 var batch = new MedicineBatch
                 {
-                    MedicineId = item.MedicineId,
+                    MedicineId = medicine.MedicineId,
                     BatchNumber = item.BatchNumber,
                     QuantityReceived = item.Quantity,
                     PurchasePrice = item.PurchasePrice,
@@ -88,7 +124,7 @@ public class PurchaseService : IPurchaseService
                 var purchaseItem = new PurchaseItem
                 {
                     PurchaseId = purchase.PurchaseId,
-                    MedicineId = item.MedicineId,
+                    MedicineId = medicine.MedicineId,
                     BatchId = batch.BatchId,
                     BatchNumber = item.BatchNumber,
                     Quantity = item.Quantity,
@@ -99,9 +135,9 @@ public class PurchaseService : IPurchaseService
 
                 await _purchaseItemRepo.AddAsync(purchaseItem);
 
-                await _unitOfWork.InventoryTransactions.AddAsync(new InventoryTransaction
+                await _transactionRepo.AddAsync(new InventoryTransaction
                 {
-                    MedicineId = item.MedicineId,
+                    MedicineId = medicine.MedicineId,
                     BatchId = batch.BatchId,
                     TransactionType = TransactionType.Purchase.ToString(),
                     Quantity = item.Quantity,
@@ -145,6 +181,10 @@ public class PurchaseService : IPurchaseService
                 SupplierName = "",
                 PurchaseDate = p.PurchaseDate,
                 TotalAmount = p.TotalAmount,
+                AmountPaid = p.AmountPaid,
+                AmountDue = p.AmountDue,
+                PaymentStatus = p.PaymentStatus,
+                PaymentMethod = p.PaymentMethod,
                 Items = items.Select(pi => new PurchaseItemResponse
                 {
                     PurchaseItemId = pi.PurchaseItemId,
@@ -175,6 +215,10 @@ public class PurchaseService : IPurchaseService
             SupplierName = purchase.Supplier?.SupplierName ?? "",
             PurchaseDate = purchase.PurchaseDate,
             TotalAmount = purchase.TotalAmount,
+            AmountPaid = purchase.AmountPaid,
+            AmountDue = purchase.AmountDue,
+            PaymentStatus = purchase.PaymentStatus,
+            PaymentMethod = purchase.PaymentMethod,
             Items = purchase.Items.Select(pi => new PurchaseItemResponse
             {
                 PurchaseItemId = pi.PurchaseItemId,

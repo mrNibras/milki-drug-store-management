@@ -10,6 +10,7 @@ public class SaleItemConfiguration : IEntityTypeConfiguration<SaleItem>
     {
         builder.HasKey(si => si.SaleItemId);
         builder.Property(si => si.UnitPrice).HasColumnType("decimal(18,2)");
+        builder.Property(si => si.DiscountAmount).HasColumnType("decimal(18,2)");
         builder.Property(si => si.PurchasePrice).HasColumnType("decimal(18,2)");
         builder.Property(si => si.Profit).HasColumnType("decimal(18,2)");
         builder.Property(si => si.SubTotal).HasColumnType("decimal(18,2)");

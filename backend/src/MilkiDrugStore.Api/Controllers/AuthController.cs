@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MilkiDrugStore.Application.DTOs.Auth;
 using MilkiDrugStore.Application.Interfaces;
@@ -6,6 +7,7 @@ namespace MilkiDrugStore.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
@@ -15,6 +17,7 @@ public class AuthController : ControllerBase
         _authService = authService;
     }
 
+    [AllowAnonymous]
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
@@ -23,6 +26,7 @@ public class AuthController : ControllerBase
         return Ok(result);
     }
 
+    [AllowAnonymous]
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request)
     {
@@ -37,6 +41,7 @@ public class AuthController : ControllerBase
         }
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpPost("approve/{userId}")]
     public async Task<IActionResult> Approve(int userId)
     {
@@ -51,6 +56,7 @@ public class AuthController : ControllerBase
         }
     }
 
+    [AllowAnonymous]
     [HttpPost("refresh")]
     public async Task<IActionResult> Refresh([FromBody] RefreshTokenRequest request)
     {

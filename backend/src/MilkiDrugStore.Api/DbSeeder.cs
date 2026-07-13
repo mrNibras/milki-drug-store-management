@@ -77,7 +77,7 @@ public static class DbSeeder
         if (connection is Microsoft.Data.Sqlite.SqliteConnection sqliteConnection)
         {
             await using var pragmaCmd = sqliteConnection.CreateCommand();
-            pragmaCmd.CommandText = "PRAGMA table_info(Sale);";
+            pragmaCmd.CommandText = "PRAGMA table_info(Sales);";
             var columns = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             await using var reader = await pragmaCmd.ExecuteReaderAsync();
             while (await reader.ReadAsync())
@@ -86,38 +86,118 @@ public static class DbSeeder
                     columns.Add(reader.GetString(reader.GetOrdinal("name")));
             }
 
+            // Table may not exist yet on a brand-new database (EnsureCreated builds
+            // the full current schema, so no column migration is needed in that case).
+            if (columns.Count == 0)
+                return;
+
             if (!columns.Contains("PaymentMethod"))
             {
                 await using var cmd = sqliteConnection.CreateCommand();
-                cmd.CommandText = "ALTER TABLE Sale ADD COLUMN PaymentMethod VARCHAR(20) NOT NULL DEFAULT 'cash';";
+                cmd.CommandText = "ALTER TABLE Sales ADD COLUMN PaymentMethod VARCHAR(20) NOT NULL DEFAULT 'cash';";
                 await cmd.ExecuteNonQueryAsync();
             }
 
             if (!columns.Contains("PaymentStatus"))
             {
                 await using var cmd = sqliteConnection.CreateCommand();
-                cmd.CommandText = "ALTER TABLE Sale ADD COLUMN PaymentStatus VARCHAR(20) NOT NULL DEFAULT 'paid';";
+                cmd.CommandText = "ALTER TABLE Sales ADD COLUMN PaymentStatus VARCHAR(20) NOT NULL DEFAULT 'paid';";
                 await cmd.ExecuteNonQueryAsync();
             }
 
             if (!columns.Contains("AmountPaid"))
             {
                 await using var cmd = sqliteConnection.CreateCommand();
-                cmd.CommandText = "ALTER TABLE Sale ADD COLUMN AmountPaid DECIMAL(18,2) NOT NULL DEFAULT 0;";
+                cmd.CommandText = "ALTER TABLE Sales ADD COLUMN AmountPaid DECIMAL(18,2) NOT NULL DEFAULT 0;";
                 await cmd.ExecuteNonQueryAsync();
             }
 
             if (!columns.Contains("AmountDue"))
             {
                 await using var cmd = sqliteConnection.CreateCommand();
-                cmd.CommandText = "ALTER TABLE Sale ADD COLUMN AmountDue DECIMAL(18,2) NOT NULL DEFAULT 0;";
+                cmd.CommandText = "ALTER TABLE Sales ADD COLUMN AmountDue DECIMAL(18,2) NOT NULL DEFAULT 0;";
                 await cmd.ExecuteNonQueryAsync();
             }
 
             if (!columns.Contains("ReferenceNumber"))
             {
                 await using var cmd = sqliteConnection.CreateCommand();
-                cmd.CommandText = "ALTER TABLE Sale ADD COLUMN ReferenceNumber VARCHAR(100);";
+                cmd.CommandText = "ALTER TABLE Sales ADD COLUMN ReferenceNumber VARCHAR(100);";
+                await cmd.ExecuteNonQueryAsync();
+            }
+
+            if (!columns.Contains("TotalDiscount"))
+            {
+                await using var cmd = sqliteConnection.CreateCommand();
+                cmd.CommandText = "ALTER TABLE Sales ADD COLUMN TotalDiscount DECIMAL(18,2) NOT NULL DEFAULT 0;";
+                await cmd.ExecuteNonQueryAsync();
+            }
+
+            if (!columns.Contains("DiscountReason"))
+            {
+                await using var cmd = sqliteConnection.CreateCommand();
+                cmd.CommandText = "ALTER TABLE Sales ADD COLUMN DiscountReason VARCHAR(500);";
+                await cmd.ExecuteNonQueryAsync();
+            }
+
+            // Purchase table payment columns (added after initial schema).
+            await using var purchasePragmaCmd = sqliteConnection.CreateCommand();
+            purchasePragmaCmd.CommandText = "PRAGMA table_info(Purchases);";
+            var purchaseColumns = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            await using (var purchaseReader = await purchasePragmaCmd.ExecuteReaderAsync())
+            {
+                while (await purchaseReader.ReadAsync())
+                {
+                    if (!purchaseReader.IsDBNull(purchaseReader.GetOrdinal("name")))
+                        purchaseColumns.Add(purchaseReader.GetString(purchaseReader.GetOrdinal("name")));
+                }
+            }
+
+            if (purchaseColumns.Count > 0)
+            {
+                if (!purchaseColumns.Contains("AmountPaid"))
+                {
+                    await using var cmd = sqliteConnection.CreateCommand();
+                    cmd.CommandText = "ALTER TABLE Purchases ADD COLUMN AmountPaid DECIMAL(18,2) NOT NULL DEFAULT 0;";
+                    await cmd.ExecuteNonQueryAsync();
+                }
+                if (!purchaseColumns.Contains("AmountDue"))
+                {
+                    await using var cmd = sqliteConnection.CreateCommand();
+                    cmd.CommandText = "ALTER TABLE Purchases ADD COLUMN AmountDue DECIMAL(18,2) NOT NULL DEFAULT 0;";
+                    await cmd.ExecuteNonQueryAsync();
+                }
+                if (!purchaseColumns.Contains("PaymentStatus"))
+                {
+                    await using var cmd = sqliteConnection.CreateCommand();
+                    cmd.CommandText = "ALTER TABLE Purchases ADD COLUMN PaymentStatus VARCHAR(20) NOT NULL DEFAULT 'unpaid';";
+                    await cmd.ExecuteNonQueryAsync();
+                }
+                if (!purchaseColumns.Contains("PaymentMethod"))
+                {
+                    await using var cmd = sqliteConnection.CreateCommand();
+                    cmd.CommandText = "ALTER TABLE Purchases ADD COLUMN PaymentMethod VARCHAR(20);";
+                    await cmd.ExecuteNonQueryAsync();
+                }
+            }
+
+            // SaleItems column migration
+            await using var itemPragmaCmd = sqliteConnection.CreateCommand();
+            itemPragmaCmd.CommandText = "PRAGMA table_info(SaleItems);";
+            var itemColumns = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            await using (var itemReader = await itemPragmaCmd.ExecuteReaderAsync())
+            {
+                while (await itemReader.ReadAsync())
+                {
+                    if (!itemReader.IsDBNull(itemReader.GetOrdinal("name")))
+                        itemColumns.Add(itemReader.GetString(itemReader.GetOrdinal("name")));
+                }
+            }
+
+            if (itemColumns.Count > 0 && !itemColumns.Contains("DiscountAmount"))
+            {
+                await using var cmd = sqliteConnection.CreateCommand();
+                cmd.CommandText = "ALTER TABLE SaleItems ADD COLUMN DiscountAmount DECIMAL(18,2) NOT NULL DEFAULT 0;";
                 await cmd.ExecuteNonQueryAsync();
             }
         }

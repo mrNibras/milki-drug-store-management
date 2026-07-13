@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using MilkiDrugStore.Application.DTOs.Auth;
@@ -8,6 +9,7 @@ namespace MilkiDrugStore.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class SettingsController : ControllerBase
 {
     private readonly IAuthService _authService;
@@ -28,6 +30,7 @@ public class SettingsController : ControllerBase
         return Ok(settings);
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpPut]
     public async Task<IActionResult> UpdateSettings([FromBody] UpdateSettingsRequest request)
     {
@@ -39,6 +42,7 @@ public class SettingsController : ControllerBase
         return Ok(result);
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpGet("backup")]
     public async Task<IActionResult> BackupDatabase()
     {
@@ -55,6 +59,7 @@ public class SettingsController : ControllerBase
         return File(fileBytes, "application/octet-stream", fileName);
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpPost("restore")]
     public async Task<IActionResult> RestoreDatabase([FromForm] IFormFile backupFile)
     {

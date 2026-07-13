@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MilkiDrugStore.Application.Interfaces;
 
@@ -5,6 +6,7 @@ namespace MilkiDrugStore.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class SalesController : ControllerBase
 {
     private readonly ISaleService _saleService;
@@ -33,9 +35,10 @@ public class SalesController : ControllerBase
     public async Task<IActionResult> Create([FromBody] MilkiDrugStore.Application.DTOs.Sale.CreateSaleRequest request)
     {
         var userId = GetUserId();
+        var userRole = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "Pharmacist";
         try
         {
-            var result = await _saleService.CreateAsync(request, userId);
+            var result = await _saleService.CreateAsync(request, userId, userRole);
             return Ok(result);
         }
         catch (MilkiDrugStore.Domain.Exceptions.InsufficientStockException ex)

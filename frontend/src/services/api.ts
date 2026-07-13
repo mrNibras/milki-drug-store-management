@@ -17,13 +17,90 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// --- Refresh-token handling ---------------------------------------------
+let isRefreshing = false;
+let pendingQueue: { resolve: (token: string) => void; reject: (err: unknown) => void }[] = [];
+
+const processQueue = (error: unknown, token: string | null) => {
+  pendingQueue.forEach((p) => {
+    if (token) p.resolve(token);
+    else p.reject(error);
+  });
+  pendingQueue = [];
+};
+
+const clearAuthAndRedirect = () => {
+  localStorage.removeItem('auth_token');
+  localStorage.removeItem('refresh_token');
+  localStorage.removeItem('current_user');
+  if (window.location.pathname !== '/login') {
+    window.location.href = '/login';
+  }
+};
+
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('current_user');
-      window.location.href = '/login';
+  async (error) => {
+    const originalRequest = error.config;
+    const status = error.response?.status;
+    const url: string = originalRequest?.url || '';
+
+    // 403 = authenticated but not allowed (role). Do NOT logout, just surface it.
+    if (status === 403) {
+      return Promise.reject(error);
+    }
+
+    const isAuthEndpoint = url.includes('/auth/login') || url.includes('/auth/refresh');
+
+    if (status === 401 && originalRequest && !originalRequest._retry && !isAuthEndpoint) {
+      const refreshToken = localStorage.getItem('refresh_token');
+      if (!refreshToken) {
+        clearAuthAndRedirect();
+        return Promise.reject(error);
+      }
+
+      // A refresh is already in flight — queue this request until it resolves.
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          pendingQueue.push({
+            resolve: (token: string) => {
+              originalRequest.headers.Authorization = `Bearer ${token}`;
+              resolve(api(originalRequest));
+            },
+            reject,
+          });
+        });
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      try {
+        // Use a bare axios call so this request does not loop through the interceptor.
+        const res = await axios.post<LoginResponse>(
+          `${API_BASE_URL}/api/auth/refresh`,
+          { refreshToken },
+          { headers: { 'Content-Type': 'application/json' } }
+        );
+        const newToken = res.data.token;
+        const newRefresh = res.data.refreshToken;
+        localStorage.setItem('auth_token', newToken);
+        if (newRefresh) localStorage.setItem('refresh_token', newRefresh);
+        api.defaults.headers.common.Authorization = `Bearer ${newToken}`;
+        processQueue(null, newToken);
+        originalRequest.headers.Authorization = `Bearer ${newToken}`;
+        return api(originalRequest);
+      } catch (refreshError) {
+        processQueue(refreshError, null);
+        clearAuthAndRedirect();
+        return Promise.reject(refreshError);
+      } finally {
+        isRefreshing = false;
+      }
+    }
+
+    if (status === 401) {
+      clearAuthAndRedirect();
     }
     return Promise.reject(error);
   }
@@ -36,9 +113,14 @@ export interface LoginRequest {
 
 export interface LoginResponse {
   token: string;
+  refreshToken: string;
   role: string;
   userId: number;
   fullName: string;
+}
+
+export interface RefreshTokenRequest {
+  refreshToken: string;
 }
 
 export interface Category {
@@ -89,6 +171,10 @@ export interface PurchaseResponse {
   supplierName: string;
   purchaseDate: string;
   totalAmount: number;
+  amountPaid: number;
+  amountDue: number;
+  paymentStatus: string;
+  paymentMethod: string | null;
   items: PurchaseItemResponse[];
 }
 
@@ -105,8 +191,15 @@ export interface PurchaseItemResponse {
 export interface CreatePurchaseRequest {
   supplierId: number;
   purchaseDate: string;
+  paymentMethod?: string;
+  amountPaid: number;
   items: {
     medicineId: number;
+    medicineName?: string;
+    genericName?: string;
+    categoryId?: number;
+    unitType?: string;
+    lowStockThreshold?: number;
     batchNumber: string;
     quantity: number;
     purchasePrice: number;
@@ -121,6 +214,8 @@ export interface SaleResponse {
   saleDate: string;
   totalAmount: number;
   totalProfit: number;
+  totalDiscount: number;
+  discountReason: string | null;
   userId: number;
   userName: string;
   paymentMethod: string;
@@ -139,6 +234,7 @@ export interface SaleItemResponse {
   batchNumber: string;
   quantity: number;
   unitPrice: number;
+  discountAmount: number;
   subTotal: number;
 }
 
@@ -146,10 +242,12 @@ export interface CreateSaleRequest {
   items: {
     medicineId: number;
     quantity: number;
+    discountAmount: number;
   }[];
   paymentMethod: string;
   amountPaid: number;
   referenceNumber?: string;
+  discountReason?: string;
 }
 
 export interface DashboardSummaryResponse {

@@ -7,6 +7,8 @@ public class Sale
     public DateTime SaleDate { get; set; } = DateTime.Now;
     public decimal TotalAmount { get; set; }
     public decimal TotalProfit { get; set; }
+    public decimal TotalDiscount { get; set; }
+    public string? DiscountReason { get; set; }
     public int UserId { get; set; }
     public string PaymentMethod { get; set; } = "cash";
     public string PaymentStatus { get; set; } = "paid";

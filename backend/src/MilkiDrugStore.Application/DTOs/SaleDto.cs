@@ -6,12 +6,15 @@ public class CreateSaleRequest
     public string PaymentMethod { get; set; } = "cash";
     public decimal AmountPaid { get; set; }
     public string? ReferenceNumber { get; set; }
+    public string? DiscountReason { get; set; }
 }
 
 public class SaleItemRequest
 {
     public int MedicineId { get; set; }
     public int Quantity { get; set; }
+    /// <summary>Per-unit discount amount requested by the cashier.</summary>
+    public decimal DiscountAmount { get; set; }
 }
 
 public class SaleResponse
@@ -21,6 +24,8 @@ public class SaleResponse
     public DateTime SaleDate { get; set; }
     public decimal TotalAmount { get; set; }
     public decimal TotalProfit { get; set; }
+    public decimal TotalDiscount { get; set; }
+    public string? DiscountReason { get; set; }
     public int UserId { get; set; }
     public string UserName { get; set; } = string.Empty;
     public string PaymentMethod { get; set; } = string.Empty;
@@ -39,6 +44,9 @@ public class SaleItemResponse
     public int? BatchId { get; set; }
     public string BatchNumber { get; set; } = string.Empty;
     public int Quantity { get; set; }
+    /// <summary>Standard (pre-discount) unit price.</summary>
     public decimal UnitPrice { get; set; }
+    /// <summary>Per-unit discount applied.</summary>
+    public decimal DiscountAmount { get; set; }
     public decimal SubTotal { get; set; }
 }

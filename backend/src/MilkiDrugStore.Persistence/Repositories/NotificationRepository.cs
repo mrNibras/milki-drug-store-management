@@ -24,4 +24,12 @@ public class NotificationRepository : Repository<Notification>, INotificationRep
             .OrderByDescending(n => n.CreatedAt)
             .FirstOrDefaultAsync();
     }
+
+    public async Task<Notification?> GetActiveByTypeAsync(string notificationType)
+    {
+        return await _dbSet
+            .Where(n => n.NotificationType == notificationType && !n.IsRead)
+            .OrderByDescending(n => n.CreatedAt)
+            .FirstOrDefaultAsync();
+    }
 }

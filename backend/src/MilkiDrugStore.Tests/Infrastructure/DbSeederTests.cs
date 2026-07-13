@@ -23,7 +23,7 @@ public class DbSeederTests
         using (var context = new AppDbContext(options))
         {
             await context.Database.ExecuteSqlRawAsync(@"
-                CREATE TABLE Sale (
+                CREATE TABLE Sales (
                     SaleId INTEGER PRIMARY KEY AUTOINCREMENT,
                     SaleNumber VARCHAR(50) NOT NULL,
                     SaleDate TEXT NOT NULL,
@@ -41,12 +41,14 @@ public class DbSeederTests
             migrateMethod!.Invoke(null, new object[] { context });
         }
 
-        var columns = await GetColumnsAsync(connection, "Sale");
+        var columns = await GetColumnsAsync(connection, "Sales");
         columns.Should().Contain("PaymentMethod");
         columns.Should().Contain("PaymentStatus");
         columns.Should().Contain("AmountPaid");
         columns.Should().Contain("AmountDue");
         columns.Should().Contain("ReferenceNumber");
+        columns.Should().Contain("TotalDiscount");
+        columns.Should().Contain("DiscountReason");
     }
 
     [Fact]
@@ -62,7 +64,7 @@ public class DbSeederTests
         using (var context = new AppDbContext(options))
         {
             await context.Database.ExecuteSqlRawAsync(@"
-                CREATE TABLE Sale (
+                CREATE TABLE Sales (
                     SaleId INTEGER PRIMARY KEY AUTOINCREMENT,
                     SaleNumber VARCHAR(50) NOT NULL,
                     SaleDate TEXT NOT NULL,
@@ -87,7 +89,7 @@ public class DbSeederTests
             migrateMethod2!.Invoke(null, new object[] { context2 });
         }
 
-        var columns = await GetColumnsAsync(connection, "Sale");
+        var columns = await GetColumnsAsync(connection, "Sales");
         columns.Count(c => c == "PaymentMethod").Should().Be(1);
     }
 

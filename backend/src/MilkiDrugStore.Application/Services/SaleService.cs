@@ -22,6 +22,9 @@ public class SaleService : ISaleService
     private readonly IAuditLogService _auditLog;
     private readonly List<IDomainEvent> _domainEvents = new();
 
+    /// <summary>Maximum discount a non-admin (pharmacist) may apply, as a fraction of unit price.</summary>
+    private const decimal MaxPharmacistDiscountRate = 0.05m;
+
     public SaleService(
         IRepository<Sale> saleRepo,
         IRepository<SaleItem> saleItemRepo,
@@ -42,17 +45,20 @@ public class SaleService : ISaleService
         _auditLog = auditLog;
     }
 
-    public async Task<SaleResponse> CreateAsync(CreateSaleRequest request, int userId)
+    public async Task<SaleResponse> CreateAsync(CreateSaleRequest request, int userId, string userRole)
     {
         await _unitOfWork.BeginTransactionAsync();
 
         try
         {
+            var isAdmin = string.Equals(userRole, "Admin", StringComparison.OrdinalIgnoreCase);
+
             var saleCount = (await _saleRepo.GetAllAsync()).Count();
             var saleNumber = $"SAL-{DateTime.Now.Year}-{saleCount + 1:D5}";
 
             var totalAmount = 0m;
             var totalProfit = 0m;
+            var totalDiscount = 0m;
             var saleItems = new List<SaleItem>();
 
             foreach (var item in request.Items)
@@ -62,6 +68,7 @@ public class SaleService : ISaleService
                     throw new InsufficientStockException($"No stock available for medicine ID {item.MedicineId}");
 
                 var remainingQty = item.Quantity;
+                var requestedDiscount = Math.Max(0m, item.DiscountAmount);
 
                 foreach (var batch in batches)
                 {
@@ -73,12 +80,19 @@ public class SaleService : ISaleService
                     batch.QuantityIssued += deductQty;
                     remainingQty -= deductQty;
 
-                    var profitPerUnit = batch.SellingPrice - batch.PurchasePrice;
+                    // Enforce discount rules server-side: pharmacists are capped, admins are not.
+                    var maxDiscountPerUnit = isAdmin ? batch.SellingPrice : batch.SellingPrice * MaxPharmacistDiscountRate;
+                    var discountPerUnit = Math.Min(requestedDiscount, maxDiscountPerUnit);
+                    if (discountPerUnit < 0) discountPerUnit = 0;
+
+                    var effectiveUnitPrice = batch.SellingPrice - discountPerUnit;
+                    var profitPerUnit = effectiveUnitPrice - batch.PurchasePrice;
                     var itemProfit = profitPerUnit * deductQty;
-                    var itemTotal = batch.SellingPrice * deductQty;
+                    var itemTotal = effectiveUnitPrice * deductQty;
 
                     totalAmount += itemTotal;
                     totalProfit += itemProfit;
+                    totalDiscount += discountPerUnit * deductQty;
 
                     saleItems.Add(new SaleItem
                     {
@@ -86,6 +100,7 @@ public class SaleService : ISaleService
                         BatchId = batch.BatchId,
                         Quantity = deductQty,
                         UnitPrice = batch.SellingPrice,
+                        DiscountAmount = discountPerUnit,
                         PurchasePrice = batch.PurchasePrice,
                         Profit = itemProfit,
                         SubTotal = itemTotal
@@ -97,7 +112,7 @@ public class SaleService : ISaleService
                         BatchId = batch.BatchId,
                         TransactionType = TransactionType.Sale.ToString(),
                         Quantity = deductQty,
-                        UnitPrice = batch.SellingPrice,
+                        UnitPrice = effectiveUnitPrice,
                         ReferenceId = null,
                         ReferenceType = "SALE",
                         CreatedBy = userId
@@ -108,12 +123,18 @@ public class SaleService : ISaleService
                     throw new InsufficientStockException($"Insufficient stock for medicine ID {item.MedicineId}");
             }
 
+            // A reason must accompany any applied discount.
+            if (totalDiscount > 0 && string.IsNullOrWhiteSpace(request.DiscountReason))
+                throw new Exception("A discount reason is required when applying a discount.");
+
             var sale = new Sale
             {
                 SaleNumber = saleNumber,
                 SaleDate = DateTime.Now,
                 TotalAmount = totalAmount,
                 TotalProfit = totalProfit,
+                TotalDiscount = totalDiscount,
+                DiscountReason = totalDiscount > 0 ? request.DiscountReason : null,
                 UserId = userId,
                 PaymentMethod = string.IsNullOrWhiteSpace(request.PaymentMethod) ? "cash" : request.PaymentMethod.ToLower(),
                 AmountPaid = request.AmountPaid,
@@ -207,6 +228,8 @@ public class SaleService : ISaleService
             SaleDate = s.SaleDate,
             TotalAmount = s.TotalAmount,
             TotalProfit = s.TotalProfit,
+            TotalDiscount = s.TotalDiscount,
+            DiscountReason = s.DiscountReason,
             UserId = s.UserId,
             UserName = s.User?.FullName ?? "",
             PaymentMethod = s.PaymentMethod,
@@ -223,6 +246,7 @@ public class SaleService : ISaleService
                 BatchNumber = i.Batch?.BatchNumber ?? "",
                 Quantity = i.Quantity,
                 UnitPrice = i.UnitPrice,
+                DiscountAmount = i.DiscountAmount,
                 SubTotal = i.SubTotal
             }).ToList()
         };

@@ -171,7 +171,11 @@ public class AuthService : IAuthService
 
         user.FullName = request.FullName;
         user.Email = request.Email;
-        user.RoleId = request.RoleId;
+        // Preserve existing role if the caller did not supply a valid RoleId.
+        if (request.RoleId > 0)
+            user.RoleId = request.RoleId;
+        if (request.IsActive.HasValue)
+            user.IsActive = request.IsActive.Value;
 
         await _userRepo.UpdateAsync(user);
         await _unitOfWork.SaveChangesAsync();

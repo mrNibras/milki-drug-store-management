@@ -72,7 +72,7 @@ public class SaleServiceReferenceNumberTests
             ReferenceNumber = "TXN-12345"
         };
 
-        var result = await _sut.CreateAsync(request, 1);
+        var result = await _sut.CreateAsync(request, 1, "Admin");
 
         result.Should().NotBeNull();
         result.ReferenceNumber.Should().Be("TXN-12345");
@@ -108,7 +108,7 @@ public class SaleServiceReferenceNumberTests
             AmountPaid = 50
         };
 
-        var result = await _sut.CreateAsync(request, 1);
+        var result = await _sut.CreateAsync(request, 1, "Admin");
 
         result.Should().NotBeNull();
         result.ReferenceNumber.Should().BeNull();

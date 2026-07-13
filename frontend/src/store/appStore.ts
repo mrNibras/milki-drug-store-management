@@ -136,9 +136,9 @@ const toPurchase = (r: PurchaseResponse): Purchase => ({
   purchaseDate: r.purchaseDate,
   totalAmount: r.totalAmount,
   paymentStatus: (r as any).paymentStatus || 'unpaid',
-  paymentMethod: 'cash',
-  amountPaid: 0,
-  remainingDebt: r.totalAmount,
+  paymentMethod: ((r as any).paymentMethod as any) || 'cash',
+  amountPaid: (r as any).amountPaid || 0,
+  remainingDebt: (r as any).amountDue || 0,
   items: r.items.map(i => ({
     id: String(i.purchaseItemId),
     purchaseId: String(r.purchaseId),
@@ -156,8 +156,8 @@ const toSale = (r: SaleResponse): Sale => ({
   saleNumber: r.saleNumber,
   saleDate: r.saleDate,
   totalAmount: r.totalAmount,
-  totalDiscount: 0,
-  discountReason: '',
+  totalDiscount: r.totalDiscount ?? 0,
+  discountReason: r.discountReason ?? '',
   approvedBy: null,
   profit: r.totalProfit,
   userId: String(r.userId),
@@ -174,10 +174,10 @@ const toSale = (r: SaleResponse): Sale => ({
     medicineName: i.medicineName,
     batchId: i.batchId ? String(i.batchId) : '',
     quantity: i.quantity,
-    unitPrice: i.unitPrice,
+    unitPrice: i.unitPrice - (i.discountAmount ?? 0),
     standardUnitPrice: i.unitPrice,
-    actualUnitPrice: i.unitPrice,
-    discountAmount: 0,
+    actualUnitPrice: i.unitPrice - (i.discountAmount ?? 0),
+    discountAmount: i.discountAmount ?? 0,
     totalPrice: i.subTotal,
   })),
 });
@@ -212,6 +212,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         createdAt: new Date().toISOString(),
       };
       localStorage.setItem('auth_token', token);
+      if (res.data.refreshToken) localStorage.setItem('refresh_token', res.data.refreshToken);
       localStorage.setItem('current_user', JSON.stringify(user));
       set({ token, currentUser: user, isAuthenticated: true, loading: false });
       return true;
@@ -223,6 +224,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   logout: () => {
     localStorage.removeItem('auth_token');
+    localStorage.removeItem('refresh_token');
     localStorage.removeItem('current_user');
     set({ currentUser: null, isAuthenticated: false, token: null });
   },
@@ -268,7 +270,14 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   updateUser: async (id, updates) => {
     try {
-      await api.put(`/users/${id}`, updates);
+      const existing = get().users.find(u => u.id === id);
+      const merged = { ...existing, ...updates } as User;
+      await api.put(`/users/${id}`, {
+        fullName: merged.fullName,
+        email: merged.email,
+        roleId: merged.role === 'admin' ? 1 : 2,
+        isActive: merged.isActive,
+      });
       await get().fetchUsers();
     } catch (e: any) {
       set({ error: e.response?.data?.message || 'Failed to update user' });
@@ -290,8 +299,14 @@ export const useAppStore = create<AppState>((set, get) => ({
     try {
       const user = get().users.find(u => u.id === id);
       if (!user) return;
-      await api.put(`/users/${id}`, { ...user, isActive: !user.isActive });
-      set(state => ({ users: state.users.map(u => u.id === id ? { ...u, isActive: !u.isActive } : u) }));
+      const newActive = !user.isActive;
+      await api.put(`/users/${id}`, {
+        fullName: user.fullName,
+        email: user.email,
+        roleId: user.role === 'admin' ? 1 : 2,
+        isActive: newActive,
+      });
+      set(state => ({ users: state.users.map(u => u.id === id ? { ...u, isActive: newActive } : u) }));
     } catch (e: any) {
       set({ error: e.response?.data?.message || 'Failed to toggle user' });
     }
@@ -413,15 +428,22 @@ export const useAppStore = create<AppState>((set, get) => ({
     try {
       const items = purchase.items.map(i => ({
         medicineId: Number(i.medicineId),
+        medicineName: (i as any).medicineName,
+        genericName: (i as any).genericName,
+        categoryId: (i as any).categoryId ? Number((i as any).categoryId) : undefined,
+        unitType: (i as any).unitType,
+        lowStockThreshold: (i as any).lowStockThreshold,
         batchNumber: i.batchNumber,
         quantity: i.quantity,
         purchasePrice: i.purchasePrice,
-        sellingPrice: i.purchasePrice * 2,
-        expiryDate: i.expiryDate || new Date().toISOString(),
+        sellingPrice: i.sellingPrice,
+        expiryDate: i.expiryDate || undefined,
       }));
       const res = await api.post<PurchaseResponse>('/purchases', {
         supplierId: Number(purchase.supplierId),
         purchaseDate: purchase.purchaseDate,
+        paymentMethod: purchase.paymentMethod || 'cash',
+        amountPaid: purchase.amountPaid || 0,
         items,
       });
       await get().fetchPurchases();
@@ -447,12 +469,14 @@ export const useAppStore = create<AppState>((set, get) => ({
       const items = sale.items.map(i => ({
         medicineId: Number(i.medicineId),
         quantity: i.quantity,
+        discountAmount: i.discountAmount || 0,
       }));
       const payload = {
         items,
         paymentMethod: sale.paymentMethod || 'cash',
         amountPaid: sale.amountPaid || 0,
         referenceNumber: sale.referenceNumber || null,
+        discountReason: sale.discountReason || null,
       };
       const res = await api.post<SaleResponse>('/sales', payload);
       await get().fetchSales();

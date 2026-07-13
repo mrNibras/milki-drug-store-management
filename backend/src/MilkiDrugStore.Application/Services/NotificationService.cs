@@ -61,21 +61,27 @@ public class NotificationService : INotificationService
 
             if (totalStock == 0 && medicine.IsActive)
             {
-                await _notificationRepo.AddAsync(new Notification
+                if (await _notificationRepo.GetActiveByTypeAsync("OUT_OF_STOCK") == null)
                 {
-                    Title = "Out of Stock",
-                    Message = $"{medicine.MedicineName} is out of stock",
-                    NotificationType = "OUT_OF_STOCK"
-                });
+                    await _notificationRepo.AddAsync(new Notification
+                    {
+                        Title = "Out of Stock",
+                        Message = $"{medicine.MedicineName} is out of stock",
+                        NotificationType = "OUT_OF_STOCK"
+                    });
+                }
             }
             else if (totalStock <= medicine.LowStockThreshold && totalStock > 0)
             {
-                await _notificationRepo.AddAsync(new Notification
+                if (await _notificationRepo.GetActiveByTypeAsync("LOW_STOCK") == null)
                 {
-                    Title = "Low Stock",
-                    Message = $"{medicine.MedicineName} stock is below threshold ({totalStock}/{medicine.LowStockThreshold})",
-                    NotificationType = "LOW_STOCK"
-                });
+                    await _notificationRepo.AddAsync(new Notification
+                    {
+                        Title = "Low Stock",
+                        Message = $"{medicine.MedicineName} stock is below threshold ({totalStock}/{medicine.LowStockThreshold})",
+                        NotificationType = "LOW_STOCK"
+                    });
+                }
             }
 
             if (medicine.Batches.Any(b => b.Balance > 0 && b.ExpiryDate <= DateTime.Now.AddMonths(6)))

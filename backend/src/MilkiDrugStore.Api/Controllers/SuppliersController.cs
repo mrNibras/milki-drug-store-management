@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MilkiDrugStore.Application.Interfaces;
 
@@ -5,6 +6,7 @@ namespace MilkiDrugStore.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class SuppliersController : ControllerBase
 {
     private readonly ISupplierService _supplierService;
@@ -29,6 +31,7 @@ public class SuppliersController : ControllerBase
         return Ok(result);
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] MilkiDrugStore.Application.DTOs.Supplier.CreateSupplierRequest request)
     {
@@ -37,6 +40,7 @@ public class SuppliersController : ControllerBase
         return Ok(result);
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(int id, [FromBody] MilkiDrugStore.Application.DTOs.Supplier.UpdateSupplierRequest request)
     {
@@ -46,6 +50,7 @@ public class SuppliersController : ControllerBase
         return Ok(result);
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {

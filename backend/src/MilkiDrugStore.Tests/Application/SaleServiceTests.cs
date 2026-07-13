@@ -71,7 +71,7 @@ public class SaleServiceTests
             AmountPaid = 20
         };
 
-        var result = await _sut.CreateAsync(request, 1);
+        var result = await _sut.CreateAsync(request, 1, "Admin");
 
         result.Should().NotBeNull();
         result.PaymentMethod.Should().Be("cash");
@@ -109,7 +109,7 @@ public class SaleServiceTests
             AmountPaid = 5
         };
 
-        var result = await _sut.CreateAsync(request, 1);
+        var result = await _sut.CreateAsync(request, 1, "Admin");
 
         result.Should().NotBeNull();
         result.PaymentMethod.Should().Be("credit");
@@ -147,7 +147,7 @@ public class SaleServiceTests
             AmountPaid = 0
         };
 
-        var result = await _sut.CreateAsync(request, 1);
+        var result = await _sut.CreateAsync(request, 1, "Admin");
 
         result.Should().NotBeNull();
         result.PaymentStatus.Should().Be("unpaid");

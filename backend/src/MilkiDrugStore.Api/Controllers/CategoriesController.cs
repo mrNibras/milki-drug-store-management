@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MilkiDrugStore.Domain.Entities;
 using MilkiDrugStore.Domain.Interfaces.Repositories;
@@ -8,6 +9,7 @@ namespace MilkiDrugStore.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class CategoriesController : ControllerBase
 {
     private readonly IRepository<Category> _categoryRepo;

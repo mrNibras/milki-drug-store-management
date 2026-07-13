@@ -8,6 +8,7 @@ public class SaleItem
     public int? BatchId { get; set; }
     public int Quantity { get; set; }
     public decimal UnitPrice { get; set; }
+    public decimal DiscountAmount { get; set; }
     public decimal PurchasePrice { get; set; }
     public decimal Profit { get; set; }
     public decimal SubTotal { get; set; }

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MilkiDrugStore.Application.Interfaces;
 
@@ -5,6 +6,7 @@ namespace MilkiDrugStore.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class PurchasesController : ControllerBase
 {
     private readonly IPurchaseService _purchaseService;
@@ -29,6 +31,7 @@ public class PurchasesController : ControllerBase
         return Ok(result);
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] MilkiDrugStore.Application.DTOs.Purchase.CreatePurchaseRequest request)
     {

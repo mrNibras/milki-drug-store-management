@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MilkiDrugStore.Application.DTOs.Medicine;
 using MilkiDrugStore.Application.Interfaces;
@@ -6,6 +7,7 @@ namespace MilkiDrugStore.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class MedicinesController : ControllerBase
 {
     private readonly IMedicineService _medicineService;

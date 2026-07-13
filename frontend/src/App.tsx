@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useEffect } from 'react';
+import type { ReactNode } from 'react';
 import { MainLayout } from './layouts/MainLayout';
 import { LoginPage } from './pages/LoginPage';
 import { DashboardPage } from './pages/DashboardPage';
@@ -15,6 +16,12 @@ import { UsersPage } from './pages/UsersPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { AuditLogsPage } from './pages/AuditLogsPage';
 import { useAppStore } from './store/appStore';
+
+function AdminRoute({ children }: { children: ReactNode }) {
+  const role = useAppStore((state) => state.currentUser?.role);
+  if (role !== 'admin') return <Navigate to="/dashboard" replace />;
+  return <>{children}</>;
+}
 
 export default function App() {
   const isAuthenticated = useAppStore((state) => state.isAuthenticated);
@@ -42,14 +49,14 @@ export default function App() {
           <Route path="medicines" element={<MedicinesPage />} />
           <Route path="pos" element={<POSPage />} />
           <Route path="inventory" element={<InventoryPage />} />
-          <Route path="purchases" element={<PurchasesPage />} />
-          <Route path="suppliers" element={<SuppliersPage />} />
+          <Route path="purchases" element={<AdminRoute><PurchasesPage /></AdminRoute>} />
+          <Route path="suppliers" element={<AdminRoute><SuppliersPage /></AdminRoute>} />
           <Route path="reports" element={<ReportsPage />} />
           <Route path="notifications" element={<NotificationsPage />} />
           <Route path="damages" element={<DamageExpiryPage />} />
-          <Route path="users" element={<UsersPage />} />
-          <Route path="settings" element={<SettingsPage />} />
-          <Route path="audit-logs" element={<AuditLogsPage />} />
+          <Route path="users" element={<AdminRoute><UsersPage /></AdminRoute>} />
+          <Route path="settings" element={<AdminRoute><SettingsPage /></AdminRoute>} />
+          <Route path="audit-logs" element={<AdminRoute><AuditLogsPage /></AdminRoute>} />
         </Route>
         <Route path="*" element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />} />
       </Routes>
