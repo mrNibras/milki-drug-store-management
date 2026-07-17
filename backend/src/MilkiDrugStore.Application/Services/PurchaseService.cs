@@ -34,11 +34,12 @@ public class PurchaseService : IPurchaseService
         _purchaseRepo = purchaseRepo;
         _purchaseItemRepo = purchaseItemRepo;
         _medicineRepo = medicineRepo;
-        _batchRepo = batchRepo;
-        _supplierRepo = supplierRepo;
-        _transactionRepo = transactionRepo;
-        _unitOfWork = unitOfWork;
-        _auditLog = auditLog;
+            _batchRepo = batchRepo;
+            _supplierRepo = supplierRepo;
+            _categoryRepo = categoryRepo;
+            _transactionRepo = transactionRepo;
+            _unitOfWork = unitOfWork;
+            _auditLog = auditLog;
     }
 
     public async Task<PurchaseResponse> CreateAsync(CreatePurchaseRequest request, int createdBy)
