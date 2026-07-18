@@ -1,5 +1,4 @@
 using MilkiDrugStore.Api;
-using MilkiDrugStore.Api.Middlewares;
 using MilkiDrugStore.Api.Extensions;
 using MilkiDrugStore.Application.Mappings;
 using MilkiDrugStore.Infrastructure.BackgroundJobs;

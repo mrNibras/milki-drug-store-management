@@ -38,6 +38,7 @@ public class MedicineService : IMedicineService
 
         var medicines = query
             .Include(m => m.Category)
+            .Include(m => m.UnitType)
             .Include(m => m.Batches)
             .OrderBy(m => m.MedicineName)
             .ToList();
@@ -48,7 +49,7 @@ public class MedicineService : IMedicineService
     public async Task<MedicineResponse?> GetByIdAsync(int id)
     {
         var medicines = await _medicineRepo.FindAsync(m => m.MedicineId == id);
-        var medicine = medicines.Include(m => m.Category).Include(m => m.Batches).FirstOrDefault();
+        var medicine = medicines.Include(m => m.Category).Include(m => m.UnitType).Include(m => m.Batches).FirstOrDefault();
         if (medicine == null) return null;
         return MapToResponse(medicine);
     }
@@ -60,7 +61,7 @@ public class MedicineService : IMedicineService
             MedicineName = request.MedicineName,
             GenericName = request.GenericName,
             CategoryId = request.CategoryId,
-            UnitType = request.UnitType,
+            UnitTypeId = request.UnitTypeId,
             LowStockThreshold = request.LowStockThreshold,
             IsActive = true,
             CreatedAt = DateTime.Now
@@ -83,7 +84,7 @@ public class MedicineService : IMedicineService
         medicine.MedicineName = request.MedicineName;
         medicine.GenericName = request.GenericName;
         medicine.CategoryId = request.CategoryId;
-        medicine.UnitType = request.UnitType;
+        medicine.UnitTypeId = request.UnitTypeId;
         medicine.LowStockThreshold = request.LowStockThreshold;
         medicine.IsActive = request.IsActive;
 
@@ -153,7 +154,8 @@ public class MedicineService : IMedicineService
             GenericName = m.GenericName,
             CategoryId = m.CategoryId,
             CategoryName = m.Category?.Name ?? "",
-            UnitType = m.UnitType,
+            UnitTypeId = m.UnitTypeId,
+            UnitTypeName = m.UnitType?.Name ?? "",
             LowStockThreshold = m.LowStockThreshold,
             IsActive = m.IsActive,
             CreatedAt = m.CreatedAt,

@@ -1,10 +1,10 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useEffect } from 'react';
-import type { ReactNode } from 'react';
 import { MainLayout } from './layouts/MainLayout';
 import { LoginPage } from './pages/LoginPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { MedicinesPage } from './pages/MedicinesPage';
+import { CategoriesPage } from './pages/CategoriesPage';
 import { POSPage } from './pages/POSPage';
 import { InventoryPage } from './pages/InventoryPage';
 import { PurchasesPage } from './pages/PurchasesPage';
@@ -15,13 +15,8 @@ import { DamageExpiryPage } from './pages/DamageExpiryPage';
 import { UsersPage } from './pages/UsersPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { AuditLogsPage } from './pages/AuditLogsPage';
+import { ProtectedRoute } from './components/ProtectedRoute';
 import { useAppStore } from './store/appStore';
-
-function AdminRoute({ children }: { children: ReactNode }) {
-  const role = useAppStore((state) => state.currentUser?.role);
-  if (role !== 'admin') return <Navigate to="/dashboard" replace />;
-  return <>{children}</>;
-}
 
 export default function App() {
   const isAuthenticated = useAppStore((state) => state.isAuthenticated);
@@ -39,6 +34,15 @@ export default function App() {
     }
   }, []);
 
+  // Proactive token refresh every 7 hours to keep the session alive.
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const interval = setInterval(() => {
+      useAppStore.getState().refreshToken();
+    }, 7 * 60 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [isAuthenticated]);
+
   return (
     <BrowserRouter>
       <Routes>
@@ -47,16 +51,17 @@ export default function App() {
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="dashboard" element={<DashboardPage />} />
           <Route path="medicines" element={<MedicinesPage />} />
+          <Route path="categories" element={<CategoriesPage />} />
           <Route path="pos" element={<POSPage />} />
           <Route path="inventory" element={<InventoryPage />} />
-          <Route path="purchases" element={<AdminRoute><PurchasesPage /></AdminRoute>} />
-          <Route path="suppliers" element={<AdminRoute><SuppliersPage /></AdminRoute>} />
+          <Route path="damages" element={<DamageExpiryPage />} />
           <Route path="reports" element={<ReportsPage />} />
           <Route path="notifications" element={<NotificationsPage />} />
-          <Route path="damages" element={<DamageExpiryPage />} />
-          <Route path="users" element={<AdminRoute><UsersPage /></AdminRoute>} />
-          <Route path="settings" element={<AdminRoute><SettingsPage /></AdminRoute>} />
-          <Route path="audit-logs" element={<AdminRoute><AuditLogsPage /></AdminRoute>} />
+          <Route path="purchases" element={<ProtectedRoute roles={['admin']}><PurchasesPage /></ProtectedRoute>} />
+          <Route path="suppliers" element={<ProtectedRoute roles={['admin']}><SuppliersPage /></ProtectedRoute>} />
+          <Route path="users" element={<ProtectedRoute roles={['admin']}><UsersPage /></ProtectedRoute>} />
+          <Route path="settings" element={<ProtectedRoute roles={['admin']}><SettingsPage /></ProtectedRoute>} />
+          <Route path="audit-logs" element={<ProtectedRoute roles={['admin']}><AuditLogsPage /></ProtectedRoute>} />
         </Route>
         <Route path="*" element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />} />
       </Routes>

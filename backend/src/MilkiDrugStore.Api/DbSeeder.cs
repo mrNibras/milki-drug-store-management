@@ -37,16 +37,44 @@ public static class DbSeeder
             await context.SaveChangesAsync();
         }
 
+        if (!context.UnitTypes.Any())
+        {
+            context.UnitTypes.AddRange(
+                new UnitType { Name = "Tablet", Description = "Solid dosage form" },
+                new UnitType { Name = "Capsule", Description = "Gelatinous shell" },
+                new UnitType { Name = "Bottle", Description = "Liquid container" },
+                new UnitType { Name = "Tube", Description = "Ointment/cream tube" },
+                new UnitType { Name = "Piece", Description = "Single item" },
+                new UnitType { Name = "Strip", Description = "Blister strip" },
+                new UnitType { Name = "Box", Description = "Box packaging" },
+                new UnitType { Name = "Packet", Description = "Packet packaging" },
+                new UnitType { Name = "Vial", Description = "Injectable vial" },
+                new UnitType { Name = "Injection", Description = "Injectable form" },
+                new UnitType { Name = "Cream", Description = "Topical cream" },
+                new UnitType { Name = "Drops", Description = "Eye/ear drops" },
+                new UnitType { Name = "Inhaler", Description = "Inhalation device" },
+                new UnitType { Name = "Patch", Description = "Transdermal patch" },
+                new UnitType { Name = "Syrup", Description = "Oral liquid" }
+            );
+            await context.SaveChangesAsync();
+        }
+
         if (!context.Categories.Any())
         {
+            var tablet = await context.UnitTypes.FirstAsync(u => u.Name == "Tablet");
+            var capsule = await context.UnitTypes.FirstAsync(u => u.Name == "Capsule");
+            var bottle = await context.UnitTypes.FirstAsync(u => u.Name == "Bottle");
+            var tube = await context.UnitTypes.FirstAsync(u => u.Name == "Tube");
+            var piece = await context.UnitTypes.FirstAsync(u => u.Name == "Piece");
+
             context.Categories.AddRange(
-                new Category { Name = "Antibiotic" },
-                new Category { Name = "Pain Killer" },
-                new Category { Name = "Vitamin" },
-                new Category { Name = "Respiratory" },
-                new Category { Name = "Dermatology" },
-                new Category { Name = "Cosmetics" },
-                new Category { Name = "Baby Supplies" }
+                new Category { Name = "Antibiotic", UnitTypeId = tablet.UnitTypeId },
+                new Category { Name = "Pain Killer", UnitTypeId = tablet.UnitTypeId },
+                new Category { Name = "Vitamin", UnitTypeId = tablet.UnitTypeId },
+                new Category { Name = "Respiratory", UnitTypeId = capsule.UnitTypeId },
+                new Category { Name = "Dermatology", UnitTypeId = tube.UnitTypeId },
+                new Category { Name = "Cosmetics", UnitTypeId = tube.UnitTypeId },
+                new Category { Name = "Baby Supplies", UnitTypeId = piece.UnitTypeId }
             );
             await context.SaveChangesAsync();
         }
@@ -198,6 +226,101 @@ public static class DbSeeder
             {
                 await using var cmd = sqliteConnection.CreateCommand();
                 cmd.CommandText = "ALTER TABLE SaleItems ADD COLUMN DiscountAmount DECIMAL(18,2) NOT NULL DEFAULT 0;";
+                await cmd.ExecuteNonQueryAsync();
+            }
+
+            if (purchaseColumns.Count > 0)
+            {
+                if (!purchaseColumns.Contains("PaymentStatus"))
+                {
+                    await using var cmd = sqliteConnection.CreateCommand();
+                    cmd.CommandText = "ALTER TABLE Purchases ADD COLUMN PaymentStatus VARCHAR(20) NOT NULL DEFAULT 'unpaid';";
+                    await cmd.ExecuteNonQueryAsync();
+                }
+                if (!purchaseColumns.Contains("PaymentMethod"))
+                {
+                    await using var cmd = sqliteConnection.CreateCommand();
+                    cmd.CommandText = "ALTER TABLE Purchases ADD COLUMN PaymentMethod VARCHAR(20);";
+                    await cmd.ExecuteNonQueryAsync();
+                }
+            }
+
+            await using var categoryPragmaCmd = sqliteConnection.CreateCommand();
+            categoryPragmaCmd.CommandText = "PRAGMA table_info(Categories);";
+            var categoryColumns = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            await using (var categoryReader = await categoryPragmaCmd.ExecuteReaderAsync())
+            {
+                while (await categoryReader.ReadAsync())
+                {
+                    if (!categoryReader.IsDBNull(categoryReader.GetOrdinal("name")))
+                        categoryColumns.Add(categoryReader.GetString(categoryReader.GetOrdinal("name")));
+                }
+            }
+
+            if (categoryColumns.Count > 0)
+            {
+                if (!categoryColumns.Contains("UnitTypeId"))
+                {
+                    await using var cmd = sqliteConnection.CreateCommand();
+                    cmd.CommandText = "ALTER TABLE Categories ADD COLUMN UnitTypeId INTEGER NOT NULL DEFAULT 1;";
+                    await cmd.ExecuteNonQueryAsync();
+                }
+                if (!categoryColumns.Contains("IsActive"))
+                {
+                    await using var cmd = sqliteConnection.CreateCommand();
+                    cmd.CommandText = "ALTER TABLE Categories ADD COLUMN IsActive INTEGER NOT NULL DEFAULT 1;";
+                    await cmd.ExecuteNonQueryAsync();
+                }
+            }
+
+            await using var medicinePragmaCmd = sqliteConnection.CreateCommand();
+            medicinePragmaCmd.CommandText = "PRAGMA table_info(Medicines);";
+            var medicineColumns = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            await using (var medicineReader = await medicinePragmaCmd.ExecuteReaderAsync())
+            {
+                while (await medicineReader.ReadAsync())
+                {
+                    if (!medicineReader.IsDBNull(medicineReader.GetOrdinal("name")))
+                        medicineColumns.Add(medicineReader.GetString(medicineReader.GetOrdinal("name")));
+                }
+            }
+
+            if (medicineColumns.Count > 0)
+            {
+                if (!medicineColumns.Contains("UnitTypeId"))
+                {
+                    await using var cmd = sqliteConnection.CreateCommand();
+                    cmd.CommandText = "ALTER TABLE Medicines ADD COLUMN UnitTypeId INTEGER NOT NULL DEFAULT 1;";
+                    await cmd.ExecuteNonQueryAsync();
+                }
+                if (medicineColumns.Contains("UnitType"))
+                {
+                    await using var cmd = sqliteConnection.CreateCommand();
+                    cmd.CommandText = "ALTER TABLE Medicines DROP COLUMN UnitType;";
+                    await cmd.ExecuteNonQueryAsync();
+                }
+            }
+
+            await using var unitTypePragmaCmd = sqliteConnection.CreateCommand();
+            unitTypePragmaCmd.CommandText = "SELECT name FROM sqlite_master WHERE type='table' AND name='UnitTypes';";
+            var unitTypeTableExists = false;
+            await using (var unitTypeReader = await unitTypePragmaCmd.ExecuteReaderAsync())
+            {
+                if (await unitTypeReader.ReadAsync())
+                {
+                    unitTypeTableExists = true;
+                }
+            }
+
+            if (!unitTypeTableExists)
+            {
+                await using var cmd = sqliteConnection.CreateCommand();
+                cmd.CommandText = @"CREATE TABLE UnitTypes (
+                    UnitTypeId INTEGER PRIMARY KEY AUTOINCREMENT,
+                    Name VARCHAR(50) NOT NULL UNIQUE,
+                    Description VARCHAR(200),
+                    IsActive INTEGER NOT NULL DEFAULT 1
+                );";
                 await cmd.ExecuteNonQueryAsync();
             }
         }

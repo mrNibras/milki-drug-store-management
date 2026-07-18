@@ -10,6 +10,7 @@ interface AppState {
   token: string | null;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
+  refreshToken: () => Promise<boolean>;
   register: (fullName: string, email: string, password: string) => Promise<{ ok: boolean; message?: string }>;
 
   users: User[];
@@ -229,6 +230,23 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({ currentUser: null, isAuthenticated: false, token: null });
   },
 
+  refreshToken: async () => {
+    const refreshToken = localStorage.getItem('refresh_token');
+    if (!refreshToken) return false;
+    try {
+      const res = await api.post<LoginResponse>('/auth/refresh', { refreshToken });
+      const newToken = res.data.token;
+      const newRefresh = res.data.refreshToken;
+      localStorage.setItem('auth_token', newToken);
+      if (newRefresh) localStorage.setItem('refresh_token', newRefresh);
+      set({ token: newToken });
+      return true;
+    } catch (e) {
+      logout();
+      return false;
+    }
+  },
+
   register: async (fullName: string, email: string, password: string) => {
     set({ loading: true, error: null });
     try {
@@ -309,6 +327,64 @@ export const useAppStore = create<AppState>((set, get) => ({
       set(state => ({ users: state.users.map(u => u.id === id ? { ...u, isActive: newActive } : u) }));
     } catch (e: any) {
       set({ error: e.response?.data?.message || 'Failed to toggle user' });
+      throw e;
+    }
+  },
+
+  fetchCategories: async () => {
+    set({ loading: true, error: null });
+    try {
+      const res = await api.get<Category[]>('/categories');
+      set({ categories: res.data.map(c => ({
+        id: String(c.categoryId),
+        name: c.name,
+        unitTypeId: c.unitTypeId || 1,
+        isActive: c.isActive ?? true,
+        createdAt: new Date().toISOString(),
+      })), loading: false });
+    } catch (e: any) {
+      set({ error: e.response?.data?.message || 'Failed to fetch categories', loading: false });
+    }
+  },
+
+  addCategory: async (category) => {
+    set({ loading: true, error: null });
+    try {
+      await api.post('/categories', {
+        name: category.name,
+        unitTypeId: category.unitTypeId,
+        isActive: category.isActive,
+      });
+      await get().fetchCategories();
+    } catch (e: any) {
+      set({ error: e.response?.data?.message || 'Failed to add category', loading: false });
+      throw e;
+    }
+  },
+
+  updateCategory: async (id, updates) => {
+    try {
+      await api.put(`/categories/${id}`, {
+        name: updates.name,
+        unitTypeId: updates.unitTypeId,
+        isActive: updates.isActive,
+      });
+      set(state => ({
+        categories: state.categories.map(c => c.id === id ? { ...c, ...updates } : c),
+      }));
+    } catch (e: any) {
+      set({ error: e.response?.data?.message || 'Failed to update category' });
+      throw e;
+    }
+  },
+
+  deleteCategory: async (id) => {
+    try {
+      await api.delete(`/categories/${id}`);
+      set(state => ({ categories: state.categories.filter(c => c.id !== id) }));
+    } catch (e: any) {
+      set({ error: e.response?.data?.message || 'Failed to delete category' });
+      throw e;
     }
   },
 

@@ -45,4 +45,45 @@ public class CategoriesController : ControllerBase
 
         return Ok(category);
     }
+
+    [HttpPut("{id}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> Update(int id, [FromBody] Category category)
+    {
+        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        var userId = int.TryParse(userIdClaim, out var parsedUserId) ? parsedUserId : 0;
+
+        var existing = (await _categoryRepo.FindAsync(c => c.CategoryId == id)).FirstOrDefault();
+        if (existing == null) return NotFound();
+
+        existing.Name = category.Name;
+        existing.UnitTypeId = category.UnitTypeId;
+        existing.IsActive = category.IsActive;
+
+        await _categoryRepo.UpdateAsync(existing);
+        await _unitOfWork.SaveChangesAsync();
+
+        await _auditLog.LogAsync(userId, $"Updated category: {existing.Name}", "Categories", existing.CategoryId);
+
+        return Ok(existing);
+    }
+
+    [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        var userId = int.TryParse(userIdClaim, out var parsedUserId) ? parsedUserId : 0;
+
+        var existing = (await _categoryRepo.FindAsync(c => c.CategoryId == id)).FirstOrDefault();
+        if (existing == null) return NotFound();
+
+        existing.IsActive = false;
+        await _categoryRepo.UpdateAsync(existing);
+        await _unitOfWork.SaveChangesAsync();
+
+        await _auditLog.LogAsync(userId, $"Deleted category: {existing.Name}", "Categories", existing.CategoryId);
+
+        return NoContent();
+    }
 }

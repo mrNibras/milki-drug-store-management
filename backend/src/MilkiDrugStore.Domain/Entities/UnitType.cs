@@ -1,12 +1,11 @@
 namespace MilkiDrugStore.Domain.Entities;
 
-public class Category
+public class UnitType
 {
-    public int CategoryId { get; set; }
-    public string Name { get; set; } = string.Empty;
     public int UnitTypeId { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string? Description { get; set; }
     public bool IsActive { get; set; } = true;
 
-    public UnitType? UnitType { get; set; }
     public List<Medicine> Medicines { get; set; } = new();
 }

@@ -5,7 +5,7 @@ public class CreateMedicineRequest
     public string MedicineName { get; set; } = string.Empty;
     public string GenericName { get; set; } = string.Empty;
     public int CategoryId { get; set; }
-    public string UnitType { get; set; } = "Tablet";
+    public int UnitTypeId { get; set; }
     public int LowStockThreshold { get; set; } = 10;
 }
 
@@ -14,7 +14,7 @@ public class UpdateMedicineRequest
     public string MedicineName { get; set; } = string.Empty;
     public string GenericName { get; set; } = string.Empty;
     public int CategoryId { get; set; }
-    public string UnitType { get; set; } = "Tablet";
+    public int UnitTypeId { get; set; }
     public int LowStockThreshold { get; set; } = 10;
     public bool IsActive { get; set; }
 }
@@ -36,7 +36,8 @@ public class MedicineResponse
     public string GenericName { get; set; } = string.Empty;
     public int CategoryId { get; set; }
     public string CategoryName { get; set; } = string.Empty;
-    public string UnitType { get; set; } = string.Empty;
+    public int UnitTypeId { get; set; }
+    public string UnitTypeName { get; set; } = string.Empty;
     public int LowStockThreshold { get; set; }
     public bool IsActive { get; set; }
     public DateTime CreatedAt { get; set; }
