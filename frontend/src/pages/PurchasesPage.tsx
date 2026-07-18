@@ -4,10 +4,10 @@ import { useAppStore } from '../store/appStore';
 import { useThemeStore } from '../store/themeStore';
 import { Modal } from '../components/ui/Modal';
 import { formatDate, formatCurrency, generateId, generatePurchaseNumber } from '../utils/helpers';
-import { Medicine, MedicineBatch } from '../types';
+import { BulkPurchaseItem } from '../types';
 
 export const PurchasesPage: React.FC = () => {
-  const { purchases, suppliers, medicines, categories, fetchPurchases, fetchSuppliers, fetchMedicines, fetchCategories, addPurchase, addMedicine, updateMedicine, currentUser, loading } = useAppStore();
+  const { purchases, suppliers, medicines, categories, fetchPurchases, fetchSuppliers, fetchMedicines, fetchCategories, addPurchase } = useAppStore();
   const { theme } = useThemeStore();
   const isDark = theme === 'dark';
   const [search, setSearch] = useState('');
@@ -179,49 +179,14 @@ export const PurchasesPage: React.FC = () => {
     
     const purchaseNumber = generatePurchaseNumber(purchases.length);
     
-    // Process each item - create medicines if needed
+    // Process each item - backend will auto-create medicines/batches as needed
     const processedItems = items.map(item => {
-      let medicineId = item.existingMedicineId;
-      
-      // If new medicine, create it
-      if (item.isNewMedicine || !medicineId) {
-        const newMedicine: Medicine = {
-          id: generateId(),
-          name: item.medicineName,
-          genericName: item.genericName || item.medicineName,
-          categoryId: item.categoryId || categories[0]?.id || '',
-          categoryName: item.categoryName || categories[0]?.name || 'General',
-          unitType: item.unitType,
-          lowStockThreshold: 10,
-          createdAt: new Date().toISOString(),
-          batches: [],
-        };
-        medicineId = newMedicine.id;
-        addMedicine(newMedicine);
-      } else {
-        // Add batch to existing medicine
-        const existingMedicine = medicines.find(m => m.id === medicineId);
-        if (existingMedicine) {
-          const newBatch: MedicineBatch = {
-            id: generateId(),
-            medicineId: medicineId,
-            batchNumber: item.batchNumber,
-            purchasePrice: Number(item.purchasePrice),
-            sellingPrice: Number(item.sellingPrice),
-            quantity: Number(item.quantity),
-            expiryDate: item.expiryDate,
-            createdAt: new Date().toISOString(),
-          };
-          updateMedicine(medicineId, {
-            batches: [...existingMedicine.batches, newBatch],
-          });
-        }
-      }
+      const medicineId = item.existingMedicineId || '0';
       
       return {
         id: generateId(),
         purchaseId: '',
-        medicineId: medicineId!,
+        medicineId: medicineId,
         medicineName: item.medicineName,
         genericName: item.genericName,
         categoryId: item.categoryId || categories[0]?.id || '',

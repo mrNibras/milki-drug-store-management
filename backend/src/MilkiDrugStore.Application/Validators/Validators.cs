@@ -50,6 +50,20 @@ public class CreatePurchaseRequestValidator : AbstractValidator<MilkiDrugStore.A
     {
         RuleFor(x => x.SupplierId).GreaterThan(0);
         RuleFor(x => x.Items).NotEmpty();
+        RuleFor(x => x.AmountPaid).GreaterThanOrEqualTo(0);
+        RuleFor(x => x.PaymentMethod)
+            .Must(status => status == null || new[] { "cash", "bank_transfer", "mobile_money", "credit" }.Contains(status))
+            .WithMessage("Invalid payment method");
+        RuleFor(x => x.PaymentStatus)
+            .Must(status => status == null || new[] { "paid", "partial", "unpaid" }.Contains(status))
+            .WithMessage("Invalid payment status");
+        RuleForEach(x => x.Items).ChildRules(item =>
+        {
+            item.RuleFor(i => i.Quantity).GreaterThan(0);
+            item.RuleFor(i => i.PurchasePrice).GreaterThan(0);
+            item.RuleFor(i => i.SellingPrice).GreaterThan(0);
+            item.RuleFor(i => i.BatchNumber).NotEmpty();
+        });
     }
 }
 

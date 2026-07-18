@@ -443,10 +443,12 @@ export const useAppStore = create<AppState>((set, get) => ({
         supplierId: Number(purchase.supplierId),
         purchaseDate: purchase.purchaseDate,
         paymentMethod: purchase.paymentMethod || 'cash',
+        paymentStatus: purchase.paymentStatus || undefined,
         amountPaid: purchase.amountPaid || 0,
         items,
       });
       await get().fetchPurchases();
+      await get().fetchMedicines();
     } catch (e: any) {
       set({ error: e.response?.data?.message || 'Failed to add purchase', loading: false });
       throw e;

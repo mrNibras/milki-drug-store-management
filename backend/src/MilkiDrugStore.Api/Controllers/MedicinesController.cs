@@ -33,6 +33,7 @@ public class MedicinesController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Create([FromBody] CreateMedicineRequest request)
     {
         var userId = GetUserId();
@@ -41,6 +42,7 @@ public class MedicinesController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateMedicineRequest request)
     {
         var userId = GetUserId();
@@ -50,6 +52,7 @@ public class MedicinesController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(int id)
     {
         var userId = GetUserId();
@@ -58,6 +61,7 @@ public class MedicinesController : ControllerBase
     }
 
     [HttpPost("batches")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> AddBatch([FromBody] AddBatchRequest request)
     {
         var userId = GetUserId();

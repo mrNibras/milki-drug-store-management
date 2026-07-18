@@ -6,6 +6,7 @@ public class CreatePurchaseRequest
     public DateTime PurchaseDate { get; set; }
     public string? PaymentMethod { get; set; }
     public decimal AmountPaid { get; set; }
+    public string? PaymentStatus { get; set; }
     public List<PurchaseItemRequest> Items { get; set; } = new();
 }
 

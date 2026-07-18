@@ -72,6 +72,24 @@ export interface PurchaseItem {
   expiryDate: string;
 }
 
+export interface BulkPurchaseItem {
+  id: string;
+  medicineName: string;
+  genericName: string;
+  categoryId: string;
+  categoryName: string;
+  batchNumber: string;
+  quantity: string;
+  purchasePrice: string;
+  sellingPrice: string;
+  expiryDate: string;
+  unitType: string;
+  isNewMedicine: boolean;
+  existingMedicineId?: string;
+  errors: string[];
+  lowStockThreshold?: number;
+}
+
 export interface Sale {
   id: string;
   saleNumber: string;

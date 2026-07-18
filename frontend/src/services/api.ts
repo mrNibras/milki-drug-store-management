@@ -192,6 +192,7 @@ export interface CreatePurchaseRequest {
   supplierId: number;
   purchaseDate: string;
   paymentMethod?: string;
+  paymentStatus?: string;
   amountPaid: number;
   items: {
     medicineId: number;

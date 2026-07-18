@@ -64,9 +64,11 @@ public class PurchaseService : IPurchaseService
                 TotalAmount = totalAmount,
                 AmountPaid = request.AmountPaid,
                 AmountDue = totalAmount - request.AmountPaid,
-                PaymentStatus = request.AmountPaid <= 0
-                    ? "unpaid"
-                    : (request.AmountPaid >= totalAmount ? "paid" : "partial"),
+                PaymentStatus = !string.IsNullOrWhiteSpace(request.PaymentStatus)
+                    ? request.PaymentStatus!.ToLower()
+                    : (request.AmountPaid <= 0
+                        ? "unpaid"
+                        : (request.AmountPaid >= totalAmount ? "paid" : "partial")),
                 PaymentMethod = string.IsNullOrWhiteSpace(request.PaymentMethod) ? "cash" : request.PaymentMethod.ToLower(),
                 CreatedBy = createdBy
             };
@@ -179,7 +181,7 @@ public class PurchaseService : IPurchaseService
                 PurchaseId = p.PurchaseId,
                 PurchaseNumber = p.PurchaseNumber,
                 SupplierId = p.SupplierId,
-                SupplierName = "",
+                SupplierName = p.Supplier?.SupplierName ?? "",
                 PurchaseDate = p.PurchaseDate,
                 TotalAmount = p.TotalAmount,
                 AmountPaid = p.AmountPaid,
