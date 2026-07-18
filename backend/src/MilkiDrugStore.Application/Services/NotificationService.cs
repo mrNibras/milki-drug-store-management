@@ -61,7 +61,7 @@ public class NotificationService : INotificationService
 
             if (totalStock == 0 && medicine.IsActive)
             {
-                if (await _notificationRepo.GetActiveByTypeAsync("OUT_OF_STOCK") == null)
+                if (await _notificationRepo.GetActiveByTypeAndMedicineAsync("OUT_OF_STOCK", medicine.MedicineName) == null)
                 {
                     await _notificationRepo.AddAsync(new Notification
                     {
@@ -73,7 +73,7 @@ public class NotificationService : INotificationService
             }
             else if (totalStock <= medicine.LowStockThreshold && totalStock > 0)
             {
-                if (await _notificationRepo.GetActiveByTypeAsync("LOW_STOCK") == null)
+                if (await _notificationRepo.GetActiveByTypeAndMedicineAsync("LOW_STOCK", medicine.MedicineName) == null)
                 {
                     await _notificationRepo.AddAsync(new Notification
                     {
@@ -82,16 +82,6 @@ public class NotificationService : INotificationService
                         NotificationType = "LOW_STOCK"
                     });
                 }
-            }
-
-            if (medicine.Batches.Any(b => b.Balance > 0 && b.ExpiryDate <= DateTime.Now.AddMonths(6)))
-            {
-                await _notificationRepo.AddAsync(new Notification
-                {
-                    Title = "Expiry Alert",
-                    Message = $"{medicine.MedicineName} has batches expiring within 6 months",
-                    NotificationType = "EXPIRY_ALERT"
-                });
             }
         }
 

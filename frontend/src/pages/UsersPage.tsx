@@ -26,14 +26,16 @@ export const UsersPage: React.FC = () => {
     role: 'pharmacist' as 'admin' | 'pharmacist',
     password: '',
     confirmPassword: '',
+    isActive: true,
   });
   const [passwordError, setPasswordError] = useState('');
+  const [isToggling, setIsToggling] = useState<string | null>(null);
 
   const activeUsers = users.filter(u => u.isActive).length;
   const inactiveUsers = users.filter(u => !u.isActive).length;
 
   const resetForm = () => {
-    setFormData({ fullName: '', email: '', role: 'pharmacist', password: '', confirmPassword: '' });
+    setFormData({ fullName: '', email: '', role: 'pharmacist', password: '', confirmPassword: '', isActive: true });
     setPasswordError('');
   };
 
@@ -76,6 +78,7 @@ export const UsersPage: React.FC = () => {
       role: user.role,
       password: '',
       confirmPassword: '',
+      isActive: user.isActive,
     });
     setShowEditModal(true);
   };
@@ -86,6 +89,7 @@ export const UsersPage: React.FC = () => {
       fullName: formData.fullName,
       email: formData.email,
       role: formData.role,
+      isActive: formData.isActive,
     });
     setShowEditModal(false);
     setSelectedUser(null);
@@ -104,10 +108,15 @@ export const UsersPage: React.FC = () => {
     setSelectedUser(null);
   };
 
-  const handleToggleActive = (userId: string) => {
+  const handleToggleActive = async (userId: string) => {
     const user = users.find(u => u.id === userId);
     if (!user || userId === currentUser?.id) return;
-    toggleUserActive(userId);
+    setIsToggling(userId);
+    try {
+      await toggleUserActive(userId);
+    } finally {
+      setIsToggling(null);
+    }
   };
 
   const inputClass = `w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
@@ -231,14 +240,19 @@ export const UsersPage: React.FC = () => {
                       {user.id !== currentUser?.id && (
                         <button
                           onClick={() => handleToggleActive(user.id)}
+                          disabled={isToggling === user.id}
                           className={`p-2 rounded-lg transition-colors ${
-                            user.isActive
-                              ? isDark ? 'hover:bg-amber-900/30 text-gray-400 hover:text-amber-400' : 'hover:bg-amber-50 text-gray-400 hover:text-amber-600'
-                              : isDark ? 'hover:bg-green-900/30 text-gray-400 hover:text-green-400' : 'hover:bg-green-50 text-gray-400 hover:text-green-600'
+                            isToggling === user.id
+                              ? 'opacity-50 cursor-not-allowed'
+                              : user.isActive
+                                ? isDark ? 'hover:bg-amber-900/30 text-gray-400 hover:text-amber-400' : 'hover:bg-amber-50 text-gray-400 hover:text-amber-600'
+                                : isDark ? 'hover:bg-green-900/30 text-gray-400 hover:text-green-400' : 'hover:bg-green-50 text-gray-400 hover:text-green-600'
                           }`}
                           title={user.isActive ? 'Deactivate' : 'Activate'}
                         >
-                          {user.isActive ? <UserX className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />}
+                          {isToggling === user.id ? (
+                            <div className="h-4 w-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                          ) : user.isActive ? <UserX className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />}
                         </button>
                       )}
                       
@@ -502,6 +516,31 @@ export const UsersPage: React.FC = () => {
                     <p className="text-xs opacity-80">Limited access</p>
                   </button>
                 </div>
+              </div>
+            </div>
+
+            <div className={`p-5 rounded-xl ${isDark ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
+              <h4 className={`text-sm font-semibold mb-4 ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>Account Status</h4>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                    {formData.isActive ? 'Active' : 'Inactive'}
+                  </p>
+                  <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                    {formData.isActive ? 'User can log in and access the system' : 'User cannot log in'}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, isActive: !formData.isActive })}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    formData.isActive ? 'bg-emerald-600' : 'bg-gray-400'
+                  }`}
+                >
+                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    formData.isActive ? 'translate-x-6' : 'translate-x-1'
+                  }`} />
+                </button>
               </div>
             </div>
 
