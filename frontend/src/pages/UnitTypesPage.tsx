@@ -40,12 +40,13 @@ export const UnitTypesPage: React.FC = () => {
     if (!formData.name.trim()) return;
 
     if (selectedUnitType) {
-      await useAppStore.getState().updateCategory(selectedUnitType.id, {
-        name: selectedUnitType.name,
-        unitTypeId: Number(selectedUnitType.id),
+      await api.put(`/unittypes/${selectedUnitType.id}`, {
+        name: formData.name,
+        description: formData.description,
         isActive: formData.isActive,
       });
       setShowEditModal(false);
+      await useAppStore.getState().fetchUnitTypes();
     } else {
       await api.post('/unittypes', {
         name: formData.name,

@@ -10,8 +10,8 @@ public interface IAuthService
     Task<string> ApproveUserAsync(int userId);
     Task<string> CreateUserAsync(CreateUserRequest request);
     Task ChangePasswordAsync(int userId, string currentPassword, string newPassword);
-    Task<IEnumerable<User>> GetAllUsersAsync();
-    Task<User?> UpdateUserAsync(int id, UpdateUserRequest request);
+    Task<IEnumerable<UserResponse>> GetAllUsersAsync();
+    Task<UserResponse?> UpdateUserAsync(int id, UpdateUserRequest request);
     Task DeleteUserAsync(int id);
     Task<Settings?> GetSettingsAsync();
     Task<Settings> UpdateSettingsAsync(UpdateSettingsRequest request, int userId);

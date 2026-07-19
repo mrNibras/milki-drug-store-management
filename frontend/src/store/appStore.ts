@@ -86,11 +86,11 @@ interface AppState {
   toggleSidebar: () => void;
 }
 
-const toUser = (r: { userId: number; fullName: string; email: string; role: { name: string } | null; isActive: boolean; createdAt: string }): User => ({
+const toUser = (r: { userId: number; fullName: string; email: string; roleName: string; isActive: boolean; createdAt: string }): User => ({
   id: String(r.userId),
   fullName: r.fullName,
   email: r.email,
-  role: (r.role?.name?.toLowerCase() || 'pharmacist') as 'admin' | 'pharmacist',
+  role: (r.roleName?.toLowerCase() || 'pharmacist') as 'admin' | 'pharmacist',
   isActive: r.isActive,
   createdAt: r.createdAt,
 });

@@ -5,6 +5,7 @@ using MilkiDrugStore.Domain.Enums;
 using MilkiDrugStore.Domain.Exceptions;
 using MilkiDrugStore.Domain.Interfaces.Repositories;
 using MilkiDrugStore.Domain.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 
 namespace MilkiDrugStore.Application.Services;
@@ -158,12 +159,26 @@ public class AuthService : IAuthService
         await _auditLog.LogAsync(userId, "Changed password", "Users", user.UserId);
     }
 
-    public async Task<IEnumerable<User>> GetAllUsersAsync()
+    public async Task<IEnumerable<UserResponse>> GetAllUsersAsync()
     {
-        return await _userRepo.GetAllAsync();
+        var users = await _userRepo.GetAllAsync();
+        var usersWithRoles = await users
+            .Include(u => u.Role)
+            .ToListAsync();
+        return usersWithRoles.Select(u => new UserResponse
+        {
+            UserId = u.UserId,
+            FullName = u.FullName,
+            Email = u.Email,
+            RoleId = u.RoleId,
+            RoleName = u.Role != null ? u.Role.Name : "",
+            IsApproved = u.IsApproved,
+            IsActive = u.IsActive,
+            CreatedAt = u.CreatedAt
+        }).ToList();
     }
 
-    public async Task<User?> UpdateUserAsync(int id, UpdateUserRequest request)
+    public async Task<UserResponse?> UpdateUserAsync(int id, UpdateUserRequest request)
     {
         var users = await _userRepo.FindAsync(u => u.UserId == id);
         var user = users.FirstOrDefault();
@@ -171,7 +186,6 @@ public class AuthService : IAuthService
 
         user.FullName = request.FullName;
         user.Email = request.Email;
-        // Preserve existing role if the caller did not supply a valid RoleId.
         if (request.RoleId > 0)
             user.RoleId = request.RoleId;
         if (request.IsActive.HasValue)
@@ -182,7 +196,21 @@ public class AuthService : IAuthService
 
         await _auditLog.LogAsync(id, $"Updated user: {user.FullName}", "Users", user.UserId);
 
-        return user;
+        var updatedUsers = await _userRepo.FindAsync(u => u.UserId == id);
+        var updated = updatedUsers.FirstOrDefault();
+        if (updated == null) return null;
+
+        return new UserResponse
+        {
+            UserId = updated.UserId,
+            FullName = updated.FullName,
+            Email = updated.Email,
+            RoleId = updated.RoleId,
+            RoleName = updated.Role != null ? updated.Role.Name : "",
+            IsApproved = updated.IsApproved,
+            IsActive = updated.IsActive,
+            CreatedAt = updated.CreatedAt
+        };
     }
 
     public async Task DeleteUserAsync(int id)

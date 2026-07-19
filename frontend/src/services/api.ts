@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { useAppStore } from '../store/appStore';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
 
@@ -88,7 +87,6 @@ api.interceptors.response.use(
         localStorage.setItem('auth_token', newToken);
         if (newRefresh) localStorage.setItem('refresh_token', newRefresh);
         api.defaults.headers.common.Authorization = `Bearer ${newToken}`;
-        useAppStore.setState({ token: newToken });
         processQueue(null, newToken);
         originalRequest.headers.Authorization = `Bearer ${newToken}`;
         return api(originalRequest);
@@ -292,7 +290,7 @@ export interface UserResponse {
   fullName: string;
   email: string;
   roleId: number;
-  role: { name: string } | null;
+  roleName: string;
   isApproved: boolean;
   isActive: boolean;
   createdAt: string;

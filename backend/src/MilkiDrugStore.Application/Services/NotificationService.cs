@@ -1,3 +1,4 @@
+using MilkiDrugStore.Application.DTOs.Notification;
 using MilkiDrugStore.Application.Interfaces;
 using MilkiDrugStore.Domain.Interfaces.Repositories;
 using MilkiDrugStore.Domain.Interfaces;
@@ -20,14 +21,32 @@ public class NotificationService : INotificationService
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<IEnumerable<Notification>> GetAllAsync()
+    public async Task<IEnumerable<NotificationResponse>> GetAllAsync()
     {
-        return await _notificationRepo.GetAllAsync();
+        var notifications = await _notificationRepo.GetAllAsync();
+        return notifications.Select(n => new NotificationResponse
+        {
+            NotificationId = n.NotificationId,
+            Title = n.Title,
+            Message = n.Message,
+            NotificationType = n.NotificationType,
+            IsRead = n.IsRead,
+            CreatedAt = n.CreatedAt
+        }).ToList();
     }
 
-    public async Task<IEnumerable<Notification>> GetUnreadAsync()
+    public async Task<IEnumerable<NotificationResponse>> GetUnreadAsync()
     {
-        return await _notificationRepo.GetUnreadAsync();
+        var notifications = await _notificationRepo.GetUnreadAsync();
+        return notifications.Select(n => new NotificationResponse
+        {
+            NotificationId = n.NotificationId,
+            Title = n.Title,
+            Message = n.Message,
+            NotificationType = n.NotificationType,
+            IsRead = n.IsRead,
+            CreatedAt = n.CreatedAt
+        }).ToList();
     }
 
     public async Task MarkAsReadAsync(int id)
@@ -54,11 +73,13 @@ public class NotificationService : INotificationService
 
     public async Task CheckAndCreateNotificationsAsync()
     {
-        var medicines = (await _medicineRepo.GetAllAsync()).ToList();
+        var medicines = (await _medicineRepo.GetAllAsync())
+            .Include(m => m.Batches)
+            .ToList();
 
         foreach (var medicine in medicines)
         {
-            var totalStock = medicine.Batches.Sum(b => b.Balance);
+            var totalStock = medicine.Batches.Sum(b => b.QuantityReceived - b.QuantityIssued - b.QuantityDamaged - b.QuantityExpired);
 
             if (totalStock == 0 && medicine.IsActive)
             {
