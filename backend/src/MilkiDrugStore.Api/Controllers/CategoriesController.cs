@@ -4,6 +4,8 @@ using MilkiDrugStore.Domain.Entities;
 using MilkiDrugStore.Domain.Interfaces.Repositories;
 using MilkiDrugStore.Domain.Interfaces;
 using MilkiDrugStore.Application.Interfaces;
+using MilkiDrugStore.Application.DTOs.Category;
+using Microsoft.EntityFrameworkCore;
 
 namespace MilkiDrugStore.Api.Controllers;
 
@@ -26,8 +28,19 @@ public class CategoriesController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        var categories = (await _categoryRepo.GetAllAsync()).ToList();
-        return Ok(categories);
+        var categories = (await _categoryRepo.GetAllAsync())
+            .Include(c => c.UnitType)
+            .ToList();
+        var result = categories.Select(c => new CategoryResponse
+        {
+            CategoryId = c.CategoryId,
+            Name = c.Name,
+            UnitTypeId = c.UnitTypeId,
+            UnitTypeName = c.UnitType?.Name ?? "",
+            IsActive = c.IsActive,
+            CreatedAt = c.CreatedAt
+        });
+        return Ok(result);
     }
 
     [HttpPost]
@@ -43,7 +56,16 @@ public class CategoriesController : ControllerBase
 
         await _auditLog.LogAsync(userId, $"Created category: {category.Name}", "Categories", category.CategoryId);
 
-        return Ok(category);
+        var result = new CategoryResponse
+        {
+            CategoryId = category.CategoryId,
+            Name = category.Name,
+            UnitTypeId = category.UnitTypeId,
+            UnitTypeName = category.UnitType?.Name ?? "",
+            IsActive = category.IsActive,
+            CreatedAt = category.CreatedAt
+        };
+        return Ok(result);
     }
 
     [HttpPut("{id}")]
@@ -65,7 +87,16 @@ public class CategoriesController : ControllerBase
 
         await _auditLog.LogAsync(userId, $"Updated category: {existing.Name}", "Categories", existing.CategoryId);
 
-        return Ok(existing);
+        var result = new CategoryResponse
+        {
+            CategoryId = existing.CategoryId,
+            Name = existing.Name,
+            UnitTypeId = existing.UnitTypeId,
+            UnitTypeName = existing.UnitType?.Name ?? "",
+            IsActive = existing.IsActive,
+            CreatedAt = existing.CreatedAt
+        };
+        return Ok(result);
     }
 
     [HttpDelete("{id}")]

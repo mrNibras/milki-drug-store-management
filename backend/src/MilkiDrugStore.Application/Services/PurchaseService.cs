@@ -16,6 +16,7 @@ public class PurchaseService : IPurchaseService
         private readonly IRepository<MedicineBatch> _batchRepo;
         private readonly IRepository<Supplier> _supplierRepo;
         private readonly IRepository<Category> _categoryRepo;
+        private readonly IRepository<UnitType> _unitTypeRepo;
         private readonly IRepository<InventoryTransaction> _transactionRepo;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IAuditLogService _auditLog;
@@ -27,6 +28,7 @@ public class PurchaseService : IPurchaseService
             IRepository<MedicineBatch> batchRepo,
             IRepository<Supplier> supplierRepo,
             IRepository<Category> categoryRepo,
+            IRepository<UnitType> unitTypeRepo,
             IRepository<InventoryTransaction> transactionRepo,
             IUnitOfWork unitOfWork,
             IAuditLogService auditLog)
@@ -37,6 +39,7 @@ public class PurchaseService : IPurchaseService
             _batchRepo = batchRepo;
             _supplierRepo = supplierRepo;
             _categoryRepo = categoryRepo;
+            _unitTypeRepo = unitTypeRepo;
             _transactionRepo = transactionRepo;
             _unitOfWork = unitOfWork;
             _auditLog = auditLog;
@@ -94,12 +97,17 @@ public class PurchaseService : IPurchaseService
                             throw new Exception("No category exists to assign the new medicine");
                     }
 
+                    var unitTypeId = (await _unitTypeRepo.GetAllAsync())
+                        .FirstOrDefault(u => u.Name.Equals(item.UnitType, StringComparison.OrdinalIgnoreCase))?.UnitTypeId
+                        ?? (await _unitTypeRepo.GetAllAsync()).FirstOrDefault()?.UnitTypeId
+                        ?? 1;
+
                     medicine = new Medicine
                     {
                         MedicineName = item.MedicineName,
                         GenericName = item.GenericName ?? item.MedicineName,
                         CategoryId = categoryId.Value,
-                        UnitType = item.UnitType ?? "unit",
+                        UnitTypeId = unitTypeId,
                         LowStockThreshold = item.LowStockThreshold > 0 ? item.LowStockThreshold : 10,
                         IsActive = true,
                         CreatedAt = DateTime.Now

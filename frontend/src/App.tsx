@@ -5,6 +5,7 @@ import { LoginPage } from './pages/LoginPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { MedicinesPage } from './pages/MedicinesPage';
 import { CategoriesPage } from './pages/CategoriesPage';
+import { UnitTypesPage } from './pages/UnitTypesPage';
 import { POSPage } from './pages/POSPage';
 import { InventoryPage } from './pages/InventoryPage';
 import { PurchasesPage } from './pages/PurchasesPage';
@@ -52,6 +53,7 @@ export default function App() {
           <Route path="dashboard" element={<DashboardPage />} />
           <Route path="medicines" element={<MedicinesPage />} />
           <Route path="categories" element={<CategoriesPage />} />
+          <Route path="unit-types" element={<UnitTypesPage />} />
           <Route path="pos" element={<POSPage />} />
           <Route path="inventory" element={<InventoryPage />} />
           <Route path="damages" element={<DamageExpiryPage />} />

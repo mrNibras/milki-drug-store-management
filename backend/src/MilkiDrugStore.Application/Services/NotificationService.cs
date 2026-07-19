@@ -2,6 +2,7 @@ using MilkiDrugStore.Application.Interfaces;
 using MilkiDrugStore.Domain.Interfaces.Repositories;
 using MilkiDrugStore.Domain.Interfaces;
 using MilkiDrugStore.Domain.Entities;
+using MilkiDrugStore.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace MilkiDrugStore.Application.Services;
@@ -61,25 +62,25 @@ public class NotificationService : INotificationService
 
             if (totalStock == 0 && medicine.IsActive)
             {
-                if (await _notificationRepo.GetActiveByTypeAndMedicineAsync("OUT_OF_STOCK", medicine.MedicineName) == null)
+                if (await _notificationRepo.GetActiveByTypeAndMedicineAsync(NotificationTypeStrings.OutOfStock, medicine.MedicineName) == null)
                 {
                     await _notificationRepo.AddAsync(new Notification
                     {
                         Title = "Out of Stock",
                         Message = $"{medicine.MedicineName} is out of stock",
-                        NotificationType = "OUT_OF_STOCK"
+                        NotificationType = NotificationTypeStrings.OutOfStock
                     });
                 }
             }
             else if (totalStock <= medicine.LowStockThreshold && totalStock > 0)
             {
-                if (await _notificationRepo.GetActiveByTypeAndMedicineAsync("LOW_STOCK", medicine.MedicineName) == null)
+                if (await _notificationRepo.GetActiveByTypeAndMedicineAsync(NotificationTypeStrings.LowStock, medicine.MedicineName) == null)
                 {
                     await _notificationRepo.AddAsync(new Notification
                     {
                         Title = "Low Stock",
                         Message = $"{medicine.MedicineName} stock is below threshold ({totalStock}/{medicine.LowStockThreshold})",
-                        NotificationType = "LOW_STOCK"
+                        NotificationType = NotificationTypeStrings.LowStock
                     });
                 }
             }

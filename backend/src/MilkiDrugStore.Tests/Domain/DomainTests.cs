@@ -44,17 +44,17 @@ public class UserEntityTests
 
 public class MedicineEntityTests
 {
-    [Fact]
-    public void Medicine_DefaultValues_AreCorrect()
-    {
-        var medicine = new Medicine();
-        medicine.MedicineName.Should().Be(string.Empty);
-        medicine.GenericName.Should().Be(string.Empty);
-        medicine.UnitType.Should().Be("Tablet");
-        medicine.LowStockThreshold.Should().Be(10);
-        medicine.IsActive.Should().BeTrue();
-        medicine.Batches.Should().BeEmpty();
-    }
+  [Fact]
+  public void Medicine_DefaultValues_AreCorrect()
+  {
+      var medicine = new Medicine();
+      medicine.MedicineName.Should().Be(string.Empty);
+      medicine.GenericName.Should().Be(string.Empty);
+      medicine.UnitTypeId.Should().Be(0);
+      medicine.LowStockThreshold.Should().Be(10);
+      medicine.IsActive.Should().BeTrue();
+      medicine.Batches.Should().BeEmpty();
+  }
 }
 
 public class MedicineBatchEntityTests

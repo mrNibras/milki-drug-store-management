@@ -22,3 +22,11 @@ public enum NotificationType
     ExpiryAlert = 3,
     SystemAlert = 4
 }
+
+public static class NotificationTypeStrings
+{
+    public const string LowStock = "LOW_STOCK";
+    public const string OutOfStock = "OUT_OF_STOCK";
+    public const string ExpiryAlert = "EXPIRY_ALERT";
+    public const string SystemAlert = "SYSTEM_ALERT";
+}

@@ -271,6 +271,12 @@ public static class DbSeeder
                     cmd.CommandText = "ALTER TABLE Categories ADD COLUMN IsActive INTEGER NOT NULL DEFAULT 1;";
                     await cmd.ExecuteNonQueryAsync();
                 }
+                if (!categoryColumns.Contains("CreatedAt"))
+                {
+                    await using var cmd = sqliteConnection.CreateCommand();
+                    cmd.CommandText = "ALTER TABLE Categories ADD COLUMN CreatedAt TEXT NOT NULL DEFAULT (datetime('now'));";
+                    await cmd.ExecuteNonQueryAsync();
+                }
             }
 
             await using var medicinePragmaCmd = sqliteConnection.CreateCommand();

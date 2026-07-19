@@ -128,6 +128,17 @@ export interface RefreshTokenRequest {
 export interface Category {
   categoryId: number;
   name: string;
+  unitTypeId: number;
+  unitTypeName: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface UnitType {
+  unitTypeId: number;
+  name: string;
+  description?: string;
+  isActive: boolean;
 }
 
 export interface MedicineResponse {

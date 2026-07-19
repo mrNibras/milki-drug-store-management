@@ -116,8 +116,8 @@ public class ReportService : IReportService
         {
             var supplierPurchases = purchases.Where(p => p.SupplierId == s.SupplierId).ToList();
             var totalAmount = supplierPurchases.Sum(p => p.TotalAmount);
-            var totalPaid = supplierPurchases.Sum(p => p.TotalAmount);
-            var totalDebt = 0m;
+            var totalPaid = supplierPurchases.Sum(p => p.AmountPaid);
+            var totalDebt = supplierPurchases.Sum(p => p.AmountDue);
 
             return new SupplierReportResponse
             {

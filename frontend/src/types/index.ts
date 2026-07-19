@@ -11,6 +11,17 @@ export interface User {
 export interface Category {
   id: string;
   name: string;
+  unitTypeId: number;
+  unitTypeName?: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface UnitType {
+  id: string;
+  name: string;
+  description?: string;
+  isActive: boolean;
 }
 
 export interface Medicine {

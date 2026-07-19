@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { User, Medicine, Supplier, Purchase, Sale, Notification, CartItem, PharmacySettings, AuditLog, Category } from '../types';
+import { User, Medicine, Supplier, Purchase, Sale, Notification, CartItem, PharmacySettings, AuditLog, Category, UnitType } from '../types';
 import { api, LoginRequest, LoginResponse, CreateSaleRequest, CreatePurchaseRequest, RecordDamageRequest, RecordExpiredRequest, ChangePasswordRequest, DamageResponse, ExpiredResponse, AuditLogResponse } from '../services/api';
 import { getSettings, updateSettings } from '../services/settingsApi';
 import { getDaysUntilExpiry, generateId } from '../utils/helpers';
@@ -59,6 +59,9 @@ interface AppState {
   fetchCategories: () => Promise<void>;
   addCategory: (category: Category) => Promise<void>;
 
+  unitTypes: UnitType[];
+  fetchUnitTypes: () => Promise<void>;
+
   auditLogs: AuditLog[];
   fetchAuditLogs: () => Promise<void>;
   addAuditLog: (log: AuditLog) => void;
@@ -92,9 +95,20 @@ const toUser = (r: { userId: number; fullName: string; email: string; roleName: 
   createdAt: r.createdAt,
 });
 
-const toCategory = (r: { categoryId: number; name: string }): Category => ({
+const toCategory = (r: { categoryId: number; name: string; unitTypeId: number; unitTypeName: string; isActive: boolean; createdAt: string }): Category => ({
   id: String(r.categoryId),
   name: r.name,
+  unitTypeId: r.unitTypeId,
+  unitTypeName: r.unitTypeName,
+  isActive: r.isActive,
+  createdAt: r.createdAt,
+});
+
+const toUnitType = (r: { unitTypeId: number; name: string; description?: string; isActive: boolean }): UnitType => ({
+  id: String(r.unitTypeId),
+  name: r.name,
+  description: r.description,
+  isActive: r.isActive,
 });
 
 const toMedicine = (r: MedicineResponse): Medicine => ({
@@ -388,6 +402,16 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
   },
 
+  unitTypes: [],
+  fetchUnitTypes: async () => {
+    try {
+      const res = await api.get<UnitType[]>('/unittypes');
+      set({ unitTypes: res.data.map(toUnitType) });
+    } catch (e) {
+      console.error('Failed to fetch unit types', e);
+    }
+  },
+
   fetchMedicines: async () => {
     set({ loading: true, error: null });
     try {
@@ -632,25 +656,6 @@ export const useAppStore = create<AppState>((set, get) => ({
     const state = get();
     if (state.notifications.length > 0 || state.medicines.length === 0) return;
     state.generateExpiryNotifications();
-  },
-
-  categories: [],
-  fetchCategories: async () => {
-    try {
-      const res = await api.get<Category[]>('/categories');
-      set({ categories: res.data.map(toCategory) });
-    } catch (e) {
-      console.error('Failed to fetch categories', e);
-    }
-  },
-  addCategory: async (category) => {
-    try {
-      await api.post('/categories', { name: category.name });
-      await get().fetchCategories();
-    } catch (e) {
-      console.error('Failed to add category', e);
-      throw e;
-    }
   },
 
   auditLogs: [],

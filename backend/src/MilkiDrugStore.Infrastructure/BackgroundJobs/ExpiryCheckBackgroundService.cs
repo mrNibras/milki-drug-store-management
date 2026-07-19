@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using MilkiDrugStore.Domain.Interfaces.Repositories;
 using MilkiDrugStore.Domain.Interfaces;
 using MilkiDrugStore.Domain.Entities;
+using MilkiDrugStore.Domain.Enums;
 using MilkiDrugStore.Application.Interfaces;
 
 namespace MilkiDrugStore.Infrastructure.BackgroundJobs;
@@ -40,7 +41,7 @@ public class ExpiryCheckBackgroundService : BackgroundService
                         {
                             Title = "Expiry Alert",
                             Message = $"{medicine.MedicineName} is expiring within 6 months",
-                            NotificationType = "EXPIRY_ALERT"
+                            NotificationType = NotificationTypeStrings.ExpiryAlert
                         });
                     }
                 }

@@ -18,6 +18,7 @@ import {
   Sun,
   Moon,
   Activity,
+  Ruler,
 } from 'lucide-react';
 import { useAppStore } from '../../store/appStore';
 import { useThemeStore } from '../../store/themeStore';
@@ -34,6 +35,8 @@ const navItems: NavItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard className="h-5 w-5" />, path: '/dashboard' },
   { id: 'pos', label: 'Point of Sale', icon: <ShoppingCart className="h-5 w-5" />, path: '/pos' },
   { id: 'medicines', label: 'Medicines', icon: <Pill className="h-5 w-5" />, path: '/medicines' },
+  { id: 'categories', label: 'Categories', icon: <Package className="h-5 w-5" />, path: '/categories' },
+  { id: 'unit-types', label: 'Unit Types', icon: <Ruler className="h-5 w-5" />, path: '/unit-types', adminOnly: true },
   { id: 'inventory', label: 'Inventory', icon: <Package className="h-5 w-5" />, path: '/inventory' },
   { id: 'purchases', label: 'Purchases', icon: <ClipboardList className="h-5 w-5" />, path: '/purchases', adminOnly: true },
   { id: 'suppliers', label: 'Suppliers', icon: <Truck className="h-5 w-5" />, path: '/suppliers', adminOnly: true },
