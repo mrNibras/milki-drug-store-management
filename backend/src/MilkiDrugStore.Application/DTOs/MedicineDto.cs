@@ -16,7 +16,7 @@ public class UpdateMedicineRequest
     public int CategoryId { get; set; }
     public int UnitTypeId { get; set; }
     public int LowStockThreshold { get; set; } = 10;
-    public bool IsActive { get; set; }
+    public bool? IsActive { get; set; }
 }
 
 public class AddBatchRequest
@@ -47,6 +47,7 @@ public class MedicineResponse
 public class BatchResponse
 {
     public int BatchId { get; set; }
+    public int MedicineId { get; set; }
     public string BatchNumber { get; set; } = string.Empty;
     public decimal PurchasePrice { get; set; }
     public decimal SellingPrice { get; set; }
@@ -56,4 +57,5 @@ public class BatchResponse
     public int QuantityExpired { get; set; }
     public int Balance { get; set; }
     public DateTime ExpiryDate { get; set; }
+    public DateTime DateReceived { get; set; }
 }

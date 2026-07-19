@@ -147,7 +147,8 @@ export interface MedicineResponse {
   genericName: string;
   categoryId: number;
   categoryName: string;
-  unitType: string;
+  unitTypeId: number;
+  unitTypeName: string;
   lowStockThreshold: number;
   isActive: boolean;
   createdAt: string;
@@ -156,6 +157,7 @@ export interface MedicineResponse {
 
 export interface BatchResponse {
   batchId: number;
+  medicineId: number;
   batchNumber: string;
   purchasePrice: number;
   sellingPrice: number;
@@ -165,6 +167,7 @@ export interface BatchResponse {
   quantityExpired: number;
   balance: number;
   expiryDate: string;
+  dateReceived: string;
 }
 
 export interface SupplierResponse {
@@ -289,7 +292,7 @@ export interface UserResponse {
   fullName: string;
   email: string;
   roleId: number;
-  roleName: string;
+  role: { name: string } | null;
   isApproved: boolean;
   isActive: boolean;
   createdAt: string;

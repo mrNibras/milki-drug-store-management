@@ -8,7 +8,7 @@ import { formatDate, getExpiryStatus, getExpiryColor, getStockStatus, getStockCo
 import { Medicine } from '../types';
 
 export const MedicinesPage: React.FC = () => {
-  const { medicines, categories, fetchMedicines, fetchCategories, addMedicine, updateMedicine, deleteMedicine, loading } = useAppStore();
+  const { medicines, categories, unitTypes, fetchMedicines, fetchCategories, fetchUnitTypes, addMedicine, updateMedicine, deleteMedicine, loading } = useAppStore();
   const { theme } = useThemeStore();
   const isDark = theme === 'dark';
   const [search, setSearch] = useState('');
@@ -19,13 +19,14 @@ export const MedicinesPage: React.FC = () => {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedMedicine, setSelectedMedicine] = useState<Medicine | null>(null);
   const [formData, setFormData] = useState({
-    name: '', genericName: '', categoryId: '', unitType: 'Tablet', lowStockThreshold: 10,
+    name: '', genericName: '', categoryId: '', unitTypeId: 1, lowStockThreshold: 10,
   });
 
   useEffect(() => {
     fetchMedicines();
     fetchCategories();
-  }, [fetchMedicines, fetchCategories]);
+    fetchUnitTypes();
+  }, [fetchMedicines, fetchCategories, fetchUnitTypes]);
 
   const filteredMedicines = useMemo(() => {
     return medicines.filter(m => {
@@ -43,7 +44,7 @@ export const MedicinesPage: React.FC = () => {
   const getMedicineStock = (m: Medicine) => m.batches.reduce((sum, b) => sum + b.quantity, 0);
 
   const handleAdd = () => {
-    setFormData({ name: '', genericName: '', categoryId: '', unitType: 'Tablet', lowStockThreshold: 10 });
+    setFormData({ name: '', genericName: '', categoryId: '', unitTypeId: 1, lowStockThreshold: 10 });
     setShowAddModal(true);
   };
 
@@ -53,7 +54,7 @@ export const MedicinesPage: React.FC = () => {
       name: medicine.name,
       genericName: medicine.genericName,
       categoryId: medicine.categoryId,
-      unitType: medicine.unitType,
+      unitTypeId: medicine.unitTypeId,
       lowStockThreshold: medicine.lowStockThreshold,
     });
     setShowEditModal(true);
@@ -71,7 +72,8 @@ export const MedicinesPage: React.FC = () => {
       genericName: formData.genericName,
       categoryId: formData.categoryId,
       categoryName: categories.find(c => c.id === formData.categoryId)?.name || '',
-      unitType: formData.unitType,
+      unitType: unitTypes.find(u => u.id === String(formData.unitTypeId))?.name || 'Tablet',
+      unitTypeId: formData.unitTypeId,
       lowStockThreshold: formData.lowStockThreshold,
       createdAt: new Date().toISOString(),
       batches: [],
@@ -87,8 +89,9 @@ export const MedicinesPage: React.FC = () => {
       genericName: formData.genericName,
       categoryId: formData.categoryId,
       categoryName: categories.find(c => c.id === formData.categoryId)?.name || '',
-      unitType: formData.unitType,
+      unitTypeId: formData.unitTypeId,
       lowStockThreshold: formData.lowStockThreshold,
+      isActive: selectedMedicine.isActive,
     });
     setShowEditModal(false);
   };
@@ -403,18 +406,11 @@ export const MedicinesPage: React.FC = () => {
                     Unit Type
                   </label>
                   <select
-                    value={formData.unitType}
-                    onChange={e => setFormData({ ...formData, unitType: e.target.value })}
+                    value={String(formData.unitTypeId)}
+                    onChange={e => setFormData({ ...formData, unitTypeId: Number(e.target.value) })}
                     className={inputClass}
                   >
-                    <option value="Tablet">Tablet</option>
-                    <option value="Capsule">Capsule</option>
-                    <option value="Bottle">Bottle</option>
-                    <option value="Tube">Tube</option>
-                    <option value="Piece">Piece</option>
-                    <option value="Box">Box</option>
-                    <option value="Sachet">Sachet</option>
-                    <option value="Vial">Vial</option>
+                    {unitTypes.map(u => <option key={u.id} value={Number(u.id)}>{u.name}</option>)}
                   </select>
                 </div>
               </div>
@@ -514,18 +510,11 @@ export const MedicinesPage: React.FC = () => {
                       Unit Type
                     </label>
                     <select
-                      value={formData.unitType}
-                      onChange={e => setFormData({ ...formData, unitType: e.target.value })}
+                      value={String(formData.unitTypeId)}
+                      onChange={e => setFormData({ ...formData, unitTypeId: Number(e.target.value) })}
                       className={inputClass}
                     >
-                      <option value="Tablet">Tablet</option>
-                      <option value="Capsule">Capsule</option>
-                      <option value="Bottle">Bottle</option>
-                      <option value="Tube">Tube</option>
-                      <option value="Piece">Piece</option>
-                      <option value="Box">Box</option>
-                      <option value="Sachet">Sachet</option>
-                      <option value="Vial">Vial</option>
+                      {unitTypes.map(u => <option key={u.id} value={Number(u.id)}>{u.name}</option>)}
                     </select>
                   </div>
                 </div>

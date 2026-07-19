@@ -86,7 +86,8 @@ public class MedicineService : IMedicineService
         medicine.CategoryId = request.CategoryId;
         medicine.UnitTypeId = request.UnitTypeId;
         medicine.LowStockThreshold = request.LowStockThreshold;
-        medicine.IsActive = request.IsActive;
+        if (request.IsActive.HasValue)
+            medicine.IsActive = request.IsActive.Value;
 
         await _medicineRepo.UpdateAsync(medicine);
         await _unitOfWork.SaveChangesAsync();

@@ -86,11 +86,11 @@ interface AppState {
   toggleSidebar: () => void;
 }
 
-const toUser = (r: { userId: number; fullName: string; email: string; roleName: string; isActive: boolean; createdAt: string }): User => ({
+const toUser = (r: { userId: number; fullName: string; email: string; role: { name: string } | null; isActive: boolean; createdAt: string }): User => ({
   id: String(r.userId),
   fullName: r.fullName,
   email: r.email,
-  role: r.roleName.toLowerCase() as 'admin' | 'pharmacist',
+  role: (r.role?.name?.toLowerCase() || 'pharmacist') as 'admin' | 'pharmacist',
   isActive: r.isActive,
   createdAt: r.createdAt,
 });
@@ -117,18 +117,19 @@ const toMedicine = (r: MedicineResponse): Medicine => ({
   genericName: r.genericName,
   categoryId: String(r.categoryId),
   categoryName: r.categoryName,
-  unitType: r.unitType,
+  unitType: r.unitTypeName,
+  unitTypeId: r.unitTypeId,
   lowStockThreshold: r.lowStockThreshold,
   createdAt: r.createdAt,
   batches: r.batches.map(b => ({
     id: String(b.batchId),
-    medicineId: String(r.medicineId),
+    medicineId: String(b.medicineId),
     batchNumber: b.batchNumber,
     purchasePrice: b.purchasePrice,
     sellingPrice: b.sellingPrice,
     quantity: b.balance,
     expiryDate: b.expiryDate,
-    createdAt: r.createdAt,
+    createdAt: b.dateReceived,
   })),
 });
 
@@ -429,7 +430,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         medicineName: medicine.name,
         genericName: medicine.genericName,
         categoryId: Number(medicine.categoryId),
-        unitType: medicine.unitType,
+        unitTypeId: medicine.unitTypeId,
         lowStockThreshold: medicine.lowStockThreshold,
       });
       await get().fetchMedicines();
@@ -445,7 +446,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         medicineName: updates.name,
         genericName: updates.genericName,
         categoryId: Number(updates.categoryId),
-        unitType: updates.unitType,
+        unitTypeId: updates.unitTypeId,
         lowStockThreshold: updates.lowStockThreshold,
         isActive: updates.isActive,
       });

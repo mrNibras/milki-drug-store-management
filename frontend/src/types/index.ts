@@ -31,6 +31,7 @@ export interface Medicine {
   categoryId: string;
   categoryName: string;
   unitType: string;
+  unitTypeId: number;
   lowStockThreshold: number;
   createdAt: string;
   batches: MedicineBatch[];
