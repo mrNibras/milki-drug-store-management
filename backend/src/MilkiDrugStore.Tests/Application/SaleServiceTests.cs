@@ -153,4 +153,139 @@ public class SaleServiceTests
         result.PaymentStatus.Should().Be("unpaid");
         result.AmountDue.Should().Be(20);
     }
+
+    [Fact]
+    public async Task CreateAsync_WithDiscount_PreservesDiscountForAdmin()
+    {
+        var medicine = new Medicine { MedicineId = 1, MedicineName = "Paracetamol", LowStockThreshold = 10 };
+        var batch = new MedicineBatch
+        {
+            BatchId = 1,
+            MedicineId = 1,
+            BatchNumber = "B001",
+            QuantityReceived = 100,
+            QuantityIssued = 0,
+            QuantityDamaged = 0,
+            QuantityExpired = 0,
+            SellingPrice = 100,
+            PurchasePrice = 50
+        };
+
+        _medicineRepo.Setup(r => r.FindAsync(It.IsAny<System.Linq.Expressions.Expression<System.Func<Medicine, bool>>>()))
+            .ReturnsAsync(new List<Medicine> { medicine }.AsQueryable());
+        _batchRepo.Setup(r => r.FindAsync(It.IsAny<System.Linq.Expressions.Expression<System.Func<MedicineBatch, bool>>>()))
+            .ReturnsAsync(new List<MedicineBatch> { batch }.AsQueryable());
+
+        var request = new CreateSaleRequest
+        {
+            Items = new List<SaleItemRequest> { new() { MedicineId = 1, Quantity = 2, DiscountAmount = 10 } },
+            PaymentMethod = "cash",
+            AmountPaid = 180,
+            DiscountReason = "Customer loyalty"
+        };
+
+        var result = await _sut.CreateAsync(request, 1, "Admin");
+
+        result.Should().NotBeNull();
+        result.TotalAmount.Should().Be(180);
+        result.TotalDiscount.Should().Be(20);
+        result.Items.Should().HaveCount(1);
+        result.Items[0].DiscountAmount.Should().Be(10);
+        result.Items[0].UnitPrice.Should().Be(100);
+    }
+
+    [Fact]
+    public async Task CreateAsync_WithDiscount_CapsDiscountForPharmacist()
+    {
+        var medicine = new Medicine { MedicineId = 1, MedicineName = "Paracetamol", LowStockThreshold = 10 };
+        var batch = new MedicineBatch
+        {
+            BatchId = 1,
+            MedicineId = 1,
+            BatchNumber = "B001",
+            QuantityReceived = 100,
+            QuantityIssued = 0,
+            QuantityDamaged = 0,
+            QuantityExpired = 0,
+            SellingPrice = 100,
+            PurchasePrice = 50
+        };
+
+        _medicineRepo.Setup(r => r.FindAsync(It.IsAny<System.Linq.Expressions.Expression<System.Func<Medicine, bool>>>()))
+            .ReturnsAsync(new List<Medicine> { medicine }.AsQueryable());
+        _batchRepo.Setup(r => r.FindAsync(It.IsAny<System.Linq.Expressions.Expression<System.Func<MedicineBatch, bool>>>()))
+            .ReturnsAsync(new List<MedicineBatch> { batch }.AsQueryable());
+
+        var request = new CreateSaleRequest
+        {
+            Items = new List<SaleItemRequest> { new() { MedicineId = 1, Quantity = 2, DiscountAmount = 10 } },
+            PaymentMethod = "cash",
+            AmountPaid = 190,
+            DiscountReason = "Customer loyalty"
+        };
+
+        var result = await _sut.CreateAsync(request, 1, "Pharmacist");
+
+        result.Should().NotBeNull();
+        result.TotalAmount.Should().Be(190);
+        result.TotalDiscount.Should().Be(10);
+        result.Items.Should().HaveCount(1);
+        result.Items[0].DiscountAmount.Should().Be(5);
+        result.Items[0].UnitPrice.Should().Be(100);
+    }
+
+    [Fact]
+    public async Task GetAllAsync_ReturnsSalesWithItemsAndTotals()
+    {
+        var user = new User { UserId = 1, FullName = "Admin" };
+        var medicine = new Medicine { MedicineId = 1, MedicineName = "Paracetamol" };
+        var batch = new MedicineBatch { BatchId = 1, MedicineId = 1, BatchNumber = "B001", SellingPrice = 100, PurchasePrice = 50 };
+        var sale = new Sale
+        {
+            SaleId = 1,
+            SaleNumber = "SAL-2026-00001",
+            SaleDate = DateTime.Now,
+            TotalAmount = 200,
+            TotalProfit = 100,
+            TotalDiscount = 0,
+            UserId = 1,
+            PaymentMethod = "cash",
+            PaymentStatus = "paid",
+            AmountPaid = 200,
+            AmountDue = 0,
+            User = user,
+            Items = new List<SaleItem>
+            {
+                new SaleItem
+                {
+                    SaleItemId = 1,
+                    SaleId = 1,
+                    MedicineId = 1,
+                    BatchId = 1,
+                    Quantity = 2,
+                    UnitPrice = 100,
+                    DiscountAmount = 0,
+                    PurchasePrice = 50,
+                    Profit = 100,
+                    SubTotal = 200,
+                    Medicine = medicine,
+                    Batch = batch
+                }
+            }
+        };
+
+        _saleRepo.Setup(r => r.GetAllAsync()).ReturnsAsync(new List<Sale> { sale }.AsQueryable());
+
+        var result = await _sut.GetAllAsync();
+
+        result.Should().HaveCount(1);
+        var s = result.First();
+        s.TotalAmount.Should().Be(200);
+        s.TotalProfit.Should().Be(100);
+        s.UserName.Should().Be("Admin");
+        s.Items.Should().HaveCount(1);
+        s.Items[0].MedicineName.Should().Be("Paracetamol");
+        s.Items[0].BatchNumber.Should().Be("B001");
+        s.Items[0].DiscountAmount.Should().Be(0);
+    }
 }

@@ -86,4 +86,54 @@ public class AuthServiceTests
         Func<Task> act = () => _sut.ChangePasswordAsync(1, "wrong", "newpass");
         await act.Should().ThrowAsync<Exception>().WithMessage("*Current password is incorrect*");
     }
+
+    [Fact]
+    public async Task LoginAsync_InactiveUser_ReturnsNull()
+    {
+        var user = new User { UserId = 1, Email = "test@test.com", PasswordHash = BCrypt.Net.BCrypt.HashPassword("pass"), IsActive = false, IsApproved = true };
+        _userRepo.Setup(r => r.FindAsync(It.IsAny<System.Linq.Expressions.Expression<System.Func<User, bool>>>()))
+            .ReturnsAsync(new List<User> { user }.AsQueryable());
+        _roleRepo.Setup(r => r.GetByIdAsync(It.IsAny<int>())).ReturnsAsync(new Role { RoleId = 2, Name = "Pharmacist" });
+
+        var result = await _sut.LoginAsync(new LoginRequest { Email = "test@test.com", Password = "pass" });
+        result.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task LoginAsync_UnapprovedUser_ReturnsNull()
+    {
+        var user = new User { UserId = 1, Email = "test@test.com", PasswordHash = BCrypt.Net.BCrypt.HashPassword("pass"), IsActive = true, IsApproved = false };
+        _userRepo.Setup(r => r.FindAsync(It.IsAny<System.Linq.Expressions.Expression<System.Func<User, bool>>>()))
+            .ReturnsAsync(new List<User> { user }.AsQueryable());
+        _roleRepo.Setup(r => r.GetByIdAsync(It.IsAny<int>())).ReturnsAsync(new Role { RoleId = 2, Name = "Pharmacist" });
+
+        var result = await _sut.LoginAsync(new LoginRequest { Email = "test@test.com", Password = "pass" });
+        result.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task RefreshTokenAsync_InactiveUser_ReturnsNull()
+    {
+        var refreshToken = new RefreshToken { Token = "rt1", UserId = 1, ExpiryDate = DateTime.UtcNow.AddDays(7), IsRevoked = false };
+        var user = new User { UserId = 1, IsActive = false, IsApproved = true };
+        _unitOfWork.Setup(u => u.RefreshTokens.FindAsync(It.IsAny<System.Linq.Expressions.Expression<System.Func<RefreshToken, bool>>>()))
+            .ReturnsAsync(new List<RefreshToken> { refreshToken }.AsQueryable());
+        _userRepo.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(user);
+
+        var result = await _sut.RefreshTokenAsync(new RefreshTokenRequest { RefreshToken = "rt1" });
+        result.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task RefreshTokenAsync_UnapprovedUser_ReturnsNull()
+    {
+        var refreshToken = new RefreshToken { Token = "rt1", UserId = 1, ExpiryDate = DateTime.UtcNow.AddDays(7), IsRevoked = false };
+        var user = new User { UserId = 1, IsActive = true, IsApproved = false };
+        _unitOfWork.Setup(u => u.RefreshTokens.FindAsync(It.IsAny<System.Linq.Expressions.Expression<System.Func<RefreshToken, bool>>>()))
+            .ReturnsAsync(new List<RefreshToken> { refreshToken }.AsQueryable());
+        _userRepo.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(user);
+
+        var result = await _sut.RefreshTokenAsync(new RefreshTokenRequest { RefreshToken = "rt1" });
+        result.Should().BeNull();
+    }
 }

@@ -45,7 +45,7 @@ public class AuthService : IAuthService
         if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
             return null;
 
-        if (!user.IsActive)
+        if (!user.IsActive || !user.IsApproved)
             return null;
 
         var role = await _roleRepo.GetByIdAsync(user.RoleId);
@@ -267,7 +267,7 @@ public class AuthService : IAuthService
             return null;
 
         var user = await _userRepo.GetByIdAsync(refreshToken.UserId);
-        if (user == null || !user.IsActive)
+        if (user == null || !user.IsActive || !user.IsApproved)
             return null;
 
         refreshToken.IsRevoked = true;
