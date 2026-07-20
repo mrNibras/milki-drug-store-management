@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: milki-drug-store-api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: JwtSettings__Secret
+        generateValue: true
+      - key: PORT
+        value: 8080
+      - key: AdminEmail
+        value: admin@milki.com
+      - key: ConnectionStrings__DefaultConnection
+        value: Data Source=/app/data/MilkiDrugStoreDB.db
+    disk:
+      name: milki-data
+      mountPath: /app/data
+      sizeGB: 1

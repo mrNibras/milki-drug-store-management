@@ -2,6 +2,7 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 WORKDIR /app
 EXPOSE 8080
 EXPOSE 8081
+RUN mkdir -p /app/data && chmod 777 /app/data
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
@@ -21,4 +22,7 @@ RUN dotnet publish "MilkiDrugStore.Api.csproj" -c Release -o /app/publish
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "MilkiDrugStore.Api.dll"]
+COPY --from=build /src/docker-entrypoint.sh /app/docker-entrypoint.sh
+RUN chmod +x /app/docker-entrypoint.sh
+ENV ConnectionStrings__DefaultConnection="Data Source=/app/data/MilkiDrugStoreDB.db"
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
