@@ -10,6 +10,7 @@ public class AppDbContext : DbContext
 
     public DbSet<Role> Roles => Set<Role>();
     public DbSet<User> Users => Set<User>();
+    public DbSet<Branch> Branches => Set<Branch>();
     public DbSet<Category> Categories => Set<Category>();
     public DbSet<Medicine> Medicines => Set<Medicine>();
     public DbSet<MedicineBatch> MedicineBatches => Set<MedicineBatch>();

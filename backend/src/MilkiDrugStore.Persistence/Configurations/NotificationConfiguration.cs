@@ -12,5 +12,6 @@ public class NotificationConfiguration : IEntityTypeConfiguration<Notification>
         builder.Property(n => n.Title).HasMaxLength(150).IsRequired();
         builder.Property(n => n.Message).HasMaxLength(500);
         builder.Property(n => n.NotificationType).HasMaxLength(50);
+        builder.HasOne(n => n.Branch).WithMany(b => b.Notifications).HasForeignKey(n => n.BranchId);
     }
 }

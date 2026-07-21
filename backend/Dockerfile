@@ -1,28 +1,30 @@
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
-WORKDIR /app
-EXPOSE 8080
-EXPOSE 8081
-RUN mkdir -p /app/data && chmod 777 /app/data
-
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
+
 COPY ["src/MilkiDrugStore.Api/MilkiDrugStore.Api.csproj", "src/MilkiDrugStore.Api/"]
 COPY ["src/MilkiDrugStore.Application/MilkiDrugStore.Application.csproj", "src/MilkiDrugStore.Application/"]
 COPY ["src/MilkiDrugStore.Domain/MilkiDrugStore.Domain.csproj", "src/MilkiDrugStore.Domain/"]
 COPY ["src/MilkiDrugStore.Persistence/MilkiDrugStore.Persistence.csproj", "src/MilkiDrugStore.Persistence/"]
 COPY ["src/MilkiDrugStore.Infrastructure/MilkiDrugStore.Infrastructure.csproj", "src/MilkiDrugStore.Infrastructure/"]
+
 RUN dotnet restore "src/MilkiDrugStore.Api/MilkiDrugStore.Api.csproj"
+
 COPY . .
 WORKDIR /src/src/MilkiDrugStore.Api
 RUN dotnet build "MilkiDrugStore.Api.csproj" -c Release -o /app/build
 
 FROM build AS publish
-RUN dotnet publish "MilkiDrugStore.Api.csproj" -c Release -o /app/publish
+RUN dotnet publish "MilkiDrugStore.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
-FROM base AS final
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 WORKDIR /app
+EXPOSE 8080
+
+RUN mkdir -p /app/data
+
 COPY --from=publish /app/publish .
-COPY --from=build /src/docker-entrypoint.sh /app/docker-entrypoint.sh
-RUN chmod +x /app/docker-entrypoint.sh
-ENV ConnectionStrings__DefaultConnection="Data Source=/app/data/MilkiDrugStoreDB.db"
-ENTRYPOINT ["/app/docker-entrypoint.sh"]
+
+ENV ASPNETCORE_URLS=http://+:8080
+ENV ASPNETCORE_ENVIRONMENT=Production
+
+ENTRYPOINT ["dotnet", "MilkiDrugStore.Api.dll"]

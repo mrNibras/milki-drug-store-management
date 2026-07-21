@@ -25,6 +25,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<IInventoryService, InventoryService>();
+        services.AddScoped<IBranchService, BranchService>();
+        services.AddScoped<IBackupService, BackupService>();
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped(typeof(IRepository<>), typeof(Repository<>));

@@ -21,6 +21,7 @@ public class SaleConfiguration : IEntityTypeConfiguration<Sale>
         builder.Property(s => s.AmountDue).HasColumnType("decimal(18,2)");
         builder.Property(s => s.ReferenceNumber).HasMaxLength(100);
         builder.HasOne(s => s.User).WithMany(u => u.Sales).HasForeignKey(s => s.UserId);
+        builder.HasOne(s => s.Branch).WithMany(b => b.Sales).HasForeignKey(s => s.BranchId);
         builder.HasIndex(s => s.SaleDate);
     }
 }

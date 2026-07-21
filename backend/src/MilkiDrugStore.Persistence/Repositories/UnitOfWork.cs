@@ -17,6 +17,7 @@ public class UnitOfWork : IUnitOfWork
         _context = context;
         Roles = new Repository<Role>(_context);
         Users = new Repository<User>(_context);
+        Branches = new Repository<Branch>(_context);
         Categories = new Repository<Category>(_context);
         Medicines = new Repository<Medicine>(_context);
         MedicineBatches = new Repository<MedicineBatch>(_context);
@@ -36,6 +37,7 @@ public class UnitOfWork : IUnitOfWork
 
     public IRepository<Role> Roles { get; }
     public IRepository<User> Users { get; }
+    public IRepository<Branch> Branches { get; }
     public IRepository<Category> Categories { get; }
     public IRepository<Medicine> Medicines { get; }
     public IRepository<MedicineBatch> MedicineBatches { get; }

@@ -7,15 +7,24 @@ services:
     envVars:
       - key: ASPNETCORE_ENVIRONMENT
         value: Production
+      - key: ASPNETCORE_URLS
+        value: http://+:8080
       - key: JwtSettings__Secret
         generateValue: true
-      - key: PORT
-        value: 8080
+      - key: JwtSettings__Issuer
+        value: MilkiDrugStore
+      - key: JwtSettings__Audience
+        value: MilkiDrugStoreClient
+      - key: JwtSettings__ExpiryMinutes
+        value: "60"
       - key: AdminEmail
         value: admin@milki.com
+      - key: AllowedOrigins
+        value: https://milki-drug-store-management.vercel.app
       - key: ConnectionStrings__DefaultConnection
-        value: Data Source=/app/data/MilkiDrugStoreDB.db
+        value: Data Source=/var/data/MilkiDrugStoreDB.db
+    healthCheckPath: /health
     disk:
       name: milki-data
-      mountPath: /app/data
+      mountPath: /var/data
       sizeGB: 1

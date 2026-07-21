@@ -14,5 +14,6 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(u => u.PasswordHash).HasMaxLength(255).IsRequired();
         builder.HasIndex(u => u.Email).IsUnique();
         builder.HasOne(u => u.Role).WithMany(r => r.Users).HasForeignKey(u => u.RoleId);
+        builder.HasOne(u => u.Branch).WithMany(b => b.Users).HasForeignKey(u => u.BranchId);
     }
 }

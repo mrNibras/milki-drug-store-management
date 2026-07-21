@@ -1,5 +1,7 @@
 using MilkiDrugStore.Api;
+using MilkiDrugStore.Api.Configuration;
 using MilkiDrugStore.Api.Extensions;
+using MilkiDrugStore.Api.Middleware;
 using MilkiDrugStore.Application.Mappings;
 using MilkiDrugStore.Infrastructure.BackgroundJobs;
 using MilkiDrugStore.Infrastructure.Logging;
@@ -7,12 +9,31 @@ using MilkiDrugStore.Persistence.Repositories;
 using MilkiDrugStore.Persistence.Context;
 using MilkiDrugStore.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Ensure data directory exists for SQLite.
+var dataDir = builder.Configuration.GetValue<string>("DataDirectory") ?? "/var/data";
+Directory.CreateDirectory(dataDir);
+
+// Strongly typed configuration.
+builder.Services.AddOptions<JwtSettings>()
+    .Bind(builder.Configuration.GetSection("JwtSettings"))
+    .ValidateOnStart();
+
+builder.Services.AddOptions<EmailSettings>()
+    .Bind(builder.Configuration.GetSection("Email"))
+    .ValidateOnStart();
+
+builder.Services.AddOptions<CorsSettings>()
+    .Bind(builder.Configuration.GetSection("Cors"))
+    .ValidateOnStart();
+
+// Database provider auto-detection.
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
-    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
     if (!string.IsNullOrEmpty(connectionString) && connectionString.Contains("Server=", StringComparison.OrdinalIgnoreCase))
     {
         options.UseSqlServer(connectionString);
@@ -27,9 +48,10 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 builder.Services.AddApplicationServices();
 
-LoggerConfiguration.ConfigureLogger(builder.Logging);
+// JWT with strongly typed configuration.
+var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>() 
+                  ?? new JwtSettings();
 
-var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 builder.Services.AddAuthentication(options =>
     {
         options.DefaultAuthenticateScheme = Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme;
@@ -41,17 +63,17 @@ builder.Services.AddAuthentication(options =>
         {
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(
-                System.Text.Encoding.UTF8.GetBytes(jwtSettings["Secret"] ?? "SuperSecretKey12345SuperSecretKey12345")),
-            ValidateIssuer = false,
-            ValidateAudience = false,
+                System.Text.Encoding.UTF8.GetBytes(jwtSettings.Secret)),
+            ValidateIssuer = !string.IsNullOrEmpty(jwtSettings.Issuer),
+            ValidateAudience = !string.IsNullOrEmpty(jwtSettings.Audience),
+            ValidIssuer = jwtSettings.Issuer,
+            ValidAudience = jwtSettings.Audience,
             ClockSkew = TimeSpan.Zero,
             RoleClaimType = System.Security.Claims.ClaimTypes.Role,
             NameClaimType = System.Security.Claims.ClaimTypes.NameIdentifier
         };
     });
 
-// Every endpoint requires an authenticated user by default (defense-in-depth).
-// Endpoints opt out explicitly with [AllowAnonymous].
 builder.Services.AddAuthorization(options =>
 {
     options.FallbackPolicy = new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder()
@@ -59,16 +81,23 @@ builder.Services.AddAuthorization(options =>
         .Build();
 });
 
-builder.Services.AddCors(options =>
+// CORS from configuration.
+var corsSettings = builder.Configuration.GetSection("Cors").Get<CorsSettings>() 
+                   ?? new CorsSettings();
+
+if (corsSettings.AllowedOrigins.Count > 0)
 {
-    options.AddPolicy("AllowFrontend", policy =>
+    builder.Services.AddCors(options =>
     {
-            policy.WithOrigins("http://localhost:5173", "http://localhost:3000", "https://milki-drug-store-management.vercel.app")
+        options.AddPolicy("AllowFrontend", policy =>
+        {
+            policy.WithOrigins(corsSettings.AllowedOrigins.ToArray())
                 .AllowAnyHeader()
                 .AllowAnyMethod()
                 .AllowCredentials();
+        });
     });
-});
+}
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
@@ -77,6 +106,7 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
         options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
     });
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -100,30 +130,65 @@ builder.Services.AddSwaggerGen(options =>
         { jwtScheme, Array.Empty<string>() }
     });
 });
-    builder.Services.AddHostedService<MilkiDrugStore.Infrastructure.BackgroundJobs.ExpiryCheckBackgroundService>();
-    builder.Services.AddHostedService<MilkiDrugStore.Infrastructure.BackgroundJobs.NotificationCheckBackgroundService>();
 
+builder.Services.AddHostedService<MilkiDrugStore.Infrastructure.BackgroundJobs.ExpiryCheckBackgroundService>();
+builder.Services.AddHostedService<MilkiDrugStore.Infrastructure.BackgroundJobs.NotificationCheckBackgroundService>();
+
+// Global exception filter.
+builder.Services.AddControllers(options =>
+{
+    options.Filters.Add<MilkiDrugStore.Api.Middleware.GlobalExceptionFilter>();
+});
 
 var app = builder.Build();
 
+// Apply migrations and seed database.
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    await DbSeeder.SeedAsync(db);
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    
+    try
+    {
+        logger.LogInformation("Applying database migrations...");
+        db.Database.Migrate();
+        logger.LogInformation("Database migrations applied successfully.");
+        
+        logger.LogInformation("Seeding database...");
+        await DbSeeder.SeedAsync(db);
+        logger.LogInformation("Database seeded successfully.");
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "An error occurred while migrating or seeding the database.");
+        throw;
+    }
 }
 
-app.UseSwagger();
-app.UseSwaggerUI();
+// Forwarded headers for Render proxy.
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor |
+                       Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto
+});
 
-app.UseCors("AllowFrontend");
+// Security headers.
+app.UseMiddleware<SecurityHeadersMiddleware>();
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
 app.UseHttpsRedirection();
+app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
 
-var port = Environment.GetEnvironmentVariable("PORT") ?? "5000";
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
 app.Urls.Add($"http://0.0.0.0:{port}");
 
 app.Run();

@@ -4,6 +4,7 @@ public class MedicineBatch
 {
     public int BatchId { get; set; }
     public int MedicineId { get; set; }
+    public int BranchId { get; set; }
     public string BatchNumber { get; set; } = string.Empty;
     public decimal PurchasePrice { get; set; }
     public decimal SellingPrice { get; set; }
@@ -16,6 +17,7 @@ public class MedicineBatch
     public string? Remarks { get; set; }
 
     public Medicine? Medicine { get; set; }
+    public Branch? Branch { get; set; }
     public List<SaleItem> SaleItems { get; set; } = new();
     public List<PurchaseItem> PurchaseItems { get; set; } = new();
     public List<InventoryTransaction> InventoryTransactions { get; set; } = new();

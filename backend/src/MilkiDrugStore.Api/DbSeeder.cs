@@ -24,12 +24,21 @@ public static class DbSeeder
         if (!context.Users.Any())
         {
             var adminRole = context.Roles.First(r => r.Name == "Admin");
+            var mainBranch = context.Branches.FirstOrDefault(b => b.BranchName == "Main Branch");
+            if (mainBranch == null)
+            {
+                mainBranch = new Branch { BranchName = "Main Branch", Location = "Main Store", IsActive = true, CreatedAt = DateTime.Now };
+                context.Branches.Add(mainBranch);
+                await context.SaveChangesAsync();
+            }
+
             context.Users.Add(new User
             {
                 FullName = "System Admin",
                 Email = "admin@milki.com",
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin123"),
                 RoleId = adminRole.RoleId,
+                BranchId = mainBranch.BranchId,
                 IsApproved = true,
                 IsActive = true,
                 CreatedAt = DateTime.Now
@@ -81,8 +90,17 @@ public static class DbSeeder
 
         if (!context.Settings.Any())
         {
+            var mainBranch = context.Branches.FirstOrDefault(b => b.BranchName == "Main Branch");
+            if (mainBranch == null)
+            {
+                mainBranch = new Branch { BranchName = "Main Branch", Location = "Main Store", IsActive = true, CreatedAt = DateTime.Now };
+                context.Branches.Add(mainBranch);
+                await context.SaveChangesAsync();
+            }
+
             context.Settings.Add(new Settings
             {
+                BranchId = mainBranch.BranchId,
                 PharmacyName = "Milki Drug Store",
                 Address = "",
                 Phone = "",
@@ -328,6 +346,61 @@ public static class DbSeeder
                     IsActive INTEGER NOT NULL DEFAULT 1
                 );";
                 await cmd.ExecuteNonQueryAsync();
+            }
+
+            // Branch-related migrations
+            await using var branchPragmaCmd = sqliteConnection.CreateCommand();
+            branchPragmaCmd.CommandText = "SELECT name FROM sqlite_master WHERE type='table' AND name='Branches';";
+            var branchTableExists = false;
+            await using (var branchReader = await branchPragmaCmd.ExecuteReaderAsync())
+            {
+                if (await branchReader.ReadAsync())
+                {
+                    branchTableExists = true;
+                }
+            }
+
+            if (!branchTableExists)
+            {
+                await using var cmd = sqliteConnection.CreateCommand();
+                cmd.CommandText = @"CREATE TABLE Branches (
+                    BranchId INTEGER PRIMARY KEY AUTOINCREMENT,
+                    BranchName VARCHAR(200) NOT NULL,
+                    Location VARCHAR(200),
+                    Phone VARCHAR(50),
+                    Email VARCHAR(150),
+                    Address VARCHAR(300),
+                    IsActive INTEGER NOT NULL DEFAULT 1,
+                    CreatedAt TEXT NOT NULL DEFAULT (datetime('now'))
+                );";
+                await cmd.ExecuteNonQueryAsync();
+
+                await using var insertCmd = sqliteConnection.CreateCommand();
+                insertCmd.CommandText = "INSERT INTO Branches (BranchName, Location, IsActive, CreatedAt) VALUES ('Main Branch', 'Main Store', 1, datetime('now'));";
+                await insertCmd.ExecuteNonQueryAsync();
+            }
+
+            var tablesToAddBranch = new[] { "Users", "Sales", "Purchases", "MedicineBatches", "DamageRecords", "ExpiredRecords", "AuditLogs", "Notifications", "Settings" };
+            foreach (var table in tablesToAddBranch)
+            {
+                await using var tablePragmaCmd = sqliteConnection.CreateCommand();
+                tablePragmaCmd.CommandText = $"PRAGMA table_info({table});";
+                var tableColumns = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                await using (var tableReader = await tablePragmaCmd.ExecuteReaderAsync())
+                {
+                    while (await tableReader.ReadAsync())
+                    {
+                        if (!tableReader.IsDBNull(tableReader.GetOrdinal("name")))
+                            tableColumns.Add(tableReader.GetString(tableReader.GetOrdinal("name")));
+                    }
+                }
+
+                if (tableColumns.Count > 0 && !tableColumns.Contains("BranchId"))
+                {
+                    await using var cmd = sqliteConnection.CreateCommand();
+                    cmd.CommandText = $"ALTER TABLE {table} ADD COLUMN BranchId INTEGER NOT NULL DEFAULT 1;";
+                    await cmd.ExecuteNonQueryAsync();
+                }
             }
         }
     }
