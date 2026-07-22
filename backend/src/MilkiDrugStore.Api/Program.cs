@@ -155,7 +155,7 @@ using (var scope = app.Services.CreateScope())
         logger.LogInformation("Database migrations applied successfully.");
         
         logger.LogInformation("Seeding database...");
-        await DbSeeder.SeedAsync(db);
+        await DbSeeder.SeedAsync(db, logger);
         logger.LogInformation("Database seeded successfully.");
     }
     catch (Exception ex)
