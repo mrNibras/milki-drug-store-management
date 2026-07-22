@@ -20,11 +20,11 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 WORKDIR /app
 EXPOSE 8080
 
-RUN mkdir -p /app/data
+RUN mkdir -p /app/data/keys
 
 COPY --from=publish /app/publish .
 
-ENV ASPNETCORE_URLS=http://+:8080
+ENV ASPNETCORE_URLS=http+:8080
 ENV ASPNETCORE_ENVIRONMENT=Production
 
 ENTRYPOINT ["dotnet", "MilkiDrugStore.Api.dll"]

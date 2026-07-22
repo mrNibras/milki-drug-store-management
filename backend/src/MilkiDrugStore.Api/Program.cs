@@ -10,12 +10,23 @@ using MilkiDrugStore.Persistence.Context;
 using MilkiDrugStore.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.Extensions.Logging;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Ensure data directory exists for SQLite.
+// Ensure data directory exists for SQLite and Data Protection keys.
 var dataDir = builder.Configuration.GetValue<string>("DataDirectory") ?? "/var/data";
 Directory.CreateDirectory(dataDir);
+
+var keysDir = Path.Combine(dataDir, "keys");
+Directory.CreateDirectory(keysDir);
+
+// Data Protection: persist keys to persistent disk so they survive container restarts.
+builder.Services.AddDataProtection()
+    .PersistKeysToFileSystem(new DirectoryInfo(keysDir))
+    .SetApplicationName("MilkiDrugStore")
+    .SetDefaultKeyLifetime(TimeSpan.FromDays(90));
 
 // Strongly typed configuration.
 builder.Services.AddOptions<JwtSettings>()
@@ -227,7 +238,14 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+// Enable HTTPS redirection only when explicitly configured or in Development.
+// Render terminates TLS at the proxy, so internal traffic is HTTP.
+var httpsPort = builder.Configuration["HttpsPort"];
+if (!string.IsNullOrEmpty(httpsPort) || app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
+
 app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
@@ -236,5 +254,18 @@ app.MapControllers();
 
 var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
 app.Urls.Add($"http://0.0.0.0:{port}");
+
+// Log Data Protection and HTTPS configuration.
+var startupLogger = app.Services.GetRequiredService<ILogger<Program>>();
+startupLogger.LogInformation("Data Protection keys stored at: {KeysPath}", keysDir);
+startupLogger.LogInformation("Data Protection Application Name: MilkiDrugStore");
+startupLogger.LogInformation("Forwarded headers enabled: XForwardedFor, XForwardedProto");
+startupLogger.LogInformation("HTTPS redirection enabled: {HttpsEnabled}", !string.IsNullOrEmpty(httpsPort) || app.Environment.IsDevelopment());
+if (!string.IsNullOrEmpty(httpsPort))
+{
+    startupLogger.LogInformation("HTTPS port: {HttpsPort}", httpsPort);
+}
+startupLogger.LogInformation("Application starting in {Environment} mode on port {Port}", 
+    app.Environment.EnvironmentName, port);
 
 app.Run();
