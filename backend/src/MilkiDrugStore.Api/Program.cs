@@ -36,11 +36,17 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 {
     if (!string.IsNullOrEmpty(connectionString) && connectionString.Contains("Server=", StringComparison.OrdinalIgnoreCase))
     {
-        options.UseSqlServer(connectionString);
+        options.UseSqlServer(connectionString, sql =>
+        {
+            sql.MigrationsAssembly("MilkiDrugStore.Persistence");
+        });
     }
     else
     {
-        options.UseSqlite(connectionString);
+        options.UseSqlite(connectionString, sql =>
+        {
+            sql.MigrationsAssembly("MilkiDrugStore.Persistence");
+        });
     }
 });
 
@@ -150,19 +156,59 @@ using (var scope = app.Services.CreateScope())
     
     try
     {
-        logger.LogInformation("Applying database migrations...");
-        db.Database.Migrate();
-        logger.LogInformation("Database migrations applied successfully.");
+        var contextType = db.GetType().FullName;
+        var provider = db.Database.ProviderName ?? "Unknown";
         
-        logger.LogInformation("Seeding database...");
+        logger.LogInformation("=== Database Initialization Starting ===");
+        logger.LogInformation("Context Type: {ContextType}", contextType);
+        logger.LogInformation("Database Provider: {Provider}", provider);
+        logger.LogInformation("Migration Assembly: MilkiDrugStore.Persistence");
+        logger.LogInformation("Connection String: {ConnectionString}", 
+            MaskConnectionString(connectionString));
+        
+        var pendingMigrations = db.Database.GetPendingMigrations();
+        var pendingCount = pendingMigrations.Count();
+        
+        logger.LogInformation("Pending Migrations Count: {PendingCount}", pendingCount);
+        
+        if (pendingCount > 0)
+        {
+            logger.LogInformation("Applying {Count} pending migration(s)...", pendingCount);
+            foreach (var migrationId in pendingMigrations)
+            {
+                logger.LogInformation("  Applying Migration: {MigrationId}", migrationId);
+            }
+        }
+        
+        logger.LogInformation("Starting database migration...");
+        db.Database.Migrate();
+        logger.LogInformation("Database migration completed successfully.");
+        
+        var appliedMigrations = db.Database.GetAppliedMigrations();
+        logger.LogInformation("Total Applied Migrations: {Count}", appliedMigrations.Count());
+        
+        logger.LogInformation("Starting database seeding...");
         await DbSeeder.SeedAsync(db, logger);
         logger.LogInformation("Database seeded successfully.");
+        logger.LogInformation("=== Database Initialization Complete ===");
     }
     catch (Exception ex)
     {
         logger.LogError(ex, "An error occurred while migrating or seeding the database.");
         throw;
     }
+}
+
+static string MaskConnectionString(string? connectionString)
+{
+    if (string.IsNullOrEmpty(connectionString))
+        return "Not configured";
+    
+    return connectionString.Contains("Password=", StringComparison.OrdinalIgnoreCase) ||
+           connectionString.Contains("User Id=", StringComparison.OrdinalIgnoreCase) ||
+           connectionString.Contains("UserID=", StringComparison.OrdinalIgnoreCase)
+           ? "***masked***"
+           : connectionString;
 }
 
 // Forwarded headers for Render proxy.
