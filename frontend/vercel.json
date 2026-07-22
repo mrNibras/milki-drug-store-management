@@ -1,4 +1,4 @@
-nder{
+{
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ],
