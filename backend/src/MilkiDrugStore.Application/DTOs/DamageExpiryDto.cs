@@ -23,6 +23,7 @@ public class DamageRecordResponse
     public string Reason { get; set; } = string.Empty;
     public int RecordedBy { get; set; }
     public DateTime RecordedDate { get; set; }
+    public int BranchId { get; set; }
 }
 
 public class ExpiredRecordResponse
@@ -34,4 +35,5 @@ public class ExpiredRecordResponse
     public int Quantity { get; set; }
     public DateTime RecordedDate { get; set; }
     public int RecordedBy { get; set; }
+    public int BranchId { get; set; }
 }

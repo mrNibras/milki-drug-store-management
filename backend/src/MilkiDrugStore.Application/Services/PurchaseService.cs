@@ -45,7 +45,7 @@ public class PurchaseService : IPurchaseService
             _auditLog = auditLog;
     }
 
-    public async Task<PurchaseResponse> CreateAsync(CreatePurchaseRequest request, int createdBy)
+    public async Task<PurchaseResponse> CreateAsync(CreatePurchaseRequest request, int createdBy, int? branchId = null)
     {
         await _unitOfWork.BeginTransactionAsync();
 
@@ -62,6 +62,7 @@ public class PurchaseService : IPurchaseService
             var purchase = new Purchase
             {
                 PurchaseNumber = purchaseNumber,
+                BranchId = branchId ?? 0,
                 SupplierId = request.SupplierId,
                 PurchaseDate = request.PurchaseDate,
                 TotalAmount = totalAmount,
@@ -121,6 +122,7 @@ public class PurchaseService : IPurchaseService
                 var batch = new MedicineBatch
                 {
                     MedicineId = medicine.MedicineId,
+                    BranchId = branchId ?? 0,
                     BatchNumber = item.BatchNumber,
                     QuantityReceived = item.Quantity,
                     PurchasePrice = item.PurchasePrice,
@@ -174,12 +176,15 @@ public class PurchaseService : IPurchaseService
         }
     }
 
-    public async Task<IEnumerable<PurchaseResponse>> GetAllAsync()
+    public async Task<IEnumerable<PurchaseResponse>> GetAllAsync(int? branchId = null)
     {
         var purchases = await _purchaseRepo.GetAllAsync();
+        var query = purchases.AsQueryable();
+        if (branchId.HasValue)
+            query = query.Where(p => p.BranchId == branchId.Value);
         var result = new List<PurchaseResponse>();
 
-        foreach (var p in purchases.OrderByDescending(p => p.PurchaseDate))
+        foreach (var p in query.OrderByDescending(p => p.PurchaseDate))
         {
             var items = (await _purchaseItemRepo.FindAsync(pi => pi.PurchaseId == p.PurchaseId))
                 .Include(pi => pi.Medicine).ToList();
@@ -190,6 +195,7 @@ public class PurchaseService : IPurchaseService
                 PurchaseNumber = p.PurchaseNumber,
                 SupplierId = p.SupplierId,
                 SupplierName = p.Supplier?.SupplierName ?? "",
+                BranchId = p.BranchId,
                 PurchaseDate = p.PurchaseDate,
                 TotalAmount = p.TotalAmount,
                 AmountPaid = p.AmountPaid,
@@ -212,10 +218,13 @@ public class PurchaseService : IPurchaseService
         return result;
     }
 
-    public async Task<PurchaseResponse?> GetByIdAsync(int id)
+    public async Task<PurchaseResponse?> GetByIdAsync(int id, int? branchId = null)
     {
         var purchases = await _purchaseRepo.FindAsync(p => p.PurchaseId == id);
-        var purchase = purchases.Include(p => p.Supplier).Include(p => p.Items).ThenInclude(i => i.Medicine).FirstOrDefault();
+        var query = purchases.AsQueryable();
+        if (branchId.HasValue)
+            query = query.Where(p => p.BranchId == branchId.Value);
+        var purchase = query.Include(p => p.Supplier).Include(p => p.Items).ThenInclude(i => i.Medicine).FirstOrDefault();
         if (purchase == null) return null;
 
         return new PurchaseResponse

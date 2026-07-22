@@ -30,9 +30,11 @@ public class InventoryService : IInventoryService
         _auditLog = auditLog;
     }
 
-    public async Task<int> GetCurrentStockAsync(int medicineId)
+    public async Task<int> GetCurrentStockAsync(int medicineId, int? branchId = null)
     {
         var batches = (await _batchRepo.FindAsync(b => b.MedicineId == medicineId)).ToList();
+        if (branchId.HasValue)
+            batches = batches.Where(b => b.BranchId == branchId.Value).ToList();
         return batches.Sum(b => b.Balance);
     }
 
@@ -88,13 +90,16 @@ public class InventoryService : IInventoryService
         await _auditLog.LogAsync(recordedBy, $"Recorded expired: {quantity} units for batch {batch.BatchNumber}", "ExpiredRecords", batchId);
     }
 
-    public async Task<IEnumerable<DamageRecordResponse>> GetDamagesAsync()
+    public async Task<IEnumerable<DamageRecordResponse>> GetDamagesAsync(int? branchId = null)
     {
         var query = await _unitOfWork.DamageRecords.GetAllAsync();
         var damages = await query
             .Include(d => d.Batch)
             .ThenInclude(b => b.Medicine)
             .ToListAsync();
+
+        if (branchId.HasValue)
+            damages = damages.Where(d => d.BranchId == branchId.Value).ToList();
 
         return damages.Select(d => new DamageRecordResponse
         {
@@ -105,17 +110,21 @@ public class InventoryService : IInventoryService
             Quantity = d.Quantity,
             Reason = d.Reason,
             RecordedBy = d.RecordedBy,
-            RecordedDate = d.RecordedDate
+            RecordedDate = d.RecordedDate,
+            BranchId = d.BranchId
         }).ToList();
     }
 
-    public async Task<IEnumerable<ExpiredRecordResponse>> GetExpiredAsync()
+    public async Task<IEnumerable<ExpiredRecordResponse>> GetExpiredAsync(int? branchId = null)
     {
         var query = await _unitOfWork.ExpiredRecords.GetAllAsync();
         var expired = await query
             .Include(e => e.Batch)
             .ThenInclude(b => b.Medicine)
             .ToListAsync();
+
+        if (branchId.HasValue)
+            expired = expired.Where(e => e.BranchId == branchId.Value).ToList();
 
         return expired.Select(e => new ExpiredRecordResponse
         {
@@ -125,7 +134,8 @@ public class InventoryService : IInventoryService
             MedicineName = e.Batch?.Medicine?.MedicineName ?? string.Empty,
             Quantity = e.Quantity,
             RecordedDate = e.RecordedDate,
-            RecordedBy = e.RecordedBy
+            RecordedBy = e.RecordedBy,
+            BranchId = e.BranchId
         }).ToList();
     }
 }

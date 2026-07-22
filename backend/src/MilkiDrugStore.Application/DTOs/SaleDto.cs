@@ -21,6 +21,7 @@ public class SaleResponse
 {
     public int SaleId { get; set; }
     public string SaleNumber { get; set; } = string.Empty;
+    public int BranchId { get; set; }
     public DateTime SaleDate { get; set; }
     public decimal TotalAmount { get; set; }
     public decimal TotalProfit { get; set; }

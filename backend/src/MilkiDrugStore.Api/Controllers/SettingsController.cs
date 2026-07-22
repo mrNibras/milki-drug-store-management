@@ -26,7 +26,8 @@ public class SettingsController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetSettings()
     {
-        var settings = await _authService.GetSettingsAsync();
+        var branchId = GetBranchId();
+        var settings = await _authService.GetSettingsAsync(branchId > 0 ? branchId : null);
         return Ok(settings);
     }
 
@@ -38,7 +39,8 @@ public class SettingsController : ControllerBase
         if (!int.TryParse(userIdClaim, out var userId))
             return Unauthorized(new { message = "Unauthorized" });
 
-        var result = await _authService.UpdateSettingsAsync(request, userId);
+        var branchId = GetBranchId();
+        var result = await _authService.UpdateSettingsAsync(request, userId, branchId > 0 ? branchId : null);
         return Ok(result);
     }
 
@@ -103,5 +105,11 @@ public class SettingsController : ControllerBase
             return connectionString["Data Source=".Length..].Trim();
         }
         return connectionString;
+    }
+
+    private int GetBranchId()
+    {
+        var branchIdClaim = User.FindFirst("branchId")?.Value;
+        return int.TryParse(branchIdClaim, out var branchId) ? branchId : 0;
     }
 }

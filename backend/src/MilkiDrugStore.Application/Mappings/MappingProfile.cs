@@ -34,6 +34,7 @@ public class MappingProfile : AutoMapper.Profile
         CreateMap<Supplier, SupplierResponse>();
 
         CreateMap<Sale, SaleResponse>()
-            .ForMember(d => d.UserName, opt => opt.MapFrom(s => s.User != null ? s.User.FullName : ""));
+            .ForMember(d => d.UserName, opt => opt.MapFrom(s => s.User != null ? s.User.FullName : ""))
+            .ForMember(d => d.BranchId, opt => opt.MapFrom(s => s.BranchId));
     }
 }

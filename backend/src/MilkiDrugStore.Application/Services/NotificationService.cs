@@ -21,10 +21,13 @@ public class NotificationService : INotificationService
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<IEnumerable<NotificationResponse>> GetAllAsync()
+    public async Task<IEnumerable<NotificationResponse>> GetAllAsync(int? branchId = null)
     {
         var notifications = await _notificationRepo.GetAllAsync();
-        return notifications.Select(n => new NotificationResponse
+        var query = notifications.AsQueryable();
+        if (branchId.HasValue)
+            query = query.Where(n => n.BranchId == branchId.Value);
+        return query.Select(n => new NotificationResponse
         {
             NotificationId = n.NotificationId,
             Title = n.Title,
@@ -35,10 +38,13 @@ public class NotificationService : INotificationService
         }).ToList();
     }
 
-    public async Task<IEnumerable<NotificationResponse>> GetUnreadAsync()
+    public async Task<IEnumerable<NotificationResponse>> GetUnreadAsync(int? branchId = null)
     {
         var notifications = await _notificationRepo.GetUnreadAsync();
-        return notifications.Select(n => new NotificationResponse
+        var query = notifications.AsQueryable();
+        if (branchId.HasValue)
+            query = query.Where(n => n.BranchId == branchId.Value);
+        return query.Select(n => new NotificationResponse
         {
             NotificationId = n.NotificationId,
             Title = n.Title,
@@ -60,10 +66,13 @@ public class NotificationService : INotificationService
         await _unitOfWork.SaveChangesAsync();
     }
 
-    public async Task MarkAllAsReadAsync()
+    public async Task MarkAllAsReadAsync(int? branchId = null)
     {
         var unread = await _notificationRepo.GetUnreadAsync();
-        foreach (var n in unread)
+        var query = unread.AsQueryable();
+        if (branchId.HasValue)
+            query = query.Where(n => n.BranchId == branchId.Value);
+        foreach (var n in query)
         {
             n.IsRead = true;
             await _notificationRepo.UpdateAsync(n);
@@ -71,7 +80,7 @@ public class NotificationService : INotificationService
         await _unitOfWork.SaveChangesAsync();
     }
 
-    public async Task CheckAndCreateNotificationsAsync()
+    public async Task CheckAndCreateNotificationsAsync(int? branchId = null)
     {
         var medicines = (await _medicineRepo.GetAllAsync())
             .Include(m => m.Batches)
@@ -79,30 +88,37 @@ public class NotificationService : INotificationService
 
         foreach (var medicine in medicines)
         {
-            var totalStock = medicine.Batches.Sum(b => b.QuantityReceived - b.QuantityIssued - b.QuantityDamaged - b.QuantityExpired);
+            var batches = medicine.Batches.AsQueryable();
+            if (branchId.HasValue)
+                batches = batches.Where(b => b.BranchId == branchId.Value);
+            var totalStock = batches.Sum(b => b.QuantityReceived - b.QuantityIssued - b.QuantityDamaged - b.QuantityExpired);
 
             if (totalStock == 0 && medicine.IsActive)
             {
                 if (await _notificationRepo.GetActiveByTypeAndMedicineAsync(NotificationTypeStrings.OutOfStock, medicine.MedicineName) == null)
                 {
-                    await _notificationRepo.AddAsync(new Notification
+                    var notification = new Notification
                     {
+                        BranchId = branchId ?? 0,
                         Title = "Out of Stock",
                         Message = $"{medicine.MedicineName} is out of stock",
                         NotificationType = NotificationTypeStrings.OutOfStock
-                    });
+                    };
+                    await _notificationRepo.AddAsync(notification);
                 }
             }
             else if (totalStock <= medicine.LowStockThreshold && totalStock > 0)
             {
                 if (await _notificationRepo.GetActiveByTypeAndMedicineAsync(NotificationTypeStrings.LowStock, medicine.MedicineName) == null)
                 {
-                    await _notificationRepo.AddAsync(new Notification
+                    var notification = new Notification
                     {
+                        BranchId = branchId ?? 0,
                         Title = "Low Stock",
                         Message = $"{medicine.MedicineName} stock is below threshold ({totalStock}/{medicine.LowStockThreshold})",
                         NotificationType = NotificationTypeStrings.LowStock
-                    });
+                    };
+                    await _notificationRepo.AddAsync(notification);
                 }
             }
         }

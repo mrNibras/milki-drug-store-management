@@ -1,17 +1,24 @@
 import { create } from 'zustand';
-import { User, Medicine, Supplier, Purchase, Sale, Notification, CartItem, PharmacySettings, AuditLog, Category, UnitType } from '../types';
-import { api, LoginRequest, LoginResponse, CreateSaleRequest, CreatePurchaseRequest, RecordDamageRequest, RecordExpiredRequest, ChangePasswordRequest, DamageResponse, ExpiredResponse, AuditLogResponse } from '../services/api';
+import { User, Medicine, Supplier, Purchase, Sale, Notification, CartItem, PharmacySettings, AuditLog, Category, UnitType, Branch, Cosmetic, CosmeticCategory } from '../types';
+import { api, LoginRequest, LoginResponse, CreateSaleRequest, CreatePurchaseRequest, RecordDamageRequest, RecordExpiredRequest, ChangePasswordRequest, DamageResponse, ExpiredResponse, AuditLogResponse, BranchResponse, CreateBranchRequest, UpdateBranchRequest, CosmeticResponse, AddCosmeticBatchRequest, CosmeticCategoryResponse, CreateCosmeticCategoryRequest, UpdateCosmeticCategoryRequest } from '../services/api';
 import { getSettings, updateSettings } from '../services/settingsApi';
 import { getDaysUntilExpiry, generateId } from '../utils/helpers';
 
 interface AppState {
   currentUser: User | null;
+  currentBranch: Branch | null;
+  branches: Branch[];
   isAuthenticated: boolean;
   token: string | null;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
   refreshToken: () => Promise<boolean>;
   register: (fullName: string, email: string, password: string) => Promise<{ ok: boolean; message?: string }>;
+  switchBranch: (branchId: number) => Promise<void>;
+  fetchBranches: () => Promise<void>;
+  addBranch: (branch: CreateBranchRequest) => Promise<void>;
+  updateBranch: (id: string, updates: Partial<Branch>) => Promise<void>;
+  deleteBranch: (id: string) => Promise<void>;
 
   users: User[];
   fetchUsers: () => Promise<void>;
@@ -25,6 +32,13 @@ interface AppState {
   addMedicine: (medicine: Medicine) => Promise<void>;
   updateMedicine: (id: string, updates: Partial<Medicine>) => Promise<void>;
   deleteMedicine: (id: string) => Promise<void>;
+
+  cosmetics: Cosmetic[];
+  fetchCosmetics: () => Promise<void>;
+  addCosmetic: (cosmetic: Cosmetic) => Promise<void>;
+  updateCosmetic: (id: string, updates: Partial<Cosmetic>) => Promise<void>;
+  deleteCosmetic: (id: string) => Promise<void>;
+  addCosmeticBatch: (data: AddCosmeticBatchRequest) => Promise<void>;
 
   suppliers: Supplier[];
   fetchSuppliers: () => Promise<void>;
@@ -58,6 +72,12 @@ interface AppState {
   categories: Category[];
   fetchCategories: () => Promise<void>;
   addCategory: (category: Category) => Promise<void>;
+
+  cosmeticCategories: CosmeticCategory[];
+  fetchCosmeticCategories: () => Promise<void>;
+  addCosmeticCategory: (category: CosmeticCategory) => Promise<void>;
+  updateCosmeticCategory: (id: string, updates: Partial<CosmeticCategory>) => Promise<void>;
+  deleteCosmeticCategory: (id: string) => Promise<void>;
 
   unitTypes: UnitType[];
   fetchUnitTypes: () => Promise<void>;
@@ -130,6 +150,31 @@ const toMedicine = (r: MedicineResponse): Medicine => ({
     quantity: b.balance,
     expiryDate: b.expiryDate,
     createdAt: b.dateReceived,
+  })),
+});
+
+const toCosmetic = (r: CosmeticResponse): Cosmetic => ({
+  id: String(r.cosmeticId),
+  productName: r.productName,
+  description: r.description,
+  cosmeticCategoryId: String(r.cosmeticCategoryId),
+  cosmeticCategoryName: r.cosmeticCategoryName,
+  unitType: r.unitTypeName,
+  unitTypeId: r.unitTypeId,
+  price: r.price,
+  isActive: r.isActive,
+  createdAt: r.createdAt,
+  batches: r.batches.map(b => ({
+    id: String(b.batchId),
+    cosmeticId: String(b.cosmeticId),
+    batchNumber: b.batchNumber,
+    quantityReceived: b.quantityReceived,
+    quantityIssued: b.quantityIssued,
+    quantityDamaged: b.quantityDamaged,
+    quantityExpired: b.quantityExpired,
+    balance: b.balance,
+    expiryDate: b.expiryDate,
+    dateReceived: b.dateReceived,
   })),
 });
 
@@ -209,6 +254,8 @@ const toNotification = (r: NotificationResponse): Notification => ({
 
 export const useAppStore = create<AppState>((set, get) => ({
   currentUser: null,
+  currentBranch: null,
+  branches: [],
   isAuthenticated: false,
   token: null,
   loading: false,
@@ -224,13 +271,21 @@ export const useAppStore = create<AppState>((set, get) => ({
         fullName: res.data.fullName,
         email,
         role: res.data.role.toLowerCase() as 'admin' | 'pharmacist',
+        branchId: res.data.branchId,
+        branchName: res.data.branchName,
         isActive: true,
         createdAt: new Date().toISOString(),
+      };
+      const branch: Branch = {
+        id: String(res.data.branchId),
+        name: res.data.branchName,
+        isActive: true,
       };
       localStorage.setItem('auth_token', token);
       if (res.data.refreshToken) localStorage.setItem('refresh_token', res.data.refreshToken);
       localStorage.setItem('current_user', JSON.stringify(user));
-      set({ token, currentUser: user, isAuthenticated: true, loading: false });
+      localStorage.setItem('current_branch', JSON.stringify(branch));
+      set({ token, currentUser: user, currentBranch: branch, isAuthenticated: true, loading: false });
       return true;
     } catch (e: any) {
       set({ error: e.response?.data?.message || 'Login failed', loading: false });
@@ -242,7 +297,65 @@ export const useAppStore = create<AppState>((set, get) => ({
     localStorage.removeItem('auth_token');
     localStorage.removeItem('refresh_token');
     localStorage.removeItem('current_user');
-    set({ currentUser: null, isAuthenticated: false, token: null });
+    localStorage.removeItem('current_branch');
+    set({ currentUser: null, currentBranch: null, branches: [], isAuthenticated: false, token: null });
+  },
+
+  switchBranch: async (branchId: number) => {
+    const branch = get().branches.find(b => Number(b.id) === branchId) || null;
+    if (branch) {
+      localStorage.setItem('current_branch', JSON.stringify(branch));
+      set({ currentBranch: branch });
+    }
+  },
+
+  fetchBranches: async () => {
+    set({ loading: true, error: null });
+    try {
+      const res = await api.get<BranchResponse[]>('/branches');
+      set({ branches: res.data.map(b => ({
+        id: String(b.branchId),
+        name: b.branchName,
+        location: b.location,
+        phone: b.phone,
+        email: b.email,
+        address: b.address,
+        isActive: b.isActive,
+      })), loading: false });
+    } catch (e: any) {
+      set({ error: e.response?.data?.message || 'Failed to fetch branches', loading: false });
+    }
+  },
+
+  addBranch: async (branch) => {
+    set({ loading: true, error: null });
+    try {
+      await api.post('/branches', branch);
+      await get().fetchBranches();
+    } catch (e: any) {
+      set({ error: e.response?.data?.message || 'Failed to add branch', loading: false });
+      throw e;
+    }
+  },
+
+  updateBranch: async (id, updates) => {
+    try {
+      await api.put(`/branches/${id}`, updates);
+      await get().fetchBranches();
+    } catch (e: any) {
+      set({ error: e.response?.data?.message || 'Failed to update branch' });
+      throw e;
+    }
+  },
+
+  deleteBranch: async (id) => {
+    try {
+      await api.delete(`/branches/${id}`);
+      set(state => ({ branches: state.branches.filter(b => b.id !== id) }));
+    } catch (e: any) {
+      set({ error: e.response?.data?.message || 'Failed to delete branch' });
+      throw e;
+    }
   },
 
   refreshToken: async () => {
@@ -254,7 +367,24 @@ export const useAppStore = create<AppState>((set, get) => ({
       const newRefresh = res.data.refreshToken;
       localStorage.setItem('auth_token', newToken);
       if (newRefresh) localStorage.setItem('refresh_token', newRefresh);
-      set({ token: newToken });
+      const user: User = {
+        id: String(res.data.userId),
+        fullName: res.data.fullName,
+        email: res.data.email,
+        role: (res.data.role?.toLowerCase() || 'pharmacist') as 'admin' | 'pharmacist',
+        branchId: res.data.branchId,
+        branchName: res.data.branchName,
+        isActive: true,
+        createdAt: new Date().toISOString(),
+      };
+      const branch: Branch = {
+        id: String(res.data.branchId),
+        name: res.data.branchName,
+        isActive: true,
+      };
+      localStorage.setItem('current_user', JSON.stringify(user));
+      localStorage.setItem('current_branch', JSON.stringify(branch));
+      set({ token: newToken, currentUser: user, currentBranch: branch });
       return true;
     } catch (e) {
       logout();
@@ -403,6 +533,56 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
   },
 
+  fetchCosmeticCategories: async () => {
+    set({ loading: true, error: null });
+    try {
+      const res = await api.get<CosmeticCategoryResponse[]>('/cosmeticcategories');
+      set({ cosmeticCategories: res.data.map(c => ({
+        id: String(c.cosmeticCategoryId),
+        name: c.name,
+        description: c.description,
+        isActive: c.isActive ?? true,
+        createdAt: c.createdAt,
+      })), loading: false });
+    } catch (e: any) {
+      set({ error: e.response?.data?.message || 'Failed to fetch cosmetic categories', loading: false });
+    }
+  },
+
+  addCosmeticCategory: async (category) => {
+    set({ loading: true, error: null });
+    try {
+      await api.post('/cosmeticcategories', {
+        name: category.name,
+        description: category.description,
+      });
+      await get().fetchCosmeticCategories();
+    } catch (e: any) {
+      set({ error: e.response?.data?.message || 'Failed to add cosmetic category', loading: false });
+      throw e;
+    }
+  },
+
+  updateCosmeticCategory: async (id, updates) => {
+    try {
+      await api.put(`/cosmeticcategories/${id}`, updates);
+      await get().fetchCosmeticCategories();
+    } catch (e: any) {
+      set({ error: e.response?.data?.message || 'Failed to update cosmetic category' });
+      throw e;
+    }
+  },
+
+  deleteCosmeticCategory: async (id) => {
+    try {
+      await api.delete(`/cosmeticcategories/${id}`);
+      set(state => ({ cosmeticCategories: state.cosmeticCategories.filter(c => c.id !== id) }));
+    } catch (e: any) {
+      set({ error: e.response?.data?.message || 'Failed to delete cosmetic category' });
+      throw e;
+    }
+  },
+
   unitTypes: [],
   fetchUnitTypes: async () => {
     try {
@@ -463,6 +643,63 @@ export const useAppStore = create<AppState>((set, get) => ({
       set(state => ({ medicines: state.medicines.filter(m => m.id !== id) }));
     } catch (e: any) {
       set({ error: e.response?.data?.message || 'Failed to delete medicine' });
+      throw e;
+    }
+  },
+
+  fetchCosmetics: async () => {
+    set({ loading: true, error: null });
+    try {
+      const res = await api.get<CosmeticResponse[]>('/cosmetics');
+      set({ cosmetics: res.data.map(toCosmetic), loading: false });
+    } catch (e: any) {
+      set({ error: e.response?.data?.message || 'Failed to fetch cosmetics', loading: false });
+    }
+  },
+
+  addCosmetic: async (cosmetic) => {
+    set({ loading: true, error: null });
+    try {
+      await api.post('/cosmetics', {
+        productName: cosmetic.productName,
+        description: cosmetic.description,
+        cosmeticCategoryId: Number(cosmetic.cosmeticCategoryId),
+        unitTypeId: cosmetic.unitTypeId,
+        price: cosmetic.price,
+      });
+      await get().fetchCosmetics();
+    } catch (e: any) {
+      set({ error: e.response?.data?.message || 'Failed to add cosmetic', loading: false });
+      throw e;
+    }
+  },
+
+  updateCosmetic: async (id, updates) => {
+    try {
+      await api.put(`/cosmetics/${id}`, updates);
+      await get().fetchCosmetics();
+    } catch (e: any) {
+      set({ error: e.response?.data?.message || 'Failed to update cosmetic' });
+      throw e;
+    }
+  },
+
+  deleteCosmetic: async (id) => {
+    try {
+      await api.delete(`/cosmetics/${id}`);
+      set(state => ({ cosmetics: state.cosmetics.filter(c => c.id !== id) }));
+    } catch (e: any) {
+      set({ error: e.response?.data?.message || 'Failed to delete cosmetic' });
+      throw e;
+    }
+  },
+
+  addCosmeticBatch: async (data) => {
+    try {
+      await api.post('/cosmetics/batches', data);
+      await get().fetchCosmetics();
+    } catch (e: any) {
+      set({ error: e.response?.data?.message || 'Failed to add batch' });
       throw e;
     }
   },

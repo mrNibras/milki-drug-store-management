@@ -74,4 +74,30 @@ public class EmailService : IEmailService
         var body = $"A new user '{userName}' has registered and requires admin approval.";
         await SendEmailAsync(toEmail, subject, body);
     }
+
+    public async Task SendPasswordResetEmailAsync(string toEmail, string userName, string resetLink)
+    {
+        var subject = "Password Reset Request - Milki Drug Store";
+        var body = $@"
+            <html>
+            <body style=""font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;"">
+                <div style=""background: linear-gradient(135deg, #059669, #0d9488); padding: 30px; border-radius: 10px 10px 0 0; text-align: center;"">
+                    <h2 style=""color: white; margin: 0;"">Milki Drug Store</h2>
+                </div>
+                <div style=""background: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; border-top: none;"">
+                    <p style=""font-size: 16px; margin-top: 0;"">Hello {userName},</p>
+                    <p style=""font-size: 16px;"">We received a request to reset your password. Click the button below to set a new password:</p>
+                    <div style=""text-align: center; margin: 30px 0;"">
+                        <a href=""{resetLink}"" style=""background: linear-gradient(135deg, #059669, #0d9488); color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;"">Reset Password</a>
+                    </div>
+                    <p style=""font-size: 14px; color: #6b7280;"">This link will expire in <strong>1 hour</strong>. If you did not request a password reset, please ignore this email.</p>
+                    <p style=""font-size: 14px; color: #6b7280;"">If the button above doesn't work, copy and paste this URL into your browser:<br><a href=""{resetLink}"" style=""color: #059669; word-break: break-all;"">{resetLink}</a></p>
+                </div>
+                <div style=""background: #f3f4f6; padding: 20px; border-radius: 0 0 10px 10px; text-align: center; font-size: 12px; color: #9ca3af;"">
+                    Milki Drug Store Management System
+                </div>
+            </body>
+            </html>";
+        await SendEmailAsync(toEmail, subject, body, isHtml: true);
+    }
 }

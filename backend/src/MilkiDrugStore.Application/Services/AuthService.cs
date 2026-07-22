@@ -14,6 +14,8 @@ public class AuthService : IAuthService
 {
     private readonly IRepository<User> _userRepo;
     private readonly IRepository<Role> _roleRepo;
+    private readonly IRepository<Branch> _branchRepo;
+    private readonly IRepository<PasswordReset> _passwordResetRepo;
     private readonly IJwtTokenService _jwtTokenService;
     private readonly IEmailService _emailService;
     private readonly IConfiguration _configuration;
@@ -23,6 +25,8 @@ public class AuthService : IAuthService
     public AuthService(
         IRepository<User> userRepo,
         IRepository<Role> roleRepo,
+        IRepository<Branch> branchRepo,
+        IRepository<PasswordReset> passwordResetRepo,
         IJwtTokenService jwtTokenService,
         IEmailService emailService,
         IConfiguration configuration,
@@ -31,6 +35,8 @@ public class AuthService : IAuthService
     {
         _userRepo = userRepo;
         _roleRepo = roleRepo;
+        _branchRepo = branchRepo;
+        _passwordResetRepo = passwordResetRepo;
         _jwtTokenService = jwtTokenService;
         _emailService = emailService;
         _configuration = configuration;
@@ -49,6 +55,7 @@ public class AuthService : IAuthService
             return null;
 
         var role = await _roleRepo.GetByIdAsync(user.RoleId);
+        var branch = await _branchRepo.GetByIdAsync(user.BranchId);
         var token = _jwtTokenService.GenerateToken(user);
 
         var refreshToken = new RefreshToken
@@ -69,7 +76,9 @@ public class AuthService : IAuthService
             RefreshToken = refreshToken.Token,
             Role = role?.Name ?? "Pharmacist",
             UserId = user.UserId,
-            FullName = user.FullName
+            FullName = user.FullName,
+            BranchId = user.BranchId,
+            BranchName = branch?.BranchName ?? string.Empty
         };
     }
 
@@ -82,12 +91,17 @@ public class AuthService : IAuthService
         var pharmacistRole = (await _roleRepo.FindAsync(r => r.Name == "Pharmacist")).FirstOrDefault();
         var roleId = pharmacistRole?.RoleId ?? (int)RoleType.Pharmacist;
 
+        var defaultBranch = (await _branchRepo.GetAllAsync()).FirstOrDefault();
+        if (defaultBranch == null)
+            throw new Exception("No branch available for registration");
+
         var user = new User
         {
             FullName = request.FullName,
             Email = request.Email,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
             RoleId = roleId,
+            BranchId = defaultBranch.BranchId,
             IsApproved = false,
             IsActive = true
         };
@@ -131,6 +145,7 @@ public class AuthService : IAuthService
             Email = request.Email,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
             RoleId = request.RoleId,
+            BranchId = request.BranchId,
             IsApproved = true,
             IsActive = true
         };
@@ -164,6 +179,7 @@ public class AuthService : IAuthService
         var users = await _userRepo.GetAllAsync();
         var usersWithRoles = await users
             .Include(u => u.Role)
+            .Include(u => u.Branch)
             .ToListAsync();
         return usersWithRoles.Select(u => new UserResponse
         {
@@ -172,6 +188,8 @@ public class AuthService : IAuthService
             Email = u.Email,
             RoleId = u.RoleId,
             RoleName = u.Role != null ? u.Role.Name : "",
+            BranchId = u.BranchId,
+            BranchName = u.Branch != null ? u.Branch.BranchName : "",
             IsApproved = u.IsApproved,
             IsActive = u.IsActive,
             CreatedAt = u.CreatedAt
@@ -188,6 +206,8 @@ public class AuthService : IAuthService
         user.Email = request.Email;
         if (request.RoleId > 0)
             user.RoleId = request.RoleId;
+        if (request.BranchId > 0)
+            user.BranchId = request.BranchId;
         if (request.IsActive.HasValue)
             user.IsActive = request.IsActive.Value;
 
@@ -197,7 +217,7 @@ public class AuthService : IAuthService
         await _auditLog.LogAsync(id, $"Updated user: {user.FullName}", "Users", user.UserId);
 
         var updatedUsers = await _userRepo.FindAsync(u => u.UserId == id);
-        var updated = updatedUsers.FirstOrDefault();
+        var updated = updatedUsers.Include(u => u.Role).Include(u => u.Branch).FirstOrDefault();
         if (updated == null) return null;
 
         return new UserResponse
@@ -207,6 +227,8 @@ public class AuthService : IAuthService
             Email = updated.Email,
             RoleId = updated.RoleId,
             RoleName = updated.Role != null ? updated.Role.Name : "",
+            BranchId = updated.BranchId,
+            BranchName = updated.Branch != null ? updated.Branch.BranchName : "",
             IsApproved = updated.IsApproved,
             IsActive = updated.IsActive,
             CreatedAt = updated.CreatedAt
@@ -226,18 +248,23 @@ public class AuthService : IAuthService
         await _auditLog.LogAsync(id, $"Deactivated user: {user.FullName}", "Users", user.UserId);
     }
 
-    public async Task<Settings?> GetSettingsAsync()
+    public async Task<Settings?> GetSettingsAsync(int? branchId = null)
     {
-        var settings = await _unitOfWork.Settings.GetAllAsync();
-        return settings.FirstOrDefault();
+        var query = (await _unitOfWork.Settings.GetAllAsync()).AsQueryable();
+        if (branchId.HasValue)
+            query = query.Where(s => s.BranchId == branchId.Value);
+        return query.FirstOrDefault();
     }
 
-    public async Task<Settings> UpdateSettingsAsync(UpdateSettingsRequest request, int userId)
+    public async Task<Settings> UpdateSettingsAsync(UpdateSettingsRequest request, int userId, int? branchId = null)
     {
-        var settings = (await _unitOfWork.Settings.GetAllAsync()).FirstOrDefault();
+        var query = (await _unitOfWork.Settings.GetAllAsync()).AsQueryable();
+        if (branchId.HasValue)
+            query = query.Where(s => s.BranchId == branchId.Value);
+        var settings = query.FirstOrDefault();
         if (settings == null)
         {
-            settings = new Settings();
+            settings = new Settings { BranchId = branchId ?? 0 };
             await _unitOfWork.Settings.AddAsync(settings);
         }
 
@@ -274,6 +301,7 @@ public class AuthService : IAuthService
         await _unitOfWork.RefreshTokens.UpdateAsync(refreshToken);
 
         var role = await _roleRepo.GetByIdAsync(user.RoleId);
+        var branch = await _branchRepo.GetByIdAsync(user.BranchId);
         var newToken = _jwtTokenService.GenerateToken(user);
 
         var newRefreshToken = new RefreshToken
@@ -294,7 +322,73 @@ public class AuthService : IAuthService
             RefreshToken = newRefreshToken.Token,
             Role = role?.Name ?? "Pharmacist",
             UserId = user.UserId,
-            FullName = user.FullName
+            FullName = user.FullName,
+            BranchId = user.BranchId,
+            BranchName = branch?.BranchName ?? string.Empty
         };
+    }
+
+    public async Task<ForgotPasswordResponse> RequestPasswordResetAsync(ForgotPasswordRequest request)
+    {
+        var users = await _userRepo.FindAsync(u => u.Email == request.Email);
+        var user = users.FirstOrDefault();
+        if (user == null || !user.IsActive || !user.IsApproved)
+            return new ForgotPasswordResponse { Message = "If an account with that email exists, a reset link has been sent." };
+
+        var existing = await _passwordResetRepo.FindAsync(pr => pr.UserId == user.UserId && !pr.IsUsed && pr.ExpiryDate > DateTime.UtcNow);
+        foreach (var pr in existing)
+        {
+            pr.IsUsed = true;
+            await _passwordResetRepo.UpdateAsync(pr);
+        }
+
+        var token = Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString("N");
+        var expiry = DateTime.UtcNow.AddHours(1);
+
+        await _passwordResetRepo.AddAsync(new PasswordReset
+        {
+            Token = token,
+            UserId = user.UserId,
+            ExpiryDate = expiry,
+            IsUsed = false,
+            CreatedAt = DateTime.UtcNow
+        });
+        await _unitOfWork.SaveChangesAsync();
+
+        var frontendUrl = _configuration["FrontendUrl"] ?? "http://localhost:5173";
+        var resetLink = $"{frontendUrl}/reset-password?token={token}";
+
+        try
+        {
+            await _emailService.SendPasswordResetEmailAsync(user.Email, user.FullName, resetLink);
+        }
+        catch
+        {
+        }
+
+        return new ForgotPasswordResponse { Message = "If an account with that email exists, a reset link has been sent." };
+    }
+
+    public async Task<string> ResetPasswordAsync(ResetPasswordRequest request)
+    {
+        var resets = await _passwordResetRepo.FindAsync(pr => pr.Token == request.Token && !pr.IsUsed);
+        var reset = resets.FirstOrDefault();
+        if (reset == null || reset.ExpiryDate < DateTime.UtcNow)
+            throw new Exception("Invalid or expired reset token.");
+
+        var user = await _userRepo.GetByIdAsync(reset.UserId);
+        if (user == null || !user.IsActive || !user.IsApproved)
+            throw new Exception("User account is not active.");
+
+        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+        await _userRepo.UpdateAsync(user);
+
+        reset.IsUsed = true;
+        await _passwordResetRepo.UpdateAsync(reset);
+        await _unitOfWork.SaveChangesAsync();
+
+        await _auditLog.LogAsync(user.UserId, "Reset password via email link", "Users", user.UserId);
+
+        return "Password has been reset successfully.";
     }
 }

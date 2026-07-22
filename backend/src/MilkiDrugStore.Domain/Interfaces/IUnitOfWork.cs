@@ -7,6 +7,7 @@ public interface IUnitOfWork : IDisposable
 {
     IRepository<Role> Roles { get; }
     IRepository<User> Users { get; }
+    IRepository<Branch> Branches { get; }
     IRepository<Category> Categories { get; }
     IRepository<Medicine> Medicines { get; }
     IRepository<MedicineBatch> MedicineBatches { get; }
@@ -22,6 +23,10 @@ public interface IUnitOfWork : IDisposable
     IRepository<DamageRecord> DamageRecords { get; }
     IRepository<ExpiredRecord> ExpiredRecords { get; }
     IRepository<RefreshToken> RefreshTokens { get; }
+    IRepository<PasswordReset> PasswordResets { get; }
+    IRepository<Cosmetic> Cosmetics { get; }
+    IRepository<CosmeticBatch> CosmeticBatches { get; }
+    IRepository<CosmeticCategory> CosmeticCategories { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
     Task BeginTransactionAsync();

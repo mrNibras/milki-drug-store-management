@@ -208,3 +208,4 @@
 /home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/obj/Debug/net8.0/MilkiDrugStore.Tests.pdb
 /home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/obj/Debug/net8.0/MilkiDrugStore.Tests.genruntimeconfig.cache
 /home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/obj/Debug/net8.0/ref/MilkiDrugStore.Tests.dll
+/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/bin/Debug/net8.0/appsettings.Production.json

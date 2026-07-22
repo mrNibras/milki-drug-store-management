@@ -126,6 +126,127 @@ namespace MilkiDrugStore.Persistence.Migrations
                     b.ToTable("Categories");
                 });
 
+            modelBuilder.Entity("MilkiDrugStore.Domain.Entities.Cosmetic", b =>
+                {
+                    b.Property<int>("CosmeticId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("CosmeticCategoryId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValueSql("GETDATE()");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(true);
+
+                    b.Property<decimal>("Price")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("ProductName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("UnitTypeId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("CosmeticId");
+
+                    b.HasIndex("CosmeticCategoryId");
+
+                    b.HasIndex("UnitTypeId");
+
+                    b.ToTable("Cosmetics", (string)null);
+                });
+
+            modelBuilder.Entity("MilkiDrugStore.Domain.Entities.CosmeticBatch", b =>
+                {
+                    b.Property<int>("BatchId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("BatchNumber")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("CosmeticId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("DateReceived")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValueSql("GETDATE()");
+
+                    b.Property<DateTime>("ExpiryDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("QuantityDamaged")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("QuantityExpired")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("QuantityIssued")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("QuantityReceived")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Remarks")
+                        .HasMaxLength(300)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("BatchId");
+
+                    b.HasIndex("BatchNumber");
+
+                    b.HasIndex("CosmeticId");
+
+                    b.ToTable("CosmeticBatches", (string)null);
+                });
+
+            modelBuilder.Entity("MilkiDrugStore.Domain.Entities.CosmeticCategory", b =>
+                {
+                    b.Property<int>("CosmeticCategoryId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValueSql("GETDATE()");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(300)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(true);
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("CosmeticCategoryId");
+
+                    b.ToTable("CosmeticCategories", (string)null);
+                });
+
             modelBuilder.Entity("MilkiDrugStore.Domain.Entities.DamageRecord", b =>
                 {
                     b.Property<int>("DamageId")
@@ -136,6 +257,9 @@ namespace MilkiDrugStore.Persistence.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("BranchId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("CosmeticBatchBatchId")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("Quantity")
@@ -158,6 +282,8 @@ namespace MilkiDrugStore.Persistence.Migrations
 
                     b.HasIndex("BranchId");
 
+                    b.HasIndex("CosmeticBatchBatchId");
+
                     b.ToTable("DamageRecords");
                 });
 
@@ -171,6 +297,9 @@ namespace MilkiDrugStore.Persistence.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("BranchId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("CosmeticBatchBatchId")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("Quantity")
@@ -188,6 +317,8 @@ namespace MilkiDrugStore.Persistence.Migrations
 
                     b.HasIndex("BranchId");
 
+                    b.HasIndex("CosmeticBatchBatchId");
+
                     b.ToTable("ExpiredRecords");
                 });
 
@@ -198,6 +329,9 @@ namespace MilkiDrugStore.Persistence.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<int?>("BatchId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("CosmeticBatchBatchId")
                         .HasColumnType("INTEGER");
 
                     b.Property<DateTime>("CreatedAt")
@@ -236,6 +370,8 @@ namespace MilkiDrugStore.Persistence.Migrations
                     b.HasKey("TransactionId");
 
                     b.HasIndex("BatchId");
+
+                    b.HasIndex("CosmeticBatchBatchId");
 
                     b.HasIndex("MedicineBatchBatchId");
 
@@ -383,6 +519,35 @@ namespace MilkiDrugStore.Persistence.Migrations
                     b.ToTable("Notifications");
                 });
 
+            modelBuilder.Entity("MilkiDrugStore.Domain.Entities.PasswordReset", b =>
+                {
+                    b.Property<int>("PasswordResetId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("ExpiryDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsUsed")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("PasswordResetId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("PasswordResets");
+                });
+
             modelBuilder.Entity("MilkiDrugStore.Domain.Entities.Purchase", b =>
                 {
                     b.Property<int>("PurchaseId")
@@ -450,6 +615,9 @@ namespace MilkiDrugStore.Persistence.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
+                    b.Property<int?>("CosmeticBatchBatchId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<DateTime?>("ExpiryDate")
                         .HasColumnType("TEXT");
 
@@ -471,6 +639,8 @@ namespace MilkiDrugStore.Persistence.Migrations
                     b.HasKey("PurchaseItemId");
 
                     b.HasIndex("BatchId");
+
+                    b.HasIndex("CosmeticBatchBatchId");
 
                     b.HasIndex("MedicineId");
 
@@ -606,6 +776,9 @@ namespace MilkiDrugStore.Persistence.Migrations
                     b.Property<int?>("BatchId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("CosmeticBatchBatchId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<decimal>("DiscountAmount")
                         .HasColumnType("decimal(18,2)");
 
@@ -633,6 +806,8 @@ namespace MilkiDrugStore.Persistence.Migrations
                     b.HasKey("SaleItemId");
 
                     b.HasIndex("BatchId");
+
+                    b.HasIndex("CosmeticBatchBatchId");
 
                     b.HasIndex("MedicineId");
 
@@ -833,6 +1008,36 @@ namespace MilkiDrugStore.Persistence.Migrations
                     b.Navigation("UnitType");
                 });
 
+            modelBuilder.Entity("MilkiDrugStore.Domain.Entities.Cosmetic", b =>
+                {
+                    b.HasOne("MilkiDrugStore.Domain.Entities.CosmeticCategory", "CosmeticCategory")
+                        .WithMany("Cosmetics")
+                        .HasForeignKey("CosmeticCategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MilkiDrugStore.Domain.Entities.UnitType", "UnitType")
+                        .WithMany()
+                        .HasForeignKey("UnitTypeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CosmeticCategory");
+
+                    b.Navigation("UnitType");
+                });
+
+            modelBuilder.Entity("MilkiDrugStore.Domain.Entities.CosmeticBatch", b =>
+                {
+                    b.HasOne("MilkiDrugStore.Domain.Entities.Cosmetic", "Cosmetic")
+                        .WithMany("Batches")
+                        .HasForeignKey("CosmeticId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Cosmetic");
+                });
+
             modelBuilder.Entity("MilkiDrugStore.Domain.Entities.DamageRecord", b =>
                 {
                     b.HasOne("MilkiDrugStore.Domain.Entities.MedicineBatch", "Batch")
@@ -846,6 +1051,10 @@ namespace MilkiDrugStore.Persistence.Migrations
                         .HasForeignKey("BranchId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("MilkiDrugStore.Domain.Entities.CosmeticBatch", null)
+                        .WithMany("DamageRecords")
+                        .HasForeignKey("CosmeticBatchBatchId");
 
                     b.Navigation("Batch");
 
@@ -866,6 +1075,10 @@ namespace MilkiDrugStore.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("MilkiDrugStore.Domain.Entities.CosmeticBatch", null)
+                        .WithMany("ExpiredRecords")
+                        .HasForeignKey("CosmeticBatchBatchId");
+
                     b.Navigation("Batch");
 
                     b.Navigation("Branch");
@@ -876,6 +1089,10 @@ namespace MilkiDrugStore.Persistence.Migrations
                     b.HasOne("MilkiDrugStore.Domain.Entities.MedicineBatch", "Batch")
                         .WithMany()
                         .HasForeignKey("BatchId");
+
+                    b.HasOne("MilkiDrugStore.Domain.Entities.CosmeticBatch", null)
+                        .WithMany("InventoryTransactions")
+                        .HasForeignKey("CosmeticBatchBatchId");
 
                     b.HasOne("MilkiDrugStore.Domain.Entities.MedicineBatch", null)
                         .WithMany("InventoryTransactions")
@@ -945,6 +1162,17 @@ namespace MilkiDrugStore.Persistence.Migrations
                     b.Navigation("Branch");
                 });
 
+            modelBuilder.Entity("MilkiDrugStore.Domain.Entities.PasswordReset", b =>
+                {
+                    b.HasOne("MilkiDrugStore.Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("MilkiDrugStore.Domain.Entities.Purchase", b =>
                 {
                     b.HasOne("MilkiDrugStore.Domain.Entities.Branch", "Branch")
@@ -969,6 +1197,10 @@ namespace MilkiDrugStore.Persistence.Migrations
                     b.HasOne("MilkiDrugStore.Domain.Entities.MedicineBatch", "Batch")
                         .WithMany("PurchaseItems")
                         .HasForeignKey("BatchId");
+
+                    b.HasOne("MilkiDrugStore.Domain.Entities.CosmeticBatch", null)
+                        .WithMany("PurchaseItems")
+                        .HasForeignKey("CosmeticBatchBatchId");
 
                     b.HasOne("MilkiDrugStore.Domain.Entities.Medicine", "Medicine")
                         .WithMany("PurchaseItems")
@@ -1024,6 +1256,10 @@ namespace MilkiDrugStore.Persistence.Migrations
                     b.HasOne("MilkiDrugStore.Domain.Entities.MedicineBatch", "Batch")
                         .WithMany("SaleItems")
                         .HasForeignKey("BatchId");
+
+                    b.HasOne("MilkiDrugStore.Domain.Entities.CosmeticBatch", null)
+                        .WithMany("SaleItems")
+                        .HasForeignKey("CosmeticBatchBatchId");
 
                     b.HasOne("MilkiDrugStore.Domain.Entities.Medicine", "Medicine")
                         .WithMany("SaleItems")
@@ -1098,6 +1334,29 @@ namespace MilkiDrugStore.Persistence.Migrations
             modelBuilder.Entity("MilkiDrugStore.Domain.Entities.Category", b =>
                 {
                     b.Navigation("Medicines");
+                });
+
+            modelBuilder.Entity("MilkiDrugStore.Domain.Entities.Cosmetic", b =>
+                {
+                    b.Navigation("Batches");
+                });
+
+            modelBuilder.Entity("MilkiDrugStore.Domain.Entities.CosmeticBatch", b =>
+                {
+                    b.Navigation("DamageRecords");
+
+                    b.Navigation("ExpiredRecords");
+
+                    b.Navigation("InventoryTransactions");
+
+                    b.Navigation("PurchaseItems");
+
+                    b.Navigation("SaleItems");
+                });
+
+            modelBuilder.Entity("MilkiDrugStore.Domain.Entities.CosmeticCategory", b =>
+                {
+                    b.Navigation("Cosmetics");
                 });
 
             modelBuilder.Entity("MilkiDrugStore.Domain.Entities.Medicine", b =>

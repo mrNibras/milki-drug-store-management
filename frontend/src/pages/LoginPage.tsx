@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Store, Mail, Lock, Eye, EyeOff, AlertCircle, Moon, Sun } from 'lucide-react';
 import { useAppStore } from '../store/appStore';
 import { useThemeStore } from '../store/themeStore';
@@ -159,9 +159,9 @@ export const LoginPage: React.FC = () => {
                 <input type="checkbox" className="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500" />
                 <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Remember me</span>
               </label>
-              <button type="button" className="text-sm text-emerald-500 hover:text-emerald-400 font-medium">
+              <Link to="/forgot-password" className="text-sm text-emerald-500 hover:text-emerald-400 font-medium">
                 Forgot password?
-              </button>
+              </Link>
             </div>
 
             <button

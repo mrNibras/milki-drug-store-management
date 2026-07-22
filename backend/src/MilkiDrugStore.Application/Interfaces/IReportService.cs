@@ -4,9 +4,9 @@ namespace MilkiDrugStore.Application.Interfaces;
 
 public interface IReportService
 {
-    Task<DashboardSummaryResponse> GetDashboardSummaryAsync();
-    Task<IEnumerable<SalesReportResponse>> GetSalesReportAsync(string period);
-    Task<IEnumerable<InventoryReportResponse>> GetInventoryReportAsync();
-    Task<IEnumerable<SupplierReportResponse>> GetSupplierReportAsync();
-    Task<IEnumerable<StaffReportResponse>> GetStaffReportAsync();
+    Task<DashboardSummaryResponse> GetDashboardSummaryAsync(int? branchId = null);
+    Task<IEnumerable<SalesReportResponse>> GetSalesReportAsync(string period, int? branchId = null);
+    Task<IEnumerable<InventoryReportResponse>> GetInventoryReportAsync(int? branchId = null);
+    Task<IEnumerable<SupplierReportResponse>> GetSupplierReportAsync(int? branchId = null);
+    Task<IEnumerable<StaffReportResponse>> GetStaffReportAsync(int? branchId = null);
 }

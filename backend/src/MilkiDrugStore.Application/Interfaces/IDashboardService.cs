@@ -4,5 +4,5 @@ namespace MilkiDrugStore.Application.Interfaces;
 
 public interface IDashboardService
 {
-    Task<DashboardSummaryResponse> GetSummaryAsync();
+    Task<DashboardSummaryResponse> GetSummaryAsync(int? branchId = null);
 }

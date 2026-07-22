@@ -27,6 +27,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IInventoryService, InventoryService>();
         services.AddScoped<IBranchService, BranchService>();
         services.AddScoped<IBackupService, BackupService>();
+        services.AddScoped<ICosmeticService, CosmeticService>();
+        services.AddScoped<ICosmeticCategoryService, CosmeticCategoryService>();
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
@@ -36,6 +38,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IInventoryTransactionRepository, InventoryTransactionRepository>();
         services.AddScoped<INotificationRepository, NotificationRepository>();
         services.AddScoped<IAuditLogRepository, AuditLogRepository>();
+        services.AddScoped<ICosmeticRepository, CosmeticRepository>();
+        services.AddScoped<ICosmeticCategoryRepository, CosmeticCategoryRepository>();
 
         return services;
     }

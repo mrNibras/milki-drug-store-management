@@ -33,6 +33,10 @@ public class UnitOfWork : IUnitOfWork
         DamageRecords = new Repository<DamageRecord>(_context);
         ExpiredRecords = new Repository<ExpiredRecord>(_context);
         RefreshTokens = new Repository<RefreshToken>(_context);
+        PasswordResets = new Repository<PasswordReset>(_context);
+        Cosmetics = new Repository<Cosmetic>(_context);
+        CosmeticBatches = new Repository<CosmeticBatch>(_context);
+        CosmeticCategories = new Repository<CosmeticCategory>(_context);
     }
 
     public IRepository<Role> Roles { get; }
@@ -53,6 +57,10 @@ public class UnitOfWork : IUnitOfWork
     public IRepository<DamageRecord> DamageRecords { get; }
     public IRepository<ExpiredRecord> ExpiredRecords { get; }
     public IRepository<RefreshToken> RefreshTokens { get; }
+    public IRepository<PasswordReset> PasswordResets { get; }
+    public IRepository<Cosmetic> Cosmetics { get; }
+    public IRepository<CosmeticBatch> CosmeticBatches { get; }
+    public IRepository<CosmeticCategory> CosmeticCategories { get; }
 
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {

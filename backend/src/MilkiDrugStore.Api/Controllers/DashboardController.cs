@@ -19,7 +19,14 @@ public class DashboardController : ControllerBase
     [HttpGet("summary")]
     public async Task<IActionResult> GetSummary()
     {
-        var result = await _dashboardService.GetSummaryAsync();
+        var branchId = GetBranchId();
+        var result = await _dashboardService.GetSummaryAsync(branchId > 0 ? branchId : null);
         return Ok(result);
+    }
+
+    private int GetBranchId()
+    {
+        var branchIdClaim = User.FindFirst("branchId")?.Value;
+        return int.TryParse(branchIdClaim, out var branchId) ? branchId : 0;
     }
 }

@@ -32,6 +32,7 @@ public class PurchaseResponse
     public string PurchaseNumber { get; set; } = string.Empty;
     public int SupplierId { get; set; }
     public string SupplierName { get; set; } = string.Empty;
+    public int BranchId { get; set; }
     public DateTime PurchaseDate { get; set; }
     public decimal TotalAmount { get; set; }
     public decimal AmountPaid { get; set; }

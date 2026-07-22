@@ -27,7 +27,8 @@ public class DamagesController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        var damages = await _inventoryService.GetDamagesAsync();
+        var branchId = GetBranchId();
+        var damages = await _inventoryService.GetDamagesAsync(branchId > 0 ? branchId : null);
         return Ok(damages);
     }
 
@@ -35,5 +36,11 @@ public class DamagesController : ControllerBase
     {
         var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         return int.TryParse(userIdClaim, out var userId) ? userId : 0;
+    }
+
+    private int GetBranchId()
+    {
+        var branchIdClaim = User.FindFirst("branchId")?.Value;
+        return int.TryParse(branchIdClaim, out var branchId) ? branchId : 0;
     }
 }

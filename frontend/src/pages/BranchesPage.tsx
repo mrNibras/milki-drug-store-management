@@ -15,7 +15,7 @@ export const BranchesPage: React.FC = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null);
   const [formData, setFormData] = useState({
-    name: '', location: '', phone: '', email: '', address: '', isActive: true,
+    branchName: '', location: '', phone: '', email: '', address: '', isActive: true,
   });
 
   useEffect(() => {
@@ -23,14 +23,14 @@ export const BranchesPage: React.FC = () => {
   }, [fetchBranches]);
 
   const handleAdd = () => {
-    setFormData({ name: '', location: '', phone: '', email: '', address: '', isActive: true });
+    setFormData({ branchName: '', location: '', phone: '', email: '', address: '', isActive: true });
     setShowAddModal(true);
   };
 
   const handleEdit = (branch: Branch) => {
     setSelectedBranch(branch);
     setFormData({
-      name: branch.name,
+      branchName: branch.name,
       location: branch.location || '',
       phone: branch.phone || '',
       email: branch.email || '',
@@ -41,9 +41,9 @@ export const BranchesPage: React.FC = () => {
   };
 
   const handleSave = async () => {
-    if (!formData.name.trim()) return;
+    if (!formData.branchName.trim()) return;
     await addBranch({
-      name: formData.name,
+      branchName: formData.branchName,
       location: formData.location,
       phone: formData.phone,
       email: formData.email,
@@ -163,7 +163,7 @@ export const BranchesPage: React.FC = () => {
         <div className="space-y-4">
           <div>
             <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Branch Name *</label>
-            <input type="text" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className={inputClass} placeholder="e.g., Main Branch" />
+            <input type="text" value={formData.branchName} onChange={e => setFormData({ ...formData, branchName: e.target.value })} className={inputClass} placeholder="e.g., Main Branch" />
           </div>
           <div>
             <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Location</label>
@@ -194,10 +194,10 @@ export const BranchesPage: React.FC = () => {
       <Modal isOpen={showEditModal} onClose={() => setShowEditModal(false)} title="Edit Branch">
         {selectedBranch && (
           <div className="space-y-4">
-            <div>
-              <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Branch Name *</label>
-              <input type="text" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className={inputClass} />
-            </div>
+             <div>
+               <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Branch Name *</label>
+               <input type="text" value={formData.branchName} onChange={e => setFormData({ ...formData, branchName: e.target.value })} className={inputClass} />
+             </div>
             <div>
               <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Location</label>
               <input type="text" value={formData.location} onChange={e => setFormData({ ...formData, location: e.target.value })} className={inputClass} />

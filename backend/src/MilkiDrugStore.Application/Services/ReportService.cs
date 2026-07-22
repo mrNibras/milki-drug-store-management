@@ -27,10 +27,14 @@ public class ReportService : IReportService
         _userRepo = userRepo;
     }
 
-    public async Task<DashboardSummaryResponse> GetDashboardSummaryAsync()
+    public async Task<DashboardSummaryResponse> GetDashboardSummaryAsync(int? branchId = null)
     {
         var medicines = (await _medicineRepo.GetAllAsync()).ToList();
         var sales = (await _saleRepo.GetAllAsync()).ToList();
+
+        if (branchId.HasValue)
+            sales = sales.Where(s => s.BranchId == branchId.Value).ToList();
+
         var today = DateTime.Today;
 
         var todaySales = sales.Where(s => s.SaleDate.Date == today).Sum(s => s.TotalAmount);
@@ -56,9 +60,11 @@ public class ReportService : IReportService
         };
     }
 
-    public async Task<IEnumerable<SalesReportResponse>> GetSalesReportAsync(string period)
+    public async Task<IEnumerable<SalesReportResponse>> GetSalesReportAsync(string period, int? branchId = null)
     {
         var sales = (await _saleRepo.GetAllAsync()).ToList();
+        if (branchId.HasValue)
+            sales = sales.Where(s => s.BranchId == branchId.Value).ToList();
         DateTime from;
 
         from = period.ToLower() switch
@@ -85,14 +91,16 @@ public class ReportService : IReportService
             .ToList();
     }
 
-    public async Task<IEnumerable<InventoryReportResponse>> GetInventoryReportAsync()
+    public async Task<IEnumerable<InventoryReportResponse>> GetInventoryReportAsync(int? branchId = null)
     {
         var medicines = (await _medicineRepo.GetAllAsync()).ToList();
-
         return medicines.Select(m =>
         {
-            var totalQty = m.Batches.Sum(b => b.Balance);
-            var totalValue = m.Batches.Sum(b => b.Balance * b.PurchasePrice);
+            var batches = m.Batches.AsQueryable();
+            if (branchId.HasValue)
+                batches = batches.Where(b => b.BranchId == branchId.Value);
+            var totalQty = batches.Sum(b => b.Balance);
+            var totalValue = batches.Sum(b => b.Balance * b.PurchasePrice);
             var status = totalQty == 0 ? "Out of Stock" : totalQty <= m.LowStockThreshold ? "Low Stock" : "In Stock";
 
             return new InventoryReportResponse
@@ -107,10 +115,13 @@ public class ReportService : IReportService
         }).OrderBy(r => r.Quantity).ToList();
     }
 
-    public async Task<IEnumerable<SupplierReportResponse>> GetSupplierReportAsync()
+    public async Task<IEnumerable<SupplierReportResponse>> GetSupplierReportAsync(int? branchId = null)
     {
         var purchases = (await _purchaseRepo.GetAllAsync()).ToList();
         var suppliers = (await _supplierRepo.GetAllAsync()).ToList();
+
+        if (branchId.HasValue)
+            purchases = purchases.Where(p => p.BranchId == branchId.Value).ToList();
 
         return suppliers.Select(s =>
         {
@@ -132,10 +143,13 @@ public class ReportService : IReportService
         }).OrderByDescending(r => r.TotalAmount).ToList();
     }
 
-    public async Task<IEnumerable<StaffReportResponse>> GetStaffReportAsync()
+    public async Task<IEnumerable<StaffReportResponse>> GetStaffReportAsync(int? branchId = null)
     {
         var sales = (await _saleRepo.GetAllAsync()).ToList();
         var users = (await _userRepo.GetAllAsync()).ToList();
+
+        if (branchId.HasValue)
+            sales = sales.Where(s => s.BranchId == branchId.Value).ToList();
 
         return users.Where(u => u.IsActive).Select(u =>
         {

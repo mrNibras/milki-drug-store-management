@@ -19,14 +19,16 @@ public class NotificationsController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        var result = await _notificationService.GetAllAsync();
+        var branchId = GetBranchId();
+        var result = await _notificationService.GetAllAsync(branchId > 0 ? branchId : null);
         return Ok(result);
     }
 
     [HttpGet("unread")]
     public async Task<IActionResult> GetUnread()
     {
-        var result = await _notificationService.GetUnreadAsync();
+        var branchId = GetBranchId();
+        var result = await _notificationService.GetUnreadAsync(branchId > 0 ? branchId : null);
         return Ok(result);
     }
 
@@ -40,7 +42,14 @@ public class NotificationsController : ControllerBase
     [HttpPut("read-all")]
     public async Task<IActionResult> MarkAllAsRead()
     {
-        await _notificationService.MarkAllAsReadAsync();
+        var branchId = GetBranchId();
+        await _notificationService.MarkAllAsReadAsync(branchId > 0 ? branchId : null);
         return NoContent();
+    }
+
+    private int GetBranchId()
+    {
+        var branchIdClaim = User.FindFirst("branchId")?.Value;
+        return int.TryParse(branchIdClaim, out var branchId) ? branchId : 0;
     }
 }

@@ -48,6 +48,7 @@ public class BatchResponse
 {
     public int BatchId { get; set; }
     public int MedicineId { get; set; }
+    public int BranchId { get; set; }
     public string BatchNumber { get; set; } = string.Empty;
     public decimal PurchasePrice { get; set; }
     public decimal SellingPrice { get; set; }

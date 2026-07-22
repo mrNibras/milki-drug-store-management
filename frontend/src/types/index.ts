@@ -3,6 +3,8 @@ export interface User {
   fullName: string;
   email: string;
   role: 'admin' | 'pharmacist';
+  branchId?: number;
+  branchName?: string;
   isActive: boolean;
   createdAt: string;
   password?: string;
@@ -22,6 +24,14 @@ export interface UnitType {
   name: string;
   description?: string;
   isActive: boolean;
+}
+
+export interface CosmeticCategory {
+  id: string;
+  name: string;
+  description?: string;
+  isActive: boolean;
+  createdAt: string;
 }
 
 export interface Medicine {
@@ -46,6 +56,33 @@ export interface MedicineBatch {
   quantity: number;
   expiryDate: string;
   createdAt: string;
+}
+
+export interface Cosmetic {
+  id: string;
+  productName: string;
+  description: string;
+  cosmeticCategoryId: string;
+  cosmeticCategoryName: string;
+  unitType: string;
+  unitTypeId: number;
+  price: number;
+  isActive: boolean;
+  createdAt: string;
+  batches: CosmeticBatch[];
+}
+
+export interface CosmeticBatch {
+  id: string;
+  cosmeticId: string;
+  batchNumber: string;
+  quantityReceived: number;
+  quantityIssued: number;
+  quantityDamaged: number;
+  quantityExpired: number;
+  balance: number;
+  expiryDate: string;
+  dateReceived: string;
 }
 
 export interface Supplier {
@@ -215,4 +252,14 @@ export interface ExpiredResponse {
   recordedBy: number;
   batchNumber?: string;
   medicineName?: string;
+}
+
+export interface Branch {
+  id: string;
+  name: string;
+  location?: string;
+  phone?: string;
+  email?: string;
+  address?: string;
+  isActive: boolean;
 }

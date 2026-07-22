@@ -26,7 +26,7 @@ public class MedicineService : IMedicineService
         _auditLog = auditLog;
     }
 
-    public async Task<IEnumerable<MedicineResponse>> GetAllAsync(string? search = null, int? categoryId = null)
+    public async Task<IEnumerable<MedicineResponse>> GetAllAsync(string? search = null, int? categoryId = null, int? branchId = null)
     {
         var query = (await _medicineRepo.GetAllAsync()).AsQueryable();
 
@@ -43,14 +43,26 @@ public class MedicineService : IMedicineService
             .OrderBy(m => m.MedicineName)
             .ToList();
 
+        if (branchId.HasValue)
+        {
+            foreach (var m in medicines)
+            {
+                m.Batches = m.Batches.Where(b => b.BranchId == branchId.Value).ToList();
+            }
+        }
+
         return medicines.Select(MapToResponse);
     }
 
-    public async Task<MedicineResponse?> GetByIdAsync(int id)
+    public async Task<MedicineResponse?> GetByIdAsync(int id, int? branchId = null)
     {
         var medicines = await _medicineRepo.FindAsync(m => m.MedicineId == id);
         var medicine = medicines.Include(m => m.Category).Include(m => m.UnitType).Include(m => m.Batches).FirstOrDefault();
         if (medicine == null) return null;
+
+        if (branchId.HasValue)
+            medicine.Batches = medicine.Batches.Where(b => b.BranchId == branchId.Value).ToList();
+
         return MapToResponse(medicine);
     }
 
@@ -110,7 +122,7 @@ public class MedicineService : IMedicineService
         await _auditLog.LogAsync(userId, $"Deleted medicine: {medicine.MedicineName}", "Medicines", medicine.MedicineId);
     }
 
-    public async Task<MedicineResponse> AddBatchAsync(AddBatchRequest request, int userId)
+    public async Task<MedicineResponse> AddBatchAsync(AddBatchRequest request, int userId, int? branchId = null)
     {
         var medicines = await _medicineRepo.FindAsync(m => m.MedicineId == request.MedicineId);
         var medicine = medicines.Include(m => m.Batches).FirstOrDefault();
@@ -119,6 +131,7 @@ public class MedicineService : IMedicineService
         var batch = new MedicineBatch
         {
             MedicineId = request.MedicineId,
+            BranchId = branchId ?? 0,
             BatchNumber = request.BatchNumber,
             QuantityReceived = request.Quantity,
             PurchasePrice = request.PurchasePrice,

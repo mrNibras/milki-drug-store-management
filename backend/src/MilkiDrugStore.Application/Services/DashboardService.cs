@@ -12,8 +12,8 @@ public class DashboardService : IDashboardService
         _reportService = reportService;
     }
 
-    public async Task<DashboardSummaryResponse> GetSummaryAsync()
+    public async Task<DashboardSummaryResponse> GetSummaryAsync(int? branchId = null)
     {
-        return await _reportService.GetDashboardSummaryAsync();
+        return await _reportService.GetDashboardSummaryAsync(branchId);
     }
 }

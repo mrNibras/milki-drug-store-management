@@ -45,7 +45,7 @@ public class SaleService : ISaleService
         _auditLog = auditLog;
     }
 
-    public async Task<SaleResponse> CreateAsync(CreateSaleRequest request, int userId, string userRole)
+    public async Task<SaleResponse> CreateAsync(CreateSaleRequest request, int userId, string userRole, int? branchId = null)
     {
         await _unitOfWork.BeginTransactionAsync();
 
@@ -63,7 +63,7 @@ public class SaleService : ISaleService
 
             foreach (var item in request.Items)
             {
-                var batches = await GetAvailableBatchesAsync(item.MedicineId);
+                var batches = await GetAvailableBatchesAsync(item.MedicineId, branchId);
                 if (!batches.Any())
                     throw new InsufficientStockException($"No stock available for medicine ID {item.MedicineId}");
 
@@ -130,6 +130,7 @@ public class SaleService : ISaleService
             var sale = new Sale
             {
                 SaleNumber = saleNumber,
+                BranchId = branchId ?? 0,
                 SaleDate = DateTime.Now,
                 TotalAmount = totalAmount,
                 TotalProfit = totalProfit,
@@ -174,7 +175,7 @@ public class SaleService : ISaleService
                 var med = (await _medicineRepo.FindAsync(m => m.MedicineId == si.MedicineId)).FirstOrDefault();
                 if (med != null)
                 {
-                    var batches = await GetAvailableBatchesAsync(med.MedicineId);
+                    var batches = await GetAvailableBatchesAsync(med.MedicineId, branchId);
                     var currentStock = batches.Sum(b => b.Balance);
                     if (currentStock <= med.LowStockThreshold && currentStock > 0)
                     {
@@ -196,25 +197,35 @@ public class SaleService : ISaleService
         }
     }
 
-    public async Task<IEnumerable<SaleResponse>> GetAllAsync()
+    public async Task<IEnumerable<SaleResponse>> GetAllAsync(int? branchId = null)
     {
         var sales = await _saleRepo.GetAllAsync();
-        return sales.OrderByDescending(s => s.SaleDate).Select(MapToResponse);
+        var query = sales.AsQueryable();
+        if (branchId.HasValue)
+            query = query.Where(s => s.BranchId == branchId.Value);
+        return query.OrderByDescending(s => s.SaleDate).Select(MapToResponse);
     }
 
-    public async Task<SaleResponse?> GetByIdAsync(int id)
+    public async Task<SaleResponse?> GetByIdAsync(int id, int? branchId = null)
     {
-        var sale = await _saleRepo.GetByIdAsync(id);
+        var sales = await _saleRepo.FindAsync(s => s.SaleId == id);
+        var query = sales.AsQueryable();
+        if (branchId.HasValue)
+            query = query.Where(s => s.BranchId == branchId.Value);
+        var sale = query.FirstOrDefault();
         if (sale == null) return null;
         return MapToResponse(sale);
     }
 
-    private async Task<List<MedicineBatch>> GetAvailableBatchesAsync(int medicineId)
+    private async Task<List<MedicineBatch>> GetAvailableBatchesAsync(int medicineId, int? branchId = null)
     {
         var batches = (await _batchRepo.FindAsync(b => b.MedicineId == medicineId))
             .OrderBy(b => b.ExpiryDate)
             .ThenBy(b => b.BatchId)
             .ToList();
+
+        if (branchId.HasValue)
+            batches = batches.Where(b => b.BranchId == branchId.Value).ToList();
 
         return batches.Where(b => b.Balance > 0).ToList();
     }
@@ -225,6 +236,7 @@ public class SaleService : ISaleService
         {
             SaleId = s.SaleId,
             SaleNumber = s.SaleNumber,
+            BranchId = s.BranchId,
             SaleDate = s.SaleDate,
             TotalAmount = s.TotalAmount,
             TotalProfit = s.TotalProfit,

@@ -13,6 +13,8 @@ public class LoginResponse
     public string Role { get; set; } = string.Empty;
     public int UserId { get; set; }
     public string FullName { get; set; } = string.Empty;
+    public int BranchId { get; set; }
+    public string BranchName { get; set; } = string.Empty;
 }
 
 public class RefreshTokenRequest
@@ -32,6 +34,7 @@ public class UpdateUserRequest
     public string FullName { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public int RoleId { get; set; }
+    public int BranchId { get; set; }
     public bool? IsActive { get; set; }
 }
 
@@ -42,6 +45,8 @@ public class UserResponse
     public string Email { get; set; } = string.Empty;
     public int RoleId { get; set; }
     public string RoleName { get; set; } = string.Empty;
+    public int BranchId { get; set; }
+    public string BranchName { get; set; } = string.Empty;
     public bool IsApproved { get; set; }
     public bool IsActive { get; set; }
     public DateTime CreatedAt { get; set; }
@@ -53,6 +58,7 @@ public class CreateUserRequest
     public string Email { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;
     public int RoleId { get; set; }
+    public int BranchId { get; set; }
 }
 
 public class UpdateSettingsRequest
@@ -71,4 +77,20 @@ public class ChangePasswordRequest
 {
     public string CurrentPassword { get; set; } = string.Empty;
     public string NewPassword { get; set; } = string.Empty;
+}
+
+public class ForgotPasswordRequest
+{
+    public string Email { get; set; } = string.Empty;
+}
+
+public class ResetPasswordRequest
+{
+    public string Token { get; set; } = string.Empty;
+    public string NewPassword { get; set; } = string.Empty;
+}
+
+public class ForgotPasswordResponse
+{
+    public string Message { get; set; } = string.Empty;
 }

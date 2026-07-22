@@ -118,10 +118,25 @@ export interface LoginResponse {
   role: string;
   userId: number;
   fullName: string;
+  branchId: number;
+  branchName: string;
 }
 
 export interface RefreshTokenRequest {
   refreshToken: string;
+}
+
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ResetPasswordRequest {
+  token: string;
+  newPassword: string;
+}
+
+export interface ForgotPasswordResponse {
+  message: string;
 }
 
 export interface Category {
@@ -335,6 +350,33 @@ export interface RecordExpiredRequest {
   quantity: number;
 }
 
+export interface BranchResponse {
+  branchId: number;
+  branchName: string;
+  location?: string;
+  phone?: string;
+  email?: string;
+  address?: string;
+  isActive: boolean;
+}
+
+export interface CreateBranchRequest {
+  branchName: string;
+  location?: string;
+  phone?: string;
+  email?: string;
+  address?: string;
+}
+
+export interface UpdateBranchRequest {
+  branchName: string;
+  location?: string;
+  phone?: string;
+  email?: string;
+  address?: string;
+  isActive: boolean;
+}
+
 export interface DamageResponse {
   damageId: number;
   batchId: number;
@@ -354,4 +396,74 @@ export interface ExpiredResponse {
   recordedBy: number;
   batchNumber?: string;
   medicineName?: string;
+}
+
+export interface CosmeticResponse {
+  cosmeticId: number;
+  productName: string;
+  description: string;
+  categoryId: number;
+  categoryName: string;
+  unitTypeId: number;
+  unitTypeName: string;
+  price: number;
+  isActive: boolean;
+  createdAt: string;
+  batches: {
+    batchId: number;
+    cosmeticId: number;
+    batchNumber: string;
+    quantityReceived: number;
+    quantityIssued: number;
+    quantityDamaged: number;
+    quantityExpired: number;
+    balance: number;
+    expiryDate: string;
+    dateReceived: string;
+  }[];
+}
+
+export interface CreateCosmeticRequest {
+  productName: string;
+  description: string;
+  categoryId: number;
+  unitTypeId: number;
+  price: number;
+}
+
+export interface UpdateCosmeticRequest {
+  productName: string;
+  description: string;
+  categoryId: number;
+  unitTypeId: number;
+  price: number;
+  isActive: boolean;
+}
+
+export interface AddCosmeticBatchRequest {
+  cosmeticId: number;
+  batchNumber: string;
+  quantity: number;
+  purchasePrice: number;
+  sellingPrice: number;
+  expiryDate: string;
+}
+
+export interface CosmeticCategoryResponse {
+  cosmeticCategoryId: number;
+  name: string;
+  description?: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface CreateCosmeticCategoryRequest {
+  name: string;
+  description?: string;
+}
+
+export interface UpdateCosmeticCategoryRequest {
+  name: string;
+  description?: string;
+  isActive: boolean;
 }

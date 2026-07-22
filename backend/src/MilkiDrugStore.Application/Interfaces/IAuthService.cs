@@ -13,7 +13,9 @@ public interface IAuthService
     Task<IEnumerable<UserResponse>> GetAllUsersAsync();
     Task<UserResponse?> UpdateUserAsync(int id, UpdateUserRequest request);
     Task DeleteUserAsync(int id);
-    Task<Settings?> GetSettingsAsync();
-    Task<Settings> UpdateSettingsAsync(UpdateSettingsRequest request, int userId);
+    Task<Settings?> GetSettingsAsync(int? branchId = null);
+    Task<Settings> UpdateSettingsAsync(UpdateSettingsRequest request, int userId, int? branchId = null);
     Task<LoginResponse?> RefreshTokenAsync(RefreshTokenRequest request);
+    Task<ForgotPasswordResponse> RequestPasswordResetAsync(ForgotPasswordRequest request);
+    Task<string> ResetPasswordAsync(ResetPasswordRequest request);
 }

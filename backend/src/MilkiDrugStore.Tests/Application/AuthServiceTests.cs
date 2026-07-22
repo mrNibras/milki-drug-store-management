@@ -17,6 +17,8 @@ public class AuthServiceTests
 {
     private readonly Mock<IRepository<User>> _userRepo = new();
     private readonly Mock<IRepository<Role>> _roleRepo = new();
+    private readonly Mock<IRepository<Branch>> _branchRepo = new();
+    private readonly Mock<IRepository<PasswordReset>> _passwordResetRepo = new();
     private readonly Mock<IJwtTokenService> _jwtService = new();
     private readonly Mock<IEmailService> _emailService = new();
     private readonly Mock<IConfiguration> _configuration = new();
@@ -37,6 +39,8 @@ public class AuthServiceTests
         _sut = new AuthService(
             _userRepo.Object,
             _roleRepo.Object,
+            _branchRepo.Object,
+            _passwordResetRepo.Object,
             _jwtService.Object,
             _emailService.Object,
             _configuration.Object,

@@ -27,7 +27,8 @@ public class ExpiredController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        var expired = await _inventoryService.GetExpiredAsync();
+        var branchId = GetBranchId();
+        var expired = await _inventoryService.GetExpiredAsync(branchId > 0 ? branchId : null);
         return Ok(expired);
     }
 
@@ -35,5 +36,11 @@ public class ExpiredController : ControllerBase
     {
         var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         return int.TryParse(userIdClaim, out var userId) ? userId : 0;
+    }
+
+    private int GetBranchId()
+    {
+        var branchIdClaim = User.FindFirst("branchId")?.Value;
+        return int.TryParse(branchIdClaim, out var branchId) ? branchId : 0;
     }
 }

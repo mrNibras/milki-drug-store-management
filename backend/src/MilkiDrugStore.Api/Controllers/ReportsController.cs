@@ -17,37 +17,37 @@ public class ReportsController : ControllerBase
     }
 
     [HttpGet("dashboard/summary")]
-    public async Task<IActionResult> GetDashboardSummary()
+    public async Task<IActionResult> GetDashboardSummary([FromQuery] int? branchId)
     {
-        var result = await _reportService.GetDashboardSummaryAsync();
+        var result = await _reportService.GetDashboardSummaryAsync(branchId);
         return Ok(result);
     }
 
     [HttpGet("sales/{period}")]
-    public async Task<IActionResult> GetSalesReport(string period)
+    public async Task<IActionResult> GetSalesReport(string period, [FromQuery] int? branchId)
     {
-        var result = await _reportService.GetSalesReportAsync(period);
+        var result = await _reportService.GetSalesReportAsync(period, branchId);
         return Ok(result);
     }
 
     [HttpGet("inventory")]
-    public async Task<IActionResult> GetInventoryReport()
+    public async Task<IActionResult> GetInventoryReport([FromQuery] int? branchId)
     {
-        var result = await _reportService.GetInventoryReportAsync();
+        var result = await _reportService.GetInventoryReportAsync(branchId);
         return Ok(result);
     }
 
     [HttpGet("suppliers")]
-    public async Task<IActionResult> GetSupplierReport()
+    public async Task<IActionResult> GetSupplierReport([FromQuery] int? branchId)
     {
-        var result = await _reportService.GetSupplierReportAsync();
+        var result = await _reportService.GetSupplierReportAsync(branchId);
         return Ok(result);
     }
 
     [HttpGet("staff")]
-    public async Task<IActionResult> GetStaffReport()
+    public async Task<IActionResult> GetStaffReport([FromQuery] int? branchId)
     {
-        var result = await _reportService.GetStaffReportAsync();
+        var result = await _reportService.GetStaffReportAsync(branchId);
         return Ok(result);
     }
 }

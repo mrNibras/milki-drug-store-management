@@ -29,7 +29,8 @@ public class JwtTokenService : IJwtTokenService
             new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
             new Claim(ClaimTypes.Name, user.FullName),
             new Claim(ClaimTypes.Email, user.Email),
-            new Claim(ClaimTypes.Role, user.Role?.Name ?? "Pharmacist")
+            new Claim(ClaimTypes.Role, user.Role?.Name ?? "Pharmacist"),
+            new Claim("branchId", user.BranchId.ToString())
         };
 
         var token = new JwtSecurityToken(

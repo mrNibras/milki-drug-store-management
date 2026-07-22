@@ -19,14 +19,16 @@ public class PurchasesController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        var result = await _purchaseService.GetAllAsync();
+        var branchId = GetBranchId();
+        var result = await _purchaseService.GetAllAsync(branchId > 0 ? branchId : null);
         return Ok(result);
     }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(int id)
     {
-        var result = await _purchaseService.GetByIdAsync(id);
+        var branchId = GetBranchId();
+        var result = await _purchaseService.GetByIdAsync(id, branchId > 0 ? branchId : null);
         if (result == null) return NotFound();
         return Ok(result);
     }
@@ -36,7 +38,8 @@ public class PurchasesController : ControllerBase
     public async Task<IActionResult> Create([FromBody] MilkiDrugStore.Application.DTOs.Purchase.CreatePurchaseRequest request)
     {
         var userId = GetUserId();
-        var result = await _purchaseService.CreateAsync(request, userId);
+        var branchId = GetBranchId();
+        var result = await _purchaseService.CreateAsync(request, userId, branchId > 0 ? branchId : null);
         return Ok(result);
     }
 
@@ -44,5 +47,11 @@ public class PurchasesController : ControllerBase
     {
         var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         return int.TryParse(userIdClaim, out var userId) ? userId : 0;
+    }
+
+    private int GetBranchId()
+    {
+        var branchIdClaim = User.FindFirst("branchId")?.Value;
+        return int.TryParse(branchIdClaim, out var branchId) ? branchId : 0;
     }
 }

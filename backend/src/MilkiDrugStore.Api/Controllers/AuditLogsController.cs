@@ -17,23 +17,23 @@ public class AuditLogsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll()
+    public async Task<IActionResult> GetAll([FromQuery] int? branchId)
     {
-        var logs = await _auditLogService.GetAllAsync();
+        var logs = await _auditLogService.GetAllAsync(branchId);
         return Ok(logs);
     }
 
     [HttpGet("user/{userId}")]
-    public async Task<IActionResult> GetByUser(int userId)
+    public async Task<IActionResult> GetByUser(int userId, [FromQuery] int? branchId)
     {
-        var logs = await _auditLogService.GetByUserAsync(userId);
+        var logs = await _auditLogService.GetByUserAsync(userId, branchId);
         return Ok(logs);
     }
 
     [HttpGet("range")]
-    public async Task<IActionResult> GetByDateRange([FromQuery] DateTime from, [FromQuery] DateTime to)
+    public async Task<IActionResult> GetByDateRange([FromQuery] DateTime from, [FromQuery] DateTime to, [FromQuery] int? branchId)
     {
-        var logs = await _auditLogService.GetByDateRangeAsync(from, to);
+        var logs = await _auditLogService.GetByDateRangeAsync(from, to, branchId);
         return Ok(logs);
     }
 }

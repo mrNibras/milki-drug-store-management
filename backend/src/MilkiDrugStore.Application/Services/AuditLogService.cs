@@ -21,13 +21,14 @@ public class AuditLogService : IAuditLogService
         _logger = logger;
     }
 
-    public async Task LogAsync(int userId, string action, string tableName, int? recordId = null)
+    public async Task LogAsync(int userId, string action, string tableName, int? recordId = null, int? branchId = null)
     {
         try
         {
             var log = new AuditLog
             {
                 UserId = userId,
+                BranchId = branchId,
                 Action = action,
                 TableName = tableName,
                 RecordId = recordId,
@@ -43,9 +44,11 @@ public class AuditLogService : IAuditLogService
         }
     }
 
-    public async Task<IEnumerable<AuditLogDto>> GetAllAsync()
+    public async Task<IEnumerable<AuditLogDto>> GetAllAsync(int? branchId = null)
     {
         var query = await _auditLogRepo.GetAllAsync();
+        if (branchId.HasValue)
+            query = query.Where(al => al.BranchId == branchId.Value);
         var logs = await query
             .OrderByDescending(al => al.CreatedAt)
             .Include(al => al.User)
@@ -63,9 +66,11 @@ public class AuditLogService : IAuditLogService
         }).ToList();
     }
 
-    public async Task<IEnumerable<AuditLogDto>> GetByUserAsync(int userId)
+    public async Task<IEnumerable<AuditLogDto>> GetByUserAsync(int userId, int? branchId = null)
     {
         var query = await _auditLogRepo.FindAsync(al => al.UserId == userId);
+        if (branchId.HasValue)
+            query = query.Where(al => al.BranchId == branchId.Value);
         var logs = await query
             .OrderByDescending(al => al.CreatedAt)
             .Include(al => al.User)
@@ -83,9 +88,11 @@ public class AuditLogService : IAuditLogService
         }).ToList();
     }
 
-    public async Task<IEnumerable<AuditLogDto>> GetByDateRangeAsync(DateTime from, DateTime to)
+    public async Task<IEnumerable<AuditLogDto>> GetByDateRangeAsync(DateTime from, DateTime to, int? branchId = null)
     {
         var query = await _auditLogRepo.GetAllAsync();
+        if (branchId.HasValue)
+            query = query.Where(al => al.BranchId == branchId.Value);
         var logs = await query
             .Where(al => al.CreatedAt >= from && al.CreatedAt <= to)
             .OrderByDescending(al => al.CreatedAt)
