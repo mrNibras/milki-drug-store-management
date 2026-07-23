@@ -23,14 +23,14 @@ public class EmailService : IEmailService
         _configuration = configuration;
         _logger = logger;
 
-        var smtp = _configuration.GetSection("Smtp");
-        _smtpHost = smtp["Host"] ?? "smtp.gmail.com";
-        _smtpPort = int.TryParse(smtp["Port"], out var port) ? port : 587;
-        _useSsl = bool.TryParse(smtp["UseSsl"], out var ssl) ? ssl : true;
-        _senderName = smtp["SenderName"] ?? "Milki Drug Store";
-        _senderEmail = smtp["SenderEmail"] ?? "noreply@milki.com";
-        _username = smtp["Username"] ?? string.Empty;
-        _password = smtp["Password"] ?? string.Empty;
+        var email = _configuration.GetSection("Email");
+        _smtpHost = email["Host"] ?? "smtp.gmail.com";
+        _smtpPort = int.TryParse(email["Port"], out var port) ? port : 587;
+        _useSsl = bool.TryParse(email["EnableSsl"], out var ssl) ? ssl : true;
+        _senderName = email["SenderName"] ?? "Milki Drug Store";
+        _senderEmail = email["SenderEmail"] ?? "noreply@milki.com";
+        _username = email["Username"] ?? string.Empty;
+        _password = email["Password"] ?? string.Empty;
     }
 
     public async Task SendEmailAsync(string toEmail, string subject, string body, bool isHtml = false)

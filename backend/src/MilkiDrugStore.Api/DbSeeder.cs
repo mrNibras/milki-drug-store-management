@@ -74,6 +74,19 @@ public static class DbSeeder
                 logger.LogInformation("Unit types seeded successfully.");
             }
 
+            if (!context.CosmeticCategories.Any())
+            {
+                context.CosmeticCategories.AddRange(
+                    new CosmeticCategory { Name = "Skin Care", Description = "Creams, lotions, and skincare products" },
+                    new CosmeticCategory { Name = "Hair Care", Description = "Shampoos, conditioners, and hair treatments" },
+                    new CosmeticCategory { Name = "Makeup", Description = "Foundations, lipsticks, and cosmetics" },
+                    new CosmeticCategory { Name = "Body Care", Description = "Soaps, body washes, and moisturizers" },
+                    new CosmeticCategory { Name = "Fragrances", Description = "Perfumes and deodorants" }
+                );
+                await context.SaveChangesAsync();
+                logger.LogInformation("Cosmetic categories seeded successfully.");
+            }
+
             if (!context.Categories.Any())
             {
                 var tablet = await context.UnitTypes.FirstAsync(u => u.Name == "Tablet");
@@ -88,7 +101,6 @@ public static class DbSeeder
                     new Category { Name = "Vitamin", UnitTypeId = tablet.UnitTypeId },
                     new Category { Name = "Respiratory", UnitTypeId = capsule.UnitTypeId },
                     new Category { Name = "Dermatology", UnitTypeId = tube.UnitTypeId },
-                    new Category { Name = "Cosmetics", UnitTypeId = tube.UnitTypeId },
                     new Category { Name = "Baby Supplies", UnitTypeId = piece.UnitTypeId }
                 );
                 await context.SaveChangesAsync();
