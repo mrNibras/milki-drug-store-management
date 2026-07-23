@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using MilkiDrugStore.Application.DTOs.Auth;
 using MilkiDrugStore.Application.Interfaces;
 using MilkiDrugStore.Persistence.Context;
@@ -15,12 +16,14 @@ public class SettingsController : ControllerBase
     private readonly IAuthService _authService;
     private readonly IConfiguration _configuration;
     private readonly IServiceProvider _serviceProvider;
+    private readonly ILogger<SettingsController> _logger;
 
-    public SettingsController(IAuthService authService, IConfiguration configuration, IServiceProvider serviceProvider)
+    public SettingsController(IAuthService authService, IConfiguration configuration, IServiceProvider serviceProvider, ILogger<SettingsController> logger)
     {
         _authService = authService;
         _configuration = configuration;
         _serviceProvider = serviceProvider;
+        _logger = logger;
     }
 
     [HttpGet]
@@ -46,55 +49,59 @@ public class SettingsController : ControllerBase
 
     [Authorize(Roles = "Admin")]
     [HttpGet("backup")]
-    public async Task<IActionResult> BackupDatabase()
+    public async Task<IActionResult> BackupDatabase([FromServices] IBackupService backupService)
     {
-        var connectionString = _configuration.GetConnectionString("DefaultConnection");
-        if (string.IsNullOrEmpty(connectionString))
-            return BadRequest(new { message = "Database connection string not configured" });
+        try
+        {
+            var timestamp = DateTime.UtcNow.ToString("yyyyMMdd-HHmmss");
+            var fileName = $"milki-drug-store-backup-{timestamp}.bak";
+            var backupPath = await backupService.CreateBackupAsync(fileName);
 
-        var dbPath = ExtractDatabasePath(connectionString);
-        if (string.IsNullOrEmpty(dbPath) || !System.IO.File.Exists(dbPath))
-            return NotFound(new { message = "Database file not found" });
+            if (!System.IO.File.Exists(backupPath))
+                return NotFound(new { message = "Backup file was not created" });
 
-        var fileBytes = await System.IO.File.ReadAllBytesAsync(dbPath);
-        var fileName = $"milki-drug-store-backup-{DateTime.Now:yyyyMMdd-HHmmss}.db";
-        return File(fileBytes, "application/octet-stream", fileName);
+            var fileBytes = await System.IO.File.ReadAllBytesAsync(backupPath);
+            var downloadName = Path.GetFileName(backupPath);
+            return base.File(fileBytes, "application/octet-stream", downloadName);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Database backup failed");
+            return BadRequest(new { message = $"Backup failed: {ex.Message}" });
+        }
     }
 
     [Authorize(Roles = "Admin")]
     [HttpPost("restore")]
-    public async Task<IActionResult> RestoreDatabase([FromForm] IFormFile backupFile)
+    public async Task<IActionResult> RestoreDatabase([FromForm] IFormFile backupFile, [FromServices] IBackupService backupService)
     {
         if (backupFile == null || backupFile.Length == 0)
             return BadRequest(new { message = "No backup file uploaded" });
 
-        var connectionString = _configuration.GetConnectionString("DefaultConnection");
-        if (string.IsNullOrEmpty(connectionString))
-            return BadRequest(new { message = "Database connection string not configured" });
-
-        var dbPath = ExtractDatabasePath(connectionString);
-        if (string.IsNullOrEmpty(dbPath))
-            return BadRequest(new { message = "Invalid database path" });
+        var tempPath = Path.Combine(Path.GetTempPath(), $"restore_{Guid.NewGuid()}{Path.GetExtension(backupFile.FileName)}");
 
         try
         {
-            using (var scope = _serviceProvider.CreateScope())
-            {
-                var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                await dbContext.DisposeAsync();
-            }
-
-            await System.IO.File.WriteAllBytesAsync(dbPath, []);
-            await using (var stream = new System.IO.FileStream(dbPath, System.IO.FileMode.Create, System.IO.FileAccess.Write, System.IO.FileShare.None))
+            await using (var stream = new System.IO.FileStream(tempPath, System.IO.FileMode.Create, System.IO.FileAccess.Write, System.IO.FileShare.None))
             {
                 await backupFile.CopyToAsync(stream);
             }
+
+            await backupService.RestoreBackupAsync(tempPath);
 
             return Ok(new { message = "Database restored successfully" });
         }
         catch (Exception ex)
         {
-            return BadRequest(new { message = $"Restore failed: {ex.Message }" });
+            _logger.LogError(ex, "Database restore failed");
+            return BadRequest(new { message = $"Restore failed: {ex.Message}" });
+        }
+        finally
+        {
+            if (System.IO.File.Exists(tempPath))
+            {
+                try { System.IO.File.Delete(tempPath); } catch { }
+            }
         }
     }
 
