@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MilkiDrugStore.Application.Interfaces;
+using MilkiDrugStore.Application.DTOs.Sale;
+using MediatR;
 
 namespace MilkiDrugStore.Api.Controllers;
 
@@ -10,17 +12,19 @@ namespace MilkiDrugStore.Api.Controllers;
 public class SalesController : ControllerBase
 {
     private readonly ISaleService _saleService;
+    private readonly IMediator _mediator;
 
-    public SalesController(ISaleService saleService)
+    public SalesController(ISaleService saleService, IMediator mediator)
     {
         _saleService = saleService;
+        _mediator = mediator;
     }
 
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
         var branchId = GetBranchId();
-        var result = await _saleService.GetAllAsync(branchId > 0 ? branchId : null);
+        var result = await _mediator.Send(new Application.Queries.Sales.GetSalesQuery(branchId > 0 ? branchId : null));
         return Ok(result);
     }
 
@@ -34,14 +38,14 @@ public class SalesController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create([FromBody] MilkiDrugStore.Application.DTOs.Sale.CreateSaleRequest request)
+    public async Task<IActionResult> Create([FromBody] CreateSaleRequest request)
     {
-        var userId = GetUserId();
-        var userRole = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "Pharmacist";
-        var branchId = GetBranchId();
         try
         {
-            var result = await _saleService.CreateAsync(request, userId, userRole, branchId > 0 ? branchId : null);
+            var userId = GetUserId();
+            var userRole = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "Pharmacist";
+            var branchId = GetBranchId();
+            var result = await _mediator.Send(new Application.Commands.Sales.CreateSaleCommand(request, userId, userRole, branchId > 0 ? branchId : null));
             return Ok(result);
         }
         catch (MilkiDrugStore.Domain.Exceptions.InsufficientStockException ex)

@@ -6,6 +6,7 @@ using MilkiDrugStore.Domain.Interfaces;
 using MilkiDrugStore.Persistence.Repositories;
 using MilkiDrugStore.Infrastructure.Services;
 using MilkiDrugStore.Infrastructure.Logging;
+using MediatR;
 
 namespace MilkiDrugStore.Api.Extensions;
 
@@ -29,6 +30,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IBackupService, BackupService>();
         services.AddScoped<ICosmeticService, CosmeticService>();
         services.AddScoped<ICosmeticCategoryService, CosmeticCategoryService>();
+
+        services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(BackupService).Assembly));
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
