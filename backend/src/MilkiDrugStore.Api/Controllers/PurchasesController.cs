@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MilkiDrugStore.Application.Interfaces;
+using MediatR;
 
 namespace MilkiDrugStore.Api.Controllers;
 
@@ -10,25 +11,26 @@ namespace MilkiDrugStore.Api.Controllers;
 public class PurchasesController : ControllerBase
 {
     private readonly IPurchaseService _purchaseService;
+    private readonly IMediator _mediator;
 
-    public PurchasesController(IPurchaseService purchaseService)
+    public PurchasesController(IPurchaseService purchaseService, IMediator mediator)
     {
         _purchaseService = purchaseService;
+        _mediator = mediator;
     }
 
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
         var branchId = GetBranchId();
-        var result = await _purchaseService.GetAllAsync(branchId > 0 ? branchId : null);
+        var result = await _mediator.Send(new Application.Queries.Purchases.GetPurchasesQuery(branchId > 0 ? branchId : null));
         return Ok(result);
     }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(int id)
     {
-        var branchId = GetBranchId();
-        var result = await _purchaseService.GetByIdAsync(id, branchId > 0 ? branchId : null);
+        var result = await _purchaseService.GetByIdAsync(id);
         if (result == null) return NotFound();
         return Ok(result);
     }
@@ -38,8 +40,7 @@ public class PurchasesController : ControllerBase
     public async Task<IActionResult> Create([FromBody] MilkiDrugStore.Application.DTOs.Purchase.CreatePurchaseRequest request)
     {
         var userId = GetUserId();
-        var branchId = GetBranchId();
-        var result = await _purchaseService.CreateAsync(request, userId, branchId > 0 ? branchId : null);
+        var result = await _mediator.Send(new Application.Commands.Purchases.CreatePurchaseCommand(request, userId));
         return Ok(result);
     }
 

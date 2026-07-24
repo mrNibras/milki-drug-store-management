@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MilkiDrugStore.Application.Interfaces;
+using MediatR;
 
 namespace MilkiDrugStore.Api.Controllers;
 
@@ -10,40 +11,39 @@ namespace MilkiDrugStore.Api.Controllers;
 public class NotificationsController : ControllerBase
 {
     private readonly INotificationService _notificationService;
+    private readonly IMediator _mediator;
 
-    public NotificationsController(INotificationService notificationService)
+    public NotificationsController(INotificationService notificationService, IMediator mediator)
     {
         _notificationService = notificationService;
+        _mediator = mediator;
     }
 
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        var branchId = GetBranchId();
-        var result = await _notificationService.GetAllAsync(branchId > 0 ? branchId : null);
+        var result = await _mediator.Send(new Application.Queries.Notifications.GetNotificationsQuery());
         return Ok(result);
     }
 
     [HttpGet("unread")]
     public async Task<IActionResult> GetUnread()
     {
-        var branchId = GetBranchId();
-        var result = await _notificationService.GetUnreadAsync(branchId > 0 ? branchId : null);
+        var result = await _mediator.Send(new Application.Queries.Notifications.GetNotificationsQuery(UnreadOnly: true));
         return Ok(result);
     }
 
     [HttpPut("{id}/read")]
     public async Task<IActionResult> MarkAsRead(int id)
     {
-        await _notificationService.MarkAsReadAsync(id);
+        await _mediator.Send(new Application.Commands.Notifications.MarkNotificationAsReadCommand(id));
         return NoContent();
     }
 
     [HttpPut("read-all")]
     public async Task<IActionResult> MarkAllAsRead()
     {
-        var branchId = GetBranchId();
-        await _notificationService.MarkAllAsReadAsync(branchId > 0 ? branchId : null);
+        await _notificationService.MarkAllAsReadAsync();
         return NoContent();
     }
 

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MilkiDrugStore.Application.DTOs.Medicine;
 using MilkiDrugStore.Application.Interfaces;
+using MediatR;
 
 namespace MilkiDrugStore.Api.Controllers;
 
@@ -11,25 +12,25 @@ namespace MilkiDrugStore.Api.Controllers;
 public class MedicinesController : ControllerBase
 {
     private readonly IMedicineService _medicineService;
+    private readonly IMediator _mediator;
 
-    public MedicinesController(IMedicineService medicineService)
+    public MedicinesController(IMedicineService medicineService, IMediator mediator)
     {
         _medicineService = medicineService;
+        _mediator = mediator;
     }
 
     [HttpGet]
     public async Task<IActionResult> GetAll([FromQuery] string? search, [FromQuery] int? categoryId)
     {
-        var branchId = GetBranchId();
-        var result = await _medicineService.GetAllAsync(search, categoryId, branchId > 0 ? branchId : null);
+        var result = await _mediator.Send(new Application.Queries.Medicines.GetMedicinesQuery(search, categoryId));
         return Ok(result);
     }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(int id)
     {
-        var branchId = GetBranchId();
-        var result = await _medicineService.GetByIdAsync(id, branchId > 0 ? branchId : null);
+        var result = await _mediator.Send(new Application.Queries.Medicines.GetMedicineByIdQuery(id));
         if (result == null) return NotFound();
         return Ok(result);
     }
@@ -39,7 +40,7 @@ public class MedicinesController : ControllerBase
     public async Task<IActionResult> Create([FromBody] CreateMedicineRequest request)
     {
         var userId = GetUserId();
-        var result = await _medicineService.CreateAsync(request, userId);
+        var result = await _mediator.Send(new Application.Commands.Medicines.CreateMedicineCommand(request, userId));
         return Ok(result);
     }
 
@@ -48,7 +49,7 @@ public class MedicinesController : ControllerBase
     public async Task<IActionResult> Update(int id, [FromBody] UpdateMedicineRequest request)
     {
         var userId = GetUserId();
-        var result = await _medicineService.UpdateAsync(id, request, userId);
+        var result = await _mediator.Send(new Application.Commands.Medicines.UpdateMedicineCommand(id, request, userId));
         if (result == null) return NotFound();
         return Ok(result);
     }
@@ -58,7 +59,8 @@ public class MedicinesController : ControllerBase
     public async Task<IActionResult> Delete(int id)
     {
         var userId = GetUserId();
-        await _medicineService.DeleteAsync(id, userId);
+        var result = await _mediator.Send(new Application.Commands.Medicines.DeleteMedicineCommand(id, userId));
+        if (!result) return NotFound();
         return NoContent();
     }
 
