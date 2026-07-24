@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MilkiDrugStore.Application.DTOs.Cosmetic;
 using MilkiDrugStore.Application.Interfaces;
+using MediatR;
 
 namespace MilkiDrugStore.Api.Controllers;
 
@@ -11,23 +12,25 @@ namespace MilkiDrugStore.Api.Controllers;
 public class CosmeticsController : ControllerBase
 {
     private readonly ICosmeticService _cosmeticService;
+    private readonly IMediator _mediator;
 
-    public CosmeticsController(ICosmeticService cosmeticService)
+    public CosmeticsController(ICosmeticService cosmeticService, IMediator mediator)
     {
         _cosmeticService = cosmeticService;
+        _mediator = mediator;
     }
 
     [HttpGet]
     public async Task<IActionResult> GetAll([FromQuery] string? search, [FromQuery] int? categoryId)
     {
-        var result = await _cosmeticService.GetAllAsync(search, categoryId);
+        var result = await _mediator.Send(new Application.Queries.Cosmetics.GetCosmeticsQuery(search, categoryId));
         return Ok(result);
     }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(int id)
     {
-        var result = await _cosmeticService.GetByIdAsync(id);
+        var result = await _mediator.Send(new Application.Queries.Cosmetics.GetCosmeticByIdQuery(id));
         if (result == null) return NotFound();
         return Ok(result);
     }
@@ -39,7 +42,7 @@ public class CosmeticsController : ControllerBase
         try
         {
             var userId = GetUserId();
-            var result = await _cosmeticService.CreateAsync(request, userId);
+            var result = await _mediator.Send(new Application.Commands.Cosmetics.CreateCosmeticCommand(request, userId));
             return Ok(result);
         }
         catch (Exception ex)
@@ -55,7 +58,7 @@ public class CosmeticsController : ControllerBase
         try
         {
             var userId = GetUserId();
-            var result = await _cosmeticService.UpdateAsync(id, request, userId);
+            var result = await _mediator.Send(new Application.Commands.Cosmetics.UpdateCosmeticCommand(id, request, userId));
             if (result == null) return NotFound();
             return Ok(result);
         }
@@ -72,7 +75,8 @@ public class CosmeticsController : ControllerBase
         try
         {
             var userId = GetUserId();
-            await _cosmeticService.DeleteAsync(id, userId);
+            var result = await _mediator.Send(new Application.Commands.Cosmetics.DeleteCosmeticCommand(id, userId));
+            if (!result) return NotFound();
             return NoContent();
         }
         catch (Exception ex)
@@ -88,7 +92,7 @@ public class CosmeticsController : ControllerBase
         try
         {
             var userId = GetUserId();
-            var result = await _cosmeticService.AddBatchAsync(request, userId);
+            var result = await _mediator.Send(new Application.Commands.Cosmetics.AddBatchCommand(request, userId));
             return Ok(result);
         }
         catch (Exception ex)

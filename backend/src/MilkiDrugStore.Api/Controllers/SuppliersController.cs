@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MilkiDrugStore.Application.Interfaces;
+using MediatR;
 
 namespace MilkiDrugStore.Api.Controllers;
 
@@ -10,23 +11,25 @@ namespace MilkiDrugStore.Api.Controllers;
 public class SuppliersController : ControllerBase
 {
     private readonly ISupplierService _supplierService;
+    private readonly IMediator _mediator;
 
-    public SuppliersController(ISupplierService supplierService)
+    public SuppliersController(ISupplierService supplierService, IMediator mediator)
     {
         _supplierService = supplierService;
+        _mediator = mediator;
     }
 
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        var result = await _supplierService.GetAllAsync();
+        var result = await _mediator.Send(new Application.Queries.Suppliers.GetSuppliersQuery());
         return Ok(result);
     }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(int id)
     {
-        var result = await _supplierService.GetByIdAsync(id);
+        var result = await _mediator.Send(new Application.Queries.Suppliers.GetSupplierByIdQuery(id));
         if (result == null) return NotFound();
         return Ok(result);
     }
@@ -36,7 +39,7 @@ public class SuppliersController : ControllerBase
     public async Task<IActionResult> Create([FromBody] MilkiDrugStore.Application.DTOs.Supplier.CreateSupplierRequest request)
     {
         var userId = GetUserId();
-        var result = await _supplierService.CreateAsync(request, userId);
+        var result = await _mediator.Send(new Application.Commands.Suppliers.CreateSupplierCommand(request, userId));
         return Ok(result);
     }
 
@@ -45,7 +48,7 @@ public class SuppliersController : ControllerBase
     public async Task<IActionResult> Update(int id, [FromBody] MilkiDrugStore.Application.DTOs.Supplier.UpdateSupplierRequest request)
     {
         var userId = GetUserId();
-        var result = await _supplierService.UpdateAsync(id, request, userId);
+        var result = await _mediator.Send(new Application.Commands.Suppliers.UpdateSupplierCommand(id, request, userId));
         if (result == null) return NotFound();
         return Ok(result);
     }
@@ -55,7 +58,8 @@ public class SuppliersController : ControllerBase
     public async Task<IActionResult> Delete(int id)
     {
         var userId = GetUserId();
-        await _supplierService.DeleteAsync(id, userId);
+        var result = await _mediator.Send(new Application.Commands.Suppliers.DeleteSupplierCommand(id, userId));
+        if (!result) return NotFound();
         return NoContent();
     }
 
