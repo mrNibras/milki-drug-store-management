@@ -1,10 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using MilkiDrugStore.Application.DTOs.Auth;
 using MilkiDrugStore.Application.Interfaces;
-using MilkiDrugStore.Persistence.Context;
 
 namespace MilkiDrugStore.Api.Controllers;
 
@@ -14,15 +12,11 @@ namespace MilkiDrugStore.Api.Controllers;
 public class SettingsController : ControllerBase
 {
     private readonly IAuthService _authService;
-    private readonly IConfiguration _configuration;
-    private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<SettingsController> _logger;
 
-    public SettingsController(IAuthService authService, IConfiguration configuration, IServiceProvider serviceProvider, ILogger<SettingsController> logger)
+    public SettingsController(IAuthService authService, ILogger<SettingsController> logger)
     {
         _authService = authService;
-        _configuration = configuration;
-        _serviceProvider = serviceProvider;
         _logger = logger;
     }
 
@@ -103,15 +97,6 @@ public class SettingsController : ControllerBase
                 try { System.IO.File.Delete(tempPath); } catch { }
             }
         }
-    }
-
-    private static string? ExtractDatabasePath(string connectionString)
-    {
-        if (connectionString.StartsWith("Data Source=", StringComparison.OrdinalIgnoreCase))
-        {
-            return connectionString["Data Source=".Length..].Trim();
-        }
-        return connectionString;
     }
 
     private int GetBranchId()

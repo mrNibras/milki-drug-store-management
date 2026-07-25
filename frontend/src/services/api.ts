@@ -467,3 +467,17 @@ export interface UpdateCosmeticCategoryRequest {
   description?: string;
   isActive: boolean;
 }
+
+// --- Settings / Backup / Restore -----------------------------------------
+export const backupDatabase = async (): Promise<Blob> => {
+  const response = await api.get('/settings/backup', { responseType: 'blob' });
+  return response.data;
+};
+
+export const restoreDatabase = async (file: File): Promise<void> => {
+  const formData = new FormData();
+  formData.append('backupFile', file);
+  await api.post('/settings/restore', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+};

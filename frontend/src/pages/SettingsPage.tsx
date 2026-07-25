@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Save, Building2, Bell, Database, Globe, Shield, Download, Upload, Key } from 'lucide-react';
+import { Save, Building2, Bell, Database, Globe, Shield, Download, Upload, Key, Languages } from 'lucide-react';
 import { useAppStore } from '../store/appStore';
 import { useThemeStore } from '../store/themeStore';
 import { Button } from '../components/ui/Button';
+import { backupDatabase, restoreDatabase } from '../services/api';
+import { useTranslation } from '../i18n/LanguageContext';
 
 export const SettingsPage: React.FC = () => {
   const { settings, updateSettings, currentUser, fetchSettings, loading, changePassword } = useAppStore();
   const { theme } = useThemeStore();
+  const { language, setLanguage, t } = useTranslation();
   const isDark = theme === 'dark';
   const [formData, setFormData] = useState({ ...settings });
   const [showSuccess, setShowSuccess] = useState(false);
@@ -21,17 +24,7 @@ export const SettingsPage: React.FC = () => {
     setIsBackingUp(true);
     setDbMessage(null);
     try {
-      const token = localStorage.getItem('auth_token');
-      const response = await fetch('/api/settings/backup', {
-        headers: { 'Authorization': `Bearer ${token}` },
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Backup failed');
-      }
-
-      const blob = await response.blob();
+      const blob = await backupDatabase();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -43,7 +36,7 @@ export const SettingsPage: React.FC = () => {
 
       setDbMessage({ type: 'success', text: 'Database backup downloaded successfully' });
     } catch (e: any) {
-      setDbMessage({ type: 'error', text: e.message || 'Failed to backup database' });
+      setDbMessage({ type: 'error', text: e.response?.data?.message || e.message || 'Failed to backup database' });
     } finally {
       setIsBackingUp(false);
     }
@@ -60,28 +53,14 @@ export const SettingsPage: React.FC = () => {
     setIsRestoring(true);
     setDbMessage(null);
     try {
-      const formData = new FormData();
-      formData.append('backupFile', file);
-
-      const token = localStorage.getItem('auth_token');
-      const response = await fetch('/api/settings/restore', {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` },
-        body: formData,
-      });
-
-      const result = await response.json();
-      if (!response.ok) {
-        throw new Error(result.message || 'Restore failed');
-      }
-
+      await restoreDatabase(file);
       setDbMessage({ type: 'success', text: 'Database restored successfully. Please refresh the page.' });
     } catch (e: any) {
-      setDbMessage({ type: 'error', text: e.message || 'Failed to restore database' });
+      setDbMessage({ type: 'error', text: e.response?.data?.message || e.message || 'Failed to restore database' });
     } finally {
       setIsRestoring(false);
       if (restoreFileInputRef.current) {
-        restoreFileInputRef.current.value = '';
+        restoreFileInputRefRef.current.value = '';
       }
     }
   };
@@ -279,23 +258,66 @@ export const SettingsPage: React.FC = () => {
               <Globe className="h-5 w-5" />
             </div>
             <div>
-              <h3 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>System Information</h3>
+              <h3 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{t.settings.systemInformation}</h3>
               <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Application details</p>
             </div>
           </div>
           <div className="space-y-3">
             {[
-              { label: 'Version', value: '1.0.0' },
-              { label: 'Architecture', value: 'Clean Architecture' },
-              { label: 'Inventory Method', value: 'FEFO' },
-              { label: 'Authentication', value: 'JWT' },
-              { label: 'Database', value: 'SQL Server' },
+              { label: t.settings.version, value: '1.0.0' },
+              { label: t.settings.architecture, value: 'Clean Architecture' },
+              { label: t.settings.inventoryMethod, value: 'FEFO' },
+              { label: t.settings.authentication, value: 'JWT' },
+              { label: t.settings.database, value: 'SQL Server' },
             ].map(item => (
               <div key={item.label} className={`flex items-center justify-between py-2 border-b ${isDark ? 'border-gray-700' : 'border-gray-100'}`}>
                 <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{item.label}</span>
                 <span className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{item.value}</span>
               </div>
             ))}
+          </div>
+        </div>
+
+        {/* Language & Localization */}
+        <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl border p-6`}>
+          <div className="flex items-center gap-3 mb-6">
+            <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${isDark ? 'bg-indigo-900/30 text-indigo-400' : 'bg-indigo-100 text-indigo-600'}`}>
+              <Languages className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{t.settings.language}</h3>
+              <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Select your preferred language</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setLanguage('en')}
+              className={`flex-1 py-2.5 px-4 rounded-lg border text-sm font-medium transition-all ${
+                language === 'en'
+                  ? isDark
+                    ? 'border-indigo-500 bg-indigo-900/30 text-indigo-300'
+                    : 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                  : isDark
+                    ? 'border-gray-600 text-gray-300 hover:bg-gray-700'
+                    : 'border-gray-200 text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              English
+            </button>
+            <button
+              onClick={() => setLanguage('am')}
+              className={`flex-1 py-2.5 px-4 rounded-lg border text-sm font-medium transition-all ${
+                language === 'am'
+                  ? isDark
+                    ? 'border-indigo-500 bg-indigo-900/30 text-indigo-300'
+                    : 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                  : isDark
+                    ? 'border-gray-600 text-gray-300 hover:bg-gray-700'
+                    : 'border-gray-200 text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              አማርኛ
+            </button>
           </div>
         </div>
 

@@ -23,6 +23,7 @@ import { CosmeticsPage } from './pages/CosmeticsPage';
 import { CosmeticCategoriesPage } from './pages/CosmeticCategoriesPage';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { useAppStore } from './store/appStore';
+import { LanguageProvider } from './i18n/LanguageContext';
 
 export default function App() {
   const isAuthenticated = useAppStore((state) => state.isAuthenticated);
@@ -57,33 +58,35 @@ export default function App() {
   }, [isAuthenticated]);
 
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-        <Route path="/reset-password" element={<ResetPasswordPage />} />
-        <Route path="/" element={isAuthenticated ? <MainLayout /> : <Navigate to="/login" replace />}>
-          <Route index element={<Navigate to="/dashboard" replace />} />
-          <Route path="dashboard" element={<DashboardPage />} />
-          <Route path="medicines" element={<MedicinesPage />} />
-          <Route path="categories" element={<CategoriesPage />} />
-          <Route path="unit-types" element={<UnitTypesPage />} />
-          <Route path="pos" element={<POSPage />} />
-          <Route path="inventory" element={<InventoryPage />} />
-          <Route path="damages" element={<DamageExpiryPage />} />
-          <Route path="reports" element={<ReportsPage />} />
-          <Route path="notifications" element={<NotificationsPage />} />
-          <Route path="purchases" element={<ProtectedRoute roles={['admin']}><PurchasesPage /></ProtectedRoute>} />
-          <Route path="suppliers" element={<ProtectedRoute roles={['admin']}><SuppliersPage /></ProtectedRoute>} />
-          <Route path="users" element={<ProtectedRoute roles={['admin']}><UsersPage /></ProtectedRoute>} />
-          <Route path="settings" element={<ProtectedRoute roles={['admin']}><SettingsPage /></ProtectedRoute>} />
-          <Route path="audit-logs" element={<ProtectedRoute roles={['admin']}><AuditLogsPage /></ProtectedRoute>} />
-          <Route path="branches" element={<ProtectedRoute roles={['admin']}><BranchesPage /></ProtectedRoute>} />
-          <Route path="cosmetics" element={<ProtectedRoute roles={['admin']}><CosmeticsPage /></ProtectedRoute>} />
-          <Route path="cosmetic-categories" element={<ProtectedRoute roles={['admin']}><CosmeticCategoriesPage /></ProtectedRoute>} />
-        </Route>
-        <Route path="*" element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />} />
-      </Routes>
-    </BrowserRouter>
+    <LanguageProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/" element={isAuthenticated ? <MainLayout /> : <Navigate to="/login" replace />}>
+            <Route index element={<Navigate to="/dashboard" replace />} />
+            <Route path="dashboard" element={<DashboardPage />} />
+            <Route path="medicines" element={<MedicinesPage />} />
+            <Route path="categories" element={<CategoriesPage />} />
+            <Route path="unit-types" element={<UnitTypesPage />} />
+            <Route path="pos" element={<POSPage />} />
+            <Route path="inventory" element={<InventoryPage />} />
+            <Route path="damages" element={<DamageExpiryPage />} />
+            <Route path="reports" element={<ReportsPage />} />
+            <Route path="notifications" element={<NotificationsPage />} />
+            <Route path="purchases" element={<ProtectedRoute roles={['admin']}><PurchasesPage /></ProtectedRoute>} />
+            <Route path="suppliers" element={<ProtectedRoute roles={['admin']}><SuppliersPage /></ProtectedRoute>} />
+            <Route path="users" element={<ProtectedRoute roles={['admin']}><UsersPage /></ProtectedRoute>} />
+            <Route path="settings" element={<ProtectedRoute roles={['admin']}><SettingsPage /></ProtectedRoute>} />
+            <Route path="audit-logs" element={<ProtectedRoute roles={['admin']}><AuditLogsPage /></ProtectedRoute>} />
+            <Route path="branches" element={<ProtectedRoute roles={['admin']}><BranchesPage /></ProtectedRoute>} />
+            <Route path="cosmetics" element={<ProtectedRoute roles={['admin']}><CosmeticsPage /></ProtectedRoute>} />
+            <Route path="cosmetic-categories" element={<ProtectedRoute roles={['admin']}><CosmeticCategoriesPage /></ProtectedRoute>} />
+          </Route>
+          <Route path="*" element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />} />
+        </Routes>
+      </BrowserRouter>
+    </LanguageProvider>
   );
 }
