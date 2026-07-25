@@ -34,9 +34,9 @@ export const SettingsPage: React.FC = () => {
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
 
-      setDbMessage({ type: 'success', text: 'Database backup downloaded successfully' });
+      setDbMessage({ type: 'success', text: t.settings.databaseBackupDownloaded });
     } catch (e: any) {
-      setDbMessage({ type: 'error', text: e.response?.data?.message || e.message || 'Failed to backup database' });
+      setDbMessage({ type: 'error', text: e.response?.data?.message || e.message || t.settings.failedToBackup });
     } finally {
       setIsBackingUp(false);
     }
@@ -54,9 +54,9 @@ export const SettingsPage: React.FC = () => {
     setDbMessage(null);
     try {
       await restoreDatabase(file);
-      setDbMessage({ type: 'success', text: 'Database restored successfully. Please refresh the page.' });
+      setDbMessage({ type: 'success', text: t.settings.databaseRestoredRefresh });
     } catch (e: any) {
-      setDbMessage({ type: 'error', text: e.response?.data?.message || e.message || 'Failed to restore database' });
+      setDbMessage({ type: 'error', text: e.response?.data?.message || e.message || t.settings.failedToRestore });
     } finally {
       setIsRestoring(false);
       if (restoreFileInputRef.current) {
@@ -76,31 +76,31 @@ export const SettingsPage: React.FC = () => {
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 3000);
     } catch (e: any) {
-      console.error('Failed to save settings', e);
+      console.error(t.settings.failedToSaveSettings, e);
     }
   };
 
   const handleChangePassword = async () => {
     setPasswordMessage(null);
     if (!passwordForm.current || !passwordForm.newPassword) {
-      setPasswordMessage({ type: 'error', text: 'Please fill in all password fields' });
+      setPasswordMessage({ type: 'error', text: t.settings.pleaseFillAllPasswordFields });
       return;
     }
     if (passwordForm.newPassword !== passwordForm.confirm) {
-      setPasswordMessage({ type: 'error', text: 'New passwords do not match' });
+      setPasswordMessage({ type: 'error', text: t.settings.passwordsDoNotMatch });
       return;
     }
     if (passwordForm.newPassword.length < 6) {
-      setPasswordMessage({ type: 'error', text: 'New password must be at least 6 characters' });
+      setPasswordMessage({ type: 'error', text: t.settings.passwordMinLength });
       return;
     }
 
     const result = await changePassword(passwordForm.current, passwordForm.newPassword);
     if (result.ok) {
-      setPasswordMessage({ type: 'success', text: 'Password changed successfully' });
+      setPasswordMessage({ type: 'success', text: t.settings.passwordChangedSuccessfully });
       setPasswordForm({ current: '', newPassword: '', confirm: '' });
     } else {
-      setPasswordMessage({ type: 'error', text: result.message || 'Failed to change password' });
+      setPasswordMessage({ type: 'error', text: result.message || t.settings.failedToChangePassword });
     }
   };
 
@@ -112,18 +112,18 @@ export const SettingsPage: React.FC = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Settings</h1>
-          <p className={`${isDark ? 'text-gray-400' : 'text-gray-500'} mt-1`}>Manage system configuration</p>
+          <h1 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{t.settings.title}</h1>
+          <p className={`${isDark ? 'text-gray-400' : 'text-gray-500'} mt-1`}>{t.common.appName}</p>
         </div>
-        <Button onClick={handleSave}>
-          <Save className="h-4 w-4" /> Save Changes
-        </Button>
+          <Button onClick={handleSave}>
+            <Save className="h-4 w-4" /> {t.common.save} {t.settings.title}
+          </Button>
       </div>
 
       {showSuccess && (
         <div className={`rounded-xl p-4 flex items-center gap-3 ${isDark ? 'bg-emerald-900/20 border border-emerald-800' : 'bg-emerald-50 border border-emerald-200'}`}>
           <div className={`flex h-8 w-8 items-center justify-center rounded-full ${isDark ? 'bg-emerald-900/30 text-emerald-400' : 'bg-emerald-100 text-emerald-600'}`}>✓</div>
-          <p className={`text-sm font-medium ${isDark ? 'text-emerald-400' : 'text-emerald-700'}`}>Settings saved successfully!</p>
+          <p className={`text-sm font-medium ${isDark ? 'text-emerald-400' : 'text-emerald-700'}`}>{t.settings.settingsSavedSuccessfully}</p>
         </div>
       )}
 
@@ -144,26 +144,26 @@ export const SettingsPage: React.FC = () => {
               <Building2 className="h-5 w-5" />
             </div>
             <div>
-              <h3 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>Pharmacy Information</h3>
-              <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Basic pharmacy details</p>
+               <h3 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{t.settings.pharmacyInformation}</h3>
+               <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t.settings.basicPharmacyDetails}</p>
             </div>
           </div>
           <div className="space-y-4">
             <div>
-              <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Pharmacy Name</label>
+              <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{t.settings.pharmacyName}</label>
               <input type="text" value={formData.pharmacyName} onChange={e => setFormData({ ...formData, pharmacyName: e.target.value })} className={inputClass} />
             </div>
             <div>
-              <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Address</label>
+              <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{t.settings.address}</label>
               <input type="text" value={formData.address} onChange={e => setFormData({ ...formData, address: e.target.value })} className={inputClass} />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Phone</label>
+                <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{t.settings.phone}</label>
                 <input type="text" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} className={inputClass} />
               </div>
               <div>
-                <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Email</label>
+                <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{t.auth.email}</label>
                 <input type="email" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} className={inputClass} />
               </div>
             </div>
@@ -177,23 +177,23 @@ export const SettingsPage: React.FC = () => {
               <Bell className="h-5 w-5" />
             </div>
             <div>
-              <h3 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>Inventory Settings</h3>
-              <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Alert thresholds and preferences</p>
+               <h3 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{t.settings.inventorySettings}</h3>
+               <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t.settings.alertThresholdsAndPreferences}</p>
             </div>
           </div>
           <div className="space-y-4">
             <div>
-              <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Low Stock Threshold</label>
+              <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{t.settings.lowStockThreshold}</label>
               <input type="number" value={formData.lowStockThreshold} onChange={e => setFormData({ ...formData, lowStockThreshold: Number(e.target.value) })} className={inputClass} />
-              <p className={`text-xs mt-1 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>Alert when stock falls below this number</p>
+              <p className={`text-xs mt-1 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>{t.settings.alertWhenStockFallsBelow}</p>
             </div>
             <div>
-              <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Expiry Alert (Months)</label>
+              <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{t.settings.expiryAlertMonths}</label>
               <input type="number" value={formData.expiryAlertMonths} onChange={e => setFormData({ ...formData, expiryAlertMonths: Number(e.target.value) })} className={inputClass} />
-              <p className={`text-xs mt-1 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>Alert months before expiry date</p>
+              <p className={`text-xs mt-1 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>{t.settings.alertMonthsBeforeExpiry}</p>
             </div>
             <div>
-              <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Currency</label>
+              <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{t.settings.currency}</label>
               <select value={formData.currency} onChange={e => setFormData({ ...formData, currency: e.target.value })} className={inputClass}>
                 <option value="ETB">ETB (Ethiopian Birr)</option>
                 <option value="USD">USD (US Dollar)</option>
@@ -210,8 +210,8 @@ export const SettingsPage: React.FC = () => {
               <Database className="h-5 w-5" />
             </div>
             <div>
-              <h3 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>Database Management</h3>
-              <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Backup and restore data</p>
+               <h3 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{t.settings.databaseManagement}</h3>
+               <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t.settings.backupAndRestoreData}</p>
             </div>
           </div>
           <div className="space-y-3">
@@ -224,8 +224,8 @@ export const SettingsPage: React.FC = () => {
             >
               <Download className="h-5 w-5 text-blue-500" />
               <div className="text-left">
-                <p className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{isBackingUp ? 'Backing up...' : 'Backup Database'}</p>
-                <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Download a full backup of the database</p>
+                 <p className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{isBackingUp ? t.settings.backingUp : t.settings.backupDatabase}</p>
+                 <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t.settings.downloadFullBackup}</p>
               </div>
             </button>
             <button
@@ -237,8 +237,8 @@ export const SettingsPage: React.FC = () => {
             >
               <Upload className="h-5 w-5 text-emerald-500" />
               <div className="text-left">
-                <p className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{isRestoring ? 'Restoring...' : 'Restore Database'}</p>
-                <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Restore from a backup file</p>
+                 <p className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{isRestoring ? t.settings.restoring : t.settings.restoreDatabase}</p>
+                 <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t.settings.restoreFromBackupFile}</p>
               </div>
             </button>
             <input
@@ -258,8 +258,8 @@ export const SettingsPage: React.FC = () => {
               <Globe className="h-5 w-5" />
             </div>
             <div>
-              <h3 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{t.settings.systemInformation}</h3>
-              <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Application details</p>
+               <h3 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{t.settings.systemInformation}</h3>
+               <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t.settings.applicationDetails}</p>
             </div>
           </div>
           <div className="space-y-3">
@@ -285,8 +285,8 @@ export const SettingsPage: React.FC = () => {
               <Languages className="h-5 w-5" />
             </div>
             <div>
-              <h3 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{t.settings.language}</h3>
-              <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Select your preferred language</p>
+               <h3 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{t.settings.language}</h3>
+               <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t.settings.selectPreferredLanguage}</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -328,8 +328,8 @@ export const SettingsPage: React.FC = () => {
               <Shield className="h-5 w-5" />
             </div>
             <div>
-              <h3 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>Security Settings</h3>
-              <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Password and authentication settings</p>
+               <h3 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{t.settings.securitySettings}</h3>
+               <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t.settings.passwordAndAuthenticationSettings}</p>
             </div>
           </div>
 
@@ -345,7 +345,7 @@ export const SettingsPage: React.FC = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Current Password</label>
+              <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{t.settings.currentPassword}</label>
               <input
                 type="password"
                 value={passwordForm.current}
@@ -354,7 +354,7 @@ export const SettingsPage: React.FC = () => {
               />
             </div>
             <div>
-              <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>New Password</label>
+              <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{t.auth.newPassword}</label>
               <input
                 type="password"
                 value={passwordForm.newPassword}
@@ -363,7 +363,7 @@ export const SettingsPage: React.FC = () => {
               />
             </div>
             <div>
-              <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Confirm New Password</label>
+              <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{t.settings.confirmNewPassword}</label>
               <input
                 type="password"
                 value={passwordForm.confirm}

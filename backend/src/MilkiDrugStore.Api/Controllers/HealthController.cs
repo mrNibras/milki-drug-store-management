@@ -1,10 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using MilkiDrugStore.Api.Models;
 
 namespace MilkiDrugStore.Api.Controllers;
 
 [ApiController]
 [Route("health")]
+[AllowAnonymous]
 public class HealthController : ControllerBase
 {
     [HttpGet]

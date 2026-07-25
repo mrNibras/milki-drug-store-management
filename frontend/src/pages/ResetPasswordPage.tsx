@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Store, Lock, Eye, EyeOff, AlertCircle, Moon, Sun } from 'lucide-react';
 import { useThemeStore } from '../store/themeStore';
+import { useTranslation } from '../i18n/LanguageContext';
 import { api, ResetPasswordRequest } from '../services/api';
 
 export const ResetPasswordPage: React.FC = () => {
@@ -15,11 +16,12 @@ export const ResetPasswordPage: React.FC = () => {
   const [success, setSuccess] = useState('');
   const navigate = useNavigate();
   const { theme, toggleTheme } = useThemeStore();
+  const { t } = useTranslation();
   const isDark = theme === 'dark';
 
   useEffect(() => {
     if (!token) {
-      setError('Invalid or missing reset token.');
+      setError(t.auth.invalidToken);
     }
   }, [token]);
 
@@ -29,21 +31,21 @@ export const ResetPasswordPage: React.FC = () => {
     setSuccess('');
 
     if (password.length < 6) {
-      setError('Password must be at least 6 characters long.');
+      setError(t.auth.passwordMinLength);
       return;
     }
     if (password !== confirmPassword) {
-      setError('Passwords do not match.');
+      setError(t.auth.passwordsDoNotMatch);
       return;
     }
 
     setLoading(true);
     try {
       await api.post('/auth/reset-password', { token, newPassword: password } as ResetPasswordRequest);
-      setSuccess('Your password has been reset successfully. Redirecting to login...');
+      setSuccess(t.auth.passwordResetSuccessRedirecting);
       setTimeout(() => navigate('/login'), 2000);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Something went wrong. Please try again.');
+      setError(err.response?.data?.message || t.common.somethingWentWrong);
     } finally {
       setLoading(false);
     }
@@ -62,18 +64,18 @@ export const ResetPasswordPage: React.FC = () => {
               <Store className="h-8 w-8 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-white">Milki Drug Store</h1>
-              <p className="text-emerald-100 text-sm">Management System</p>
+              <h1 className="text-2xl font-bold text-white">{t.common.appName}</h1>
+              <p className="text-emerald-100 text-sm">{t.auth.managementSystem}</p>
             </div>
           </div>
         </div>
         <div className="space-y-6">
           <h2 className="text-4xl font-bold text-white leading-tight">
-            Create a new<br />
-            <span className="text-emerald-200">password</span>
+            {t.auth.createANewPasswordLine1}<br />
+            <span className="text-emerald-200">{t.auth.createANewPasswordLine2}</span>
           </h2>
           <p className="text-emerald-100 text-lg max-w-md">
-            Make sure it's strong and easy for you to remember.
+            {t.auth.makeItStrongAndEasy}
           </p>
         </div>
         <p className="text-emerald-200 text-sm">© 2026 Milki Drug Store. All rights reserved.</p>
@@ -85,12 +87,12 @@ export const ResetPasswordPage: React.FC = () => {
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg mb-4">
               <Store className="h-8 w-8 text-white" />
             </div>
-            <h1 className="text-xl font-bold text-white lg:text-gray-900">Milki Drug Store</h1>
+              <h1 className="text-xl font-bold text-white lg:text-gray-900">{t.common.appName}</h1>
           </div>
 
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Reset Password</h2>
-            <p className="mt-2 text-sm text-gray-500">Enter your new password below.</p>
+            <h2 className="text-2xl font-bold text-gray-900">{t.auth.resetPassword}</h2>
+            <p className="mt-2 text-sm text-gray-500">{t.auth.enterYourNewPassword}</p>
           </div>
 
           {success && (
@@ -109,7 +111,7 @@ export const ResetPasswordPage: React.FC = () => {
           {!success && (
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>
-                <label className="block text-sm font-medium mb-1.5 text-gray-700">New Password</label>
+                <label className="block text-sm font-medium mb-1.5 text-gray-700">{t.auth.newPassword}</label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                   <input
@@ -128,7 +130,7 @@ export const ResetPasswordPage: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1.5 text-gray-700">Confirm New Password</label>
+                <label className="block text-sm font-medium mb-1.5 text-gray-700">{t.auth.confirmPassword}</label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                   <input
@@ -151,7 +153,7 @@ export const ResetPasswordPage: React.FC = () => {
                 {loading ? (
                   <div className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 ) : (
-                  'Reset Password'
+                  {t.auth.resetPassword}
                 )}
               </button>
             </form>
@@ -159,7 +161,7 @@ export const ResetPasswordPage: React.FC = () => {
 
           <div className="text-center">
             <p className="text-sm text-gray-500">
-              Remember your password? <Link to="/login" className="text-emerald-500 hover:text-emerald-400 font-medium">Sign in</Link>
+              {t.common.rememberPassword} <Link to="/login" className="text-emerald-500 hover:text-emerald-400 font-medium">{t.common.signIn}</Link>
             </p>
           </div>
         </div>

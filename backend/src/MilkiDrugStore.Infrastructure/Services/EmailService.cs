@@ -39,7 +39,17 @@ public class EmailService : IEmailService
     {
         if (string.IsNullOrWhiteSpace(_username) || string.IsNullOrWhiteSpace(_password))
         {
-            _logger.LogWarning("SMTP credentials not configured. Email to {To}: {Subject}", toEmail, subject);
+            _logger.LogWarning("SMTP credentials not configured. Logging email to {To}: {Subject}", toEmail, subject);
+            _logger.LogInformation("EMAIL BODY (not sent): {Body}", body);
+            if (_configuration.GetValue<bool>("Email:DevMode", false))
+            {
+                Console.WriteLine($"=== EMAIL (Dev Mode) ===");
+                Console.WriteLine($"To: {toEmail}");
+                Console.WriteLine($"Subject: {subject}");
+                Console.WriteLine($"Body: {body}");
+                Console.WriteLine($"========================");
+                return;
+            }
             throw new InvalidOperationException("SMTP credentials are not configured. Please set Email:Username and Email:Password in configuration.");
         }
 

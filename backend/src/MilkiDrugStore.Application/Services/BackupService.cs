@@ -28,8 +28,7 @@ public class BackupService : IBackupService
             var safeName = string.IsNullOrWhiteSpace(fileName) ? "backup" : Path.GetFileNameWithoutExtension(fileName);
             var fullBackupPath = Path.Combine(_backupDirectory, $"{safeName}_{timestamp}.bak");
 
-            if (_connectionString.StartsWith("Server=", StringComparison.OrdinalIgnoreCase) ||
-                _connectionString.StartsWith("Data Source=", StringComparison.OrdinalIgnoreCase))
+            if (_connectionString.StartsWith("Server=", StringComparison.OrdinalIgnoreCase))
             {
                 return await BackupSqlServerAsync(fullBackupPath);
             }
@@ -56,8 +55,7 @@ public class BackupService : IBackupService
             if (!File.Exists(backupPath))
                 throw new FileNotFoundException("Backup file not found.", backupPath);
 
-            if (_connectionString.StartsWith("Server=", StringComparison.OrdinalIgnoreCase) ||
-                _connectionString.StartsWith("Data Source=", StringComparison.OrdinalIgnoreCase))
+            if (_connectionString.StartsWith("Server=", StringComparison.OrdinalIgnoreCase))
             {
                 return await RestoreSqlServerAsync(backupPath);
             }

@@ -17,10 +17,26 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Ensure data directory exists for SQLite and Data Protection keys.
 var dataDir = builder.Configuration.GetValue<string>("DataDirectory") ?? "/var/data";
-Directory.CreateDirectory(dataDir);
+try
+{
+    Directory.CreateDirectory(dataDir);
+}
+catch
+{
+    dataDir = Path.Combine(Path.GetTempPath(), "MilkiDrugStore_Data");
+    Directory.CreateDirectory(dataDir);
+}
 
 var keysDir = Path.Combine(dataDir, "keys");
-Directory.CreateDirectory(keysDir);
+try
+{
+    Directory.CreateDirectory(keysDir);
+}
+catch
+{
+    keysDir = Path.Combine(Path.GetTempPath(), "MilkiDrugStore_Keys");
+    Directory.CreateDirectory(keysDir);
+}
 
 // Data Protection: persist keys to persistent disk so they survive container restarts.
 builder.Services.AddDataProtection()
@@ -269,3 +285,5 @@ startupLogger.LogInformation("Application starting in {Environment} mode on port
     app.Environment.EnvironmentName, port);
 
 app.Run();
+
+public partial class Program { }

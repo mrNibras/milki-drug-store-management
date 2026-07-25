@@ -23,6 +23,23 @@ export interface Translations {
     backToLogin: string;
     signIn: string;
     rememberPassword: string;
+    emailAddress: string;
+    managementSystem: string;
+    resetYourPasswordSecurely: string;
+    resetYourPassword: string;
+    passwordSecurely: string;
+    enterYourEmailAndResetLink: string;
+    enterYourRegisteredEmail: string;
+    passwordResetLinkSent: string;
+    createANewPassword: string;
+    createANewPasswordLine1: string;
+    createANewPasswordLine2: string;
+    makeItStrongAndEasy: string;
+    enterYourNewPassword: string;
+    passwordResetSuccessRedirecting: string;
+      passwordMinLength: string;
+      passwordsDoNotMatch: string;
+      somethingWentWrong: string;
   };
   auth: {
     login: string;
@@ -141,23 +158,54 @@ export interface Translations {
     markAsRead: string;
     noNotifications: string;
   };
-  settings: {
-    title: string;
-    pharmacyInformation: string;
-    inventorySettings: string;
-    databaseManagement: string;
-    systemInformation: string;
-    securitySettings: string;
-    backupDatabase: string;
-    restoreDatabase: string;
-    language: string;
-    currency: string;
-    version: string;
-    architecture: string;
-    inventoryMethod: string;
-    authentication: string;
-    database: string;
-  };
+    settings: {
+      title: string;
+      pharmacyInformation: string;
+      basicPharmacyDetails: string;
+      pharmacyName: string;
+      address: string;
+      phone: string;
+      inventorySettings: string;
+      alertThresholdsAndPreferences: string;
+      lowStockThreshold: string;
+      alertWhenStockFallsBelow: string;
+      expiryAlertMonths: string;
+      alertMonthsBeforeExpiry: string;
+      currency: string;
+      databaseManagement: string;
+      backupAndRestoreData: string;
+      backupDatabase: string;
+      restoreDatabase: string;
+      downloadFullBackup: string;
+      restoreFromBackupFile: string;
+      backingUp: string;
+      restoring: string;
+      systemInformation: string;
+      applicationDetails: string;
+      version: string;
+      architecture: string;
+      inventoryMethod: string;
+      authentication: string;
+      database: string;
+      language: string;
+      selectPreferredLanguage: string;
+      securitySettings: string;
+      passwordAndAuthenticationSettings: string;
+      currentPassword: string;
+      confirmNewPassword: string;
+      changePassword: string;
+      passwordChangedSuccessfully: string;
+      pleaseFillAllPasswordFields: string;
+      passwordsDoNotMatch: string;
+      passwordMinLength: string;
+      settingsSavedSuccessfully: string;
+      databaseBackupDownloaded: string;
+      databaseRestoredRefresh: string;
+      failedToBackup: string;
+      failedToRestore: string;
+      failedToChangePassword: string;
+      failedToSaveSettings: string;
+    };
   branches: {
     title: string;
     addBranch: string;
@@ -231,6 +279,23 @@ export const translations: Record<Language, Translations> = {
       backToLogin: 'Back to login',
       signIn: 'Sign in',
       rememberPassword: 'Remember your password?',
+      emailAddress: 'Email Address',
+      managementSystem: 'Management System',
+      resetYourPasswordSecurely: 'Reset your password securely',
+      resetYourPassword: 'Reset your',
+      passwordSecurely: 'password securely',
+      enterYourEmailAndResetLink: 'Enter your email and we\'ll send you a reset link.',
+      enterYourRegisteredEmail: 'Enter your registered email and we\'ll send you a link to reset your password.',
+      passwordResetLinkSent: 'If an account with that email exists, a password reset link has been sent.',
+      createANewPassword: 'Create a new password',
+      createANewPasswordLine1: 'Create a new',
+      createANewPasswordLine2: 'password',
+      makeItStrongAndEasy: 'Make sure it\'s strong and easy for you to remember.',
+      enterYourNewPassword: 'Enter your new password below.',
+      passwordResetSuccessRedirecting: 'Your password has been reset successfully. Redirecting to login...',
+      passwordMinLength: 'Password must be at least 6 characters long.',
+      passwordsDoNotMatch: 'Passwords do not match.',
+      somethingWentWrong: 'Something went wrong. Please try again.',
     },
     auth: {
       login: 'Login',
@@ -352,19 +417,51 @@ export const translations: Record<Language, Translations> = {
     settings: {
       title: 'Settings',
       pharmacyInformation: 'Pharmacy Information',
+      basicPharmacyDetails: 'Basic pharmacy details',
+      pharmacyName: 'Pharmacy Name',
+      address: 'Address',
+      phone: 'Phone',
+      email: 'Email',
       inventorySettings: 'Inventory Settings',
+      alertThresholdsAndPreferences: 'Alert thresholds and preferences',
+      lowStockThreshold: 'Low Stock Threshold',
+      alertWhenStockFallsBelow: 'Alert when stock falls below this number',
+      expiryAlertMonths: 'Expiry Alert (Months)',
+      alertMonthsBeforeExpiry: 'Alert months before expiry date',
+      currency: 'Currency',
       databaseManagement: 'Database Management',
-      systemInformation: 'System Information',
-      securitySettings: 'Security Settings',
+      backupAndRestoreData: 'Backup and restore data',
       backupDatabase: 'Backup Database',
       restoreDatabase: 'Restore Database',
-      language: 'Language',
-      currency: 'Currency',
+      downloadFullBackup: 'Download a full backup of the database',
+      restoreFromBackupFile: 'Restore from a backup file',
+      backingUp: 'Backing up...',
+      restoring: 'Restoring...',
+      systemInformation: 'System Information',
+      applicationDetails: 'Application details',
       version: 'Version',
       architecture: 'Architecture',
       inventoryMethod: 'Inventory Method',
       authentication: 'Authentication',
       database: 'Database',
+      language: 'Language',
+      selectPreferredLanguage: 'Select your preferred language',
+      securitySettings: 'Security Settings',
+      passwordAndAuthenticationSettings: 'Password and authentication settings',
+      currentPassword: 'Current Password',
+      confirmNewPassword: 'Confirm New Password',
+      changePassword: 'Change Password',
+      passwordChangedSuccessfully: 'Password changed successfully',
+      pleaseFillAllPasswordFields: 'Please fill in all password fields',
+      passwordsDoNotMatch: 'New passwords do not match',
+      passwordMinLength: 'New password must be at least 6 characters',
+      settingsSavedSuccessfully: 'Settings saved successfully!',
+      databaseBackupDownloaded: 'Database backup downloaded successfully',
+      databaseRestoredRefresh: 'Database restored successfully. Please refresh the page.',
+      failedToBackup: 'Failed to backup database',
+      failedToRestore: 'Failed to restore database',
+      failedToChangePassword: 'Failed to change password',
+      failedToSaveSettings: 'Failed to save settings',
     },
     branches: {
       title: 'Branch Management',
@@ -437,6 +534,23 @@ export const translations: Record<Language, Translations> = {
       backToLogin: 'ወደ መግቢያ ተመለስ',
       signIn: 'ግባ',
       rememberPassword: 'የይለፍ ቃልዎን ያስታውሳሉ?',
+      emailAddress: 'የኢሜይል አድራሻ',
+      managementSystem: 'የስራ አስተዳደር ስርአት',
+      resetYourPasswordSecurely: 'የይለፍ ቃልዎን በደህንነት ያድሱ',
+      resetYourPassword: 'የይለፍ ቃልዎን',
+      passwordSecurely: 'በደህንነት ያድሱ',
+      enterYourEmailAndResetLink: 'ኢሜይልዎን ያስገቡ እና የማድስ ሊንክ እንልክልዎታለን።',
+      enterYourRegisteredEmail: 'የተመዘገበ ኢሜይል አድራሻዎን ያስገቡ እና የይለፍ ቃል ለማድስ ሊንክ እንልክልዎታለን።',
+      passwordResetLinkSent: 'ከዚህ ኢሜይል ጋር መለያ ካለ የማድስ ሊንክ ተልኳል።',
+      createANewPassword: 'አዲስ ይለፍ ቃል ፍጠር',
+      createANewPasswordLine1: 'አዲስ',
+      createANewPasswordLine2: 'ይለፍ ቃል ፍጠር',
+      makeItStrongAndEasy: 'ደህንነቱ እና መታደስ እንዲቻል ያድርጉት።',
+      enterYourNewPassword: 'አዲስ የይለፍ ቃልዎን ከዚህ በታች ያስገቡ።',
+      passwordResetSuccessRedirecting: 'የይለፍ ቃልዎ በተሳካ ሁኔታ ተቀይሯል። ወደ መግቢያ በማምጣት ላይ...',
+      passwordMinLength: 'የይለፍ ቃል ቢያንስ 6 ፊደሎች ሊኖሩት ይገባል።',
+      passwordsDoNotMatch: 'የይለፍ ቃላት አይመሳሰሉም።',
+      somethingWentWrong: 'ምን አጥፋብን ነው። እባክዎ እንደገና ይሞክሩ።',
     },
     auth: {
       login: 'መግቢያ',
@@ -558,19 +672,51 @@ export const translations: Record<Language, Translations> = {
     settings: {
       title: 'ማዋቀሪያዎች',
       pharmacyInformation: 'የፋርማሲ መረጃ',
+      basicPharmacyDetails: 'መሠረታዊ የፋርማሲ ዝርዝሮች',
+      pharmacyName: 'የፋርማሲ ስም',
+      address: 'አድራሻ',
+      phone: 'ስልክ',
+      email: 'ኢሜይል',
       inventorySettings: 'የማሰራጫ ማዋቀሪያዎች',
+      alertThresholdsAndPreferences: 'የማሳሰቢያ መስፋፋት እና ምርጫዎች',
+      lowStockThreshold: 'ዝቅተኛ ክምችት መስፈርት',
+      alertWhenStockFallsBelow: 'ክምችት ከዚህ ቁጥር በታች ሲወድቅ ማሳሰቢያ ስጥ',
+      expiryAlertMonths: 'የማብቂያ ማሳሰቢያ (ወር)',
+      alertMonthsBeforeExpiry: 'የማብቂያ ቀን ከሚደርስበት ቀን በፊት ወርዎች ማሳሰቢያ',
+      currency: 'ምንዛሪ',
       databaseManagement: 'የመረጃ ጎታ አስተዳደር',
-      systemInformation: 'የስርአቱ መረጃ',
-      securitySettings: 'የደህንነት ማዋቀሪያዎች',
+      backupAndRestoreData: 'መረጃ ጠቅልይ እና አስቀድም',
       backupDatabase: 'መረጃ ጎታ ጠቅልይ',
       restoreDatabase: 'መረጃ ጎታ አስቀድም',
-      language: 'ቋንቋ',
-      currency: 'ምንዛሪ',
+      downloadFullBackup: 'ሙሉ የመረጃ ጎታ ጠቅልይ አውርድ',
+      restoreFromBackupFile: 'ከጠቅላይ ፋይል አስቀድም',
+      backingUp: 'በጠቅላይ ላይ...',
+      restoring: 'በአስቀድሞ ላይ...',
+      systemInformation: 'የስርአቱ መረጃ',
+      applicationDetails: 'የመተግበሪያ ዝርዝሮች',
       version: 'ስሪት',
       architecture: 'አርክቴክቸር',
       inventoryMethod: 'የማሰራጫ ዘዴ',
       authentication: 'ማረጋገጫ',
       database: 'መረጃ ጎታ',
+      language: 'ቋንቋ',
+      selectPreferredLanguage: 'የሚመርጡትን ቋንቋ ይምረጡ',
+      securitySettings: 'የደህንነት ማዋቀሪያዎች',
+      passwordAndAuthenticationSettings: 'የይለፍ ቃል እና ማረጋገጫ ማዋቀሪያዎች',
+      currentPassword: 'የአሁኑ ይለፍ ቃል',
+      confirmNewPassword: 'አዲስ ይለፍ ቃል አረጋግጥ',
+      changePassword: 'ይለፍ ቃል ቀይር',
+      passwordChangedSuccessfully: 'የይለፍ ቃል በተሳካ ሁኔታ ተቀይሯል',
+      pleaseFillAllPasswordFields: 'እባክዎ ሁሉንም የይለፍ ቃል ሜዳዎች ይሙሉ',
+      passwordsDoNotMatch: 'አዲስ የይለፍ ቃላት አይመሳሰሉም',
+      passwordMinLength: 'አዲስ ይለፍ ቃል ቢያንስ 6 ፊደሎች ሊኖሩት ይገባል',
+      settingsSavedSuccessfully: 'ማዋቀሪያዎች በተሳካ ሁኔታ ተቀምጠዋል!',
+      databaseBackupDownloaded: 'የመረጃ ጎታ ጠቅላይ በተሳካ ሁኔታ ተውሷል',
+      databaseRestoredRefresh: 'የመረጃ ጎታ በተሳካ ሁኔታ አስቀድሟል። እባክዎ ገጹን ያድሱ።',
+      failedToBackup: 'የመረጃ ጎታ ጠቅላይ ላይ ስህተት ተከስቷል',
+      failedToRestore: 'የመረጃ ጎታ አስቀድሞ ላይ ስህተት ተከስቷል',
+      failedToChangePassword: 'የይለፍ ቃል መቀየር ላይ ስህተት ተከስቷል',
+      failedToSaveSettings: 'ማዋቀሪያዎችን ማስቀመጥ ላይ ስህተት ተከስቷል',
     },
     branches: {
       title: 'የጅምላ አስተዳደር',
