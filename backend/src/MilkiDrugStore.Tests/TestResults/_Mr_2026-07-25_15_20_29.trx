@@ -1,0 +1,709 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="c6d26d7f-64d6-421b-a62d-6d53d13cda3f" name="@Mr 2026-07-25 15:20:29" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-07-25T15:20:30.0504560+03:00" queuing="2026-07-25T15:20:30.0504563+03:00" start="2026-07-25T15:20:25.2511994+03:00" finish="2026-07-25T15:20:44.7662728+03:00" />
+  <TestSettings name="default" id="08730d73-69aa-4ed7-b180-03a3232cc49e">
+    <Deployment runDeploymentRoot="_Mr_2026-07-25_15_20_29" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="e21e3505-ff9d-4522-87af-26fe05e3896c" testId="4ad3cb11-7cda-6fbc-8636-c823cd19f31f" testName="MilkiDrugStore.Tests.Application.SaleServiceTests.CreateAsync_WithZeroPayment_SetsPaymentStatusUnpaid" computerName="Mr" duration="00:00:00.0349612" startTime="2026-07-25T15:20:30.5194540+03:00" endTime="2026-07-25T15:20:30.5194542+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="e21e3505-ff9d-4522-87af-26fe05e3896c" />
+    <UnitTestResult executionId="7a0a33cb-d51a-40a6-879e-4005b4cc3f71" testId="d0ef4c0c-3c3b-223b-1d5b-1d77da73013a" testName="MilkiDrugStore.Tests.Application.CQRS.CosmeticCQRSTests.GetCosmeticsQueryHandler_Should_Call_Service" computerName="Mr" duration="00:00:00.0364815" startTime="2026-07-25T15:20:30.3734486+03:00" endTime="2026-07-25T15:20:30.3734489+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="7a0a33cb-d51a-40a6-879e-4005b4cc3f71" />
+    <UnitTestResult executionId="53f0755b-5a2c-4da6-ba71-4a9cd6a58692" testId="7b80ecd6-3d11-2f2c-ed1c-4c89e40122d5" testName="MilkiDrugStore.Tests.Integration.Database.DatabaseIntegrationTests.Seed_Should_Create_Default_Roles" computerName="Mr" duration="00:00:00.0329756" startTime="2026-07-25T15:20:43.8534434+03:00" endTime="2026-07-25T15:20:43.8534438+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="53f0755b-5a2c-4da6-ba71-4a9cd6a58692" />
+    <UnitTestResult executionId="eeca77dd-c8bb-4939-ba1a-4f787a19d198" testId="d8d06448-de8e-04b9-8c50-89e50cd76f5f" testName="MilkiDrugStore.Tests.Integration.Database.DatabaseIntegrationTests.FEFO_Should_Prioritize_Earliest_Expiry" computerName="Mr" duration="00:00:00.1581814" startTime="2026-07-25T15:20:37.4235378+03:00" endTime="2026-07-25T15:20:37.4235383+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="eeca77dd-c8bb-4939-ba1a-4f787a19d198">
+      <Output>
+        <ErrorInfo>
+          <Message>Microsoft.EntityFrameworkCore.DbUpdateException : An error occurred while saving the entity changes. See the inner exception for details.
+---- Microsoft.Data.Sqlite.SqliteException : SQLite Error 19: 'FOREIGN KEY constraint failed'.</Message>
+          <StackTrace>   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(IList`1 entriesToSave, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(StateManager stateManager, Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at MilkiDrugStore.Tests.Integration.Database.DatabaseIntegrationTests.FEFO_Should_Prioritize_Earliest_Expiry() in /home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/Integration/DatabaseIntegrationTests.cs:line 284
+--- End of stack trace from previous location ---
+----- Inner Stack Trace -----
+   at Microsoft.Data.Sqlite.SqliteException.ThrowExceptionForRC(Int32 rc, sqlite3 db)
+   at Microsoft.Data.Sqlite.SqliteDataReader.NextResult()
+   at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReader(CommandBehavior behavior)
+   at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Microsoft.Data.Sqlite.SqliteCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="96276ad9-3fc4-44ca-8036-decd94e37794" testId="ce2422cf-b51e-8b6b-7011-b6ad971959e2" testName="MilkiDrugStore.Tests.Application.CQRS.SaleCQRSTests.CreateSaleCommandHandler_Should_Call_SaleService" computerName="Mr" duration="00:00:00.4359123" startTime="2026-07-25T15:20:30.1805215+03:00" endTime="2026-07-25T15:20:30.1805218+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="96276ad9-3fc4-44ca-8036-decd94e37794" />
+    <UnitTestResult executionId="037eee4d-1604-4842-8fc3-1e4fb38807e1" testId="5f226f98-d490-661d-4f86-483d7742c537" testName="MilkiDrugStore.Tests.Integration.Database.DatabaseIntegrationTests.AuditLog_Should_Be_Created_For_Critical_Actions" computerName="Mr" duration="00:00:00.1685639" startTime="2026-07-25T15:20:38.5712290+03:00" endTime="2026-07-25T15:20:38.5712294+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="037eee4d-1604-4842-8fc3-1e4fb38807e1" />
+    <UnitTestResult executionId="40e4952a-4f49-4534-a00e-817497e3eb95" testId="4d5e7f24-5fb3-65a8-72e2-161afc3954ba" testName="MilkiDrugStore.Tests.Application.SaleServiceTests.CreateAsync_WithCashPayment_SetsPaymentStatusPaid" computerName="Mr" duration="00:00:00.0294385" startTime="2026-07-25T15:20:30.5862733+03:00" endTime="2026-07-25T15:20:30.5862734+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="40e4952a-4f49-4534-a00e-817497e3eb95" />
+    <UnitTestResult executionId="eee30b8a-4f35-440e-9706-869a361ea6b9" testId="585efe12-9ec1-4e3f-7e05-6ff0b1c2efbe" testName="MilkiDrugStore.Tests.Application.AuthServiceTests.LoginAsync_InvalidCredentials_ReturnsNull" computerName="Mr" duration="00:00:00.0363092" startTime="2026-07-25T15:20:30.5129954+03:00" endTime="2026-07-25T15:20:30.5129957+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="eee30b8a-4f35-440e-9706-869a361ea6b9" />
+    <UnitTestResult executionId="614b0f92-c0c1-4118-8daf-19587c35f412" testId="69218783-242d-e7d5-6ab2-5f85719271da" testName="MilkiDrugStore.Tests.Application.Services.NotificationServiceTests.MarkAsReadAsync_Should_Mark_Notification_As_Read" computerName="Mr" duration="00:00:00.4881435" startTime="2026-07-25T15:20:30.2082038+03:00" endTime="2026-07-25T15:20:30.2082041+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="614b0f92-c0c1-4118-8daf-19587c35f412" />
+    <UnitTestResult executionId="35683d5e-a3e2-4156-ae8e-6ae29dfa94c9" testId="918c9096-9a2a-d566-38fd-b04b1d8e865e" testName="MilkiDrugStore.Tests.Application.Services.PurchaseServiceTests.CreateAsync_Should_Create_Purchase_With_Paid_Status_When_AmountPaid_Equals_Total" computerName="Mr" duration="00:00:00.3506542" startTime="2026-07-25T15:20:30.5675309+03:00" endTime="2026-07-25T15:20:30.5675311+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="35683d5e-a3e2-4156-ae8e-6ae29dfa94c9" />
+    <UnitTestResult executionId="e158518c-6a85-44eb-822d-1ca672ce9059" testId="76db006c-b30c-0147-4047-99b7499b89c4" testName="MilkiDrugStore.Tests.Application.CQRS.CosmeticCQRSTests.AddBatchCommandHandler_Should_Call_Service" computerName="Mr" duration="00:00:00.0483757" startTime="2026-07-25T15:20:30.3175061+03:00" endTime="2026-07-25T15:20:30.3175064+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="e158518c-6a85-44eb-822d-1ca672ce9059" />
+    <UnitTestResult executionId="cc9f1ede-e7ab-488b-95ba-8e6b6b5f2441" testId="14485f05-721f-3ac4-fa85-be3c8f4305bc" testName="MilkiDrugStore.Tests.Integration.Database.DatabaseIntegrationTests.Sale_Should_Deduct_Inventory_And_Calculate_Profit" computerName="Mr" duration="00:00:00.0184301" startTime="2026-07-25T15:20:39.2832693+03:00" endTime="2026-07-25T15:20:39.2832696+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="cc9f1ede-e7ab-488b-95ba-8e6b6b5f2441">
+      <Output>
+        <ErrorInfo>
+          <Message>Microsoft.EntityFrameworkCore.DbUpdateException : An error occurred while saving the entity changes. See the inner exception for details.
+---- Microsoft.Data.Sqlite.SqliteException : SQLite Error 19: 'FOREIGN KEY constraint failed'.</Message>
+          <StackTrace>   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(IList`1 entriesToSave, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(StateManager stateManager, Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at MilkiDrugStore.Tests.Integration.Database.DatabaseIntegrationTests.Sale_Should_Deduct_Inventory_And_Calculate_Profit() in /home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/Integration/DatabaseIntegrationTests.cs:line 385
+--- End of stack trace from previous location ---
+----- Inner Stack Trace -----
+   at Microsoft.Data.Sqlite.SqliteException.ThrowExceptionForRC(Int32 rc, sqlite3 db)
+   at Microsoft.Data.Sqlite.SqliteDataReader.NextResult()
+   at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReader(CommandBehavior behavior)
+   at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Microsoft.Data.Sqlite.SqliteCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="543bf71b-4546-4394-8deb-007a826813f7" testId="a6fb23a6-1819-c6cd-6c02-be0876ab5c14" testName="MilkiDrugStore.Tests.Application.AuthServiceTests.RefreshTokenAsync_InactiveUser_ReturnsNull" computerName="Mr" duration="00:00:00.2469432" startTime="2026-07-25T15:20:30.4776190+03:00" endTime="2026-07-25T15:20:30.4776199+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="543bf71b-4546-4394-8deb-007a826813f7" />
+    <UnitTestResult executionId="4cbb4113-4381-4f3f-a187-6bfed76ee3c2" testId="789af199-d140-9b95-af0d-f2862624c89c" testName="MilkiDrugStore.Tests.Application.SaleServiceTests.CreateAsync_WithDiscount_CapsDiscountForPharmacist" computerName="Mr" duration="00:00:00.0325724" startTime="2026-07-25T15:20:30.5529304+03:00" endTime="2026-07-25T15:20:30.5529306+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="4cbb4113-4381-4f3f-a187-6bfed76ee3c2" />
+    <UnitTestResult executionId="08f04c10-a95b-4213-a43c-35ba59b6b64b" testId="ef48fcfa-77a6-4315-ec6a-976fa0995b6c" testName="MilkiDrugStore.Tests.Application.SaleServiceReferenceNumberTests.CreateAsync_WithBankTransfer_ReturnsReferenceNumber" computerName="Mr" duration="00:00:00.5562392" startTime="2026-07-25T15:20:30.3884935+03:00" endTime="2026-07-25T15:20:30.3884943+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="08f04c10-a95b-4213-a43c-35ba59b6b64b" />
+    <UnitTestResult executionId="0fdbeea4-a1ec-4305-8613-8260da8aec12" testId="302bde51-e8e2-1fc1-4018-cfb81afc0e97" testName="MilkiDrugStore.Tests.Domain.UserEntityTests.User_DefaultValues_AreCorrect" computerName="Mr" duration="00:00:00.0065319" startTime="2026-07-25T15:20:30.3446011+03:00" endTime="2026-07-25T15:20:30.3446013+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="0fdbeea4-a1ec-4305-8613-8260da8aec12" />
+    <UnitTestResult executionId="67634f90-4587-45c9-85ee-09fecfceb1fc" testId="7f1f90e0-506f-a7d2-eab7-2c85076d5894" testName="MilkiDrugStore.Tests.Application.CQRS.SupplierCQRSTests.CreateSupplierCommandHandler_Should_Call_Service" computerName="Mr" duration="00:00:00.0227866" startTime="2026-07-25T15:20:30.1956590+03:00" endTime="2026-07-25T15:20:30.1956593+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="67634f90-4587-45c9-85ee-09fecfceb1fc" />
+    <UnitTestResult executionId="8231ade6-1490-4e14-86f2-67e3145e1332" testId="c8af2c65-faa2-463b-96b7-32b34deb6d08" testName="MilkiDrugStore.Tests.Application.CQRS.CosmeticCQRSTests.CreateCosmeticCommandHandler_Should_Call_Service" computerName="Mr" duration="00:00:00.0229487" startTime="2026-07-25T15:20:30.3403889+03:00" endTime="2026-07-25T15:20:30.3403891+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="8231ade6-1490-4e14-86f2-67e3145e1332" />
+    <UnitTestResult executionId="15aeeebe-6d87-4a43-ac14-123d9bd58d2f" testId="45ffcc85-c804-c3eb-1652-469f6cd0f604" testName="MilkiDrugStore.Tests.Domain.RoleEnumTests.RoleType_HasExpectedValues" computerName="Mr" duration="00:00:00.0576482" startTime="2026-07-25T15:20:29.8794360+03:00" endTime="2026-07-25T15:20:29.8794362+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="15aeeebe-6d87-4a43-ac14-123d9bd58d2f" />
+    <UnitTestResult executionId="74de9668-9c57-4b8d-b389-798394b92b4a" testId="1c9602c9-a8d7-cadd-0fdb-065322006d79" testName="MilkiDrugStore.Tests.Integration.IntegrationTests.CosmeticCategory_Should_Be_Persisted" computerName="Mr" duration="00:00:00.2862927" startTime="2026-07-25T15:20:34.1838496+03:00" endTime="2026-07-25T15:20:34.1838498+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="74de9668-9c57-4b8d-b389-798394b92b4a" />
+    <UnitTestResult executionId="d062a43a-85ef-4d8f-b3b8-e1f60b9fb459" testId="abbd243f-46ef-efef-e3d8-f59c017c78de" testName="MilkiDrugStore.Tests.Application.CQRS.SaleCQRSTests.GetSalesQueryHandler_Should_Call_SaleService" computerName="Mr" duration="00:00:00.0420517" startTime="2026-07-25T15:20:30.2248967+03:00" endTime="2026-07-25T15:20:30.2248970+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="d062a43a-85ef-4d8f-b3b8-e1f60b9fb459" />
+    <UnitTestResult executionId="bf213f8c-106e-42aa-93d8-06ac99565b41" testId="56b8f706-e219-a2b2-282b-715c35a405a3" testName="MilkiDrugStore.Tests.Domain.SaleEntityTests.Sale_DefaultValues_AreCorrect" computerName="Mr" duration="00:00:00.0647360" startTime="2026-07-25T15:20:29.8794951+03:00" endTime="2026-07-25T15:20:29.8794951+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="bf213f8c-106e-42aa-93d8-06ac99565b41" />
+    <UnitTestResult executionId="7254c106-5b61-482e-885f-c58cc1afb64a" testId="f3e737bf-a4cb-5398-a703-7bdc4b8a83d5" testName="MilkiDrugStore.Tests.Application.AuthServiceTests.LoginAsync_InactiveUser_ReturnsNull" computerName="Mr" duration="00:00:02.1573716" startTime="2026-07-25T15:20:32.7704773+03:00" endTime="2026-07-25T15:20:32.7704782+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="7254c106-5b61-482e-885f-c58cc1afb64a" />
+    <UnitTestResult executionId="a4358824-bd41-4f44-af81-0f6ca9f80e96" testId="f6dc3bc7-cd17-7f81-5a32-f7a7b7625031" testName="MilkiDrugStore.Tests.Integration.IntegrationTests.Cosmetic_Should_Be_Persisted_With_Batch" computerName="Mr" duration="00:00:00.5097216" startTime="2026-07-25T15:20:34.6940446+03:00" endTime="2026-07-25T15:20:34.6940450+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="a4358824-bd41-4f44-af81-0f6ca9f80e96" />
+    <UnitTestResult executionId="ef858859-2f0c-449a-94ce-cc07a31fd473" testId="0a0a7b71-93a5-0aa1-3ffe-32aaf6bb8829" testName="MilkiDrugStore.Tests.Application.CQRS.SupplierCQRSTests.GetSuppliersQueryHandler_Should_Call_Service" computerName="Mr" duration="00:00:00.0158979" startTime="2026-07-25T15:20:30.1704271+03:00" endTime="2026-07-25T15:20:30.1704274+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="ef858859-2f0c-449a-94ce-cc07a31fd473" />
+    <UnitTestResult executionId="374fa1c4-9653-4e0c-9741-f8d3b5733383" testId="5337afee-1f13-78f4-1d7c-51a2fe24ec74" testName="MilkiDrugStore.Tests.Domain.NotificationEntityTests.Notification_DefaultValues_AreCorrect" computerName="Mr" duration="00:00:00.0468215" startTime="2026-07-25T15:20:29.8369735+03:00" endTime="2026-07-25T15:20:29.8370736+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="374fa1c4-9653-4e0c-9741-f8d3b5733383" />
+    <UnitTestResult executionId="154576f6-5459-4038-977c-8cfc72ec8c84" testId="48845435-e47e-9f09-2789-b30b7155ca60" testName="MilkiDrugStore.Tests.Integration.Database.DatabaseIntegrationTests.MedicineBatch_Should_Calculate_Balance" computerName="Mr" duration="00:00:00.0115605" startTime="2026-07-25T15:20:41.3092804+03:00" endTime="2026-07-25T15:20:41.3092835+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="154576f6-5459-4038-977c-8cfc72ec8c84">
+      <Output>
+        <ErrorInfo>
+          <Message>Microsoft.EntityFrameworkCore.DbUpdateException : An error occurred while saving the entity changes. See the inner exception for details.
+---- Microsoft.Data.Sqlite.SqliteException : SQLite Error 19: 'FOREIGN KEY constraint failed'.</Message>
+          <StackTrace>   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(IList`1 entriesToSave, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(StateManager stateManager, Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at MilkiDrugStore.Tests.Integration.Database.DatabaseIntegrationTests.MedicineBatch_Should_Calculate_Balance() in /home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/Integration/DatabaseIntegrationTests.cs:line 234
+--- End of stack trace from previous location ---
+----- Inner Stack Trace -----
+   at Microsoft.Data.Sqlite.SqliteException.ThrowExceptionForRC(Int32 rc, sqlite3 db)
+   at Microsoft.Data.Sqlite.SqliteDataReader.NextResult()
+   at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReader(CommandBehavior behavior)
+   at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Microsoft.Data.Sqlite.SqliteCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="72d7dc7c-b85a-4dfc-8839-b2a48cc27381" testId="25e9e3c5-9fce-5afc-fa12-9905a2560ed6" testName="MilkiDrugStore.Tests.Domain.MedicineBatchEntityTests.MedicineBatch_Balance_ReturnsZeroWhenAllIssued" computerName="Mr" duration="00:00:00.0461948" startTime="2026-07-25T15:20:29.8793354+03:00" endTime="2026-07-25T15:20:29.8793356+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="72d7dc7c-b85a-4dfc-8839-b2a48cc27381" />
+    <UnitTestResult executionId="17de2f11-7e41-4394-9b9e-7a97b4aa9575" testId="627dc906-f7c3-ba31-f1b6-8aa76df4afd6" testName="MilkiDrugStore.Tests.Application.Services.NotificationServiceTests.GetAllAsync_Should_Return_All_Notifications" computerName="Mr" duration="00:00:00.0366412" startTime="2026-07-25T15:20:30.2450510+03:00" endTime="2026-07-25T15:20:30.2450511+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="17de2f11-7e41-4394-9b9e-7a97b4aa9575" />
+    <UnitTestResult executionId="82e6fa2d-2cbb-4975-8102-48c440025d93" testId="21993b61-8001-7c99-ca8b-b8595f7bf865" testName="MilkiDrugStore.Tests.Integration.Database.DatabaseIntegrationTests.Purchase_Should_Create_Batches_And_Transactions" computerName="Mr" duration="00:00:00.0926181" startTime="2026-07-25T15:20:40.5300147+03:00" endTime="2026-07-25T15:20:40.5300150+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="82e6fa2d-2cbb-4975-8102-48c440025d93">
+      <Output>
+        <ErrorInfo>
+          <Message>Microsoft.EntityFrameworkCore.DbUpdateException : An error occurred while saving the entity changes. See the inner exception for details.
+---- Microsoft.Data.Sqlite.SqliteException : SQLite Error 19: 'FOREIGN KEY constraint failed'.</Message>
+          <StackTrace>   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(IList`1 entriesToSave, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(StateManager stateManager, Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at MilkiDrugStore.Tests.Integration.Database.DatabaseIntegrationTests.Purchase_Should_Create_Batches_And_Transactions() in /home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/Integration/DatabaseIntegrationTests.cs:line 319
+--- End of stack trace from previous location ---
+----- Inner Stack Trace -----
+   at Microsoft.Data.Sqlite.SqliteException.ThrowExceptionForRC(Int32 rc, sqlite3 db)
+   at Microsoft.Data.Sqlite.SqliteDataReader.NextResult()
+   at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReader(CommandBehavior behavior)
+   at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Microsoft.Data.Sqlite.SqliteCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="10fd2365-95c6-4b37-a2cf-962ba0797448" testId="c9b44394-4a3e-d6e8-8cf6-55deb85a4bbe" testName="MilkiDrugStore.Tests.Application.Services.NotificationServiceTests.GetUnreadAsync_Should_Return_Only_Unread_Notifications" computerName="Mr" duration="00:00:00.0183251" startTime="2026-07-25T15:20:30.2636496+03:00" endTime="2026-07-25T15:20:30.2636499+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="10fd2365-95c6-4b37-a2cf-962ba0797448" />
+    <UnitTestResult executionId="8d3bd7b3-0dbd-4234-9096-2b5054e806c2" testId="e7814ac9-05c3-df61-934a-3ba99ae8c8eb" testName="MilkiDrugStore.Tests.Application.AuthServiceTests.RefreshTokenAsync_UnapprovedUser_ReturnsNull" computerName="Mr" duration="00:00:00.0175959" startTime="2026-07-25T15:20:35.2054402+03:00" endTime="2026-07-25T15:20:35.2054405+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="8d3bd7b3-0dbd-4234-9096-2b5054e806c2" />
+    <UnitTestResult executionId="9e0fcbf2-0ef1-4b2a-a8a2-100234f98b10" testId="3ca10268-fe1f-d612-e2ad-8db0b7f02fa4" testName="MilkiDrugStore.Tests.Integration.Database.DatabaseIntegrationTests.Notification_Should_Be_Created_For_Low_Stock" computerName="Mr" duration="00:00:00.0121669" startTime="2026-07-25T15:20:44.5365803+03:00" endTime="2026-07-25T15:20:44.5365806+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="9e0fcbf2-0ef1-4b2a-a8a2-100234f98b10">
+      <Output>
+        <ErrorInfo>
+          <Message>Microsoft.EntityFrameworkCore.DbUpdateException : An error occurred while saving the entity changes. See the inner exception for details.
+---- Microsoft.Data.Sqlite.SqliteException : SQLite Error 19: 'FOREIGN KEY constraint failed'.</Message>
+          <StackTrace>   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(IList`1 entriesToSave, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(StateManager stateManager, Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at MilkiDrugStore.Tests.Integration.Database.DatabaseIntegrationTests.Notification_Should_Be_Created_For_Low_Stock() in /home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/Integration/DatabaseIntegrationTests.cs:line 493
+--- End of stack trace from previous location ---
+----- Inner Stack Trace -----
+   at Microsoft.Data.Sqlite.SqliteException.ThrowExceptionForRC(Int32 rc, sqlite3 db)
+   at Microsoft.Data.Sqlite.SqliteDataReader.NextResult()
+   at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReader(CommandBehavior behavior)
+   at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Microsoft.Data.Sqlite.SqliteCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="ea73d312-fd8e-4530-9ad8-fefcefdedd0f" testId="ded34509-7676-549a-8a0f-80ecc305689a" testName="MilkiDrugStore.Tests.Integration.Database.DatabaseIntegrationTests.Damage_And_Expiry_Should_Reduce_Inventory" computerName="Mr" duration="00:00:00.0161808" startTime="2026-07-25T15:20:43.1232195+03:00" endTime="2026-07-25T15:20:43.1232205+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="ea73d312-fd8e-4530-9ad8-fefcefdedd0f">
+      <Output>
+        <ErrorInfo>
+          <Message>Microsoft.EntityFrameworkCore.DbUpdateException : An error occurred while saving the entity changes. See the inner exception for details.
+---- Microsoft.Data.Sqlite.SqliteException : SQLite Error 19: 'FOREIGN KEY constraint failed'.</Message>
+          <StackTrace>   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(IList`1 entriesToSave, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(StateManager stateManager, Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at MilkiDrugStore.Tests.Integration.Database.DatabaseIntegrationTests.Damage_And_Expiry_Should_Reduce_Inventory() in /home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/Integration/DatabaseIntegrationTests.cs:line 541
+--- End of stack trace from previous location ---
+----- Inner Stack Trace -----
+   at Microsoft.Data.Sqlite.SqliteException.ThrowExceptionForRC(Int32 rc, sqlite3 db)
+   at Microsoft.Data.Sqlite.SqliteDataReader.NextResult()
+   at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReader(CommandBehavior behavior)
+   at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Microsoft.Data.Sqlite.SqliteCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="a0bb576e-593f-405e-95e0-9716fd816dc3" testId="0713af1e-380d-151a-16de-42bd4268db61" testName="MilkiDrugStore.Tests.Application.AuthServiceTests.LoginAsync_UnapprovedUser_ReturnsNull" computerName="Mr" duration="00:00:02.7281433" startTime="2026-07-25T15:20:37.9390791+03:00" endTime="2026-07-25T15:20:37.9390793+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="a0bb576e-593f-405e-95e0-9716fd816dc3" />
+    <UnitTestResult executionId="cafc9bb0-5599-4ecf-9737-180527fb166c" testId="ee185216-5de7-c3e8-c28c-88f94d3c8bb3" testName="MilkiDrugStore.Tests.Infrastructure.DbSeederTests.SeedAsync_Should_Not_Duplicate_Data_When_Run_Twice" computerName="Mr" duration="00:00:01.3133356" startTime="2026-07-25T15:20:38.7754672+03:00" endTime="2026-07-25T15:20:38.7754676+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="cafc9bb0-5599-4ecf-9737-180527fb166c" />
+    <UnitTestResult executionId="4fdfecd2-684e-44b3-a756-ffc8a12af83e" testId="0bd19aa4-34ec-19fd-73ea-d9a53bff03bf" testName="MilkiDrugStore.Tests.Application.SaleServiceReferenceNumberTests.CreateAsync_WithoutReferenceNumber_ReturnsNull" computerName="Mr" duration="00:00:00.0209138" startTime="2026-07-25T15:20:30.4132827+03:00" endTime="2026-07-25T15:20:30.4132836+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="4fdfecd2-684e-44b3-a756-ffc8a12af83e" />
+    <UnitTestResult executionId="4283fa3c-57f8-43f8-acf1-e2d76411df5a" testId="65a12f61-ed59-9295-1911-f8142e7e078c" testName="MilkiDrugStore.Tests.Domain.MedicineBatchEntityTests.MedicineBatch_Balance_CalculatesCorrectly" computerName="Mr" duration="00:00:00.0006506" startTime="2026-07-25T15:20:29.8859624+03:00" endTime="2026-07-25T15:20:29.8859626+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="4283fa3c-57f8-43f8-acf1-e2d76411df5a" />
+    <UnitTestResult executionId="8ece2e79-0303-4826-bf99-c22454a0e7bf" testId="f48c7c1b-3195-e0e3-59c6-28937f8335a1" testName="MilkiDrugStore.Tests.Integration.Database.DatabaseIntegrationTests.Migrations_Should_Create_All_Tables" computerName="Mr" duration="00:00:00.0159907" startTime="2026-07-25T15:20:39.8816210+03:00" endTime="2026-07-25T15:20:39.8816213+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="8ece2e79-0303-4826-bf99-c22454a0e7bf">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.True() Failure
+Expected: True
+Actual:   False</Message>
+          <StackTrace>   at MilkiDrugStore.Tests.Integration.Database.DatabaseIntegrationTests.Migrations_Should_Create_All_Tables() in /home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/Integration/DatabaseIntegrationTests.cs:line 136
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="21fa46dc-079c-45de-9661-c22882699ca4" testId="6b0ab3be-32c5-a305-70a0-6041bf01b965" testName="MilkiDrugStore.Tests.Application.CQRS.ReportCQRSTests.GetDashboardSummaryQueryHandler_Should_Call_Service" computerName="Mr" duration="00:00:00.0304588" startTime="2026-07-25T15:20:30.2161183+03:00" endTime="2026-07-25T15:20:30.2161187+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="21fa46dc-079c-45de-9661-c22882699ca4" />
+    <UnitTestResult executionId="db0bf94b-187e-4324-92a9-2bddd0e12dcc" testId="56ee3ed2-6be1-db49-39e3-ed9978aa14f1" testName="MilkiDrugStore.Tests.Integration.Database.DatabaseIntegrationTests.Medicine_CRUD_Should_Work" computerName="Mr" duration="00:00:00.5177555" startTime="2026-07-25T15:20:35.8716913+03:00" endTime="2026-07-25T15:20:35.8716914+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="db0bf94b-187e-4324-92a9-2bddd0e12dcc" />
+    <UnitTestResult executionId="f194191b-8555-444b-a083-999eb97a0c10" testId="bb818cf4-b95a-696a-2161-208df8bb53ba" testName="MilkiDrugStore.Tests.Application.AuthServiceTests.ChangePasswordAsync_WrongCurrentPassword_ThrowsException" computerName="Mr" duration="00:00:02.4019049" startTime="2026-07-25T15:20:35.1729359+03:00" endTime="2026-07-25T15:20:35.1729362+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="f194191b-8555-444b-a083-999eb97a0c10" />
+    <UnitTestResult executionId="44a3541a-5c7d-4b3c-8e84-68fde5cd267f" testId="44a12e78-1688-c256-412d-50422eda0aa2" testName="MilkiDrugStore.Tests.Application.SaleServiceTests.GetAllAsync_ReturnsSalesWithItemsAndTotals" computerName="Mr" duration="00:00:00.0398820" startTime="2026-07-25T15:20:30.4324850+03:00" endTime="2026-07-25T15:20:30.4324856+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="44a3541a-5c7d-4b3c-8e84-68fde5cd267f" />
+    <UnitTestResult executionId="78d67cc1-0df6-4db2-8dba-3ccaef4fe89a" testId="3fb49bea-c9d3-1fe5-63a4-c33fbfb67e63" testName="MilkiDrugStore.Tests.Application.Services.PurchaseServiceTests.CreateAsync_Should_Create_Purchase_With_Unpaid_Status_When_Not_Paid" computerName="Mr" duration="00:00:00.0532023" startTime="2026-07-25T15:20:30.6611947+03:00" endTime="2026-07-25T15:20:30.6611950+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="78d67cc1-0df6-4db2-8dba-3ccaef4fe89a" />
+    <UnitTestResult executionId="ec72a344-484a-405d-80e8-5b1785f8daf2" testId="1075627d-c26a-f657-bbfd-01fefcd29923" testName="MilkiDrugStore.Tests.Domain.MedicineEntityTests.Medicine_DefaultValues_AreCorrect" computerName="Mr" duration="00:00:00.0033606" startTime="2026-07-25T15:20:30.2286998+03:00" endTime="2026-07-25T15:20:30.2287001+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="ec72a344-484a-405d-80e8-5b1785f8daf2" />
+    <UnitTestResult executionId="5a0771cf-5d6f-42c7-9288-279564be16c0" testId="98cc0d59-3086-d7a1-21f8-ad1b24070bfb" testName="MilkiDrugStore.Tests.Integration.Database.DatabaseIntegrationTests.Branch_Should_Be_Required_For_Users" computerName="Mr" duration="00:00:00.0589865" startTime="2026-07-25T15:20:42.2850869+03:00" endTime="2026-07-25T15:20:42.2850871+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="5a0771cf-5d6f-42c7-9288-279564be16c0" />
+    <UnitTestResult executionId="8cbe7c5e-2e13-42fe-9659-7409cca50276" testId="2f0628ba-cb19-5355-7d19-32f2c859b472" testName="MilkiDrugStore.Tests.Application.CQRS.ReportCQRSTests.GetSalesReportQueryHandler_Should_Call_Service" computerName="Mr" duration="00:00:00.3366913" startTime="2026-07-25T15:20:30.1644194+03:00" endTime="2026-07-25T15:20:30.1644197+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="8cbe7c5e-2e13-42fe-9659-7409cca50276" />
+    <UnitTestResult executionId="9679d38f-e8a9-44c9-9b94-f0336b3f558b" testId="7f8e4386-9bae-0ce2-10f4-f1276330bc57" testName="MilkiDrugStore.Tests.Infrastructure.DbSeederTests.SeedAsync_Should_Seed_Roles_When_Empty" computerName="Mr" duration="00:00:07.6143002" startTime="2026-07-25T15:20:37.4419584+03:00" endTime="2026-07-25T15:20:37.4419594+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="9679d38f-e8a9-44c9-9b94-f0336b3f558b" />
+    <UnitTestResult executionId="cf16cc8c-cedd-4e13-9afa-2b36b515474a" testId="3a29348c-b1e3-329e-9736-0f51e7e28493" testName="MilkiDrugStore.Tests.Application.CQRS.ReportCQRSTests.GetInventoryReportQueryHandler_Should_Call_Service" computerName="Mr" duration="00:00:00.0244634" startTime="2026-07-25T15:20:30.1908278+03:00" endTime="2026-07-25T15:20:30.1908280+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="cf16cc8c-cedd-4e13-9afa-2b36b515474a" />
+    <UnitTestResult executionId="7b038886-7eb8-47af-b50f-73ae705350d5" testId="65e10314-6bff-7cb0-579b-58a2abc431fc" testName="MilkiDrugStore.Tests.Application.AuthServiceTests.ApproveUserAsync_UserNotFound_ThrowsException" computerName="Mr" duration="00:00:00.0984437" startTime="2026-07-25T15:20:30.6118663+03:00" endTime="2026-07-25T15:20:30.6118671+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="7b038886-7eb8-47af-b50f-73ae705350d5" />
+    <UnitTestResult executionId="aad0510d-4db3-4b3b-9afc-da8f135b88c4" testId="aabe1746-1515-f882-d36f-5bb6517fb7d5" testName="MilkiDrugStore.Tests.Application.SaleServiceTests.CreateAsync_WithDiscount_PreservesDiscountForAdmin" computerName="Mr" duration="00:00:00.0464517" startTime="2026-07-25T15:20:30.3927059+03:00" endTime="2026-07-25T15:20:30.3927061+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="aad0510d-4db3-4b3b-9afc-da8f135b88c4" />
+    <UnitTestResult executionId="56035ae9-b871-41af-96ca-0e62f1a01bd6" testId="7cd39bf1-a4f4-689b-572e-0136cb46e079" testName="MilkiDrugStore.Tests.Integration.IntegrationTests.Database_Should_Initialize_With_Sample_Data" computerName="Mr" duration="00:00:04.0494198" startTime="2026-07-25T15:20:33.8963972+03:00" endTime="2026-07-25T15:20:33.8963975+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="56035ae9-b871-41af-96ca-0e62f1a01bd6" />
+    <UnitTestResult executionId="d08c3fd1-d6cb-4018-8199-be25dc02edf8" testId="264a274f-7557-c912-94c8-cb1f40b5c99f" testName="MilkiDrugStore.Tests.Application.Services.FEFOTests.CreateAsync_Should_Throw_When_Batch_Not_Found" computerName="Mr" duration="00:00:00.5784956" startTime="2026-07-25T15:20:30.3051893+03:00" endTime="2026-07-25T15:20:30.3051895+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="d08c3fd1-d6cb-4018-8199-be25dc02edf8" />
+    <UnitTestResult executionId="8433bfc7-b737-443d-9cda-1ad9e3b9b675" testId="9e28ba39-2fc2-7046-f60d-8e2afe613e7b" testName="MilkiDrugStore.Tests.Application.SaleServiceTests.CreateAsync_WithPartialPayment_SetsPaymentStatusPartial" computerName="Mr" duration="00:00:00.0520249" startTime="2026-07-25T15:20:30.4852746+03:00" endTime="2026-07-25T15:20:30.4852749+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="8433bfc7-b737-443d-9cda-1ad9e3b9b675" />
+    <UnitTestResult executionId="44b3528e-1eda-4c28-a8a7-9a2477cb04e1" testId="d2802ad4-c203-fd04-f823-93e03b0745a6" testName="MilkiDrugStore.Tests.Domain.CategoryEntityTests.Category_DefaultValues_AreCorrect" computerName="Mr" duration="00:00:00.0490357" startTime="2026-07-25T15:20:29.8741741+03:00" endTime="2026-07-25T15:20:29.8741742+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="44b3528e-1eda-4c28-a8a7-9a2477cb04e1" />
+    <UnitTestResult executionId="ae9e7603-e88f-4026-9da3-c26f294a44cb" testId="dad3b9ee-9a9c-2472-d968-f91ee1b8bd55" testName="MilkiDrugStore.Tests.Application.AuthServiceTests.RegisterAsync_EmailAlreadyExists_ThrowsException" computerName="Mr" duration="00:00:00.0139726" startTime="2026-07-25T15:20:35.1874414+03:00" endTime="2026-07-25T15:20:35.1874416+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="ae9e7603-e88f-4026-9da3-c26f294a44cb" />
+    <UnitTestResult executionId="dd9afff6-fea2-4fa1-a232-770722004be3" testId="86408d07-c6ee-fcca-f9bd-30fde7900189" testName="MilkiDrugStore.Tests.Application.Services.FEFOTests.GetAvailableBatchesAsync_Should_Filter_By_Branch" computerName="Mr" duration="00:00:00.0317649" startTime="2026-07-25T15:20:30.3410256+03:00" endTime="2026-07-25T15:20:30.3410259+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="dd9afff6-fea2-4fa1-a232-770722004be3" />
+    <UnitTestResult executionId="0b356264-18e7-4cfe-bdca-1da28b1cc179" testId="5a35a3c2-d8ca-6976-de81-b672df62a2dc" testName="MilkiDrugStore.Tests.Application.Services.PurchaseServiceTests.CreateAsync_Should_Create_Purchase_With_Partial_Status_When_Partially_Paid" computerName="Mr" duration="00:00:00.0380187" startTime="2026-07-25T15:20:30.6075322+03:00" endTime="2026-07-25T15:20:30.6075327+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="0b356264-18e7-4cfe-bdca-1da28b1cc179" />
+    <UnitTestResult executionId="27900962-44ec-4897-b0f1-7f512ff0147b" testId="a4a6f3fe-d743-4052-2ca2-e8d599c49ad3" testName="MilkiDrugStore.Tests.Application.CQRS.SupplierCQRSTests.GetSupplierByIdQueryHandler_Should_Call_Service" computerName="Mr" duration="00:00:00.3296630" startTime="2026-07-25T15:20:30.1541951+03:00" endTime="2026-07-25T15:20:30.1541954+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="27900962-44ec-4897-b0f1-7f512ff0147b" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="MilkiDrugStore.Tests.Integration.Database.DatabaseIntegrationTests.Medicine_CRUD_Should_Work" storage="/home/mrnibra/milki-drug-store-management/backend/src/milkidrugstore.tests/bin/debug/net8.0/milkidrugstore.tests.dll" id="56ee3ed2-6be1-db49-39e3-ed9978aa14f1">
+      <Execution id="db0bf94b-187e-4324-92a9-2bddd0e12dcc" />
+      <TestMethod codeBase="/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/bin/Debug/net8.0/MilkiDrugStore.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="MilkiDrugStore.Tests.Integration.Database.DatabaseIntegrationTests" name="Medicine_CRUD_Should_Work" />
+    </UnitTest>
+    <UnitTest name="MilkiDrugStore.Tests.Application.Services.NotificationServiceTests.GetAllAsync_Should_Return_All_Notifications" storage="/home/mrnibra/milki-drug-store-management/backend/src/milkidrugstore.tests/bin/debug/net8.0/milkidrugstore.tests.dll" id="627dc906-f7c3-ba31-f1b6-8aa76df4afd6">
+      <Execution id="17de2f11-7e41-4394-9b9e-7a97b4aa9575" />
+      <TestMethod codeBase="/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/bin/Debug/net8.0/MilkiDrugStore.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="MilkiDrugStore.Tests.Application.Services.NotificationServiceTests" name="GetAllAsync_Should_Return_All_Notifications" />
+    </UnitTest>
+    <UnitTest name="MilkiDrugStore.Tests.Application.CQRS.SupplierCQRSTests.GetSupplierByIdQueryHandler_Should_Call_Service" storage="/home/mrnibra/milki-drug-store-management/backend/src/milkidrugstore.tests/bin/debug/net8.0/milkidrugstore.tests.dll" id="a4a6f3fe-d743-4052-2ca2-e8d599c49ad3">
+      <Execution id="27900962-44ec-4897-b0f1-7f512ff0147b" />
+      <TestMethod codeBase="/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/bin/Debug/net8.0/MilkiDrugStore.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="MilkiDrugStore.Tests.Application.CQRS.SupplierCQRSTests" name="GetSupplierByIdQueryHandler_Should_Call_Service" />
+    </UnitTest>
+    <UnitTest name="MilkiDrugStore.Tests.Integration.IntegrationTests.Cosmetic_Should_Be_Persisted_With_Batch" storage="/home/mrnibra/milki-drug-store-management/backend/src/milkidrugstore.tests/bin/debug/net8.0/milkidrugstore.tests.dll" id="f6dc3bc7-cd17-7f81-5a32-f7a7b7625031">
+      <Execution id="a4358824-bd41-4f44-af81-0f6ca9f80e96" />
+      <TestMethod codeBase="/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/bin/Debug/net8.0/MilkiDrugStore.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="MilkiDrugStore.Tests.Integration.IntegrationTests" name="Cosmetic_Should_Be_Persisted_With_Batch" />
+    </UnitTest>
+    <UnitTest name="MilkiDrugStore.Tests.Application.AuthServiceTests.RegisterAsync_EmailAlreadyExists_ThrowsException" storage="/home/mrnibra/milki-drug-store-management/backend/src/milkidrugstore.tests/bin/debug/net8.0/milkidrugstore.tests.dll" id="dad3b9ee-9a9c-2472-d968-f91ee1b8bd55">
+      <Execution id="ae9e7603-e88f-4026-9da3-c26f294a44cb" />
+      <TestMethod codeBase="/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/bin/Debug/net8.0/MilkiDrugStore.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="MilkiDrugStore.Tests.Application.AuthServiceTests" name="RegisterAsync_EmailAlreadyExists_ThrowsException" />
+    </UnitTest>
+    <UnitTest name="MilkiDrugStore.Tests.Domain.MedicineBatchEntityTests.MedicineBatch_Balance_CalculatesCorrectly" storage="/home/mrnibra/milki-drug-store-management/backend/src/milkidrugstore.tests/bin/debug/net8.0/milkidrugstore.tests.dll" id="65a12f61-ed59-9295-1911-f8142e7e078c">
+      <Execution id="4283fa3c-57f8-43f8-acf1-e2d76411df5a" />
+      <TestMethod codeBase="/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/bin/Debug/net8.0/MilkiDrugStore.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="MilkiDrugStore.Tests.Domain.MedicineBatchEntityTests" name="MedicineBatch_Balance_CalculatesCorrectly" />
+    </UnitTest>
+    <UnitTest name="MilkiDrugStore.Tests.Application.AuthServiceTests.ChangePasswordAsync_WrongCurrentPassword_ThrowsException" storage="/home/mrnibra/milki-drug-store-management/backend/src/milkidrugstore.tests/bin/debug/net8.0/milkidrugstore.tests.dll" id="bb818cf4-b95a-696a-2161-208df8bb53ba">
+      <Execution id="f194191b-8555-444b-a083-999eb97a0c10" />
+      <TestMethod codeBase="/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/bin/Debug/net8.0/MilkiDrugStore.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="MilkiDrugStore.Tests.Application.AuthServiceTests" name="ChangePasswordAsync_WrongCurrentPassword_ThrowsException" />
+    </UnitTest>
+    <UnitTest name="MilkiDrugStore.Tests.Application.SaleServiceTests.GetAllAsync_ReturnsSalesWithItemsAndTotals" storage="/home/mrnibra/milki-drug-store-management/backend/src/milkidrugstore.tests/bin/debug/net8.0/milkidrugstore.tests.dll" id="44a12e78-1688-c256-412d-50422eda0aa2">
+      <Execution id="44a3541a-5c7d-4b3c-8e84-68fde5cd267f" />
+      <TestMethod codeBase="/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/bin/Debug/net8.0/MilkiDrugStore.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="MilkiDrugStore.Tests.Application.SaleServiceTests" name="GetAllAsync_ReturnsSalesWithItemsAndTotals" />
+    </UnitTest>
+    <UnitTest name="MilkiDrugStore.Tests.Application.AuthServiceTests.LoginAsync_InactiveUser_ReturnsNull" storage="/home/mrnibra/milki-drug-store-management/backend/src/milkidrugstore.tests/bin/debug/net8.0/milkidrugstore.tests.dll" id="f3e737bf-a4cb-5398-a703-7bdc4b8a83d5">
+      <Execution id="7254c106-5b61-482e-885f-c58cc1afb64a" />
+      <TestMethod codeBase="/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/bin/Debug/net8.0/MilkiDrugStore.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="MilkiDrugStore.Tests.Application.AuthServiceTests" name="LoginAsync_InactiveUser_ReturnsNull" />
+    </UnitTest>
+    <UnitTest name="MilkiDrugStore.Tests.Application.SaleServiceReferenceNumberTests.CreateAsync_WithoutReferenceNumber_ReturnsNull" storage="/home/mrnibra/milki-drug-store-management/backend/src/milkidrugstore.tests/bin/debug/net8.0/milkidrugstore.tests.dll" id="0bd19aa4-34ec-19fd-73ea-d9a53bff03bf">
+      <Execution id="4fdfecd2-684e-44b3-a756-ffc8a12af83e" />
+      <TestMethod codeBase="/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/bin/Debug/net8.0/MilkiDrugStore.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="MilkiDrugStore.Tests.Application.SaleServiceReferenceNumberTests" name="CreateAsync_WithoutReferenceNumber_ReturnsNull" />
+    </UnitTest>
+    <UnitTest name="MilkiDrugStore.Tests.Domain.CategoryEntityTests.Category_DefaultValues_AreCorrect" storage="/home/mrnibra/milki-drug-store-management/backend/src/milkidrugstore.tests/bin/debug/net8.0/milkidrugstore.tests.dll" id="d2802ad4-c203-fd04-f823-93e03b0745a6">
+      <Execution id="44b3528e-1eda-4c28-a8a7-9a2477cb04e1" />
+      <TestMethod codeBase="/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/bin/Debug/net8.0/MilkiDrugStore.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="MilkiDrugStore.Tests.Domain.CategoryEntityTests" name="Category_DefaultValues_AreCorrect" />
+    </UnitTest>
+    <UnitTest name="MilkiDrugStore.Tests.Application.Services.NotificationServiceTests.GetUnreadAsync_Should_Return_Only_Unread_Notifications" storage="/home/mrnibra/milki-drug-store-management/backend/src/milkidrugstore.tests/bin/debug/net8.0/milkidrugstore.tests.dll" id="c9b44394-4a3e-d6e8-8cf6-55deb85a4bbe">
+      <Execution id="10fd2365-95c6-4b37-a2cf-962ba0797448" />
+      <TestMethod codeBase="/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/bin/Debug/net8.0/MilkiDrugStore.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="MilkiDrugStore.Tests.Application.Services.NotificationServiceTests" name="GetUnreadAsync_Should_Return_Only_Unread_Notifications" />
+    </UnitTest>
+    <UnitTest name="MilkiDrugStore.Tests.Integration.Database.DatabaseIntegrationTests.Notification_Should_Be_Created_For_Low_Stock" storage="/home/mrnibra/milki-drug-store-management/backend/src/milkidrugstore.tests/bin/debug/net8.0/milkidrugstore.tests.dll" id="3ca10268-fe1f-d612-e2ad-8db0b7f02fa4">
+      <Execution id="9e0fcbf2-0ef1-4b2a-a8a2-100234f98b10" />
+      <TestMethod codeBase="/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/bin/Debug/net8.0/MilkiDrugStore.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="MilkiDrugStore.Tests.Integration.Database.DatabaseIntegrationTests" name="Notification_Should_Be_Created_For_Low_Stock" />
+    </UnitTest>
+    <UnitTest name="MilkiDrugStore.Tests.Application.CQRS.SupplierCQRSTests.GetSuppliersQueryHandler_Should_Call_Service" storage="/home/mrnibra/milki-drug-store-management/backend/src/milkidrugstore.tests/bin/debug/net8.0/milkidrugstore.tests.dll" id="0a0a7b71-93a5-0aa1-3ffe-32aaf6bb8829">
+      <Execution id="ef858859-2f0c-449a-94ce-cc07a31fd473" />
+      <TestMethod codeBase="/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/bin/Debug/net8.0/MilkiDrugStore.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="MilkiDrugStore.Tests.Application.CQRS.SupplierCQRSTests" name="GetSuppliersQueryHandler_Should_Call_Service" />
+    </UnitTest>
+    <UnitTest name="MilkiDrugStore.Tests.Application.CQRS.SaleCQRSTests.GetSalesQueryHandler_Should_Call_SaleService" storage="/home/mrnibra/milki-drug-store-management/backend/src/milkidrugstore.tests/bin/debug/net8.0/milkidrugstore.tests.dll" id="abbd243f-46ef-efef-e3d8-f59c017c78de">
+      <Execution id="d062a43a-85ef-4d8f-b3b8-e1f60b9fb459" />
+      <TestMethod codeBase="/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/bin/Debug/net8.0/MilkiDrugStore.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="MilkiDrugStore.Tests.Application.CQRS.SaleCQRSTests" name="GetSalesQueryHandler_Should_Call_SaleService" />
+    </UnitTest>
+    <UnitTest name="MilkiDrugStore.Tests.Integration.Database.DatabaseIntegrationTests.MedicineBatch_Should_Calculate_Balance" storage="/home/mrnibra/milki-drug-store-management/backend/src/milkidrugstore.tests/bin/debug/net8.0/milkidrugstore.tests.dll" id="48845435-e47e-9f09-2789-b30b7155ca60">
+      <Execution id="154576f6-5459-4038-977c-8cfc72ec8c84" />
+      <TestMethod codeBase="/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/bin/Debug/net8.0/MilkiDrugStore.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="MilkiDrugStore.Tests.Integration.Database.DatabaseIntegrationTests" name="MedicineBatch_Should_Calculate_Balance" />
+    </UnitTest>
+    <UnitTest name="MilkiDrugStore.Tests.Application.CQRS.ReportCQRSTests.GetInventoryReportQueryHandler_Should_Call_Service" storage="/home/mrnibra/milki-drug-store-management/backend/src/milkidrugstore.tests/bin/debug/net8.0/milkidrugstore.tests.dll" id="3a29348c-b1e3-329e-9736-0f51e7e28493">
+      <Execution id="cf16cc8c-cedd-4e13-9afa-2b36b515474a" />
+      <TestMethod codeBase="/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/bin/Debug/net8.0/MilkiDrugStore.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="MilkiDrugStore.Tests.Application.CQRS.ReportCQRSTests" name="GetInventoryReportQueryHandler_Should_Call_Service" />
+    </UnitTest>
+    <UnitTest name="MilkiDrugStore.Tests.Integration.Database.DatabaseIntegrationTests.Purchase_Should_Create_Batches_And_Transactions" storage="/home/mrnibra/milki-drug-store-management/backend/src/milkidrugstore.tests/bin/debug/net8.0/milkidrugstore.tests.dll" id="21993b61-8001-7c99-ca8b-b8595f7bf865">
+      <Execution id="82e6fa2d-2cbb-4975-8102-48c440025d93" />
+      <TestMethod codeBase="/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/bin/Debug/net8.0/MilkiDrugStore.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="MilkiDrugStore.Tests.Integration.Database.DatabaseIntegrationTests" name="Purchase_Should_Create_Batches_And_Transactions" />
+    </UnitTest>
+    <UnitTest name="MilkiDrugStore.Tests.Domain.MedicineEntityTests.Medicine_DefaultValues_AreCorrect" storage="/home/mrnibra/milki-drug-store-management/backend/src/milkidrugstore.tests/bin/debug/net8.0/milkidrugstore.tests.dll" id="1075627d-c26a-f657-bbfd-01fefcd29923">
+      <Execution id="ec72a344-484a-405d-80e8-5b1785f8daf2" />
+      <TestMethod codeBase="/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/bin/Debug/net8.0/MilkiDrugStore.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="MilkiDrugStore.Tests.Domain.MedicineEntityTests" name="Medicine_DefaultValues_AreCorrect" />
+    </UnitTest>
+    <UnitTest name="MilkiDrugStore.Tests.Application.SaleServiceTests.CreateAsync_WithDiscount_CapsDiscountForPharmacist" storage="/home/mrnibra/milki-drug-store-management/backend/src/milkidrugstore.tests/bin/debug/net8.0/milkidrugstore.tests.dll" id="789af199-d140-9b95-af0d-f2862624c89c">
+      <Execution id="4cbb4113-4381-4f3f-a187-6bfed76ee3c2" />
+      <TestMethod codeBase="/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/bin/Debug/net8.0/MilkiDrugStore.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="MilkiDrugStore.Tests.Application.SaleServiceTests" name="CreateAsync_WithDiscount_CapsDiscountForPharmacist" />
+    </UnitTest>
+    <UnitTest name="MilkiDrugStore.Tests.Application.SaleServiceTests.CreateAsync_WithPartialPayment_SetsPaymentStatusPartial" storage="/home/mrnibra/milki-drug-store-management/backend/src/milkidrugstore.tests/bin/debug/net8.0/milkidrugstore.tests.dll" id="9e28ba39-2fc2-7046-f60d-8e2afe613e7b">
+      <Execution id="8433bfc7-b737-443d-9cda-1ad9e3b9b675" />
+      <TestMethod codeBase="/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/bin/Debug/net8.0/MilkiDrugStore.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="MilkiDrugStore.Tests.Application.SaleServiceTests" name="CreateAsync_WithPartialPayment_SetsPaymentStatusPartial" />
+    </UnitTest>
+    <UnitTest name="MilkiDrugStore.Tests.Application.CQRS.SupplierCQRSTests.CreateSupplierCommandHandler_Should_Call_Service" storage="/home/mrnibra/milki-drug-store-management/backend/src/milkidrugstore.tests/bin/debug/net8.0/milkidrugstore.tests.dll" id="7f1f90e0-506f-a7d2-eab7-2c85076d5894">
+      <Execution id="67634f90-4587-45c9-85ee-09fecfceb1fc" />
+      <TestMethod codeBase="/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/bin/Debug/net8.0/MilkiDrugStore.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="MilkiDrugStore.Tests.Application.CQRS.SupplierCQRSTests" name="CreateSupplierCommandHandler_Should_Call_Service" />
+    </UnitTest>
+    <UnitTest name="MilkiDrugStore.Tests.Application.CQRS.CosmeticCQRSTests.GetCosmeticsQueryHandler_Should_Call_Service" storage="/home/mrnibra/milki-drug-store-management/backend/src/milkidrugstore.tests/bin/debug/net8.0/milkidrugstore.tests.dll" id="d0ef4c0c-3c3b-223b-1d5b-1d77da73013a">
+      <Execution id="7a0a33cb-d51a-40a6-879e-4005b4cc3f71" />
+      <TestMethod codeBase="/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/bin/Debug/net8.0/MilkiDrugStore.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="MilkiDrugStore.Tests.Application.CQRS.CosmeticCQRSTests" name="GetCosmeticsQueryHandler_Should_Call_Service" />
+    </UnitTest>
+    <UnitTest name="MilkiDrugStore.Tests.Integration.Database.DatabaseIntegrationTests.Seed_Should_Create_Default_Roles" storage="/home/mrnibra/milki-drug-store-management/backend/src/milkidrugstore.tests/bin/debug/net8.0/milkidrugstore.tests.dll" id="7b80ecd6-3d11-2f2c-ed1c-4c89e40122d5">
+      <Execution id="53f0755b-5a2c-4da6-ba71-4a9cd6a58692" />
+      <TestMethod codeBase="/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/bin/Debug/net8.0/MilkiDrugStore.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="MilkiDrugStore.Tests.Integration.Database.DatabaseIntegrationTests" name="Seed_Should_Create_Default_Roles" />
+    </UnitTest>
+    <UnitTest name="MilkiDrugStore.Tests.Application.SaleServiceTests.CreateAsync_WithCashPayment_SetsPaymentStatusPaid" storage="/home/mrnibra/milki-drug-store-management/backend/src/milkidrugstore.tests/bin/debug/net8.0/milkidrugstore.tests.dll" id="4d5e7f24-5fb3-65a8-72e2-161afc3954ba">
+      <Execution id="40e4952a-4f49-4534-a00e-817497e3eb95" />
+      <TestMethod codeBase="/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/bin/Debug/net8.0/MilkiDrugStore.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="MilkiDrugStore.Tests.Application.SaleServiceTests" name="CreateAsync_WithCashPayment_SetsPaymentStatusPaid" />
+    </UnitTest>
+    <UnitTest name="MilkiDrugStore.Tests.Domain.SaleEntityTests.Sale_DefaultValues_AreCorrect" storage="/home/mrnibra/milki-drug-store-management/backend/src/milkidrugstore.tests/bin/debug/net8.0/milkidrugstore.tests.dll" id="56b8f706-e219-a2b2-282b-715c35a405a3">
+      <Execution id="bf213f8c-106e-42aa-93d8-06ac99565b41" />
+      <TestMethod codeBase="/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/bin/Debug/net8.0/MilkiDrugStore.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="MilkiDrugStore.Tests.Domain.SaleEntityTests" name="Sale_DefaultValues_AreCorrect" />
+    </UnitTest>
+    <UnitTest name="MilkiDrugStore.Tests.Application.CQRS.SaleCQRSTests.CreateSaleCommandHandler_Should_Call_SaleService" storage="/home/mrnibra/milki-drug-store-management/backend/src/milkidrugstore.tests/bin/debug/net8.0/milkidrugstore.tests.dll" id="ce2422cf-b51e-8b6b-7011-b6ad971959e2">
+      <Execution id="96276ad9-3fc4-44ca-8036-decd94e37794" />
+      <TestMethod codeBase="/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/bin/Debug/net8.0/MilkiDrugStore.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="MilkiDrugStore.Tests.Application.CQRS.SaleCQRSTests" name="CreateSaleCommandHandler_Should_Call_SaleService" />
+    </UnitTest>
+    <UnitTest name="MilkiDrugStore.Tests.Application.SaleServiceReferenceNumberTests.CreateAsync_WithBankTransfer_ReturnsReferenceNumber" storage="/home/mrnibra/milki-drug-store-management/backend/src/milkidrugstore.tests/bin/debug/net8.0/milkidrugstore.tests.dll" id="ef48fcfa-77a6-4315-ec6a-976fa0995b6c">
+      <Execution id="08f04c10-a95b-4213-a43c-35ba59b6b64b" />
+      <TestMethod codeBase="/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/bin/Debug/net8.0/MilkiDrugStore.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="MilkiDrugStore.Tests.Application.SaleServiceReferenceNumberTests" name="CreateAsync_WithBankTransfer_ReturnsReferenceNumber" />
+    </UnitTest>
+    <UnitTest name="MilkiDrugStore.Tests.Integration.Database.DatabaseIntegrationTests.Branch_Should_Be_Required_For_Users" storage="/home/mrnibra/milki-drug-store-management/backend/src/milkidrugstore.tests/bin/debug/net8.0/milkidrugstore.tests.dll" id="98cc0d59-3086-d7a1-21f8-ad1b24070bfb">
+      <Execution id="5a0771cf-5d6f-42c7-9288-279564be16c0" />
+      <TestMethod codeBase="/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/bin/Debug/net8.0/MilkiDrugStore.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="MilkiDrugStore.Tests.Integration.Database.DatabaseIntegrationTests" name="Branch_Should_Be_Required_For_Users" />
+    </UnitTest>
+    <UnitTest name="MilkiDrugStore.Tests.Application.AuthServiceTests.LoginAsync_UnapprovedUser_ReturnsNull" storage="/home/mrnibra/milki-drug-store-management/backend/src/milkidrugstore.tests/bin/debug/net8.0/milkidrugstore.tests.dll" id="0713af1e-380d-151a-16de-42bd4268db61">
+      <Execution id="a0bb576e-593f-405e-95e0-9716fd816dc3" />
+      <TestMethod codeBase="/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/bin/Debug/net8.0/MilkiDrugStore.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="MilkiDrugStore.Tests.Application.AuthServiceTests" name="LoginAsync_UnapprovedUser_ReturnsNull" />
+    </UnitTest>
+    <UnitTest name="MilkiDrugStore.Tests.Integration.Database.DatabaseIntegrationTests.Damage_And_Expiry_Should_Reduce_Inventory" storage="/home/mrnibra/milki-drug-store-management/backend/src/milkidrugstore.tests/bin/debug/net8.0/milkidrugstore.tests.dll" id="ded34509-7676-549a-8a0f-80ecc305689a">
+      <Execution id="ea73d312-fd8e-4530-9ad8-fefcefdedd0f" />
+      <TestMethod codeBase="/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/bin/Debug/net8.0/MilkiDrugStore.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="MilkiDrugStore.Tests.Integration.Database.DatabaseIntegrationTests" name="Damage_And_Expiry_Should_Reduce_Inventory" />
+    </UnitTest>
+    <UnitTest name="MilkiDrugStore.Tests.Integration.Database.DatabaseIntegrationTests.Sale_Should_Deduct_Inventory_And_Calculate_Profit" storage="/home/mrnibra/milki-drug-store-management/backend/src/milkidrugstore.tests/bin/debug/net8.0/milkidrugstore.tests.dll" id="14485f05-721f-3ac4-fa85-be3c8f4305bc">
+      <Execution id="cc9f1ede-e7ab-488b-95ba-8e6b6b5f2441" />
+      <TestMethod codeBase="/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/bin/Debug/net8.0/MilkiDrugStore.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="MilkiDrugStore.Tests.Integration.Database.DatabaseIntegrationTests" name="Sale_Should_Deduct_Inventory_And_Calculate_Profit" />
+    </UnitTest>
+    <UnitTest name="MilkiDrugStore.Tests.Application.Services.PurchaseServiceTests.CreateAsync_Should_Create_Purchase_With_Partial_Status_When_Partially_Paid" storage="/home/mrnibra/milki-drug-store-management/backend/src/milkidrugstore.tests/bin/debug/net8.0/milkidrugstore.tests.dll" id="5a35a3c2-d8ca-6976-de81-b672df62a2dc">
+      <Execution id="0b356264-18e7-4cfe-bdca-1da28b1cc179" />
+      <TestMethod codeBase="/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/bin/Debug/net8.0/MilkiDrugStore.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="MilkiDrugStore.Tests.Application.Services.PurchaseServiceTests" name="CreateAsync_Should_Create_Purchase_With_Partial_Status_When_Partially_Paid" />
+    </UnitTest>
+    <UnitTest name="MilkiDrugStore.Tests.Application.Services.PurchaseServiceTests.CreateAsync_Should_Create_Purchase_With_Unpaid_Status_When_Not_Paid" storage="/home/mrnibra/milki-drug-store-management/backend/src/milkidrugstore.tests/bin/debug/net8.0/milkidrugstore.tests.dll" id="3fb49bea-c9d3-1fe5-63a4-c33fbfb67e63">
+      <Execution id="78d67cc1-0df6-4db2-8dba-3ccaef4fe89a" />
+      <TestMethod codeBase="/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/bin/Debug/net8.0/MilkiDrugStore.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="MilkiDrugStore.Tests.Application.Services.PurchaseServiceTests" name="CreateAsync_Should_Create_Purchase_With_Unpaid_Status_When_Not_Paid" />
+    </UnitTest>
+    <UnitTest name="MilkiDrugStore.Tests.Infrastructure.DbSeederTests.SeedAsync_Should_Seed_Roles_When_Empty" storage="/home/mrnibra/milki-drug-store-management/backend/src/milkidrugstore.tests/bin/debug/net8.0/milkidrugstore.tests.dll" id="7f8e4386-9bae-0ce2-10f4-f1276330bc57">
+      <Execution id="9679d38f-e8a9-44c9-9b94-f0336b3f558b" />
+      <TestMethod codeBase="/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/bin/Debug/net8.0/MilkiDrugStore.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="MilkiDrugStore.Tests.Infrastructure.DbSeederTests" name="SeedAsync_Should_Seed_Roles_When_Empty" />
+    </UnitTest>
+    <UnitTest name="MilkiDrugStore.Tests.Infrastructure.DbSeederTests.SeedAsync_Should_Not_Duplicate_Data_When_Run_Twice" storage="/home/mrnibra/milki-drug-store-management/backend/src/milkidrugstore.tests/bin/debug/net8.0/milkidrugstore.tests.dll" id="ee185216-5de7-c3e8-c28c-88f94d3c8bb3">
+      <Execution id="cafc9bb0-5599-4ecf-9737-180527fb166c" />
+      <TestMethod codeBase="/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/bin/Debug/net8.0/MilkiDrugStore.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="MilkiDrugStore.Tests.Infrastructure.DbSeederTests" name="SeedAsync_Should_Not_Duplicate_Data_When_Run_Twice" />
+    </UnitTest>
+    <UnitTest name="MilkiDrugStore.Tests.Application.Services.FEFOTests.GetAvailableBatchesAsync_Should_Filter_By_Branch" storage="/home/mrnibra/milki-drug-store-management/backend/src/milkidrugstore.tests/bin/debug/net8.0/milkidrugstore.tests.dll" id="86408d07-c6ee-fcca-f9bd-30fde7900189">
+      <Execution id="dd9afff6-fea2-4fa1-a232-770722004be3" />
+      <TestMethod codeBase="/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/bin/Debug/net8.0/MilkiDrugStore.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="MilkiDrugStore.Tests.Application.Services.FEFOTests" name="GetAvailableBatchesAsync_Should_Filter_By_Branch" />
+    </UnitTest>
+    <UnitTest name="MilkiDrugStore.Tests.Integration.IntegrationTests.Database_Should_Initialize_With_Sample_Data" storage="/home/mrnibra/milki-drug-store-management/backend/src/milkidrugstore.tests/bin/debug/net8.0/milkidrugstore.tests.dll" id="7cd39bf1-a4f4-689b-572e-0136cb46e079">
+      <Execution id="56035ae9-b871-41af-96ca-0e62f1a01bd6" />
+      <TestMethod codeBase="/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/bin/Debug/net8.0/MilkiDrugStore.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="MilkiDrugStore.Tests.Integration.IntegrationTests" name="Database_Should_Initialize_With_Sample_Data" />
+    </UnitTest>
+    <UnitTest name="MilkiDrugStore.Tests.Application.Services.FEFOTests.CreateAsync_Should_Throw_When_Batch_Not_Found" storage="/home/mrnibra/milki-drug-store-management/backend/src/milkidrugstore.tests/bin/debug/net8.0/milkidrugstore.tests.dll" id="264a274f-7557-c912-94c8-cb1f40b5c99f">
+      <Execution id="d08c3fd1-d6cb-4018-8199-be25dc02edf8" />
+      <TestMethod codeBase="/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/bin/Debug/net8.0/MilkiDrugStore.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="MilkiDrugStore.Tests.Application.Services.FEFOTests" name="CreateAsync_Should_Throw_When_Batch_Not_Found" />
+    </UnitTest>
+    <UnitTest name="MilkiDrugStore.Tests.Application.Services.PurchaseServiceTests.CreateAsync_Should_Create_Purchase_With_Paid_Status_When_AmountPaid_Equals_Total" storage="/home/mrnibra/milki-drug-store-management/backend/src/milkidrugstore.tests/bin/debug/net8.0/milkidrugstore.tests.dll" id="918c9096-9a2a-d566-38fd-b04b1d8e865e">
+      <Execution id="35683d5e-a3e2-4156-ae8e-6ae29dfa94c9" />
+      <TestMethod codeBase="/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/bin/Debug/net8.0/MilkiDrugStore.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="MilkiDrugStore.Tests.Application.Services.PurchaseServiceTests" name="CreateAsync_Should_Create_Purchase_With_Paid_Status_When_AmountPaid_Equals_Total" />
+    </UnitTest>
+    <UnitTest name="MilkiDrugStore.Tests.Application.Services.NotificationServiceTests.MarkAsReadAsync_Should_Mark_Notification_As_Read" storage="/home/mrnibra/milki-drug-store-management/backend/src/milkidrugstore.tests/bin/debug/net8.0/milkidrugstore.tests.dll" id="69218783-242d-e7d5-6ab2-5f85719271da">
+      <Execution id="614b0f92-c0c1-4118-8daf-19587c35f412" />
+      <TestMethod codeBase="/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/bin/Debug/net8.0/MilkiDrugStore.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="MilkiDrugStore.Tests.Application.Services.NotificationServiceTests" name="MarkAsReadAsync_Should_Mark_Notification_As_Read" />
+    </UnitTest>
+    <UnitTest name="MilkiDrugStore.Tests.Application.CQRS.ReportCQRSTests.GetDashboardSummaryQueryHandler_Should_Call_Service" storage="/home/mrnibra/milki-drug-store-management/backend/src/milkidrugstore.tests/bin/debug/net8.0/milkidrugstore.tests.dll" id="6b0ab3be-32c5-a305-70a0-6041bf01b965">
+      <Execution id="21fa46dc-079c-45de-9661-c22882699ca4" />
+      <TestMethod codeBase="/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/bin/Debug/net8.0/MilkiDrugStore.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="MilkiDrugStore.Tests.Application.CQRS.ReportCQRSTests" name="GetDashboardSummaryQueryHandler_Should_Call_Service" />
+    </UnitTest>
+    <UnitTest name="MilkiDrugStore.Tests.Application.AuthServiceTests.RefreshTokenAsync_InactiveUser_ReturnsNull" storage="/home/mrnibra/milki-drug-store-management/backend/src/milkidrugstore.tests/bin/debug/net8.0/milkidrugstore.tests.dll" id="a6fb23a6-1819-c6cd-6c02-be0876ab5c14">
+      <Execution id="543bf71b-4546-4394-8deb-007a826813f7" />
+      <TestMethod codeBase="/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/bin/Debug/net8.0/MilkiDrugStore.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="MilkiDrugStore.Tests.Application.AuthServiceTests" name="RefreshTokenAsync_InactiveUser_ReturnsNull" />
+    </UnitTest>
+    <UnitTest name="MilkiDrugStore.Tests.Application.CQRS.CosmeticCQRSTests.AddBatchCommandHandler_Should_Call_Service" storage="/home/mrnibra/milki-drug-store-management/backend/src/milkidrugstore.tests/bin/debug/net8.0/milkidrugstore.tests.dll" id="76db006c-b30c-0147-4047-99b7499b89c4">
+      <Execution id="e158518c-6a85-44eb-822d-1ca672ce9059" />
+      <TestMethod codeBase="/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/bin/Debug/net8.0/MilkiDrugStore.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="MilkiDrugStore.Tests.Application.CQRS.CosmeticCQRSTests" name="AddBatchCommandHandler_Should_Call_Service" />
+    </UnitTest>
+    <UnitTest name="MilkiDrugStore.Tests.Integration.Database.DatabaseIntegrationTests.AuditLog_Should_Be_Created_For_Critical_Actions" storage="/home/mrnibra/milki-drug-store-management/backend/src/milkidrugstore.tests/bin/debug/net8.0/milkidrugstore.tests.dll" id="5f226f98-d490-661d-4f86-483d7742c537">
+      <Execution id="037eee4d-1604-4842-8fc3-1e4fb38807e1" />
+      <TestMethod codeBase="/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/bin/Debug/net8.0/MilkiDrugStore.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="MilkiDrugStore.Tests.Integration.Database.DatabaseIntegrationTests" name="AuditLog_Should_Be_Created_For_Critical_Actions" />
+    </UnitTest>
+    <UnitTest name="MilkiDrugStore.Tests.Application.CQRS.CosmeticCQRSTests.CreateCosmeticCommandHandler_Should_Call_Service" storage="/home/mrnibra/milki-drug-store-management/backend/src/milkidrugstore.tests/bin/debug/net8.0/milkidrugstore.tests.dll" id="c8af2c65-faa2-463b-96b7-32b34deb6d08">
+      <Execution id="8231ade6-1490-4e14-86f2-67e3145e1332" />
+      <TestMethod codeBase="/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/bin/Debug/net8.0/MilkiDrugStore.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="MilkiDrugStore.Tests.Application.CQRS.CosmeticCQRSTests" name="CreateCosmeticCommandHandler_Should_Call_Service" />
+    </UnitTest>
+    <UnitTest name="MilkiDrugStore.Tests.Application.AuthServiceTests.RefreshTokenAsync_UnapprovedUser_ReturnsNull" storage="/home/mrnibra/milki-drug-store-management/backend/src/milkidrugstore.tests/bin/debug/net8.0/milkidrugstore.tests.dll" id="e7814ac9-05c3-df61-934a-3ba99ae8c8eb">
+      <Execution id="8d3bd7b3-0dbd-4234-9096-2b5054e806c2" />
+      <TestMethod codeBase="/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/bin/Debug/net8.0/MilkiDrugStore.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="MilkiDrugStore.Tests.Application.AuthServiceTests" name="RefreshTokenAsync_UnapprovedUser_ReturnsNull" />
+    </UnitTest>
+    <UnitTest name="MilkiDrugStore.Tests.Domain.RoleEnumTests.RoleType_HasExpectedValues" storage="/home/mrnibra/milki-drug-store-management/backend/src/milkidrugstore.tests/bin/debug/net8.0/milkidrugstore.tests.dll" id="45ffcc85-c804-c3eb-1652-469f6cd0f604">
+      <Execution id="15aeeebe-6d87-4a43-ac14-123d9bd58d2f" />
+      <TestMethod codeBase="/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/bin/Debug/net8.0/MilkiDrugStore.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="MilkiDrugStore.Tests.Domain.RoleEnumTests" name="RoleType_HasExpectedValues" />
+    </UnitTest>
+    <UnitTest name="MilkiDrugStore.Tests.Application.SaleServiceTests.CreateAsync_WithZeroPayment_SetsPaymentStatusUnpaid" storage="/home/mrnibra/milki-drug-store-management/backend/src/milkidrugstore.tests/bin/debug/net8.0/milkidrugstore.tests.dll" id="4ad3cb11-7cda-6fbc-8636-c823cd19f31f">
+      <Execution id="e21e3505-ff9d-4522-87af-26fe05e3896c" />
+      <TestMethod codeBase="/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/bin/Debug/net8.0/MilkiDrugStore.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="MilkiDrugStore.Tests.Application.SaleServiceTests" name="CreateAsync_WithZeroPayment_SetsPaymentStatusUnpaid" />
+    </UnitTest>
+    <UnitTest name="MilkiDrugStore.Tests.Integration.Database.DatabaseIntegrationTests.FEFO_Should_Prioritize_Earliest_Expiry" storage="/home/mrnibra/milki-drug-store-management/backend/src/milkidrugstore.tests/bin/debug/net8.0/milkidrugstore.tests.dll" id="d8d06448-de8e-04b9-8c50-89e50cd76f5f">
+      <Execution id="eeca77dd-c8bb-4939-ba1a-4f787a19d198" />
+      <TestMethod codeBase="/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/bin/Debug/net8.0/MilkiDrugStore.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="MilkiDrugStore.Tests.Integration.Database.DatabaseIntegrationTests" name="FEFO_Should_Prioritize_Earliest_Expiry" />
+    </UnitTest>
+    <UnitTest name="MilkiDrugStore.Tests.Application.AuthServiceTests.LoginAsync_InvalidCredentials_ReturnsNull" storage="/home/mrnibra/milki-drug-store-management/backend/src/milkidrugstore.tests/bin/debug/net8.0/milkidrugstore.tests.dll" id="585efe12-9ec1-4e3f-7e05-6ff0b1c2efbe">
+      <Execution id="eee30b8a-4f35-440e-9706-869a361ea6b9" />
+      <TestMethod codeBase="/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/bin/Debug/net8.0/MilkiDrugStore.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="MilkiDrugStore.Tests.Application.AuthServiceTests" name="LoginAsync_InvalidCredentials_ReturnsNull" />
+    </UnitTest>
+    <UnitTest name="MilkiDrugStore.Tests.Integration.IntegrationTests.CosmeticCategory_Should_Be_Persisted" storage="/home/mrnibra/milki-drug-store-management/backend/src/milkidrugstore.tests/bin/debug/net8.0/milkidrugstore.tests.dll" id="1c9602c9-a8d7-cadd-0fdb-065322006d79">
+      <Execution id="74de9668-9c57-4b8d-b389-798394b92b4a" />
+      <TestMethod codeBase="/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/bin/Debug/net8.0/MilkiDrugStore.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="MilkiDrugStore.Tests.Integration.IntegrationTests" name="CosmeticCategory_Should_Be_Persisted" />
+    </UnitTest>
+    <UnitTest name="MilkiDrugStore.Tests.Integration.Database.DatabaseIntegrationTests.Migrations_Should_Create_All_Tables" storage="/home/mrnibra/milki-drug-store-management/backend/src/milkidrugstore.tests/bin/debug/net8.0/milkidrugstore.tests.dll" id="f48c7c1b-3195-e0e3-59c6-28937f8335a1">
+      <Execution id="8ece2e79-0303-4826-bf99-c22454a0e7bf" />
+      <TestMethod codeBase="/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/bin/Debug/net8.0/MilkiDrugStore.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="MilkiDrugStore.Tests.Integration.Database.DatabaseIntegrationTests" name="Migrations_Should_Create_All_Tables" />
+    </UnitTest>
+    <UnitTest name="MilkiDrugStore.Tests.Domain.UserEntityTests.User_DefaultValues_AreCorrect" storage="/home/mrnibra/milki-drug-store-management/backend/src/milkidrugstore.tests/bin/debug/net8.0/milkidrugstore.tests.dll" id="302bde51-e8e2-1fc1-4018-cfb81afc0e97">
+      <Execution id="0fdbeea4-a1ec-4305-8613-8260da8aec12" />
+      <TestMethod codeBase="/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/bin/Debug/net8.0/MilkiDrugStore.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="MilkiDrugStore.Tests.Domain.UserEntityTests" name="User_DefaultValues_AreCorrect" />
+    </UnitTest>
+    <UnitTest name="MilkiDrugStore.Tests.Domain.NotificationEntityTests.Notification_DefaultValues_AreCorrect" storage="/home/mrnibra/milki-drug-store-management/backend/src/milkidrugstore.tests/bin/debug/net8.0/milkidrugstore.tests.dll" id="5337afee-1f13-78f4-1d7c-51a2fe24ec74">
+      <Execution id="374fa1c4-9653-4e0c-9741-f8d3b5733383" />
+      <TestMethod codeBase="/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/bin/Debug/net8.0/MilkiDrugStore.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="MilkiDrugStore.Tests.Domain.NotificationEntityTests" name="Notification_DefaultValues_AreCorrect" />
+    </UnitTest>
+    <UnitTest name="MilkiDrugStore.Tests.Application.SaleServiceTests.CreateAsync_WithDiscount_PreservesDiscountForAdmin" storage="/home/mrnibra/milki-drug-store-management/backend/src/milkidrugstore.tests/bin/debug/net8.0/milkidrugstore.tests.dll" id="aabe1746-1515-f882-d36f-5bb6517fb7d5">
+      <Execution id="aad0510d-4db3-4b3b-9afc-da8f135b88c4" />
+      <TestMethod codeBase="/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/bin/Debug/net8.0/MilkiDrugStore.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="MilkiDrugStore.Tests.Application.SaleServiceTests" name="CreateAsync_WithDiscount_PreservesDiscountForAdmin" />
+    </UnitTest>
+    <UnitTest name="MilkiDrugStore.Tests.Application.AuthServiceTests.ApproveUserAsync_UserNotFound_ThrowsException" storage="/home/mrnibra/milki-drug-store-management/backend/src/milkidrugstore.tests/bin/debug/net8.0/milkidrugstore.tests.dll" id="65e10314-6bff-7cb0-579b-58a2abc431fc">
+      <Execution id="7b038886-7eb8-47af-b50f-73ae705350d5" />
+      <TestMethod codeBase="/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/bin/Debug/net8.0/MilkiDrugStore.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="MilkiDrugStore.Tests.Application.AuthServiceTests" name="ApproveUserAsync_UserNotFound_ThrowsException" />
+    </UnitTest>
+    <UnitTest name="MilkiDrugStore.Tests.Application.CQRS.ReportCQRSTests.GetSalesReportQueryHandler_Should_Call_Service" storage="/home/mrnibra/milki-drug-store-management/backend/src/milkidrugstore.tests/bin/debug/net8.0/milkidrugstore.tests.dll" id="2f0628ba-cb19-5355-7d19-32f2c859b472">
+      <Execution id="8cbe7c5e-2e13-42fe-9659-7409cca50276" />
+      <TestMethod codeBase="/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/bin/Debug/net8.0/MilkiDrugStore.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="MilkiDrugStore.Tests.Application.CQRS.ReportCQRSTests" name="GetSalesReportQueryHandler_Should_Call_Service" />
+    </UnitTest>
+    <UnitTest name="MilkiDrugStore.Tests.Domain.MedicineBatchEntityTests.MedicineBatch_Balance_ReturnsZeroWhenAllIssued" storage="/home/mrnibra/milki-drug-store-management/backend/src/milkidrugstore.tests/bin/debug/net8.0/milkidrugstore.tests.dll" id="25e9e3c5-9fce-5afc-fa12-9905a2560ed6">
+      <Execution id="72d7dc7c-b85a-4dfc-8839-b2a48cc27381" />
+      <TestMethod codeBase="/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/bin/Debug/net8.0/MilkiDrugStore.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="MilkiDrugStore.Tests.Domain.MedicineBatchEntityTests" name="MedicineBatch_Balance_ReturnsZeroWhenAllIssued" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="4ad3cb11-7cda-6fbc-8636-c823cd19f31f" executionId="e21e3505-ff9d-4522-87af-26fe05e3896c" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="d0ef4c0c-3c3b-223b-1d5b-1d77da73013a" executionId="7a0a33cb-d51a-40a6-879e-4005b4cc3f71" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="7b80ecd6-3d11-2f2c-ed1c-4c89e40122d5" executionId="53f0755b-5a2c-4da6-ba71-4a9cd6a58692" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="d8d06448-de8e-04b9-8c50-89e50cd76f5f" executionId="eeca77dd-c8bb-4939-ba1a-4f787a19d198" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="ce2422cf-b51e-8b6b-7011-b6ad971959e2" executionId="96276ad9-3fc4-44ca-8036-decd94e37794" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="5f226f98-d490-661d-4f86-483d7742c537" executionId="037eee4d-1604-4842-8fc3-1e4fb38807e1" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="4d5e7f24-5fb3-65a8-72e2-161afc3954ba" executionId="40e4952a-4f49-4534-a00e-817497e3eb95" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="585efe12-9ec1-4e3f-7e05-6ff0b1c2efbe" executionId="eee30b8a-4f35-440e-9706-869a361ea6b9" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="69218783-242d-e7d5-6ab2-5f85719271da" executionId="614b0f92-c0c1-4118-8daf-19587c35f412" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="918c9096-9a2a-d566-38fd-b04b1d8e865e" executionId="35683d5e-a3e2-4156-ae8e-6ae29dfa94c9" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="76db006c-b30c-0147-4047-99b7499b89c4" executionId="e158518c-6a85-44eb-822d-1ca672ce9059" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="14485f05-721f-3ac4-fa85-be3c8f4305bc" executionId="cc9f1ede-e7ab-488b-95ba-8e6b6b5f2441" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="a6fb23a6-1819-c6cd-6c02-be0876ab5c14" executionId="543bf71b-4546-4394-8deb-007a826813f7" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="789af199-d140-9b95-af0d-f2862624c89c" executionId="4cbb4113-4381-4f3f-a187-6bfed76ee3c2" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="ef48fcfa-77a6-4315-ec6a-976fa0995b6c" executionId="08f04c10-a95b-4213-a43c-35ba59b6b64b" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="302bde51-e8e2-1fc1-4018-cfb81afc0e97" executionId="0fdbeea4-a1ec-4305-8613-8260da8aec12" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="7f1f90e0-506f-a7d2-eab7-2c85076d5894" executionId="67634f90-4587-45c9-85ee-09fecfceb1fc" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="c8af2c65-faa2-463b-96b7-32b34deb6d08" executionId="8231ade6-1490-4e14-86f2-67e3145e1332" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="45ffcc85-c804-c3eb-1652-469f6cd0f604" executionId="15aeeebe-6d87-4a43-ac14-123d9bd58d2f" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="1c9602c9-a8d7-cadd-0fdb-065322006d79" executionId="74de9668-9c57-4b8d-b389-798394b92b4a" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="abbd243f-46ef-efef-e3d8-f59c017c78de" executionId="d062a43a-85ef-4d8f-b3b8-e1f60b9fb459" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="56b8f706-e219-a2b2-282b-715c35a405a3" executionId="bf213f8c-106e-42aa-93d8-06ac99565b41" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="f3e737bf-a4cb-5398-a703-7bdc4b8a83d5" executionId="7254c106-5b61-482e-885f-c58cc1afb64a" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="f6dc3bc7-cd17-7f81-5a32-f7a7b7625031" executionId="a4358824-bd41-4f44-af81-0f6ca9f80e96" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="0a0a7b71-93a5-0aa1-3ffe-32aaf6bb8829" executionId="ef858859-2f0c-449a-94ce-cc07a31fd473" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="5337afee-1f13-78f4-1d7c-51a2fe24ec74" executionId="374fa1c4-9653-4e0c-9741-f8d3b5733383" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="48845435-e47e-9f09-2789-b30b7155ca60" executionId="154576f6-5459-4038-977c-8cfc72ec8c84" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="25e9e3c5-9fce-5afc-fa12-9905a2560ed6" executionId="72d7dc7c-b85a-4dfc-8839-b2a48cc27381" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="627dc906-f7c3-ba31-f1b6-8aa76df4afd6" executionId="17de2f11-7e41-4394-9b9e-7a97b4aa9575" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="21993b61-8001-7c99-ca8b-b8595f7bf865" executionId="82e6fa2d-2cbb-4975-8102-48c440025d93" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="c9b44394-4a3e-d6e8-8cf6-55deb85a4bbe" executionId="10fd2365-95c6-4b37-a2cf-962ba0797448" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="e7814ac9-05c3-df61-934a-3ba99ae8c8eb" executionId="8d3bd7b3-0dbd-4234-9096-2b5054e806c2" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="3ca10268-fe1f-d612-e2ad-8db0b7f02fa4" executionId="9e0fcbf2-0ef1-4b2a-a8a2-100234f98b10" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="ded34509-7676-549a-8a0f-80ecc305689a" executionId="ea73d312-fd8e-4530-9ad8-fefcefdedd0f" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="0713af1e-380d-151a-16de-42bd4268db61" executionId="a0bb576e-593f-405e-95e0-9716fd816dc3" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="ee185216-5de7-c3e8-c28c-88f94d3c8bb3" executionId="cafc9bb0-5599-4ecf-9737-180527fb166c" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="0bd19aa4-34ec-19fd-73ea-d9a53bff03bf" executionId="4fdfecd2-684e-44b3-a756-ffc8a12af83e" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="65a12f61-ed59-9295-1911-f8142e7e078c" executionId="4283fa3c-57f8-43f8-acf1-e2d76411df5a" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="f48c7c1b-3195-e0e3-59c6-28937f8335a1" executionId="8ece2e79-0303-4826-bf99-c22454a0e7bf" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="6b0ab3be-32c5-a305-70a0-6041bf01b965" executionId="21fa46dc-079c-45de-9661-c22882699ca4" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="56ee3ed2-6be1-db49-39e3-ed9978aa14f1" executionId="db0bf94b-187e-4324-92a9-2bddd0e12dcc" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="bb818cf4-b95a-696a-2161-208df8bb53ba" executionId="f194191b-8555-444b-a083-999eb97a0c10" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="44a12e78-1688-c256-412d-50422eda0aa2" executionId="44a3541a-5c7d-4b3c-8e84-68fde5cd267f" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="3fb49bea-c9d3-1fe5-63a4-c33fbfb67e63" executionId="78d67cc1-0df6-4db2-8dba-3ccaef4fe89a" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="1075627d-c26a-f657-bbfd-01fefcd29923" executionId="ec72a344-484a-405d-80e8-5b1785f8daf2" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="98cc0d59-3086-d7a1-21f8-ad1b24070bfb" executionId="5a0771cf-5d6f-42c7-9288-279564be16c0" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="2f0628ba-cb19-5355-7d19-32f2c859b472" executionId="8cbe7c5e-2e13-42fe-9659-7409cca50276" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="7f8e4386-9bae-0ce2-10f4-f1276330bc57" executionId="9679d38f-e8a9-44c9-9b94-f0336b3f558b" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="3a29348c-b1e3-329e-9736-0f51e7e28493" executionId="cf16cc8c-cedd-4e13-9afa-2b36b515474a" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="65e10314-6bff-7cb0-579b-58a2abc431fc" executionId="7b038886-7eb8-47af-b50f-73ae705350d5" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="aabe1746-1515-f882-d36f-5bb6517fb7d5" executionId="aad0510d-4db3-4b3b-9afc-da8f135b88c4" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="7cd39bf1-a4f4-689b-572e-0136cb46e079" executionId="56035ae9-b871-41af-96ca-0e62f1a01bd6" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="264a274f-7557-c912-94c8-cb1f40b5c99f" executionId="d08c3fd1-d6cb-4018-8199-be25dc02edf8" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="9e28ba39-2fc2-7046-f60d-8e2afe613e7b" executionId="8433bfc7-b737-443d-9cda-1ad9e3b9b675" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="d2802ad4-c203-fd04-f823-93e03b0745a6" executionId="44b3528e-1eda-4c28-a8a7-9a2477cb04e1" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="dad3b9ee-9a9c-2472-d968-f91ee1b8bd55" executionId="ae9e7603-e88f-4026-9da3-c26f294a44cb" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="86408d07-c6ee-fcca-f9bd-30fde7900189" executionId="dd9afff6-fea2-4fa1-a232-770722004be3" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="5a35a3c2-d8ca-6976-de81-b672df62a2dc" executionId="0b356264-18e7-4cfe-bdca-1da28b1cc179" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="a4a6f3fe-d743-4052-2ca2-e8d599c49ad3" executionId="27900962-44ec-4897-b0f1-7f512ff0147b" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Failed">
+    <Counters total="59" executed="59" passed="52" failed="7" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.01] xUnit.net VSTest Adapter v2.4.5+1caef2f33e (64-bit .NET 8.0.29)
+[xUnit.net 00:00:02.52]   Discovering: MilkiDrugStore.Tests
+[xUnit.net 00:00:02.69]   Discovered:  MilkiDrugStore.Tests
+[xUnit.net 00:00:02.70]   Starting:    MilkiDrugStore.Tests
+[xUnit.net 00:00:10.60]       Microsoft.EntityFrameworkCore.DbUpdateException : An error occurred while saving the entity changes. See the inner exception for details.
+[xUnit.net 00:00:10.60]       ---- Microsoft.Data.Sqlite.SqliteException : SQLite Error 19: 'FOREIGN KEY constraint failed'.
+[xUnit.net 00:00:10.60]       Stack Trace:
+[xUnit.net 00:00:10.61]            at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+[xUnit.net 00:00:10.61]            at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+[xUnit.net 00:00:10.61]            at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+[xUnit.net 00:00:10.61]            at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+[xUnit.net 00:00:10.61]            at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(IList`1 entriesToSave, CancellationToken cancellationToken)
+[xUnit.net 00:00:10.61]            at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(StateManager stateManager, Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+[xUnit.net 00:00:10.61]            at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+[xUnit.net 00:00:10.61]            at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+[xUnit.net 00:00:10.61]         /home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/Integration/DatabaseIntegrationTests.cs(284,0): at MilkiDrugStore.Tests.Integration.Database.DatabaseIntegrationTests.FEFO_Should_Prioritize_Earliest_Expiry()
+[xUnit.net 00:00:10.61]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:10.61]         ----- Inner Stack Trace -----
+[xUnit.net 00:00:10.61]            at Microsoft.Data.Sqlite.SqliteException.ThrowExceptionForRC(Int32 rc, sqlite3 db)
+[xUnit.net 00:00:10.61]            at Microsoft.Data.Sqlite.SqliteDataReader.NextResult()
+[xUnit.net 00:00:10.61]            at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReader(CommandBehavior behavior)
+[xUnit.net 00:00:10.61]            at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+[xUnit.net 00:00:10.61]            at Microsoft.Data.Sqlite.SqliteCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+[xUnit.net 00:00:10.61]            at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+[xUnit.net 00:00:10.61]            at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+[xUnit.net 00:00:10.61]            at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+[xUnit.net 00:00:12.47]       Microsoft.EntityFrameworkCore.DbUpdateException : An error occurred while saving the entity changes. See the inner exception for details.
+[xUnit.net 00:00:12.47]       ---- Microsoft.Data.Sqlite.SqliteException : SQLite Error 19: 'FOREIGN KEY constraint failed'.
+[xUnit.net 00:00:12.47]       Stack Trace:
+[xUnit.net 00:00:12.47]            at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+[xUnit.net 00:00:12.47]            at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+[xUnit.net 00:00:12.47]            at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+[xUnit.net 00:00:12.47]            at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+[xUnit.net 00:00:12.47]            at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(IList`1 entriesToSave, CancellationToken cancellationToken)
+[xUnit.net 00:00:12.47]            at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(StateManager stateManager, Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+[xUnit.net 00:00:12.47]            at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+[xUnit.net 00:00:12.47]            at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+[xUnit.net 00:00:12.47]         /home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/Integration/DatabaseIntegrationTests.cs(385,0): at MilkiDrugStore.Tests.Integration.Database.DatabaseIntegrationTests.Sale_Should_Deduct_Inventory_And_Calculate_Profit()
+[xUnit.net 00:00:12.47]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:12.47]         ----- Inner Stack Trace -----
+[xUnit.net 00:00:12.47]            at Microsoft.Data.Sqlite.SqliteException.ThrowExceptionForRC(Int32 rc, sqlite3 db)
+[xUnit.net 00:00:12.47]            at Microsoft.Data.Sqlite.SqliteDataReader.NextResult()
+[xUnit.net 00:00:12.47]            at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReader(CommandBehavior behavior)
+[xUnit.net 00:00:12.47]            at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+[xUnit.net 00:00:12.47]            at Microsoft.Data.Sqlite.SqliteCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+[xUnit.net 00:00:12.47]            at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+[xUnit.net 00:00:12.47]            at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+[xUnit.net 00:00:12.47]            at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+[xUnit.net 00:00:13.07]       Assert.True() Failure
+[xUnit.net 00:00:13.07]       Expected: True
+[xUnit.net 00:00:13.07]       Actual:   False
+[xUnit.net 00:00:13.07]       Stack Trace:
+[xUnit.net 00:00:13.07]         /home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/Integration/DatabaseIntegrationTests.cs(136,0): at MilkiDrugStore.Tests.Integration.Database.DatabaseIntegrationTests.Migrations_Should_Create_All_Tables()
+[xUnit.net 00:00:13.07]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:13.72]       Microsoft.EntityFrameworkCore.DbUpdateException : An error occurred while saving the entity changes. See the inner exception for details.
+[xUnit.net 00:00:13.72]       ---- Microsoft.Data.Sqlite.SqliteException : SQLite Error 19: 'FOREIGN KEY constraint failed'.
+[xUnit.net 00:00:13.72]       Stack Trace:
+[xUnit.net 00:00:13.72]            at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+[xUnit.net 00:00:13.72]            at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+[xUnit.net 00:00:13.72]            at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+[xUnit.net 00:00:13.72]            at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+[xUnit.net 00:00:13.72]            at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(IList`1 entriesToSave, CancellationToken cancellationToken)
+[xUnit.net 00:00:13.72]            at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(StateManager stateManager, Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+[xUnit.net 00:00:13.72]            at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+[xUnit.net 00:00:13.72]            at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+[xUnit.net 00:00:13.72]         /home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/Integration/DatabaseIntegrationTests.cs(319,0): at MilkiDrugStore.Tests.Integration.Database.DatabaseIntegrationTests.Purchase_Should_Create_Batches_And_Transactions()
+[xUnit.net 00:00:13.72]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:13.72]         ----- Inner Stack Trace -----
+[xUnit.net 00:00:13.72]            at Microsoft.Data.Sqlite.SqliteException.ThrowExceptionForRC(Int32 rc, sqlite3 db)
+[xUnit.net 00:00:13.72]            at Microsoft.Data.Sqlite.SqliteDataReader.NextResult()
+[xUnit.net 00:00:13.72]            at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReader(CommandBehavior behavior)
+[xUnit.net 00:00:13.72]            at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+[xUnit.net 00:00:13.72]            at Microsoft.Data.Sqlite.SqliteCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+[xUnit.net 00:00:13.72]            at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+[xUnit.net 00:00:13.72]            at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+[xUnit.net 00:00:13.72]            at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+[xUnit.net 00:00:14.49]       Microsoft.EntityFrameworkCore.DbUpdateException : An error occurred while saving the entity changes. See the inner exception for details.
+[xUnit.net 00:00:14.49]       ---- Microsoft.Data.Sqlite.SqliteException : SQLite Error 19: 'FOREIGN KEY constraint failed'.
+[xUnit.net 00:00:14.49]       Stack Trace:
+[xUnit.net 00:00:14.49]            at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+[xUnit.net 00:00:14.49]            at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+[xUnit.net 00:00:14.50]            at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+[xUnit.net 00:00:14.50]            at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+[xUnit.net 00:00:14.50]            at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(IList`1 entriesToSave, CancellationToken cancellationToken)
+[xUnit.net 00:00:14.50]            at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(StateManager stateManager, Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+[xUnit.net 00:00:14.50]            at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+[xUnit.net 00:00:14.50]            at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+[xUnit.net 00:00:14.50]         /home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/Integration/DatabaseIntegrationTests.cs(234,0): at MilkiDrugStore.Tests.Integration.Database.DatabaseIntegrationTests.MedicineBatch_Should_Calculate_Balance()
+[xUnit.net 00:00:14.50]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:14.50]         ----- Inner Stack Trace -----
+[xUnit.net 00:00:14.50]            at Microsoft.Data.Sqlite.SqliteException.ThrowExceptionForRC(Int32 rc, sqlite3 db)
+[xUnit.net 00:00:14.50]            at Microsoft.Data.Sqlite.SqliteDataReader.NextResult()
+[xUnit.net 00:00:14.50]            at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReader(CommandBehavior behavior)
+[xUnit.net 00:00:14.50]            at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+[xUnit.net 00:00:14.50]            at Microsoft.Data.Sqlite.SqliteCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+[xUnit.net 00:00:14.50]            at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+[xUnit.net 00:00:14.50]            at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+[xUnit.net 00:00:14.50]            at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+[xUnit.net 00:00:16.31]       Microsoft.EntityFrameworkCore.DbUpdateException : An error occurred while saving the entity changes. See the inner exception for details.
+[xUnit.net 00:00:16.31]       ---- Microsoft.Data.Sqlite.SqliteException : SQLite Error 19: 'FOREIGN KEY constraint failed'.
+[xUnit.net 00:00:16.31]       Stack Trace:
+[xUnit.net 00:00:16.31]            at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+[xUnit.net 00:00:16.31]            at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+[xUnit.net 00:00:16.31]            at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+[xUnit.net 00:00:16.31]            at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+[xUnit.net 00:00:16.31]            at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(IList`1 entriesToSave, CancellationToken cancellationToken)
+[xUnit.net 00:00:16.31]            at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(StateManager stateManager, Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+[xUnit.net 00:00:16.31]            at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+[xUnit.net 00:00:16.31]            at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+[xUnit.net 00:00:16.31]         /home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/Integration/DatabaseIntegrationTests.cs(541,0): at MilkiDrugStore.Tests.Integration.Database.DatabaseIntegrationTests.Damage_And_Expiry_Should_Reduce_Inventory()
+[xUnit.net 00:00:16.31]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:16.31]         ----- Inner Stack Trace -----
+[xUnit.net 00:00:16.31]            at Microsoft.Data.Sqlite.SqliteException.ThrowExceptionForRC(Int32 rc, sqlite3 db)
+[xUnit.net 00:00:16.31]            at Microsoft.Data.Sqlite.SqliteDataReader.NextResult()
+[xUnit.net 00:00:16.31]            at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReader(CommandBehavior behavior)
+[xUnit.net 00:00:16.31]            at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+[xUnit.net 00:00:16.31]            at Microsoft.Data.Sqlite.SqliteCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+[xUnit.net 00:00:16.31]            at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+[xUnit.net 00:00:16.31]            at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+[xUnit.net 00:00:16.31]            at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+[xUnit.net 00:00:17.72]       Microsoft.EntityFrameworkCore.DbUpdateException : An error occurred while saving the entity changes. See the inner exception for details.
+[xUnit.net 00:00:17.72]       ---- Microsoft.Data.Sqlite.SqliteException : SQLite Error 19: 'FOREIGN KEY constraint failed'.
+[xUnit.net 00:00:17.72]       Stack Trace:
+[xUnit.net 00:00:17.73]            at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+[xUnit.net 00:00:17.73]            at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+[xUnit.net 00:00:17.73]            at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+[xUnit.net 00:00:17.73]            at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+[xUnit.net 00:00:17.73]            at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(IList`1 entriesToSave, CancellationToken cancellationToken)
+[xUnit.net 00:00:17.73]            at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(StateManager stateManager, Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+[xUnit.net 00:00:17.73]            at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+[xUnit.net 00:00:17.73]            at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+[xUnit.net 00:00:17.73]         /home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Tests/Integration/DatabaseIntegrationTests.cs(493,0): at MilkiDrugStore.Tests.Integration.Database.DatabaseIntegrationTests.Notification_Should_Be_Created_For_Low_Stock()
+[xUnit.net 00:00:17.73]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:17.73]         ----- Inner Stack Trace -----
+[xUnit.net 00:00:17.73]            at Microsoft.Data.Sqlite.SqliteException.ThrowExceptionForRC(Int32 rc, sqlite3 db)
+[xUnit.net 00:00:17.73]            at Microsoft.Data.Sqlite.SqliteDataReader.NextResult()
+[xUnit.net 00:00:17.73]            at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReader(CommandBehavior behavior)
+[xUnit.net 00:00:17.73]            at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+[xUnit.net 00:00:17.73]            at Microsoft.Data.Sqlite.SqliteCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+[xUnit.net 00:00:17.73]            at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+[xUnit.net 00:00:17.73]            at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+[xUnit.net 00:00:17.73]            at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+[xUnit.net 00:00:17.73]   Finished:    MilkiDrugStore.Tests
+</StdOut>
+    </Output>
+    <RunInfos>
+      <RunInfo computerName="Mr" outcome="Error" timestamp="2026-07-25T15:20:37.4098267+03:00">
+        <Text>[xUnit.net 00:00:10.60]     MilkiDrugStore.Tests.Integration.Database.DatabaseIntegrationTests.FEFO_Should_Prioritize_Earliest_Expiry [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="Mr" outcome="Error" timestamp="2026-07-25T15:20:39.2792500+03:00">
+        <Text>[xUnit.net 00:00:12.47]     MilkiDrugStore.Tests.Integration.Database.DatabaseIntegrationTests.Sale_Should_Deduct_Inventory_And_Calculate_Profit [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="Mr" outcome="Error" timestamp="2026-07-25T15:20:39.8802212+03:00">
+        <Text>[xUnit.net 00:00:13.07]     MilkiDrugStore.Tests.Integration.Database.DatabaseIntegrationTests.Migrations_Should_Create_All_Tables [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="Mr" outcome="Error" timestamp="2026-07-25T15:20:40.5265391+03:00">
+        <Text>[xUnit.net 00:00:13.72]     MilkiDrugStore.Tests.Integration.Database.DatabaseIntegrationTests.Purchase_Should_Create_Batches_And_Transactions [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="Mr" outcome="Error" timestamp="2026-07-25T15:20:41.3020755+03:00">
+        <Text>[xUnit.net 00:00:14.49]     MilkiDrugStore.Tests.Integration.Database.DatabaseIntegrationTests.MedicineBatch_Should_Calculate_Balance [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="Mr" outcome="Error" timestamp="2026-07-25T15:20:43.1135462+03:00">
+        <Text>[xUnit.net 00:00:16.30]     MilkiDrugStore.Tests.Integration.Database.DatabaseIntegrationTests.Damage_And_Expiry_Should_Reduce_Inventory [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="Mr" outcome="Error" timestamp="2026-07-25T15:20:44.5325390+03:00">
+        <Text>[xUnit.net 00:00:17.72]     MilkiDrugStore.Tests.Integration.Database.DatabaseIntegrationTests.Notification_Should_Be_Created_For_Low_Stock [FAIL]</Text>
+      </RunInfo>
+    </RunInfos>
+  </ResultSummary>
+</TestRun>
