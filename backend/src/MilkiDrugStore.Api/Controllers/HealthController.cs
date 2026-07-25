@@ -5,7 +5,7 @@ using MilkiDrugStore.Api.Models;
 namespace MilkiDrugStore.Api.Controllers;
 
 [ApiController]
-[Route("health")]
+[Route("api/health")]
 [AllowAnonymous]
 public class HealthController : ControllerBase
 {

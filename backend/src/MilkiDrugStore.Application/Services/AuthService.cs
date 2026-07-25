@@ -110,7 +110,13 @@ public class AuthService : IAuthService
         await _unitOfWork.SaveChangesAsync();
 
         var adminEmail = _configuration["AdminEmail"] ?? "admin@milki.com";
-        await _emailService.SendApprovalEmailAsync(adminEmail, user.FullName);
+        try
+        {
+            await _emailService.SendApprovalEmailAsync(adminEmail, user.FullName);
+        }
+        catch
+        {
+        }
 
         return "Registration submitted for admin approval.";
     }

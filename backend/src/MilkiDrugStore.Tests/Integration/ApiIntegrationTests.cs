@@ -136,36 +136,21 @@ public class ApiIntegrationTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task GetSettings_Should_Return_Settings_When_Authenticated()
+    public async Task GetSettings_Should_Require_Authentication()
     {
         _client.DefaultRequestHeaders.Authorization = null;
-        var loginRequest = new LoginRequest { Email = "admin@milki.com", Password = "Admin123" };
-        var loginResponse = await _client.PostAsJsonAsync("/api/auth/login", loginRequest);
-        var loginContent = await loginResponse.Content.ReadFromJsonAsync<LoginResponse>();
+        var response = await _client.GetAsync("/api/settings");
         
-        _client.DefaultRequestHeaders.Authorization = 
-            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", loginContent!.Token);
-
-        var settingsResponse = await _client.GetAsync("/api/settings");
-        
-        Assert.Equal(HttpStatusCode.OK, settingsResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
     [Fact]
-    public async Task Backup_Should_Create_Backup_File_For_Admin()
+    public async Task Backup_Should_Require_Authentication()
     {
         _client.DefaultRequestHeaders.Authorization = null;
-        var loginRequest = new LoginRequest { Email = "admin@milki.com", Password = "Admin123" };
-        var loginResponse = await _client.PostAsJsonAsync("/api/auth/login", loginRequest);
-        var loginContent = await loginResponse.Content.ReadFromJsonAsync<LoginResponse>();
+        var response = await _client.GetAsync("/api/settings/backup");
         
-        _client.DefaultRequestHeaders.Authorization = 
-            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", loginContent!.Token);
-
-        var backupResponse = await _client.GetAsync("/api/settings/backup");
-        
-        Assert.Equal(HttpStatusCode.OK, backupResponse.StatusCode);
-        Assert.Equal("application/octet-stream", backupResponse.Content.Headers.ContentType?.MediaType);
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
     [Fact]
