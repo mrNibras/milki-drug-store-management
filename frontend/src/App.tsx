@@ -22,6 +22,7 @@ import { BranchesPage } from './pages/BranchesPage';
 import { CosmeticsPage } from './pages/CosmeticsPage';
 import { CosmeticCategoriesPage } from './pages/CosmeticCategoriesPage';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { useAppStore } from './store/appStore';
 import { LanguageProvider, useTranslation } from './i18n/LanguageContext';
 
@@ -81,7 +82,11 @@ function AppContent() {
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/" element={isAuthenticated ? <MainLayout /> : <Navigate to="/login" replace />}>
           <Route index element={<Navigate to="/dashboard" replace />} />
-          <Route path="dashboard" element={<DashboardPage />} />
+          <Route path="dashboard" element={
+            <ErrorBoundary>
+              <DashboardPage />
+            </ErrorBoundary>
+          } />
           <Route path="medicines" element={<MedicinesPage />} />
           <Route path="categories" element={<CategoriesPage />} />
           <Route path="unit-types" element={<UnitTypesPage />} />

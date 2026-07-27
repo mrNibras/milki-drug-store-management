@@ -23,47 +23,47 @@ export const DashboardPage: React.FC = () => {
   }, [fetchMedicines, fetchSales, fetchNotifications, fetchAuditLogs]);
 
   // Calculate stats
-  const totalMedicines = medicines.length;
-  const totalInventoryValue = medicines.reduce((sum, m) => {
-    return sum + m.batches.reduce((bSum, b) => bSum + (b.quantity * b.purchasePrice), 0);
+  const totalMedicines = (medicines || []).length;
+  const totalInventoryValue = (medicines || []).reduce((sum, m) => {
+    return sum + (m.batches || []).reduce((bSum, b) => bSum + ((b.quantity || 0) * (b.purchasePrice || 0)), 0);
   }, 0);
-  
+
   const today = new Date().toISOString().split('T')[0];
-  const todaySales = sales
-    .filter(s => s.saleDate.startsWith(today))
-    .reduce((sum, s) => sum + s.totalAmount, 0);
+  const todaySales = (sales || [])
+    .filter(s => s.saleDate?.startsWith(today))
+    .reduce((sum, s) => sum + (s.totalAmount || 0), 0);
 
   const currentMonth = new Date().toISOString().slice(0, 7);
-  const monthlySales = sales
-    .filter(s => s.saleDate.startsWith(currentMonth))
-    .reduce((sum, s) => sum + s.totalAmount, 0);
+  const monthlySales = (sales || [])
+    .filter(s => s.saleDate?.startsWith(currentMonth))
+    .reduce((sum, s) => sum + (s.totalAmount || 0), 0);
 
-  const monthlyProfit = sales
-    .filter(s => s.saleDate.startsWith(currentMonth))
-    .reduce((sum, s) => sum + s.profit, 0);
+  const monthlyProfit = (sales || [])
+    .filter(s => s.saleDate?.startsWith(currentMonth))
+    .reduce((sum, s) => sum + (s.profit || 0), 0);
 
-  const lowStockCount = medicines.filter(m => {
-    const totalQty = m.batches.reduce((sum, b) => sum + b.quantity, 0);
-    return totalQty > 0 && totalQty <= m.lowStockThreshold;
+  const lowStockCount = (medicines || []).filter(m => {
+    const totalQty = (m.batches || []).reduce((sum, b) => sum + (b.quantity || 0), 0);
+    return totalQty > 0 && totalQty <= (m.lowStockThreshold || 0);
   }).length;
 
-  const expiringCount = medicines.filter(m =>
-    m.batches.some(b => {
+  const expiringCount = (medicines || []).filter(m =>
+    (m.batches || []).some(b => {
       const days = getDaysUntilExpiry(b.expiryDate);
       return days > 0 && days <= 180;
     })
   ).length;
 
-  const outOfStockCount = medicines.filter(m =>
-    m.batches.every(b => b.quantity === 0)
+  const outOfStockCount = (medicines || []).filter(m =>
+    (m.batches || []).every(b => b.quantity === 0)
   ).length;
 
-  const recentSales = [...sales].sort((a, b) => new Date(b.saleDate).getTime() - new Date(a.saleDate).getTime()).slice(0, 5);
-  const unreadNotifications = notifications.filter(n => !n.isRead);
+  const recentSales = [...(sales || [])].sort((a, b) => new Date(b.saleDate).getTime() - new Date(a.saleDate).getTime()).slice(0, 5);
+  const unreadNotifications = (notifications || []).filter(n => !n.isRead);
 
   // Inventory by category
-  const inventoryByCategory = medicines.reduce((acc, m) => {
-    const totalQty = m.batches.reduce((sum, b) => sum + b.quantity, 0);
+  const inventoryByCategory = (medicines || []).reduce((acc, m) => {
+    const totalQty = (m.batches || []).reduce((sum, b) => sum + (b.quantity || 0), 0);
     const existing = acc.find(a => a.name === m.categoryName);
     if (existing) {
       existing.value += totalQty;
@@ -76,16 +76,16 @@ export const DashboardPage: React.FC = () => {
   // Most selling items for current month
   const mostSellingItems = useMemo(() => {
     const currentMonth = new Date().toISOString().slice(0, 7);
-    const monthlySales = sales.filter(s => s.saleDate.startsWith(currentMonth));
-    
+    const monthlySales = (sales || []).filter(s => s.saleDate?.startsWith(currentMonth));
+
     const itemSales: Record<string, { name: string; quantity: number; revenue: number }> = {};
     monthlySales.forEach(sale => {
-      sale.items.forEach(item => {
+      (sale.items || []).forEach(item => {
         if (!itemSales[item.medicineId]) {
           itemSales[item.medicineId] = { name: item.medicineName, quantity: 0, revenue: 0 };
         }
-        itemSales[item.medicineId].quantity += item.quantity;
-        itemSales[item.medicineId].revenue += item.totalPrice;
+        itemSales[item.medicineId].quantity += item.quantity || 0;
+        itemSales[item.medicineId].revenue += item.totalPrice || 0;
       });
     });
 
