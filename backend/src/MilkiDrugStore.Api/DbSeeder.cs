@@ -24,7 +24,9 @@ public static class DbSeeder
                 logger.LogInformation("Roles seeded successfully.");
             }
 
-            if (!context.Users.Any())
+            var adminEmail = "admin@milki.com";
+            var existingAdmin = await context.Users.FirstOrDefaultAsync(u => u.Email == adminEmail);
+            if (existingAdmin == null)
             {
                 var adminRole = context.Roles.First(r => r.Name == "Admin");
                 var mainBranch = context.Branches.FirstOrDefault(b => b.BranchName == "Main Branch");
@@ -39,7 +41,7 @@ public static class DbSeeder
                 context.Users.Add(new User
                 {
                     FullName = "System Admin",
-                    Email = "admin@milki.com",
+                    Email = adminEmail,
                     PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin123"),
                     RoleId = adminRole.RoleId,
                     BranchId = mainBranch.BranchId,
@@ -49,6 +51,46 @@ public static class DbSeeder
                 });
                 await context.SaveChangesAsync();
                 logger.LogInformation("Default admin user seeded successfully.");
+            }
+            else
+            {
+                var adminRole = context.Roles.First(r => r.Name == "Admin");
+                var mainBranch = context.Branches.FirstOrDefault(b => b.BranchName == "Main Branch");
+                if (mainBranch == null)
+                {
+                    mainBranch = new Branch { BranchName = "Main Branch", Location = "Main Store", IsActive = true, CreatedAt = DateTime.Now };
+                    context.Branches.Add(mainBranch);
+                    await context.SaveChangesAsync();
+                    logger.LogInformation("Main Branch created.");
+                }
+
+                var needsUpdate = false;
+                if (existingAdmin.RoleId != adminRole.RoleId)
+                {
+                    existingAdmin.RoleId = adminRole.RoleId;
+                    needsUpdate = true;
+                }
+                if (existingAdmin.BranchId != mainBranch.BranchId)
+                {
+                    existingAdmin.BranchId = mainBranch.BranchId;
+                    needsUpdate = true;
+                }
+                if (!existingAdmin.IsApproved)
+                {
+                    existingAdmin.IsApproved = true;
+                    needsUpdate = true;
+                }
+                if (!existingAdmin.IsActive)
+                {
+                    existingAdmin.IsActive = true;
+                    needsUpdate = true;
+                }
+
+                if (needsUpdate)
+                {
+                    await context.SaveChangesAsync();
+                    logger.LogInformation("Default admin user updated successfully.");
+                }
             }
 
             if (!context.UnitTypes.Any())

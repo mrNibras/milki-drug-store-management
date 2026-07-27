@@ -154,47 +154,47 @@ export const Sidebar: React.FC = () => {
                   <div className="absolute left-full ml-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50 shadow-xl">
                     {item.label}
                     <div className="absolute top-1/2 -left-1 -translate-y-1/2 w-2 h-2 bg-gray-900 rotate-45"></div>
-        </div>
-      )}
-
-      {/* Branch Selector */}
-      {sidebarOpen && currentUser?.role === 'admin' && (
-        <div className="px-3 mt-3">
-          <div className="relative">
-            <button
-              onClick={() => setBranchMenuOpen(!branchMenuOpen)}
-              className="w-full flex items-center gap-2 px-3 py-2 bg-slate-700/50 hover:bg-slate-700 rounded-lg text-sm text-slate-300 transition-colors"
-            >
-              <Building2 className="h-4 w-4 flex-shrink-0" />
-              <span className="truncate">{currentBranch?.name || 'Select Branch'}</span>
-              <ChevronDown className="h-4 w-4 ml-auto flex-shrink-0" />
-            </button>
-            {branchMenuOpen && (
-              <>
-                <div className="fixed inset-0 z-40" onClick={() => setBranchMenuOpen(false)} />
-                <div className="absolute top-full left-3 right-3 mt-1 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-50 overflow-hidden">
-                  {branches.filter(b => b.isActive).map(branch => (
-                    <button
-                      key={branch.id}
-                      onClick={() => { switchBranch(Number(branch.id)); setBranchMenuOpen(false); }}
-                      className={`w-full text-left px-3 py-2 text-sm hover:bg-slate-700 transition-colors ${Number(currentBranch?.id) === Number(branch.id) ? 'text-emerald-400 bg-slate-700/50' : 'text-slate-300'}`}
-                    >
-                      {branch.name}
-                    </button>
-                  ))}
-                  {branches.filter(b => b.isActive).length === 0 && (
-                    <div className="px-3 py-2 text-sm text-slate-500">No active branches</div>
-                  )}
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      )}
+                  </div>
+                )}
               </button>
             );
           })}
         </nav>
+
+        {/* Branch Selector */}
+        {sidebarOpen && currentUser?.role === 'admin' && (
+          <div className="px-3 mt-3">
+            <div className="relative">
+              <button
+                onClick={() => setBranchMenuOpen(!branchMenuOpen)}
+                className="w-full flex items-center gap-2 px-3 py-2 bg-slate-700/50 hover:bg-slate-700 rounded-lg text-sm text-slate-300 transition-colors"
+              >
+                <Building2 className="h-4 w-4 flex-shrink-0" />
+                <span className="truncate">{currentBranch?.name || 'Select Branch'}</span>
+                <ChevronDown className="h-4 w-4 ml-auto flex-shrink-0" />
+              </button>
+              {branchMenuOpen && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setBranchMenuOpen(false)} />
+                  <div className="absolute top-full left-3 right-3 mt-1 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-50 overflow-hidden">
+                    {branches.filter(b => b.isActive).map(branch => (
+                      <button
+                        key={branch.id}
+                        onClick={() => { switchBranch(Number(branch.id)); setBranchMenuOpen(false); }}
+                        className={`w-full text-left px-3 py-2 text-sm hover:bg-slate-700 transition-colors ${Number(currentBranch?.id) === Number(branch.id) ? 'text-emerald-400 bg-slate-700/50' : 'text-slate-300'}`}
+                      >
+                        {branch.name}
+                      </button>
+                    ))}
+                    {branches.filter(b => b.isActive).length === 0 && (
+                      <div className="px-3 py-2 text-sm text-slate-500">No active branches</div>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Bottom Section */}
         <div className={`absolute bottom-0 left-0 right-0 border-t border-slate-700 dark:border-slate-800 ${sidebarOpen ? 'p-3' : 'p-2'}`}>

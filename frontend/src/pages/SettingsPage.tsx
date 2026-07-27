@@ -7,7 +7,7 @@ import { backupDatabase, restoreDatabase } from '../services/api';
 import { useTranslation } from '../i18n/LanguageContext';
 
 export const SettingsPage: React.FC = () => {
-  const { settings, updateSettings, currentUser, fetchSettings, loading, changePassword } = useAppStore();
+  const { settings, updateSettings, fetchSettings, changePassword } = useAppStore();
   const { theme } = useThemeStore();
   const { language, setLanguage, t } = useTranslation();
   const isDark = theme === 'dark';
@@ -60,7 +60,7 @@ export const SettingsPage: React.FC = () => {
     } finally {
       setIsRestoring(false);
       if (restoreFileInputRef.current) {
-        restoreFileInputRefRef.current.value = '';
+        restoreFileInputRef.current.value = '';
       }
     }
   };
@@ -291,7 +291,10 @@ export const SettingsPage: React.FC = () => {
           </div>
           <div className="flex items-center gap-3">
             <button
-              onClick={() => setLanguage('en')}
+              onClick={async () => {
+                setLanguage('en');
+                await updateSettings({ language: 'en' });
+              }}
               className={`flex-1 py-2.5 px-4 rounded-lg border text-sm font-medium transition-all ${
                 language === 'en'
                   ? isDark
@@ -305,7 +308,10 @@ export const SettingsPage: React.FC = () => {
               English
             </button>
             <button
-              onClick={() => setLanguage('am')}
+              onClick={async () => {
+                setLanguage('am');
+                await updateSettings({ language: 'am' });
+              }}
               className={`flex-1 py-2.5 px-4 rounded-lg border text-sm font-medium transition-all ${
                 language === 'am'
                   ? isDark

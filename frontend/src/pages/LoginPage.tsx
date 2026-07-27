@@ -26,7 +26,8 @@ export const LoginPage: React.FC = () => {
     if (success) {
       navigate('/dashboard');
     } else {
-      setError('Invalid email or account is inactive');
+      const storeError = useAppStore.getState().error;
+      setError(storeError || 'Invalid email or password');
     }
     setLoading(false);
   };

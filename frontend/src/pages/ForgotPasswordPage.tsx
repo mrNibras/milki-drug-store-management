@@ -46,17 +46,17 @@ export const ForgotPasswordPage: React.FC = () => {
                  </div>
                  <div>
                    <h1 className="text-2xl font-bold text-white">{t.common.appName}</h1>
-                   <p className="text-emerald-100 text-sm">{t.auth.managementSystem}</p>
+                    <p className="text-emerald-100 text-sm">{t.common.managementSystem}</p>
                  </div>
                </div>
              </div>
         <div className="space-y-6">
           <h2 className="text-4xl font-bold text-white leading-tight">
-            {t.auth.resetYourPassword}<br />
-            <span className="text-emerald-200">{t.auth.passwordSecurely}</span>
+            {t.common.resetYourPassword}<br />
+            <span className="text-emerald-200">{t.common.passwordSecurely}</span>
           </h2>
           <p className="text-emerald-100 text-lg max-w-md">
-            {t.auth.enterYourRegisteredEmail}
+            {t.common.enterYourRegisteredEmail}
           </p>
         </div>
         <p className="text-emerald-200 text-sm">© 2026 Milki Drug Store. All rights reserved.</p>
@@ -76,7 +76,7 @@ export const ForgotPasswordPage: React.FC = () => {
               <ArrowLeft className="h-4 w-4" /> {t.common.backToLogin}
             </button>
             <h2 className="text-2xl font-bold text-gray-900">{t.auth.forgotPassword}</h2>
-            <p className="mt-2 text-sm text-gray-500">{t.auth.enterYourEmailAndResetLink}</p>
+            <p className="mt-2 text-sm text-gray-500">{t.common.enterYourEmailAndResetLink}</p>
           </div>
 
           {message && (
@@ -93,7 +93,7 @@ export const ForgotPasswordPage: React.FC = () => {
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-sm font-medium mb-1.5 text-gray-700">{t.auth.emailAddress}</label>
+              <label className="block text-sm font-medium mb-1.5 text-gray-700">{t.common.emailAddress}</label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                 <input
@@ -112,11 +112,9 @@ export const ForgotPasswordPage: React.FC = () => {
               disabled={loading}
               className="w-full py-3 px-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl font-medium transition-all shadow-lg disabled:opacity-50 flex items-center justify-center gap-2"
             >
-              {loading ? (
-                <div className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              ) : (
-                {t.auth.sendResetLink}
-              )}
+               {loading ? (
+                 <div className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+               ) : t.auth.sendResetLink}
             </button>
           </form>
 

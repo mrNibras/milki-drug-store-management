@@ -231,6 +231,7 @@ export interface PharmacySettings {
   address: string;
   phone: string;
   email: string;
+  language: string;
 }
 
 export interface DamageResponse {

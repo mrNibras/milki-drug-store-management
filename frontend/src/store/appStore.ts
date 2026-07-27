@@ -893,7 +893,25 @@ export const useAppStore = create<AppState>((set, get) => ({
   generateExpiryNotifications: () => {
     const state = get();
     if (state.notifications.length > 0 || state.medicines.length === 0) return;
-    state.generateExpiryNotifications();
+    const newNotifications: Notification[] = [];
+    state.medicines.forEach(medicine => {
+      medicine.batches.forEach(batch => {
+        const days = getDaysUntilExpiry(batch.expiryDate);
+        if (days > 0 && days <= state.settings.expiryAlertMonths * 30) {
+          newNotifications.push({
+            id: generateId(),
+            title: 'Medicine Expiring Soon',
+            message: `${medicine.name} (Batch: ${batch.batchNumber}) expires in ${days} days`,
+            type: 'expiry',
+            isRead: false,
+            createdAt: new Date().toISOString(),
+          });
+        }
+      });
+    });
+    if (newNotifications.length > 0) {
+      set({ notifications: [...state.notifications, ...newNotifications] });
+    }
   },
 
   auditLogs: [],
@@ -978,6 +996,7 @@ export const useAppStore = create<AppState>((set, get) => ({
           address: s.address,
           phone: s.phone,
           email: s.email,
+          language: s.language,
         },
       });
     } catch (e) {
