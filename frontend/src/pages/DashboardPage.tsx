@@ -155,11 +155,11 @@ export const DashboardPage: React.FC = () => {
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={
               ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map((day, i) => {
-                const daySales = sales.filter(s => {
+                const daySales = (sales || []).filter(s => {
                   const d = new Date(s.saleDate);
                   return d.getDay() === (i === 0 ? 1 : i === 1 ? 2 : i === 2 ? 3 : i === 3 ? 4 : i === 4 ? 5 : i === 5 ? 6 : 0);
                 });
-                return { date: day, sales: daySales.reduce((a, b) => a + b.totalAmount, 0), profit: daySales.reduce((a, b) => a + b.profit, 0) };
+                return { date: day, sales: daySales.reduce((a, b) => a + (b.totalAmount || 0), 0), profit: daySales.reduce((a, b) => a + (b.profit || 0), 0) };
               })
             }>
               <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#374151' : '#f0f0f0'} />
