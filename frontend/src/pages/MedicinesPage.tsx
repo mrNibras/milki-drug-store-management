@@ -41,7 +41,7 @@ export const MedicinesPage: React.FC = () => {
     }).sort((a, b) => a.name.localeCompare(b.name));
   }, [medicines, search, categoryFilter, statusFilter]);
 
-  const getMedicineStock = (m: Medicine) => m.batches.reduce((sum, b) => sum + b.quantity, 0);
+  const getMedicineStock = (m: Medicine) => (m.batches || []).reduce((sum, b) => sum + (b.quantity || 0), 0);
 
   const handleAdd = () => {
     setFormData({ name: '', genericName: '', categoryId: '', unitTypeId: 1, lowStockThreshold: 10 });
@@ -71,8 +71,8 @@ export const MedicinesPage: React.FC = () => {
       name: formData.name,
       genericName: formData.genericName,
       categoryId: formData.categoryId,
-      categoryName: categories.find(c => c.id === formData.categoryId)?.name || '',
-      unitType: unitTypes.find(u => u.id === String(formData.unitTypeId))?.name || 'Tablet',
+      categoryName: (categories || []).find(c => c.id === formData.categoryId)?.name || '',
+      unitType: (unitTypes || []).find(u => u.id === String(formData.unitTypeId))?.name || 'Tablet',
       unitTypeId: formData.unitTypeId,
       lowStockThreshold: formData.lowStockThreshold,
       createdAt: new Date().toISOString(),
@@ -179,7 +179,7 @@ export const MedicinesPage: React.FC = () => {
             </div>
             <div>
               <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>With Stock</p>
-              <p className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{medicines.filter(m => m.batches.length > 0).length}</p>
+              <p className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{(medicines || []).filter(m => (m.batches || []).length > 0).length}</p>
             </div>
           </div>
         </div>
@@ -190,7 +190,7 @@ export const MedicinesPage: React.FC = () => {
             </div>
             <div>
               <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>No Stock</p>
-              <p className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{medicines.filter(m => m.batches.length === 0).length}</p>
+              <p className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{(medicines || []).filter(m => (m.batches || []).length === 0).length}</p>
             </div>
           </div>
         </div>
