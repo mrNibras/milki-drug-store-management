@@ -13,7 +13,7 @@ export const NotificationsPage: React.FC = () => {
   useEffect(() => {
     fetchNotifications();
   }, [fetchNotifications]);
-  const unreadCount = notifications.filter(n => !n.isRead).length;
+  const unreadCount = (notifications || []).filter(n => !n.isRead).length;
 
   const getIcon = (type: string) => {
     switch (type) {
@@ -79,7 +79,7 @@ export const NotificationsPage: React.FC = () => {
             </div>
             <div>
               <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Low Stock</p>
-              <p className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{notifications.filter(n => n.type === 'low_stock').length}</p>
+              <p className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{(notifications || []).filter(n => n.type === 'low_stock').length}</p>
             </div>
           </div>
         </div>
@@ -90,7 +90,7 @@ export const NotificationsPage: React.FC = () => {
             </div>
             <div>
               <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Expiry</p>
-              <p className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{notifications.filter(n => n.type === 'expiry').length}</p>
+              <p className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{(notifications || []).filter(n => n.type === 'expiry').length}</p>
             </div>
           </div>
         </div>
@@ -101,7 +101,7 @@ export const NotificationsPage: React.FC = () => {
             </div>
             <div>
               <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Out of Stock</p>
-              <p className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{notifications.filter(n => n.type === 'out_of_stock').length}</p>
+              <p className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{(notifications || []).filter(n => n.type === 'out_of_stock').length}</p>
             </div>
           </div>
         </div>

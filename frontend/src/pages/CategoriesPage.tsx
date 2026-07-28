@@ -21,7 +21,7 @@ export const CategoriesPage: React.FC = () => {
     fetchUnitTypes();
   }, [fetchCategories, fetchUnitTypes]);
 
-  const filteredCategories = categories.filter(c =>
+  const filteredCategories = (categories || []).filter(c =>
     c.name.toLowerCase().includes(search.toLowerCase())
   );
 

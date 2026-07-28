@@ -62,7 +62,7 @@ export const SuppliersPage: React.FC = () => {
   }, [suppliers, purchases]);
 
   const filteredSuppliers = useMemo(() => {
-    return suppliers.filter(s =>
+    return (suppliers || []).filter(s =>
       s.name.toLowerCase().includes(search.toLowerCase()) ||
       s.phone.includes(search) ||
       s.email.toLowerCase().includes(search.toLowerCase()) ||
@@ -70,7 +70,7 @@ export const SuppliersPage: React.FC = () => {
     );
   }, [suppliers, search]);
 
-  const getSupplierPurchases = (supplierId: string) => purchases.filter(p => p.supplierId === supplierId);
+  const getSupplierPurchases = (supplierId: string) => (purchases || []).filter(p => p.supplierId === supplierId);
 
   // Global stats
   const totalDebt = Object.values(supplierFinancials).reduce((sum, s) => sum + s.totalDebt, 0);

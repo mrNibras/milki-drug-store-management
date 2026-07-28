@@ -865,7 +865,8 @@ export const useAppStore = create<AppState>((set, get) => ({
   fetchNotifications: async () => {
     try {
       const res = await api.get<NotificationResponse[]>('/notifications');
-      set({ notifications: res.data.map(toNotification) });
+      const data = Array.isArray(res.data) ? res.data : [];
+      set({ notifications: data.map(toNotification) });
     } catch (e) {
       console.error('Failed to fetch notifications', e);
     }
@@ -918,8 +919,9 @@ export const useAppStore = create<AppState>((set, get) => ({
   fetchAuditLogs: async () => {
     try {
       const res = await api.get<AuditLogResponse[]>('/audit-logs');
+      const data = Array.isArray(res.data) ? res.data : [];
       set({
-        auditLogs: res.data.map(l => ({
+        auditLogs: data.map(l => ({
           id: String(l.auditId),
           userId: String(l.userId),
           userName: l.userName,

@@ -31,8 +31,8 @@ export const UsersPage: React.FC = () => {
   const [passwordError, setPasswordError] = useState('');
   const [isToggling, setIsToggling] = useState<string | null>(null);
 
-  const activeUsers = users.filter(u => u.isActive).length;
-  const inactiveUsers = users.filter(u => !u.isActive).length;
+  const activeUsers = (users || []).filter(u => u.isActive).length;
+  const inactiveUsers = (users || []).filter(u => !u.isActive).length;
 
   const resetForm = () => {
     setFormData({ fullName: '', email: '', role: 'pharmacist', password: '', confirmPassword: '', isActive: true });

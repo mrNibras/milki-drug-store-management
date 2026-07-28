@@ -29,12 +29,12 @@ export const MedicinesPage: React.FC = () => {
   }, [fetchMedicines, fetchCategories, fetchUnitTypes]);
 
   const filteredMedicines = useMemo(() => {
-    return medicines.filter(m => {
-      const matchSearch = m.name.toLowerCase().includes(search.toLowerCase()) ||
-        m.genericName.toLowerCase().includes(search.toLowerCase()) ||
-        m.categoryName.toLowerCase().includes(search.toLowerCase());
+    return (medicines || []).filter(m => {
+      const matchSearch = m.name?.toLowerCase().includes(search.toLowerCase()) ||
+        m.genericName?.toLowerCase().includes(search.toLowerCase()) ||
+        m.categoryName?.toLowerCase().includes(search.toLowerCase());
       const matchCategory = categoryFilter === 'all' || m.categoryId === categoryFilter;
-      const totalQty = m.batches.reduce((sum, b) => sum + b.quantity, 0);
+      const totalQty = (m.batches || []).reduce((sum, b) => sum + (b.quantity || 0), 0);
       const status = getStockStatus(totalQty, m.lowStockThreshold);
       const matchStatus = statusFilter === 'all' || status === statusFilter;
       return matchSearch && matchCategory && matchStatus;

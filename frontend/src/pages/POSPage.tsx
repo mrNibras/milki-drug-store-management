@@ -48,24 +48,24 @@ export const POSPage: React.FC = () => {
 
   const searchResults = useMemo(() => {
     if (!search.trim()) return [];
-    return medicines.filter(m => {
-      const totalQty = m.batches.reduce((sum, b) => sum + b.quantity, 0);
-      const matchesBatch = m.batches.some(b => b.batchNumber.toLowerCase().includes(search.toLowerCase()));
+    return (medicines || []).filter(m => {
+      const totalQty = (m.batches || []).reduce((sum, b) => sum + (b.quantity || 0), 0);
+      const matchesBatch = (m.batches || []).some(b => b.batchNumber?.toLowerCase().includes(search.toLowerCase()));
       return totalQty > 0 && (
-        m.name.toLowerCase().includes(search.toLowerCase()) ||
-        m.genericName.toLowerCase().includes(search.toLowerCase()) ||
-        m.categoryName.toLowerCase().includes(search.toLowerCase()) ||
+        m.name?.toLowerCase().includes(search.toLowerCase()) ||
+        m.genericName?.toLowerCase().includes(search.toLowerCase()) ||
+        m.categoryName?.toLowerCase().includes(search.toLowerCase()) ||
         matchesBatch
       );
     }).slice(0, 8);
   }, [medicines, search]);
 
-  const cartSubtotal = cart.reduce((sum, item) => sum + (item.standardPrice * item.quantity), 0);
-  const cartTotalDiscount = cart.reduce((sum, item) => sum + (item.discountAmount * item.quantity), 0);
-  const cartTotal = cart.reduce((sum, item) => sum + (item.sellingPrice * item.quantity), 0);
-  const cartProfit = cart.reduce((sum, item) => {
-    const medicine = medicines.find(m => m.id === item.medicineId);
-    const batch = medicine?.batches.find(b => b.id === item.batchId);
+  const cartSubtotal = (cart || []).reduce((sum, item) => sum + (item.standardPrice * item.quantity), 0);
+  const cartTotalDiscount = (cart || []).reduce((sum, item) => sum + (item.discountAmount * item.quantity), 0);
+  const cartTotal = (cart || []).reduce((sum, item) => sum + (item.sellingPrice * item.quantity), 0);
+  const cartProfit = (cart || []).reduce((sum, item) => {
+    const medicine = (medicines || []).find(m => m.id === item.medicineId);
+    const batch = medicine?.batches?.find(b => b.id === item.batchId);
     return sum + ((item.sellingPrice - (batch?.purchasePrice || 0)) * item.quantity);
   }, 0);
 
@@ -90,9 +90,9 @@ export const POSPage: React.FC = () => {
     setSearch('');
   };
 
-  const handleApplyDiscount = (medicineId: string, batchId: string) => {
+   const handleApplyDiscount = (medicineId: string, batchId: string) => {
     const discount = Number(tempDiscount) || 0;
-    const item = cart.find(c => c.medicineId === medicineId && c.batchId === batchId);
+    const item = (cart || []).find(c => c.medicineId === medicineId && c.batchId === batchId);
     if (!item) return;
 
     const maxDiscount = (item.standardPrice * maxDiscountPercent) / 100;
@@ -122,7 +122,7 @@ export const POSPage: React.FC = () => {
     }
     setPaymentError('');
 
-    const saleNumber = generateSaleNumber(sales.length);
+    const saleNumber = generateSaleNumber((sales || []).length);
     const sale = {
       id: generateId(),
       saleNumber,
@@ -322,7 +322,7 @@ export const POSPage: React.FC = () => {
             <div className="flex-1 overflow-y-auto p-3 sm:p-4">
               <h3 className={`text-sm font-semibold mb-3 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Quick Access - Available Medicines</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {medicines.filter(m => m.batches.some(b => b.quantity > 0)).slice(0, 12).map(medicine => {
+                 {(medicines || []).filter(m => (m.batches || []).some(b => b.quantity > 0)).slice(0, 12).map(medicine => {
                   const totalQty = medicine.batches.reduce((sum, b) => sum + b.quantity, 0);
                   const fefoBatch = getFefoBatches(medicine)[0];
                   return (
@@ -468,9 +468,9 @@ export const POSPage: React.FC = () => {
                       {item.discountAmount > 0 ? `Discount: -${item.discountAmount.toLocaleString()} ETB` : 'Add Discount'}
                     </button>
                   )}
-                </div>
-              ))
-            )}
+                 </div>
+               ))
+             )}
           </div>
 
           {/* Desktop Summary (hidden on mobile) */}
