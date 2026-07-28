@@ -19,7 +19,7 @@ export const InventoryPage: React.FC = () => {
 
   const categories = useMemo(() => {
     const seen = new Set<string>();
-    return medicines.reduce<{ id: string; name: string }[]>((acc, m) => {
+    return (medicines || []).reduce<{ id: string; name: string }[]>((acc, m) => {
       if (!seen.has(m.categoryId)) {
         seen.add(m.categoryId);
         acc.push({ id: m.categoryId, name: m.categoryName });
@@ -29,20 +29,20 @@ export const InventoryPage: React.FC = () => {
   }, [medicines]);
 
   const filteredMedicines = useMemo(() => {
-    return medicines.filter(medicine => {
-      const matchSearch = medicine.name.toLowerCase().includes(search.toLowerCase()) ||
-        medicine.genericName.toLowerCase().includes(search.toLowerCase()) ||
-        medicine.categoryName.toLowerCase().includes(search.toLowerCase()) ||
-        medicine.batches.some(b => b.batchNumber.toLowerCase().includes(search.toLowerCase()));
+    return (medicines || []).filter(medicine => {
+      const matchSearch = medicine.name?.toLowerCase().includes(search.toLowerCase()) ||
+        medicine.genericName?.toLowerCase().includes(search.toLowerCase()) ||
+        medicine.categoryName?.toLowerCase().includes(search.toLowerCase()) ||
+        (medicine.batches || []).some(b => b.batchNumber?.toLowerCase().includes(search.toLowerCase()));
       
       const matchCategory = categoryFilter === 'all' || medicine.categoryId === categoryFilter;
       
-      const totalQty = medicine.batches.reduce((sum, b) => sum + b.quantity, 0);
+      const totalQty = (medicine.batches || []).reduce((sum, b) => sum + (b.quantity || 0), 0);
       let matchStatus = true;
       if (statusFilter === 'expired') {
-        matchStatus = medicine.batches.some(b => getDaysUntilExpiry(b.expiryDate) < 0 && b.quantity > 0);
+        matchStatus = (medicine.batches || []).some(b => getDaysUntilExpiry(b.expiryDate) < 0 && b.quantity > 0);
       } else if (statusFilter === 'expiring') {
-        matchStatus = medicine.batches.some(b => {
+        matchStatus = (medicine.batches || []).some(b => {
           const days = getDaysUntilExpiry(b.expiryDate);
           return days >= 0 && days <= 180 && b.quantity > 0;
         });
@@ -56,16 +56,16 @@ export const InventoryPage: React.FC = () => {
     }).sort((a, b) => a.name.localeCompare(b.name));
   }, [medicines, search, categoryFilter, statusFilter]);
 
-  const totalItems = medicines.reduce((sum, m) => sum + m.batches.reduce((b, r) => b + r.quantity, 0), 0);
-  const totalInventoryValue = medicines.reduce((sum, m) => sum + m.batches.reduce((b, r) => b + (r.quantity * r.purchasePrice), 0), 0);
-  const totalSellingValue = medicines.reduce((sum, m) => sum + m.batches.reduce((b, r) => b + (r.quantity * r.sellingPrice), 0), 0);
-  const totalBatches = medicines.reduce((sum, m) => sum + m.batches.length, 0);
-  const lowStockCount = medicines.filter(m => {
-    const qty = m.batches.reduce((s, b) => s + b.quantity, 0);
+  const totalItems = (medicines || []).reduce((sum, m) => sum + (m.batches || []).reduce((b, r) => b + (r.quantity || 0), 0), 0);
+  const totalInventoryValue = (medicines || []).reduce((sum, m) => sum + (m.batches || []).reduce((b, r) => b + ((r.quantity || 0) * (r.purchasePrice || 0)), 0), 0);
+  const totalSellingValue = (medicines || []).reduce((sum, m) => sum + (m.batches || []).reduce((b, r) => b + ((r.quantity || 0) * (r.sellingPrice || 0)), 0), 0);
+  const totalBatches = (medicines || []).reduce((sum, m) => sum + (m.batches || []).length, 0);
+  const lowStockCount = (medicines || []).filter(m => {
+    const qty = (m.batches || []).reduce((s, b) => s + (b.quantity || 0), 0);
     return qty > 0 && qty <= m.lowStockThreshold;
   }).length;
 
-  const getMedicineStock = (m: typeof medicines[0]) => m.batches.reduce((sum, b) => sum + b.quantity, 0);
+  const getMedicineStock = (m: typeof medicines[0]) => (m.batches || []).reduce((sum, b) => sum + (b.quantity || 0), 0);
 
   const thClass = `px-5 py-3 text-xs font-semibold uppercase whitespace-nowrap ${isDark ? 'text-gray-400' : 'text-gray-500'}`;
 
@@ -155,7 +155,7 @@ export const InventoryPage: React.FC = () => {
               isDark ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'
             }`}>
             <option value="all">All Categories</option>
-            {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
+            {(categories || []).map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
           </select>
           <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
             className={`px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm ${

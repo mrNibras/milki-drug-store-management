@@ -104,7 +104,7 @@ export const MedicinesPage: React.FC = () => {
 
   const categoryList = useMemo(() => {
     const seen = new Set<string>();
-    return medicines.reduce<{ id: string; name: string }[]>((acc, m) => {
+    return (medicines || []).reduce<{ id: string; name: string }[]>((acc, m) => {
       if (!seen.has(m.categoryId)) {
         seen.add(m.categoryId);
         acc.push({ id: m.categoryId, name: m.categoryName });
@@ -157,7 +157,7 @@ export const MedicinesPage: React.FC = () => {
             </div>
             <div>
               <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Total Medicines</p>
-              <p className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{medicines.length}</p>
+              <p className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{(medicines || []).length}</p>
             </div>
           </div>
         </div>
@@ -397,9 +397,9 @@ export const MedicinesPage: React.FC = () => {
                     onChange={e => setFormData({ ...formData, categoryId: e.target.value })}
                     className={inputClass}
                   >
-                    <option value="">Select Category</option>
-                    {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                  </select>
+                      <option value="">Select Category</option>
+                      {(categories || []).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    </select>
                 </div>
                 <div>
                   <label className={`flex items-center gap-2 text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
@@ -409,9 +409,9 @@ export const MedicinesPage: React.FC = () => {
                     value={String(formData.unitTypeId)}
                     onChange={e => setFormData({ ...formData, unitTypeId: Number(e.target.value) })}
                     className={inputClass}
-                  >
-                    {unitTypes.map(u => <option key={u.id} value={Number(u.id)}>{u.name}</option>)}
-                  </select>
+                   >
+                     {(unitTypes || []).map(u => <option key={u.id} value={Number(u.id)}>{u.name}</option>)}
+                   </select>
                 </div>
               </div>
               <div>
@@ -501,9 +501,9 @@ export const MedicinesPage: React.FC = () => {
                       value={formData.categoryId}
                       onChange={e => setFormData({ ...formData, categoryId: e.target.value })}
                       className={inputClass}
-                    >
-                      {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                    </select>
+                     >
+                       {(categories || []).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                     </select>
                   </div>
                   <div>
                     <label className={`flex items-center gap-2 text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
@@ -514,7 +514,7 @@ export const MedicinesPage: React.FC = () => {
                       onChange={e => setFormData({ ...formData, unitTypeId: Number(e.target.value) })}
                       className={inputClass}
                     >
-                      {unitTypes.map(u => <option key={u.id} value={Number(u.id)}>{u.name}</option>)}
+                      {(unitTypes || []).map(u => <option key={u.id} value={Number(u.id)}>{u.name}</option>)}
                     </select>
                   </div>
                 </div>

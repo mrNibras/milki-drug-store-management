@@ -313,7 +313,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({ loading: true, error: null });
     try {
       const res = await api.get<BranchResponse[]>('/branches');
-      set({ branches: res.data.map(b => ({
+      set({ branches: (Array.isArray(res.data) ? res.data : []).map(b => ({
         id: String(b.branchId),
         name: b.branchName,
         location: b.location,
@@ -409,7 +409,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({ loading: true, error: null });
     try {
       const res = await api.get<UserResponse[]>('/users');
-      set({ users: res.data.map(toUser), loading: false });
+      set({ users: (Array.isArray(res.data) ? res.data : []).map(toUser), loading: false });
     } catch (e: any) {
       set({ error: e.response?.data?.message || 'Failed to fetch users', loading: false });
     }
@@ -480,7 +480,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({ loading: true, error: null });
     try {
       const res = await api.get<Category[]>('/categories');
-      set({ categories: res.data.map(c => ({
+      set({ categories: (Array.isArray(res.data) ? res.data : []).map(c => ({
         id: String(c.categoryId),
         name: c.name,
         unitTypeId: c.unitTypeId || 1,
@@ -537,7 +537,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({ loading: true, error: null });
     try {
       const res = await api.get<CosmeticCategoryResponse[]>('/cosmeticcategories');
-      set({ cosmeticCategories: res.data.map(c => ({
+      set({ cosmeticCategories: (Array.isArray(res.data) ? res.data : []).map(c => ({
         id: String(c.cosmeticCategoryId),
         name: c.name,
         description: c.description,
@@ -587,7 +587,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   fetchUnitTypes: async () => {
     try {
       const res = await api.get<UnitType[]>('/unittypes');
-      set({ unitTypes: res.data.map(toUnitType) });
+      set({ unitTypes: (Array.isArray(res.data) ? res.data : []).map(toUnitType) });
     } catch (e) {
       console.error('Failed to fetch unit types', e);
     }
@@ -597,7 +597,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({ loading: true, error: null });
     try {
       const res = await api.get<MedicineResponse[]>('/medicines');
-      set({ medicines: res.data.map(toMedicine), loading: false });
+      set({ medicines: (Array.isArray(res.data) ? res.data : []).map(toMedicine), loading: false });
     } catch (e: any) {
       set({ error: e.response?.data?.message || 'Failed to fetch medicines', loading: false });
     }
@@ -651,7 +651,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({ loading: true, error: null });
     try {
       const res = await api.get<CosmeticResponse[]>('/cosmetics');
-      set({ cosmetics: res.data.map(toCosmetic), loading: false });
+      set({ cosmetics: (Array.isArray(res.data) ? res.data : []).map(toCosmetic), loading: false });
     } catch (e: any) {
       set({ error: e.response?.data?.message || 'Failed to fetch cosmetics', loading: false });
     }
@@ -708,7 +708,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({ loading: true, error: null });
     try {
       const res = await api.get<SupplierResponse[]>('/suppliers');
-      set({ suppliers: res.data.map(toSupplier), loading: false });
+      set({ suppliers: (Array.isArray(res.data) ? res.data : []).map(toSupplier), loading: false });
     } catch (e: any) {
       set({ error: e.response?.data?.message || 'Failed to fetch suppliers', loading: false });
     }
@@ -755,7 +755,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({ loading: true, error: null });
     try {
       const res = await api.get<PurchaseResponse[]>('/purchases');
-      set({ purchases: res.data.map(toPurchase), loading: false });
+      set({ purchases: (Array.isArray(res.data) ? res.data : []).map(toPurchase), loading: false });
     } catch (e: any) {
       set({ error: e.response?.data?.message || 'Failed to fetch purchases', loading: false });
     }
@@ -797,7 +797,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({ loading: true, error: null });
     try {
       const res = await api.get<SaleResponse[]>('/sales');
-      set({ sales: res.data.map(toSale), loading: false });
+      set({ sales: (Array.isArray(res.data) ? res.data : []).map(toSale), loading: false });
     } catch (e: any) {
       set({ error: e.response?.data?.message || 'Failed to fetch sales', loading: false });
     }

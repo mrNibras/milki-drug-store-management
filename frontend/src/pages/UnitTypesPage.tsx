@@ -20,8 +20,8 @@ export const UnitTypesPage: React.FC = () => {
     fetchUnitTypes();
   }, [fetchUnitTypes]);
 
-  const filteredUnitTypes = unitTypes.filter(u =>
-    u.name.toLowerCase().includes(search.toLowerCase()) ||
+  const filteredUnitTypes = (unitTypes || []).filter(u =>
+    u.name?.toLowerCase().includes(search.toLowerCase()) ||
     (u.description && u.description.toLowerCase().includes(search.toLowerCase()))
   );
 
