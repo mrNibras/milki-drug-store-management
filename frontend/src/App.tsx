@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { MainLayout } from './layouts/MainLayout';
 import { LoginPage } from './pages/LoginPage';
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
@@ -29,6 +29,7 @@ import { LanguageProvider, useTranslation } from './i18n/LanguageContext';
 function AppContent() {
   const isAuthenticated = useAppStore((state) => state.isAuthenticated);
   const { setLanguage } = useTranslation();
+  const [authInitialized, setAuthInitialized] = useState(false);
 
   useEffect(() => {
     try {
@@ -47,6 +48,8 @@ function AppContent() {
       localStorage.removeItem('auth_token');
       localStorage.removeItem('current_user');
       localStorage.removeItem('current_branch');
+    } finally {
+      setAuthInitialized(true);
     }
   }, []);
 
@@ -73,6 +76,14 @@ function AppContent() {
     }, 7 * 60 * 60 * 1000);
     return () => clearInterval(interval);
   }, [isAuthenticated]);
+
+  if (!authInitialized) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+      </div>
+    );
+  }
 
   return (
     <BrowserRouter>
