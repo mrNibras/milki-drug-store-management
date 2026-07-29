@@ -58,7 +58,7 @@ export const DamageExpiryPage: React.FC = () => {
 
   const handleRecordDamage = async () => {
     if (!damageForm.medicineId || !damageForm.batchId || !damageForm.quantity) return;
-    const medicine = medicines.find(m => m.id === damageForm.medicineId);
+    const medicine = (medicines || []).find(m => m.id === damageForm.medicineId);
     const batch = medicine?.batches.find(b => b.id === damageForm.batchId);
     if (!medicine || !batch) return;
 
@@ -77,7 +77,7 @@ export const DamageExpiryPage: React.FC = () => {
 
   const handleRecordExpired = async () => {
     if (!expiredForm.medicineId || !expiredForm.batchId || !expiredForm.quantity) return;
-    const medicine = medicines.find(m => m.id === expiredForm.medicineId);
+    const medicine = (medicines || []).find(m => m.id === expiredForm.medicineId);
     const batch = medicine?.batches.find(b => b.id === expiredForm.batchId);
     if (!medicine || !batch) return;
 
@@ -135,7 +135,7 @@ export const DamageExpiryPage: React.FC = () => {
           <Clock className="h-4 w-4" /> 
           Expiring Soon 
           <span className={`ml-1 px-2 py-0.5 rounded-full text-xs ${activeTab === 'expiring' ? 'bg-white/20' : isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
-            {expiringMedicines.length}
+            {(expiringMedicines || []).length}
           </span>
         </button>
         <button
@@ -149,7 +149,7 @@ export const DamageExpiryPage: React.FC = () => {
           <AlertTriangle className="h-4 w-4" /> 
           Expired 
           <span className={`ml-1 px-2 py-0.5 rounded-full text-xs ${activeTab === 'expired' ? 'bg-white/20' : isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
-            {expiredMedicines.length}
+            {(expiredMedicines || []).length}
           </span>
         </button>
         <button
@@ -163,7 +163,7 @@ export const DamageExpiryPage: React.FC = () => {
           <Trash2 className="h-4 w-4" /> 
           Damages 
           <span className={`ml-1 px-2 py-0.5 rounded-full text-xs ${activeTab === 'damages' ? 'bg-white/20' : isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
-            {damages.length}
+            {(damages || []).length}
           </span>
         </button>
       </div>
@@ -191,19 +191,19 @@ export const DamageExpiryPage: React.FC = () => {
             <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl border p-4`}>
               <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Critical (≤30 days)</p>
               <p className="text-2xl font-bold text-red-500 mt-1">
-                {expiringMedicines.filter(i => i.daysLeft <= 30).length}
+                {(expiringMedicines || []).filter(i => i.daysLeft <= 30).length}
               </p>
             </div>
             <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl border p-4`}>
               <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Warning (31-90 days)</p>
               <p className="text-2xl font-bold text-amber-500 mt-1">
-                {expiringMedicines.filter(i => i.daysLeft > 30 && i.daysLeft <= 90).length}
+                {(expiringMedicines || []).filter(i => i.daysLeft > 30 && i.daysLeft <= 90).length}
               </p>
             </div>
             <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl border p-4`}>
               <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Monitor (91-180 days)</p>
               <p className="text-2xl font-bold text-blue-500 mt-1">
-                {expiringMedicines.filter(i => i.daysLeft > 90).length}
+                {(expiringMedicines || []).filter(i => i.daysLeft > 90).length}
               </p>
             </div>
           </div>
@@ -222,7 +222,7 @@ export const DamageExpiryPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody className={`divide-y ${isDark ? 'divide-gray-700' : 'divide-gray-100'}`}>
-                {expiringMedicines.map(item => (
+                {(expiringMedicines || []).map(item => (
                   <tr key={item.id} className={isDark ? 'hover:bg-gray-700/50' : 'hover:bg-gray-50'}>
                     <td className="px-6 py-3">
                       <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{item.medicineName}</p>
@@ -258,7 +258,7 @@ export const DamageExpiryPage: React.FC = () => {
                 ))}
               </tbody>
             </table>
-            {expiringMedicines.length === 0 && (
+            {(expiringMedicines || []).length === 0 && (
               <div className="text-center py-12">
                 <CheckCircle className={`h-12 w-12 mx-auto mb-3 ${isDark ? 'text-emerald-600' : 'text-emerald-400'}`} />
                 <p className={`font-medium ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>No items expiring soon</p>
@@ -309,7 +309,7 @@ export const DamageExpiryPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody className={`divide-y ${isDark ? 'divide-gray-700' : 'divide-gray-100'}`}>
-                {expiredMedicines.map(item => (
+                {(expiredMedicines || []).map(item => (
                   <tr key={item.id} className={isDark ? 'hover:bg-red-900/10' : 'hover:bg-red-50/50'}>
                     <td className="px-6 py-3">
                       <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{item.medicineName}</p>
@@ -328,7 +328,7 @@ export const DamageExpiryPage: React.FC = () => {
                 ))}
               </tbody>
             </table>
-            {expiredMedicines.length === 0 && (
+            {(expiredMedicines || []).length === 0 && (
               <div className="text-center py-12">
                 <CheckCircle className={`h-12 w-12 mx-auto mb-3 ${isDark ? 'text-emerald-600' : 'text-emerald-400'}`} />
                 <p className={`font-medium ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>No expired items</p>
@@ -367,7 +367,7 @@ export const DamageExpiryPage: React.FC = () => {
 
           {/* Table */}
           <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl border overflow-hidden`}>
-            {damages.length > 0 ? (
+            {(damages || []).length > 0 ? (
               <table className="w-full">
                 <thead>
                   <tr className={isDark ? 'bg-gray-700' : 'bg-gray-50'}>
@@ -379,7 +379,7 @@ export const DamageExpiryPage: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className={`divide-y ${isDark ? 'divide-gray-700' : 'divide-gray-100'}`}>
-                  {damages.map(damage => (
+                  {(damages || []).map(damage => (
                     <tr key={damage.damageId} className={isDark ? 'hover:bg-gray-700/50' : 'hover:bg-gray-50'}>
                       <td className={`px-6 py-3 font-medium text-sm ${isDark ? 'text-white' : ''}`}>{damage.medicineName || '-'}</td>
                       <td className={`px-6 py-3 font-mono text-sm ${isDark ? 'text-gray-300' : ''}`}>{damage.batchNumber || '-'}</td>
@@ -426,7 +426,7 @@ export const DamageExpiryPage: React.FC = () => {
                   className={inputClass}
                 >
                   <option value="">Select Medicine</option>
-                  {medicines.filter(m => m.batches.some(b => b.quantity > 0)).map(m => (
+                  {(medicines || []).filter(m => m.batches.some(b => b.quantity > 0)).map(m => (
                     <option key={m.id} value={m.id}>{m.name}</option>
                   ))}
                 </select>
@@ -441,7 +441,7 @@ export const DamageExpiryPage: React.FC = () => {
                   className={inputClass}
                 >
                   <option value="">Select Batch</option>
-                  {medicines.find(m => m.id === damageForm.medicineId)?.batches.filter(b => b.quantity > 0).map(b => (
+                  {(medicines || []).find(m => m.id === damageForm.medicineId)?.batches.filter(b => b.quantity > 0).map(b => (
                     <option key={b.id} value={b.id}>{b.batchNumber} (Qty: {b.quantity})</option>
                   ))}
                 </select>
@@ -514,7 +514,7 @@ export const DamageExpiryPage: React.FC = () => {
                   className={inputClass}
                 >
                   <option value="">Select Medicine</option>
-                  {medicines.filter(m => m.batches.some(b => b.quantity > 0)).map(m => (
+                  {(medicines || []).filter(m => m.batches.some(b => b.quantity > 0)).map(m => (
                     <option key={m.id} value={m.id}>{m.name}</option>
                   ))}
                 </select>
@@ -529,7 +529,7 @@ export const DamageExpiryPage: React.FC = () => {
                   className={inputClass}
                 >
                   <option value="">Select Batch</option>
-                  {medicines.find(m => m.id === expiredForm.medicineId)?.batches.filter(b => b.quantity > 0).map(b => (
+                  {(medicines || []).find(m => m.id === expiredForm.medicineId)?.batches.filter(b => b.quantity > 0).map(b => (
                     <option key={b.id} value={b.id}>{b.batchNumber} (Qty: {b.quantity})</option>
                   ))}
                 </select>

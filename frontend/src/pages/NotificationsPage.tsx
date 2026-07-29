@@ -68,7 +68,7 @@ export const NotificationsPage: React.FC = () => {
             </div>
             <div>
               <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Total</p>
-              <p className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{notifications.length}</p>
+              <p className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{(notifications || []).length}</p>
             </div>
           </div>
         </div>
@@ -110,13 +110,13 @@ export const NotificationsPage: React.FC = () => {
       {/* Notifications List */}
       <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl border overflow-hidden`}>
         <div className={`divide-y ${isDark ? 'divide-gray-700' : 'divide-gray-100'}`}>
-          {notifications.length === 0 ? (
+          {(notifications || []).length === 0 ? (
             <div className="text-center py-16">
               <Bell className={`h-12 w-12 mx-auto mb-3 ${isDark ? 'text-gray-600' : 'text-gray-300'}`} />
               <p className={isDark ? 'text-gray-400' : 'text-gray-500'}>No notifications</p>
             </div>
           ) : (
-            notifications.map(notification => (
+            (notifications || []).map(notification => (
               <div
                 key={notification.id}
                 className={`flex items-start gap-4 p-5 transition-colors ${getBgColor(notification.type, notification.isRead)} ${isDark ? 'hover:bg-gray-700/50' : 'hover:bg-gray-50'}`}

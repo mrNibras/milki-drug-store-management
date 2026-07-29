@@ -33,7 +33,7 @@ export const ReportsPage: React.FC = () => {
   // Sales Report Data
   const salesByDate = useMemo(() => {
     const grouped: Record<string, { sales: number; profit: number; count: number }> = {};
-    sales.forEach(s => {
+    (sales || []).forEach(s => {
       const date = s.saleDate.split('T')[0];
       if (!grouped[date]) grouped[date] = { sales: 0, profit: 0, count: 0 };
       grouped[date].sales += s.totalAmount;
@@ -45,14 +45,14 @@ export const ReportsPage: React.FC = () => {
       .sort((a, b) => a.date.localeCompare(b.date));
   }, [sales]);
 
-  const totalSales = sales.reduce((s, sale) => s + sale.totalAmount, 0);
-  const totalProfit = sales.reduce((s, sale) => s + sale.profit, 0);
+  const totalSales = (sales || []).reduce((s, sale) => s + sale.totalAmount, 0);
+  const totalProfit = (sales || []).reduce((s, sale) => s + sale.profit, 0);
 
   // Most Selling Items by Month
   const mostSellingByMonth = useMemo(() => {
     const months: Record<string, Record<string, { name: string; quantity: number; revenue: number }>> = {};
     
-    sales.forEach(sale => {
+    (sales || []).forEach(sale => {
       const month = sale.saleDate.slice(0, 7); // YYYY-MM
       if (!months[month]) months[month] = {};
       
@@ -96,7 +96,7 @@ export const ReportsPage: React.FC = () => {
     // Get start of year
     const startOfYear = new Date(now.getFullYear(), 0, 1);
 
-    return sales.filter(sale => {
+    return (sales || []).filter(sale => {
       const saleDate = new Date(sale.saleDate);
       
       switch (dateRange) {
@@ -115,14 +115,14 @@ export const ReportsPage: React.FC = () => {
   }, [sales, dateRange]);
 
   // Calculate stats for filtered period
-  const filteredTotalSales = filteredSales.reduce((s, sale) => s + sale.totalAmount, 0);
-  const filteredTotalProfit = filteredSales.reduce((s, sale) => s + sale.profit, 0);
-  const filteredTotalTransactions = filteredSales.length;
+  const filteredTotalSales = (filteredSales || []).reduce((s, sale) => s + sale.totalAmount, 0);
+  const filteredTotalProfit = (filteredSales || []).reduce((s, sale) => s + sale.profit, 0);
+  const filteredTotalTransactions = (filteredSales || []).length;
 
   // Overall most selling
   const overallMostSelling = useMemo(() => {
     const itemSales: Record<string, { name: string; quantity: number; revenue: number }> = {};
-    sales.forEach(sale => {
+    (sales || []).forEach(sale => {
       sale.items.forEach(item => {
         if (!itemSales[item.medicineId]) {
           itemSales[item.medicineId] = { name: item.medicineName, quantity: 0, revenue: 0 };
@@ -136,7 +136,7 @@ export const ReportsPage: React.FC = () => {
 
   // Inventory Report Data
   const inventoryData = useMemo(() => {
-    return medicines.map(m => {
+    return (medicines || []).map(m => {
       const totalQty = m.batches.reduce((s, b) => s + b.quantity, 0);
       const totalValue = m.batches.reduce((s, b) => s + (b.quantity * b.purchasePrice), 0);
       return {
@@ -149,14 +149,14 @@ export const ReportsPage: React.FC = () => {
     }).sort((a, b) => a.quantity - b.quantity);
   }, [medicines]);
 
-  const totalInventoryValue = inventoryData.reduce((s, i) => s + i.value, 0);
-  const outOfStockItems = inventoryData.filter(i => i.status === 'Out of Stock').length;
-  const lowStockItems = inventoryData.filter(i => i.status === 'Low Stock').length;
+  const totalInventoryValue = (inventoryData || []).reduce((s, i) => s + i.value, 0);
+  const outOfStockItems = (inventoryData || []).filter(i => i.status === 'Out of Stock').length;
+  const lowStockItems = (inventoryData || []).filter(i => i.status === 'Low Stock').length;
 
   // Supplier Report Data
   const supplierData = useMemo(() => {
-    return suppliers.map(s => {
-      const supplierPurchases = purchases.filter(p => p.supplierId === s.id);
+    return (suppliers || []).map(s => {
+      const supplierPurchases = (purchases || []).filter(p => p.supplierId === s.id);
       const totalAmount = supplierPurchases.reduce((sum, p) => sum + p.totalAmount, 0);
       const totalPaid = supplierPurchases.reduce((sum, p) => sum + p.amountPaid, 0);
       const totalDebt = supplierPurchases.reduce((sum, p) => sum + p.remainingDebt, 0);
@@ -173,8 +173,8 @@ export const ReportsPage: React.FC = () => {
 
   // Staff Report Data
   const staffData = useMemo(() => {
-    return users.filter(u => u.isActive).map(u => {
-      const userSales = sales.filter(s => s.userId === u.id);
+    return (users || []).filter(u => u.isActive).map(u => {
+      const userSales = (sales || []).filter(s => s.userId === u.id);
       const totalAmount = userSales.reduce((sum, s) => sum + s.totalAmount, 0);
       const totalProfitAmount = userSales.reduce((sum, s) => sum + s.profit, 0);
       return {
@@ -294,7 +294,7 @@ export const ReportsPage: React.FC = () => {
                 Sales Detail - {dateRange === 'daily' ? 'Today' : dateRange === 'weekly' ? 'This Week' : dateRange === 'monthly' ? 'This Month' : 'This Year'}
               </h3>
               <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'} mt-1`}>
-                Showing {filteredSales.length} transaction{filteredSales.length !== 1 ? 's' : ''}
+                Showing {(filteredSales || []).length} transaction{(filteredSales || []).length !== 1 ? 's' : ''}
               </p>
             </div>
             <table className="w-full">
@@ -309,7 +309,7 @@ export const ReportsPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody className={`divide-y ${isDark ? 'divide-gray-700' : 'divide-gray-100'}`}>
-                {filteredSales.map(sale => (
+                {(filteredSales || []).map(sale => (
                   <tr key={sale.id} className={isDark ? 'hover:bg-gray-700/50' : 'hover:bg-gray-50'}>
                     <td className="px-6 py-3 font-mono text-sm text-blue-500">{sale.saleNumber}</td>
                     <td className={`px-6 py-3 text-sm ${isDark ? 'text-gray-300' : ''}`}>
@@ -331,11 +331,11 @@ export const ReportsPage: React.FC = () => {
                   </tr>
                 ))}
               </tbody>
-              {filteredSales.length > 0 && (
+              {(filteredSales || []).length > 0 && (
                 <tfoot>
                   <tr className={`border-t-2 ${isDark ? 'border-gray-600 bg-gray-700/50' : 'border-gray-200 bg-gray-50'}`}>
                     <td colSpan={4} className={`px-6 py-3 text-sm font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                      Total ({filteredSales.length} transaction{filteredSales.length !== 1 ? 's' : ''})
+                      Total ({(filteredSales || []).length} transaction{(filteredSales || []).length !== 1 ? 's' : ''})
                     </td>
                     <td className={`px-6 py-3 text-sm font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{formatCurrency(filteredTotalSales)}</td>
                     <td className="px-6 py-3 text-sm font-bold text-emerald-500">{formatCurrency(filteredTotalProfit)}</td>
@@ -343,7 +343,7 @@ export const ReportsPage: React.FC = () => {
                 </tfoot>
               )}
             </table>
-            {filteredSales.length === 0 && (
+            {(filteredSales || []).length === 0 && (
               <div className="text-center py-12">
                 <BarChart3 className={`h-12 w-12 mx-auto mb-3 ${isDark ? 'text-gray-600' : 'text-gray-300'}`} />
                 <p className={isDark ? 'text-gray-400' : 'text-gray-500'}>No sales found for this period</p>
@@ -375,7 +375,7 @@ export const ReportsPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody className={`divide-y ${isDark ? 'divide-gray-700' : 'divide-gray-100'}`}>
-                {overallMostSelling.map((item, index) => {
+                {(overallMostSelling || []).map((item, index) => {
                   const maxQty = overallMostSelling[0]?.quantity || 1;
                   const percentage = (item.quantity / maxQty) * 100;
                   const medals = ['🥇', '🥈', '🥉'];
@@ -423,7 +423,7 @@ export const ReportsPage: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className={`divide-y ${isDark ? 'divide-gray-700' : 'divide-gray-100'}`}>
-                  {items.map((item, index) => {
+                  {(items || []).map((item, index) => {
                     const medals = ['🥇', '🥈', '🥉'];
                     return (
                       <tr key={item.name} className={isDark ? 'hover:bg-gray-700/50' : 'hover:bg-gray-50'}>
@@ -472,7 +472,7 @@ export const ReportsPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody className={`divide-y ${isDark ? 'divide-gray-700' : 'divide-gray-100'}`}>
-                {inventoryData.map((item, i) => (
+                {(inventoryData || []).map((item, i) => (
                   <tr key={i} className={isDark ? 'hover:bg-gray-700/50' : 'hover:bg-gray-50'}>
                     <td className={`px-6 py-3 font-medium text-sm ${isDark ? 'text-white' : ''}`}>{item.name}</td>
                     <td className={`px-6 py-3 text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{item.category}</td>
@@ -554,7 +554,7 @@ export const ReportsPage: React.FC = () => {
               </tr>
             </thead>
             <tbody className={`divide-y ${isDark ? 'divide-gray-700' : 'divide-gray-100'}`}>
-              {supplierData.map((item, i) => (
+              {(supplierData || []).map((item, i) => (
                 <tr key={i} className={isDark ? 'hover:bg-gray-700/50' : 'hover:bg-gray-50'}>
                   <td className={`px-6 py-3 font-medium text-sm ${isDark ? 'text-white' : ''}`}>{item.name}</td>
                   <td className={`px-6 py-3 text-sm text-center ${isDark ? 'text-gray-300' : ''}`}>{item.purchases}</td>
@@ -593,7 +593,7 @@ export const ReportsPage: React.FC = () => {
               </tr>
             </thead>
             <tbody className={`divide-y ${isDark ? 'divide-gray-700' : 'divide-gray-100'}`}>
-              {staffData.map((item, i) => (
+              {(staffData || []).map((item, i) => (
                 <tr key={i} className={isDark ? 'hover:bg-gray-700/50' : 'hover:bg-gray-50'}>
                   <td className={`px-6 py-3 font-medium text-sm ${isDark ? 'text-white' : ''}`}>{item.name}</td>
                   <td className={`px-6 py-3 text-sm capitalize ${isDark ? 'text-gray-300' : ''}`}>{item.role}</td>

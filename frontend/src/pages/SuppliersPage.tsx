@@ -33,7 +33,7 @@ export const SuppliersPage: React.FC = () => {
   const supplierFinancials = useMemo(() => {
     const summary: Record<string, SupplierFinancialSummary> = {};
     
-    suppliers.forEach(supplier => {
+    (suppliers || []).forEach(supplier => {
       summary[supplier.id] = {
         supplierId: supplier.id,
         totalPurchases: 0,
@@ -44,7 +44,7 @@ export const SuppliersPage: React.FC = () => {
       };
     });
 
-    purchases.forEach(purchase => {
+    (purchases || []).forEach(purchase => {
       if (summary[purchase.supplierId]) {
         summary[purchase.supplierId].totalPurchases += purchase.totalAmount;
         summary[purchase.supplierId].totalPaid += purchase.amountPaid;
@@ -133,7 +133,7 @@ export const SuppliersPage: React.FC = () => {
 
   const handleDelete = (id: string) => {
     if (window.confirm('Are you sure you want to delete this supplier?')) {
-      const supplier = suppliers.find(s => s.id === id);
+      const supplier = (suppliers || []).find(s => s.id === id);
       deleteSupplier(id);
     }
   };
@@ -182,7 +182,7 @@ export const SuppliersPage: React.FC = () => {
             </div>
             <div>
               <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Total Suppliers</p>
-              <p className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{suppliers.length}</p>
+              <p className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{(suppliers || []).length}</p>
             </div>
           </div>
         </div>
@@ -193,7 +193,7 @@ export const SuppliersPage: React.FC = () => {
             </div>
             <div>
               <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Cleared</p>
-              <p className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{suppliers.length - suppliersWithDebt}</p>
+              <p className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{(suppliers || []).length - suppliersWithDebt}</p>
             </div>
           </div>
         </div>
@@ -252,7 +252,7 @@ export const SuppliersPage: React.FC = () => {
               </tr>
             </thead>
             <tbody className={`divide-y ${isDark ? 'divide-gray-700' : 'divide-gray-100'}`}>
-              {filteredSuppliers.map(supplier => {
+              {(filteredSuppliers || []).map(supplier => {
                 const financial = supplierFinancials[supplier.id];
                 return (
                   <tr key={supplier.id} className={isDark ? 'hover:bg-gray-700/50' : 'hover:bg-gray-50'}>

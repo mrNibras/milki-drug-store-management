@@ -32,7 +32,7 @@ export const PurchasesPage: React.FC = () => {
   const [amountPaid, setAmountPaid] = useState('');
 
   const filteredPurchases = useMemo(() => {
-    return purchases.filter(p =>
+    return (purchases || []).filter(p =>
       p.purchaseNumber.toLowerCase().includes(search.toLowerCase()) ||
       p.supplierName.toLowerCase().includes(search.toLowerCase()) ||
       p.items.some(i => 
@@ -42,13 +42,13 @@ export const PurchasesPage: React.FC = () => {
     ).sort((a, b) => new Date(b.purchaseDate).getTime() - new Date(a.purchaseDate).getTime());
   }, [purchases, search]);
 
-  const totalAmount = items.reduce((sum, item) => {
+  const totalAmount = (items || []).reduce((sum, item) => {
     const qty = Number(item.quantity) || 0;
     const price = Number(item.purchasePrice) || 0;
     return sum + (qty * price);
   }, 0);
 
-  const totalItems = items.filter(i => i.medicineName && i.quantity).length;
+  const totalItems = (items || []).filter(i => i.medicineName && i.quantity).length;
 
   const resetForm = () => {
     setSelectedSupplier('');
@@ -80,18 +80,18 @@ export const PurchasesPage: React.FC = () => {
   };
 
   const handleRemoveRow = (id: string) => {
-    setItems(items.filter(item => item.id !== id));
+    setItems((items || []).filter(item => item.id !== id));
   };
 
   const handleItemChange = (id: string, field: keyof BulkPurchaseItem, value: string) => {
-    setItems(items.map(item => {
+    setItems((items || []).map(item => {
       if (item.id !== id) return item;
       
       const updated = { ...item, [field]: value, errors: [] };
       
       // Auto-fill when medicine is selected from existing
       if (field === 'medicineName') {
-        const existingMedicine = medicines.find(m => 
+        const existingMedicine = (medicines || []).find(m => 
           m.name.toLowerCase() === value.toLowerCase()
         );
         if (existingMedicine) {
@@ -112,7 +112,7 @@ export const PurchasesPage: React.FC = () => {
       }
       
       if (field === 'categoryId') {
-        const cat = categories.find(c => c.id === value);
+        const cat = (categories || []).find(c => c.id === value);
         if (cat) {
           updated.categoryName = cat.name;
         }
@@ -124,7 +124,7 @@ export const PurchasesPage: React.FC = () => {
 
   const validateItems = (): boolean => {
     let isValid = true;
-    const validatedItems = items.map(item => {
+    const validatedItems = (items || []).map(item => {
       const errors: string[] = [];
       
       if (!item.medicineName.trim()) errors.push('Medicine name required');
@@ -136,7 +136,7 @@ export const PurchasesPage: React.FC = () => {
       if (item.isNewMedicine && !item.categoryId) errors.push('Category required for new medicine');
       
       // Check duplicate batch numbers
-      const duplicateBatch = items.find(i => 
+      const duplicateBatch = (items || []).find(i => 
         i.id !== item.id && 
         i.batchNumber.toLowerCase() === item.batchNumber.toLowerCase() &&
         i.medicineName.toLowerCase() === item.medicineName.toLowerCase()
@@ -157,7 +157,7 @@ export const PurchasesPage: React.FC = () => {
       return;
     }
     
-    if (items.length === 0) {
+    if ((items || []).length === 0) {
       alert('Please add at least one item');
       return;
     }
@@ -171,16 +171,16 @@ export const PurchasesPage: React.FC = () => {
     // Simulate processing delay
     await new Promise(resolve => setTimeout(resolve, 500));
     
-    const supplier = suppliers.find(s => s.id === selectedSupplier);
+    const supplier = (suppliers || []).find(s => s.id === selectedSupplier);
     if (!supplier) {
       setIsProcessing(false);
       return;
     }
     
-    const purchaseNumber = generatePurchaseNumber(purchases.length);
+    const purchaseNumber = generatePurchaseNumber((purchases || []).length);
     
     // Process each item - backend will auto-create medicines/batches as needed
-    const processedItems = items.map(item => {
+    const processedItems = (items || []).map(item => {
       const medicineId = item.existingMedicineId || '0';
       
       return {
@@ -297,7 +297,7 @@ export const PurchasesPage: React.FC = () => {
             </div>
             <div>
               <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Total Purchases</p>
-              <p className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{purchases.length}</p>
+              <p className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{(purchases || []).length}</p>
             </div>
           </div>
         </div>
@@ -308,7 +308,7 @@ export const PurchasesPage: React.FC = () => {
             </div>
             <div>
               <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Total Spent</p>
-              <p className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{formatCurrency(purchases.reduce((s, p) => s + p.totalAmount, 0))}</p>
+              <p className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{formatCurrency((purchases || []).reduce((s, p) => s + p.totalAmount, 0))}</p>
             </div>
           </div>
         </div>
@@ -319,7 +319,7 @@ export const PurchasesPage: React.FC = () => {
             </div>
             <div>
               <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Suppliers</p>
-              <p className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{new Set(purchases.map(p => p.supplierId)).size}</p>
+              <p className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{new Set((purchases || []).map(p => p.supplierId)).size}</p>
             </div>
           </div>
         </div>
@@ -355,7 +355,7 @@ export const PurchasesPage: React.FC = () => {
               </tr>
             </thead>
             <tbody className={`divide-y ${isDark ? 'divide-gray-700' : 'divide-gray-100'}`}>
-              {filteredPurchases.map(purchase => (
+              {(filteredPurchases || []).map(purchase => (
                 <tr key={purchase.id} className={isDark ? 'hover:bg-gray-700/50' : 'hover:bg-gray-50'}>
                   <td className="px-6 py-4">
                     <span className="font-mono text-sm font-medium text-blue-500">{purchase.purchaseNumber}</span>
@@ -399,7 +399,7 @@ export const PurchasesPage: React.FC = () => {
             </tbody>
           </table>
         </div>
-        {filteredPurchases.length === 0 && (
+        {(filteredPurchases || []).length === 0 && (
           <div className="text-center py-12">
             <ClipboardList className={`h-12 w-12 mx-auto mb-3 ${isDark ? 'text-gray-600' : 'text-gray-300'}`} />
             <p className={isDark ? 'text-gray-400' : 'text-gray-500'}>No purchases found</p>
@@ -434,7 +434,7 @@ export const PurchasesPage: React.FC = () => {
                   className={inputClass}
                 >
                   <option value="">Select Supplier</option>
-                  {suppliers.map(s => (
+                  {(suppliers || []).map(s => (
                     <option key={s.id} value={s.id}>{s.name}</option>
                   ))}
                 </select>
@@ -457,7 +457,7 @@ export const PurchasesPage: React.FC = () => {
           <div className={`rounded-xl border overflow-hidden ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
             <div className={`px-4 py-3 flex items-center justify-between ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
               <h4 className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                Medicine Items ({items.length})
+                Medicine Items ({(items || []).length})
               </h4>
               <button
                 onClick={handleAddRow}
@@ -467,7 +467,7 @@ export const PurchasesPage: React.FC = () => {
               </button>
             </div>
             
-            {items.length > 0 ? (
+            {(items || []).length > 0 ? (
               <div className="overflow-x-auto max-h-[400px] overflow-y-auto">
                 <table className="w-full">
                   <thead className={`sticky top-0 z-10 ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
@@ -484,7 +484,7 @@ export const PurchasesPage: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody className={`divide-y ${isDark ? 'divide-gray-700' : 'divide-gray-100'}`}>
-                    {items.map((item, index) => (
+                    {(items || []).map((item, index) => (
                       <tr key={item.id} className={`${isDark ? 'hover:bg-gray-700/30' : 'hover:bg-gray-50'} ${item.errors.length > 0 ? isDark ? 'bg-red-900/10' : 'bg-red-50/50' : ''}`}>
                         <td className={`px-3 py-2 text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{index + 1}</td>
                         <td className="px-3 py-2">
@@ -498,7 +498,7 @@ export const PurchasesPage: React.FC = () => {
                               list={`medicines-${item.id}`}
                             />
                             <datalist id={`medicines-${item.id}`}>
-                              {medicines.map(m => (
+                              {(medicines || []).map(m => (
                                 <option key={m.id} value={m.name} />
                               ))}
                             </datalist>
@@ -525,7 +525,7 @@ export const PurchasesPage: React.FC = () => {
                             className={`${smallInputClass} ${!item.categoryId && item.isNewMedicine ? 'border-red-400' : ''}`}
                           >
                             <option value="">Category</option>
-                            {categories.map(c => (
+                            {(categories || []).map(c => (
                               <option key={c.id} value={c.id}>{c.name}</option>
                             ))}
                           </select>
@@ -597,14 +597,14 @@ export const PurchasesPage: React.FC = () => {
           </div>
 
           {/* Validation Errors */}
-          {items.some(i => i.errors.length > 0) && (
+          {(items || []).some(i => i.errors.length > 0) && (
             <div className={`p-4 rounded-xl border ${isDark ? 'bg-red-900/20 border-red-800' : 'bg-red-50 border-red-200'}`}>
               <div className="flex items-center gap-2 mb-2">
                 <AlertCircle className="h-4 w-4 text-red-500" />
                 <p className="text-sm font-medium text-red-500">Validation Errors</p>
               </div>
               <ul className="space-y-1">
-                {items.filter(i => i.errors.length > 0).map((item) => (
+                {(items || []).filter(i => i.errors.length > 0).map((item) => (
                   <li key={item.id} className="text-xs text-red-400">
                     Row {items.indexOf(item) + 1}: {item.errors.join(', ')}
                   </li>
@@ -763,7 +763,7 @@ export const PurchasesPage: React.FC = () => {
             </button>
             <button
               onClick={handleSave}
-              disabled={isProcessing || items.length === 0 || !selectedSupplier}
+              disabled={isProcessing || (items || []).length === 0 || !selectedSupplier}
               className="px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl text-sm font-medium transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {isProcessing ? (

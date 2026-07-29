@@ -98,7 +98,7 @@ export const BranchesPage: React.FC = () => {
         </div>
       ) : (
         <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4`}>
-          {branches.map((branch) => (
+          {(branches || []).map((branch) => (
             <div key={branch.id} className={`rounded-xl border shadow-sm p-5 ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-3">
@@ -150,7 +150,7 @@ export const BranchesPage: React.FC = () => {
         </div>
       )}
 
-      {branches.length === 0 && !loading && (
+      {(branches || []).length === 0 && !loading && (
         <div className={`text-center py-12 rounded-xl border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
           <Building2 className={`h-12 w-12 mx-auto mb-3 ${isDark ? 'text-gray-600' : 'text-gray-300'}`} />
           <p className={isDark ? 'text-gray-400' : 'text-gray-500'}>No branches found</p>

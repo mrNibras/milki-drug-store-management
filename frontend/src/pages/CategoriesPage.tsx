@@ -66,7 +66,7 @@ export const CategoriesPage: React.FC = () => {
   };
 
   const getUnitTypeName = (unitTypeId: number) => {
-    return unitTypes.find(u => u.id === String(unitTypeId))?.name || 'Unknown';
+    return (unitTypes || []).find(u => u.id === String(unitTypeId))?.name || 'Unknown';
   };
 
   const inputClass = `w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm ${
@@ -114,7 +114,7 @@ export const CategoriesPage: React.FC = () => {
               </tr>
             </thead>
             <tbody className={`divide-y ${isDark ? 'divide-gray-700' : 'divide-gray-100'}`}>
-              {filteredCategories.length === 0 ? (
+              {(filteredCategories || []).length === 0 ? (
                 <tr>
                   <td colSpan={5} className="px-6 py-12 text-center">
                     <Package className={`h-12 w-12 mx-auto mb-3 ${isDark ? 'text-gray-600' : 'text-gray-300'}`} />
@@ -122,7 +122,7 @@ export const CategoriesPage: React.FC = () => {
                   </td>
                 </tr>
               ) : (
-                filteredCategories.map(category => (
+                (filteredCategories || []).map(category => (
                   <tr key={category.id} className={isDark ? 'hover:bg-gray-700/50' : 'hover:bg-gray-50'}>
                     <td className={`px-6 py-3 text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{category.name}</td>
                     <td className="px-6 py-3">
@@ -191,7 +191,7 @@ export const CategoriesPage: React.FC = () => {
               onChange={e => setFormData({ ...formData, unitTypeId: Number(e.target.value) })}
               className={inputClass}
             >
-              {unitTypes.map(u => (
+              {(unitTypes || []).map(u => (
                 <option key={u.id} value={Number(u.id)}>{u.name}</option>
               ))}
             </select>
@@ -221,7 +221,7 @@ export const CategoriesPage: React.FC = () => {
               onChange={e => setFormData({ ...formData, unitTypeId: Number(e.target.value) })}
               className={inputClass}
             >
-              {unitTypes.map(u => (
+              {(unitTypes || []).map(u => (
                 <option key={u.id} value={Number(u.id)}>{u.name}</option>
               ))}
             </select>

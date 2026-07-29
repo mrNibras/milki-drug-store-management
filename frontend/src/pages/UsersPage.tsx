@@ -109,7 +109,7 @@ export const UsersPage: React.FC = () => {
   };
 
   const handleToggleActive = async (userId: string) => {
-    const user = users.find(u => u.id === userId);
+    const user = (users || []).find(u => u.id === userId);
     if (!user || userId === currentUser?.id) return;
     setIsToggling(userId);
     try {
@@ -146,7 +146,7 @@ export const UsersPage: React.FC = () => {
             </div>
             <div>
               <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Total Users</p>
-              <p className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{users.length}</p>
+              <p className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{(users || []).length}</p>
             </div>
           </div>
         </div>
@@ -189,7 +189,7 @@ export const UsersPage: React.FC = () => {
               </tr>
             </thead>
             <tbody className={`divide-y ${isDark ? 'divide-gray-700' : 'divide-gray-100'}`}>
-              {users.map(user => (
+              {(users || []).map(user => (
                 <tr key={user.id} className={isDark ? 'hover:bg-gray-700/50' : 'hover:bg-gray-50'}>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
