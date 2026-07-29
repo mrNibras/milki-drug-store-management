@@ -45,6 +45,11 @@ export const ReportsPage: React.FC = () => {
       .sort((a, b) => a.date.localeCompare(b.date));
   }, [sales]);
 
+  const dailySalesData = salesByDate;
+  const weeklySalesData = salesByDate;
+  const monthlySalesData = salesByDate;
+  const yearlySalesData = salesByDate;
+
   const totalSales = (sales || []).reduce((s, sale) => s + sale.totalAmount, 0);
   const totalProfit = (sales || []).reduce((s, sale) => s + sale.profit, 0);
 
