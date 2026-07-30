@@ -205,7 +205,23 @@ export interface Translations {
     failedToRestore: string;
     failedToChangePassword: string;
     failedToSaveSettings: string;
-    };
+  };
+  medicine: {
+    title: string;
+    name: string;
+    genericName: string;
+    category: string;
+    batchNumber: string;
+    purchasePrice: string;
+    sellingPrice: string;
+    unitType: string;
+    quantity: string;
+    expiryDate: string;
+    addMedicine: string;
+    editMedicine: string;
+    searchPlaceholder: string;
+    lowStockThreshold: string;
+  };
   branches: {
     title: string;
     addBranch: string;
@@ -219,7 +235,6 @@ export interface Translations {
     noBranches: string;
     createFirstBranch: string;
   };
-};
   users: {
     title: string;
     fullName: string;
