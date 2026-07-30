@@ -157,7 +157,7 @@ export interface UnitType {
 
 export interface MedicineResponse {
   medicineId: number;
-  medicineName: string;
+  brandName: string;
   genericName: string;
   categoryId: number;
   categoryName: string;
@@ -211,7 +211,7 @@ export interface PurchaseResponse {
 export interface PurchaseItemResponse {
   purchaseItemId: number;
   medicineId: number;
-  medicineName: string;
+  brandName: string;
   batchNumber: string;
   quantity: number;
   purchasePrice: number;
@@ -226,7 +226,7 @@ export interface CreatePurchaseRequest {
   amountPaid: number;
   items: {
     medicineId: number;
-    medicineName?: string;
+    brandName?: string;
     genericName?: string;
     categoryId?: number;
     unitType?: string;
@@ -260,7 +260,7 @@ export interface SaleResponse {
 export interface SaleItemResponse {
   saleItemId: number;
   medicineId: number;
-  medicineName: string;
+  brandName: string;
   batchId?: number;
   batchNumber: string;
   quantity: number;
@@ -385,7 +385,7 @@ export interface DamageResponse {
   recordedBy: number;
   recordedDate: string;
   batchNumber?: string;
-  medicineName?: string;
+  brandName?: string;
 }
 
 export interface ExpiredResponse {
@@ -395,77 +395,7 @@ export interface ExpiredResponse {
   recordedDate: string;
   recordedBy: number;
   batchNumber?: string;
-  medicineName?: string;
-}
-
-export interface CosmeticResponse {
-  cosmeticId: number;
-  productName: string;
-  description: string;
-  categoryId: number;
-  categoryName: string;
-  unitTypeId: number;
-  unitTypeName: string;
-  price: number;
-  isActive: boolean;
-  createdAt: string;
-  batches: {
-    batchId: number;
-    cosmeticId: number;
-    batchNumber: string;
-    quantityReceived: number;
-    quantityIssued: number;
-    quantityDamaged: number;
-    quantityExpired: number;
-    balance: number;
-    expiryDate: string;
-    dateReceived: string;
-  }[];
-}
-
-export interface CreateCosmeticRequest {
-  productName: string;
-  description: string;
-  categoryId: number;
-  unitTypeId: number;
-  price: number;
-}
-
-export interface UpdateCosmeticRequest {
-  productName: string;
-  description: string;
-  categoryId: number;
-  unitTypeId: number;
-  price: number;
-  isActive: boolean;
-}
-
-export interface AddCosmeticBatchRequest {
-  cosmeticId: number;
-  batchNumber: string;
-  quantity: number;
-  purchasePrice: number;
-  sellingPrice: number;
-  expiryDate: string;
-}
-
-export interface CosmeticCategoryResponse {
-  cosmeticCategoryId: number;
-  name: string;
-  description?: string;
-  isActive: boolean;
-  createdAt: string;
-}
-
-export interface CreateCosmeticCategoryRequest {
-  name: string;
-  description?: string;
-}
-
-export interface UpdateCosmeticCategoryRequest {
-  name: string;
-  description?: string;
-  isActive: boolean;
+  brandName?: string;
 }
 
 // --- Settings / Backup / Restore -----------------------------------------

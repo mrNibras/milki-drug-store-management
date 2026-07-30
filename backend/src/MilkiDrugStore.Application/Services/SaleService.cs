@@ -253,7 +253,7 @@ public class SaleService : ISaleService
             {
                 SaleItemId = i.SaleItemId,
                 MedicineId = i.MedicineId,
-                MedicineName = i.Medicine?.MedicineName ?? "",
+                BrandName = i.Medicine?.BrandName ?? "",
                 BatchId = i.BatchId,
                 BatchNumber = i.Batch?.BatchNumber ?? "",
                 Quantity = i.Quantity,

@@ -15,12 +15,12 @@ public class NotificationRepository : Repository<Notification>, INotificationRep
         return await _dbSet.Where(n => !n.IsRead).OrderByDescending(n => n.CreatedAt).ToListAsync();
     }
 
-    public async Task<Notification?> GetRecentExpiryAlertAsync(string medicineName, int days)
+    public async Task<Notification?> GetRecentExpiryAlertAsync(string brandName, int days)
     {
         var since = DateTime.Now.AddDays(-days);
         return await _dbSet
             .Where(n => n.NotificationType == NotificationTypeStrings.ExpiryAlert
-                     && n.Title.Contains(medicineName)
+                     && n.Title.Contains(brandName)
                      && n.CreatedAt >= since)
             .OrderByDescending(n => n.CreatedAt)
             .FirstOrDefaultAsync();
@@ -34,12 +34,12 @@ public class NotificationRepository : Repository<Notification>, INotificationRep
             .FirstOrDefaultAsync();
     }
 
-    public async Task<Notification?> GetActiveByTypeAndMedicineAsync(string notificationType, string medicineName)
+    public async Task<Notification?> GetActiveByTypeAndMedicineAsync(string notificationType, string brandName)
     {
         return await _dbSet
             .Where(n => n.NotificationType == notificationType
                      && !n.IsRead
-                     && n.Title.Contains(medicineName))
+                     && n.Title.Contains(brandName))
             .OrderByDescending(n => n.CreatedAt)
             .FirstOrDefaultAsync();
     }

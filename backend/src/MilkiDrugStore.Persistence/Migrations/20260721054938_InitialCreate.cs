@@ -310,7 +310,7 @@ namespace MilkiDrugStore.Persistence.Migrations
                 {
                     MedicineId = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    MedicineName = table.Column<string>(type: "TEXT", maxLength: 150, nullable: false),
+                    BrandName = table.Column<string>(type: "TEXT", maxLength: 150, nullable: false),
                     GenericName = table.Column<string>(type: "TEXT", maxLength: 150, nullable: false),
                     CategoryId = table.Column<int>(type: "INTEGER", nullable: false),
                     UnitTypeId = table.Column<int>(type: "INTEGER", nullable: false),
@@ -636,9 +636,9 @@ namespace MilkiDrugStore.Persistence.Migrations
                 column: "CategoryId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Medicines_MedicineName",
+                name: "IX_Medicines_BrandName",
                 table: "Medicines",
-                column: "MedicineName");
+                column: "BrandName");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Medicines_UnitTypeId",

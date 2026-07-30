@@ -45,7 +45,7 @@ public class SaleServiceTests
     [Fact]
     public async Task CreateAsync_WithCashPayment_SetsPaymentStatusPaid()
     {
-        var medicine = new Medicine { MedicineId = 1, MedicineName = "Paracetamol", LowStockThreshold = 10 };
+        var medicine = new Medicine { MedicineId = 1, BrandName = "Paracetamol", LowStockThreshold = 10 };
         var batch = new MedicineBatch
         {
             BatchId = 1,
@@ -83,7 +83,7 @@ public class SaleServiceTests
     [Fact]
     public async Task CreateAsync_WithPartialPayment_SetsPaymentStatusPartial()
     {
-        var medicine = new Medicine { MedicineId = 1, MedicineName = "Paracetamol", LowStockThreshold = 10 };
+        var medicine = new Medicine { MedicineId = 1, BrandName = "Paracetamol", LowStockThreshold = 10 };
         var batch = new MedicineBatch
         {
             BatchId = 1,
@@ -121,7 +121,7 @@ public class SaleServiceTests
     [Fact]
     public async Task CreateAsync_WithZeroPayment_SetsPaymentStatusUnpaid()
     {
-        var medicine = new Medicine { MedicineId = 1, MedicineName = "Paracetamol", LowStockThreshold = 10 };
+        var medicine = new Medicine { MedicineId = 1, BrandName = "Paracetamol", LowStockThreshold = 10 };
         var batch = new MedicineBatch
         {
             BatchId = 1,
@@ -157,7 +157,7 @@ public class SaleServiceTests
     [Fact]
     public async Task CreateAsync_WithDiscount_PreservesDiscountForAdmin()
     {
-        var medicine = new Medicine { MedicineId = 1, MedicineName = "Paracetamol", LowStockThreshold = 10 };
+        var medicine = new Medicine { MedicineId = 1, BrandName = "Paracetamol", LowStockThreshold = 10 };
         var batch = new MedicineBatch
         {
             BatchId = 1,
@@ -197,7 +197,7 @@ public class SaleServiceTests
     [Fact]
     public async Task CreateAsync_WithDiscount_CapsDiscountForPharmacist()
     {
-        var medicine = new Medicine { MedicineId = 1, MedicineName = "Paracetamol", LowStockThreshold = 10 };
+        var medicine = new Medicine { MedicineId = 1, BrandName = "Paracetamol", LowStockThreshold = 10 };
         var batch = new MedicineBatch
         {
             BatchId = 1,
@@ -238,7 +238,7 @@ public class SaleServiceTests
     public async Task GetAllAsync_ReturnsSalesWithItemsAndTotals()
     {
         var user = new User { UserId = 1, FullName = "Admin" };
-        var medicine = new Medicine { MedicineId = 1, MedicineName = "Paracetamol" };
+        var medicine = new Medicine { MedicineId = 1, BrandName = "Paracetamol" };
         var batch = new MedicineBatch { BatchId = 1, MedicineId = 1, BatchNumber = "B001", SellingPrice = 100, PurchasePrice = 50 };
         var sale = new Sale
         {
@@ -284,7 +284,7 @@ public class SaleServiceTests
         s.TotalProfit.Should().Be(100);
         s.UserName.Should().Be("Admin");
         s.Items.Should().HaveCount(1);
-        s.Items[0].MedicineName.Should().Be("Paracetamol");
+        s.Items[0].BrandName.Should().Be("Paracetamol");
         s.Items[0].BatchNumber.Should().Be("B001");
         s.Items[0].DiscountAmount.Should().Be(0);
     }

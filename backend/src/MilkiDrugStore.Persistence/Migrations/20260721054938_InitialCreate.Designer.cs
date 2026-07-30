@@ -274,7 +274,7 @@ namespace MilkiDrugStore.Persistence.Migrations
                     b.Property<int>("LowStockThreshold")
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("MedicineName")
+                    b.Property<string>("BrandName")
                         .IsRequired()
                         .HasMaxLength(150)
                         .HasColumnType("TEXT");
@@ -286,7 +286,7 @@ namespace MilkiDrugStore.Persistence.Migrations
 
                     b.HasIndex("CategoryId");
 
-                    b.HasIndex("MedicineName");
+                    b.HasIndex("BrandName");
 
                     b.HasIndex("UnitTypeId");
 

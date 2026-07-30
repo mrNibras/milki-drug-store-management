@@ -2,7 +2,7 @@ namespace MilkiDrugStore.Application.DTOs.Medicine;
 
 public class CreateMedicineRequest
 {
-    public string MedicineName { get; set; } = string.Empty;
+    public string BrandName { get; set; } = string.Empty;
     public string GenericName { get; set; } = string.Empty;
     public int CategoryId { get; set; }
     public int UnitTypeId { get; set; }
@@ -11,7 +11,7 @@ public class CreateMedicineRequest
 
 public class UpdateMedicineRequest
 {
-    public string MedicineName { get; set; } = string.Empty;
+    public string BrandName { get; set; } = string.Empty;
     public string GenericName { get; set; } = string.Empty;
     public int CategoryId { get; set; }
     public int UnitTypeId { get; set; }
@@ -32,7 +32,7 @@ public class AddBatchRequest
 public class MedicineResponse
 {
     public int MedicineId { get; set; }
-    public string MedicineName { get; set; } = string.Empty;
+    public string BrandName { get; set; } = string.Empty;
     public string GenericName { get; set; } = string.Empty;
     public int CategoryId { get; set; }
     public string CategoryName { get; set; } = string.Empty;

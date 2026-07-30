@@ -106,7 +106,7 @@ public class ReportService : IReportService
             return new InventoryReportResponse
             {
                 MedicineId = m.MedicineId,
-                MedicineName = m.MedicineName,
+                BrandName = m.BrandName,
                 CategoryName = m.Category?.Name ?? "",
                 Quantity = totalQty,
                 Value = totalValue,

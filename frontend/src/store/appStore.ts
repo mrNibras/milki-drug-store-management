@@ -1,6 +1,6 @@
 import { create } from 'zustand';
-import { User, Medicine, Supplier, Purchase, Sale, Notification, CartItem, PharmacySettings, AuditLog, Category, UnitType, Branch, Cosmetic, CosmeticCategory } from '../types';
-import { api, LoginRequest, LoginResponse, CreateSaleRequest, CreatePurchaseRequest, RecordDamageRequest, RecordExpiredRequest, ChangePasswordRequest, DamageResponse, ExpiredResponse, AuditLogResponse, BranchResponse, CreateBranchRequest, UpdateBranchRequest, CosmeticResponse, AddCosmeticBatchRequest, CosmeticCategoryResponse, CreateCosmeticCategoryRequest, UpdateCosmeticCategoryRequest } from '../services/api';
+import { User, Medicine, Supplier, Purchase, Sale, Notification, CartItem, PharmacySettings, AuditLog, Category, UnitType, Branch } from '../types';
+import { api, LoginRequest, LoginResponse, CreateSaleRequest, CreatePurchaseRequest, RecordDamageRequest, RecordExpiredRequest, ChangePasswordRequest, DamageResponse, ExpiredResponse, AuditLogResponse, BranchResponse, CreateBranchRequest, UpdateBranchRequest } from '../services/api';
 import { getSettings, updateSettings } from '../services/settingsApi';
 import { getDaysUntilExpiry, generateId } from '../utils/helpers';
 
@@ -33,13 +33,6 @@ interface AppState {
   updateMedicine: (id: string, updates: Partial<Medicine>) => Promise<void>;
   deleteMedicine: (id: string) => Promise<void>;
 
-  cosmetics: Cosmetic[];
-  fetchCosmetics: () => Promise<void>;
-  addCosmetic: (cosmetic: Cosmetic) => Promise<void>;
-  updateCosmetic: (id: string, updates: Partial<Cosmetic>) => Promise<void>;
-  deleteCosmetic: (id: string) => Promise<void>;
-  addCosmeticBatch: (data: AddCosmeticBatchRequest) => Promise<void>;
-
   suppliers: Supplier[];
   fetchSuppliers: () => Promise<void>;
   addSupplier: (supplier: Supplier) => Promise<void>;
@@ -71,13 +64,6 @@ interface AppState {
 
   categories: Category[];
   fetchCategories: () => Promise<void>;
-  addCategory: (category: Category) => Promise<void>;
-
-  cosmeticCategories: CosmeticCategory[];
-  fetchCosmeticCategories: () => Promise<void>;
-  addCosmeticCategory: (category: CosmeticCategory) => Promise<void>;
-  updateCosmeticCategory: (id: string, updates: Partial<CosmeticCategory>) => Promise<void>;
-  deleteCosmeticCategory: (id: string) => Promise<void>;
 
   unitTypes: UnitType[];
   fetchUnitTypes: () => Promise<void>;
@@ -133,7 +119,7 @@ const toUnitType = (r: { unitTypeId: number; name: string; description?: string;
 
 const toMedicine = (r: MedicineResponse): Medicine => ({
   id: String(r.medicineId),
-  name: r.medicineName,
+  brandName: r.brandName,
   genericName: r.genericName,
   categoryId: String(r.categoryId),
   categoryName: r.categoryName,
@@ -150,31 +136,6 @@ const toMedicine = (r: MedicineResponse): Medicine => ({
     quantity: b.balance,
     expiryDate: b.expiryDate,
     createdAt: b.dateReceived,
-  })),
-});
-
-const toCosmetic = (r: CosmeticResponse): Cosmetic => ({
-  id: String(r.cosmeticId),
-  productName: r.productName,
-  description: r.description,
-  cosmeticCategoryId: String(r.cosmeticCategoryId),
-  cosmeticCategoryName: r.cosmeticCategoryName,
-  unitType: r.unitTypeName,
-  unitTypeId: r.unitTypeId,
-  price: r.price,
-  isActive: r.isActive,
-  createdAt: r.createdAt,
-  batches: r.batches.map(b => ({
-    id: String(b.batchId),
-    cosmeticId: String(b.cosmeticId),
-    batchNumber: b.batchNumber,
-    quantityReceived: b.quantityReceived,
-    quantityIssued: b.quantityIssued,
-    quantityDamaged: b.quantityDamaged,
-    quantityExpired: b.quantityExpired,
-    balance: b.balance,
-    expiryDate: b.expiryDate,
-    dateReceived: b.dateReceived,
   })),
 });
 
@@ -204,7 +165,7 @@ const toPurchase = (r: PurchaseResponse): Purchase => ({
     id: String(i.purchaseItemId),
     purchaseId: String(r.purchaseId),
     medicineId: String(i.medicineId),
-    medicineName: i.medicineName,
+    brandName: i.brandName,
     batchNumber: i.batchNumber,
     quantity: i.quantity,
     purchasePrice: i.purchasePrice,
@@ -232,7 +193,7 @@ const toSale = (r: SaleResponse): Sale => ({
     id: String(i.saleItemId),
     saleId: String(r.saleId),
     medicineId: String(i.medicineId),
-    medicineName: i.medicineName,
+    brandName: i.brandName,
     batchId: i.batchId ? String(i.batchId) : '',
     quantity: i.quantity,
     unitPrice: i.unitPrice - (i.discountAmount ?? 0),
@@ -476,8 +437,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
   },
 
-  fetchCategories: async () => {
-    set({ loading: true, error: null });
+fetchCategories: async () => {
     try {
       const res = await api.get<Category[]>('/categories');
       set({ categories: (Array.isArray(res.data) ? res.data : []).map(c => ({
@@ -486,114 +446,13 @@ export const useAppStore = create<AppState>((set, get) => ({
         unitTypeId: c.unitTypeId || 1,
         isActive: c.isActive ?? true,
         createdAt: new Date().toISOString(),
-      })), loading: false });
-    } catch (e: any) {
-      set({ error: e.response?.data?.message || 'Failed to fetch categories', loading: false });
-    }
-  },
-
-  addCategory: async (category) => {
-    set({ loading: true, error: null });
-    try {
-      await api.post('/categories', {
-        name: category.name,
-        unitTypeId: category.unitTypeId,
-        isActive: category.isActive,
-      });
-      await get().fetchCategories();
-    } catch (e: any) {
-      set({ error: e.response?.data?.message || 'Failed to add category', loading: false });
-      throw e;
-    }
-  },
-
-  updateCategory: async (id, updates) => {
-    try {
-      await api.put(`/categories/${id}`, {
-        name: updates.name,
-        unitTypeId: updates.unitTypeId,
-        isActive: updates.isActive,
-      });
-      set(state => ({
-        categories: state.categories.map(c => c.id === id ? { ...c, ...updates } : c),
-      }));
-    } catch (e: any) {
-      set({ error: e.response?.data?.message || 'Failed to update category' });
-      throw e;
-    }
-  },
-
-  deleteCategory: async (id) => {
-    try {
-      await api.delete(`/categories/${id}`);
-      set(state => ({ categories: state.categories.filter(c => c.id !== id) }));
-    } catch (e: any) {
-      set({ error: e.response?.data?.message || 'Failed to delete category' });
-      throw e;
-    }
-  },
-
-  fetchCosmeticCategories: async () => {
-    set({ loading: true, error: null });
-    try {
-      const res = await api.get<CosmeticCategoryResponse[]>('/cosmeticcategories');
-      set({ cosmeticCategories: (Array.isArray(res.data) ? res.data : []).map(c => ({
-        id: String(c.cosmeticCategoryId),
-        name: c.name,
-        description: c.description,
-        isActive: c.isActive ?? true,
-        createdAt: c.createdAt,
-      })), loading: false });
-    } catch (e: any) {
-      set({ error: e.response?.data?.message || 'Failed to fetch cosmetic categories', loading: false });
-    }
-  },
-
-  addCosmeticCategory: async (category) => {
-    set({ loading: true, error: null });
-    try {
-      await api.post('/cosmeticcategories', {
-        name: category.name,
-        description: category.description,
-      });
-      await get().fetchCosmeticCategories();
-    } catch (e: any) {
-      set({ error: e.response?.data?.message || 'Failed to add cosmetic category', loading: false });
-      throw e;
-    }
-  },
-
-  updateCosmeticCategory: async (id, updates) => {
-    try {
-      await api.put(`/cosmeticcategories/${id}`, updates);
-      await get().fetchCosmeticCategories();
-    } catch (e: any) {
-      set({ error: e.response?.data?.message || 'Failed to update cosmetic category' });
-      throw e;
-    }
-  },
-
-  deleteCosmeticCategory: async (id) => {
-    try {
-      await api.delete(`/cosmeticcategories/${id}`);
-      set(state => ({ cosmeticCategories: state.cosmeticCategories.filter(c => c.id !== id) }));
-    } catch (e: any) {
-      set({ error: e.response?.data?.message || 'Failed to delete cosmetic category' });
-      throw e;
-    }
-  },
-
-  unitTypes: [],
-  fetchUnitTypes: async () => {
-    try {
-      const res = await api.get<UnitType[]>('/unittypes');
-      set({ unitTypes: (Array.isArray(res.data) ? res.data : []).map(toUnitType) });
+      })) });
     } catch (e) {
-      console.error('Failed to fetch unit types', e);
+      console.error('Failed to fetch categories', e);
     }
   },
 
-  fetchMedicines: async () => {
+  fetchUnitTypes: async () => {
     set({ loading: true, error: null });
     try {
       const res = await api.get<MedicineResponse[]>('/medicines');
@@ -607,7 +466,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({ loading: true, error: null });
     try {
       await api.post('/medicines', {
-        medicineName: medicine.name,
+        brandName: medicine.name,
         genericName: medicine.genericName,
         categoryId: Number(medicine.categoryId),
         unitTypeId: medicine.unitTypeId,
@@ -623,7 +482,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   updateMedicine: async (id, updates) => {
     try {
       await api.put(`/medicines/${id}`, {
-        medicineName: updates.name,
+        brandName: updates.name,
         genericName: updates.genericName,
         categoryId: Number(updates.categoryId),
         unitTypeId: updates.unitTypeId,
@@ -647,64 +506,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
   },
 
-  fetchCosmetics: async () => {
-    set({ loading: true, error: null });
-    try {
-      const res = await api.get<CosmeticResponse[]>('/cosmetics');
-      set({ cosmetics: (Array.isArray(res.data) ? res.data : []).map(toCosmetic), loading: false });
-    } catch (e: any) {
-      set({ error: e.response?.data?.message || 'Failed to fetch cosmetics', loading: false });
-    }
-  },
-
-  addCosmetic: async (cosmetic) => {
-    set({ loading: true, error: null });
-    try {
-      await api.post('/cosmetics', {
-        productName: cosmetic.productName,
-        description: cosmetic.description,
-        cosmeticCategoryId: Number(cosmetic.cosmeticCategoryId),
-        unitTypeId: cosmetic.unitTypeId,
-        price: cosmetic.price,
-      });
-      await get().fetchCosmetics();
-    } catch (e: any) {
-      set({ error: e.response?.data?.message || 'Failed to add cosmetic', loading: false });
-      throw e;
-    }
-  },
-
-  updateCosmetic: async (id, updates) => {
-    try {
-      await api.put(`/cosmetics/${id}`, updates);
-      await get().fetchCosmetics();
-    } catch (e: any) {
-      set({ error: e.response?.data?.message || 'Failed to update cosmetic' });
-      throw e;
-    }
-  },
-
-  deleteCosmetic: async (id) => {
-    try {
-      await api.delete(`/cosmetics/${id}`);
-      set(state => ({ cosmetics: state.cosmetics.filter(c => c.id !== id) }));
-    } catch (e: any) {
-      set({ error: e.response?.data?.message || 'Failed to delete cosmetic' });
-      throw e;
-    }
-  },
-
-  addCosmeticBatch: async (data) => {
-    try {
-      await api.post('/cosmetics/batches', data);
-      await get().fetchCosmetics();
-    } catch (e: any) {
-      set({ error: e.response?.data?.message || 'Failed to add batch' });
-      throw e;
-    }
-  },
-
-  fetchSuppliers: async () => {
+fetchMedicines: async () => {
     set({ loading: true, error: null });
     try {
       const res = await api.get<SupplierResponse[]>('/suppliers');
@@ -766,7 +568,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     try {
       const items = purchase.items.map(i => ({
         medicineId: Number(i.medicineId),
-        medicineName: (i as any).medicineName,
+        brandName: (i as any).brandName,
         genericName: (i as any).genericName,
         categoryId: (i as any).categoryId ? Number((i as any).categoryId) : undefined,
         unitType: (i as any).unitType,

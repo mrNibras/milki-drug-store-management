@@ -95,7 +95,7 @@ export const ReceiptDialog: React.FC<ReceiptDialogProps> = ({ open, onOpenChange
           <tbody>
             {sale.items.map((item, idx) => (
               <tr key={item.id || idx} className={`border-b ${isDark ? 'border-gray-700' : 'border-gray-100'}`}>
-                <td className="py-2 text-sm">{item.medicineName}</td>
+                <td className="py-2 text-sm">{item.brandName}</td>
                 <td className="py-2 text-sm text-center">{item.quantity}</td>
                 <td className="py-2 text-sm text-right">{formatCurrency(item.unitPrice)}</td>
                 <td className="py-2 text-sm text-right">{formatCurrency(item.totalPrice)}</td>

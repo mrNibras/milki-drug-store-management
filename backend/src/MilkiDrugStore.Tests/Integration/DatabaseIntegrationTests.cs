@@ -177,7 +177,7 @@ public class DatabaseIntegrationTests : IAsyncLifetime
 
         var medicine = new Medicine
         {
-            MedicineName = "CRUD Test Medicine",
+            BrandName = "CRUD Test Medicine",
             GenericName = "Test Generic",
             CategoryId = category.CategoryId,
             UnitTypeId = 1,
@@ -188,14 +188,14 @@ public class DatabaseIntegrationTests : IAsyncLifetime
         _dbContext.Medicines.Add(medicine);
         await _dbContext.SaveChangesAsync();
 
-        var saved = await _dbContext.Medicines.FirstOrDefaultAsync(m => m.MedicineName == "CRUD Test Medicine");
+        var saved = await _dbContext.Medicines.FirstOrDefaultAsync(m => m.BrandName == "CRUD Test Medicine");
         Assert.NotNull(saved);
         Assert.Equal("Test Generic", saved!.GenericName);
 
-        saved.MedicineName = "Updated Medicine";
+        saved.BrandName = "Updated Medicine";
         await _dbContext.SaveChangesAsync();
         var updated = await _dbContext.Medicines.FirstOrDefaultAsync(m => m.MedicineId == saved.MedicineId);
-        Assert.Equal("Updated Medicine", updated!.MedicineName);
+        Assert.Equal("Updated Medicine", updated!.BrandName);
 
         updated.IsActive = false;
         await _dbContext.SaveChangesAsync();
@@ -208,7 +208,7 @@ public class DatabaseIntegrationTests : IAsyncLifetime
     {
         var medicine = new Medicine
         {
-            MedicineName = "Batch Test Medicine",
+            BrandName = "Batch Test Medicine",
             CategoryId = 1,
             UnitTypeId = 1,
             IsActive = true,
@@ -243,7 +243,7 @@ public class DatabaseIntegrationTests : IAsyncLifetime
     {
         var medicine = new Medicine
         {
-            MedicineName = "FEFO Test Medicine",
+            BrandName = "FEFO Test Medicine",
             CategoryId = 1,
             UnitTypeId = 1,
             IsActive = true,
@@ -298,7 +298,7 @@ public class DatabaseIntegrationTests : IAsyncLifetime
     {
         var medicine = new Medicine
         {
-            MedicineName = "Purchase Test Medicine",
+            BrandName = "Purchase Test Medicine",
             CategoryId = 1,
             UnitTypeId = 1,
             IsActive = true,
@@ -359,7 +359,7 @@ public class DatabaseIntegrationTests : IAsyncLifetime
     {
         var medicine = new Medicine
         {
-            MedicineName = "Sale Test Medicine",
+            BrandName = "Sale Test Medicine",
             CategoryId = 1,
             UnitTypeId = 1,
             IsActive = true,
@@ -466,7 +466,7 @@ public class DatabaseIntegrationTests : IAsyncLifetime
     {
         var medicine = new Medicine
         {
-            MedicineName = "Low Stock Medicine",
+            BrandName = "Low Stock Medicine",
             CategoryId = 1,
             UnitTypeId = 1,
             LowStockThreshold = 10,
@@ -496,7 +496,7 @@ public class DatabaseIntegrationTests : IAsyncLifetime
         {
             BranchId = 1,
             Title = "Low Stock Alert",
-            Message = $"{medicine.MedicineName} stock is below threshold",
+            Message = $"{medicine.BrandName} stock is below threshold",
             NotificationType = "LOW_STOCK",
             IsRead = false,
             CreatedAt = DateTime.Now
@@ -515,7 +515,7 @@ public class DatabaseIntegrationTests : IAsyncLifetime
     {
         var medicine = new Medicine
         {
-            MedicineName = "Damage Test Medicine",
+            BrandName = "Damage Test Medicine",
             CategoryId = 1,
             UnitTypeId = 1,
             IsActive = true,

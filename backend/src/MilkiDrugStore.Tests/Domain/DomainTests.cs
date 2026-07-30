@@ -48,7 +48,7 @@ public class MedicineEntityTests
   public void Medicine_DefaultValues_AreCorrect()
   {
       var medicine = new Medicine();
-      medicine.MedicineName.Should().Be(string.Empty);
+      medicine.BrandName.Should().Be(string.Empty);
       medicine.GenericName.Should().Be(string.Empty);
       medicine.UnitTypeId.Should().Be(0);
       medicine.LowStockThreshold.Should().Be(10);

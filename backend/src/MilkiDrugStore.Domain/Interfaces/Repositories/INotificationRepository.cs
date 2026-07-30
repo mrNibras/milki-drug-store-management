@@ -5,7 +5,7 @@ namespace MilkiDrugStore.Domain.Interfaces.Repositories;
 public interface INotificationRepository : IRepository<Notification>
 {
     Task<IEnumerable<Notification>> GetUnreadAsync();
-    Task<Notification?> GetRecentExpiryAlertAsync(string medicineName, int days);
+    Task<Notification?> GetRecentExpiryAlertAsync(string brandName, int days);
     Task<Notification?> GetActiveByTypeAsync(string notificationType);
-    Task<Notification?> GetActiveByTypeAndMedicineAsync(string notificationType, string medicineName);
+    Task<Notification?> GetActiveByTypeAndMedicineAsync(string notificationType, string brandName);
 }

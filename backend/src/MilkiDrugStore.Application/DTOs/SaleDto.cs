@@ -41,7 +41,7 @@ public class SaleItemResponse
 {
     public int SaleItemId { get; set; }
     public int MedicineId { get; set; }
-    public string MedicineName { get; set; } = string.Empty;
+    public string BrandName { get; set; } = string.Empty;
     public int? BatchId { get; set; }
     public string BatchNumber { get; set; } = string.Empty;
     public int Quantity { get; set; }

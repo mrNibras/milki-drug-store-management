@@ -95,13 +95,13 @@ public class NotificationService : INotificationService
 
             if (totalStock == 0 && medicine.IsActive)
             {
-                if (await _notificationRepo.GetActiveByTypeAndMedicineAsync(NotificationTypeStrings.OutOfStock, medicine.MedicineName) == null)
+                if (await _notificationRepo.GetActiveByTypeAndMedicineAsync(NotificationTypeStrings.OutOfStock, medicine.BrandName) == null)
                 {
                     var notification = new Notification
                     {
                         BranchId = branchId ?? 0,
                         Title = "Out of Stock",
-                        Message = $"{medicine.MedicineName} is out of stock",
+                        Message = $"{medicine.BrandName} is out of stock",
                         NotificationType = NotificationTypeStrings.OutOfStock
                     };
                     await _notificationRepo.AddAsync(notification);
@@ -109,13 +109,13 @@ public class NotificationService : INotificationService
             }
             else if (totalStock <= medicine.LowStockThreshold && totalStock > 0)
             {
-                if (await _notificationRepo.GetActiveByTypeAndMedicineAsync(NotificationTypeStrings.LowStock, medicine.MedicineName) == null)
+                if (await _notificationRepo.GetActiveByTypeAndMedicineAsync(NotificationTypeStrings.LowStock, medicine.BrandName) == null)
                 {
                     var notification = new Notification
                     {
                         BranchId = branchId ?? 0,
                         Title = "Low Stock",
-                        Message = $"{medicine.MedicineName} stock is below threshold ({totalStock}/{medicine.LowStockThreshold})",
+                        Message = $"{medicine.BrandName} stock is below threshold ({totalStock}/{medicine.LowStockThreshold})",
                         NotificationType = NotificationTypeStrings.LowStock
                     };
                     await _notificationRepo.AddAsync(notification);

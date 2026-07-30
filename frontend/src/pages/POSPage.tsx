@@ -76,7 +76,7 @@ export const POSPage: React.FC = () => {
     const earliestBatch = availableBatches[0];
     addToCart({
       medicineId: medicine.id,
-      medicineName: medicine.name,
+      brandName: medicine.name,
       batchId: earliestBatch.id,
       batchNumber: earliestBatch.batchNumber,
       quantity: 1,
@@ -143,7 +143,7 @@ export const POSPage: React.FC = () => {
         id: generateId(),
         saleId: '',
         medicineId: item.medicineId,
-        medicineName: item.medicineName,
+        brandName: item.brandName,
         batchId: item.batchId,
         quantity: item.quantity,
         unitPrice: item.sellingPrice,
@@ -252,7 +252,7 @@ export const POSPage: React.FC = () => {
               <Search className={`absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} />
               <input
                 type="text"
-                placeholder="Search by medicine name, generic name, batch number, or category..."
+                placeholder="Search by brand name, generic name, batch number, or category..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className={inputClass}
@@ -271,7 +271,7 @@ export const POSPage: React.FC = () => {
           <Search className={`absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} />
           <input
             type="text"
-            placeholder="Search by medicine name, generic name, batch number, or category..."
+            placeholder="Search by brand name, generic name, batch number, or category..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className={`w-full pl-12 pr-4 py-4 border-2 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-base transition-all ${isDark ? 'bg-gray-800 border-gray-700 text-white placeholder-gray-500' : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400'}`}
@@ -382,7 +382,7 @@ export const POSPage: React.FC = () => {
                 <div key={`${item.medicineId}-${item.batchId}`} className={`rounded-lg p-3 sm:p-4 ${isDark ? 'bg-gray-700' : 'bg-gray-50'}`}>
                   <div className="flex items-start justify-between mb-2">
                     <div>
-                      <p className={`font-medium text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>{item.medicineName}</p>
+                      <p className={`font-medium text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>{item.brandName}</p>
                       <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Batch: {item.batchNumber}</p>
                     </div>
                     <button
@@ -555,7 +555,7 @@ export const POSPage: React.FC = () => {
             <div className="space-y-3 mb-6">
               {cart.map(item => (
                 <div key={`${item.medicineId}-${item.batchId}`} className={`flex items-center justify-between text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                  <span>{item.medicineName} × {item.quantity}</span>
+                  <span>{item.brandName} × {item.quantity}</span>
                   <div className="text-right">
                     {item.discountAmount > 0 && (
                       <span className={`text-xs line-through mr-2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>

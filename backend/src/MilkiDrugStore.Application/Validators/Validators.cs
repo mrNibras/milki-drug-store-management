@@ -25,7 +25,7 @@ public class CreateMedicineRequestValidator : AbstractValidator<MilkiDrugStore.A
 {
     public CreateMedicineRequestValidator()
     {
-        RuleFor(x => x.MedicineName).NotEmpty().MaximumLength(150);
+        RuleFor(x => x.BrandName).NotEmpty().MaximumLength(150);
         RuleFor(x => x.CategoryId).GreaterThan(0);
         RuleFor(x => x.UnitTypeId).NotEmpty().GreaterThan(0);
     }

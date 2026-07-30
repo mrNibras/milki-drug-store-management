@@ -36,7 +36,7 @@ export const PurchasesPage: React.FC = () => {
       p.purchaseNumber.toLowerCase().includes(search.toLowerCase()) ||
       p.supplierName.toLowerCase().includes(search.toLowerCase()) ||
       p.items.some(i => 
-        i.medicineName.toLowerCase().includes(search.toLowerCase()) ||
+        i.brandName.toLowerCase().includes(search.toLowerCase()) ||
         i.batchNumber.toLowerCase().includes(search.toLowerCase())
       )
     ).sort((a, b) => new Date(b.purchaseDate).getTime() - new Date(a.purchaseDate).getTime());
@@ -48,7 +48,7 @@ export const PurchasesPage: React.FC = () => {
     return sum + (qty * price);
   }, 0);
 
-  const totalItems = (items || []).filter(i => i.medicineName && i.quantity).length;
+  const totalItems = (items || []).filter(i => i.brandName && i.quantity).length;
 
   const resetForm = () => {
     setSelectedSupplier('');
@@ -61,7 +61,7 @@ export const PurchasesPage: React.FC = () => {
 
   const createEmptyItem = (): BulkPurchaseItem => ({
     id: generateId(),
-    medicineName: '',
+    brandName: '',
     genericName: '',
     categoryId: '',
     categoryName: '',
@@ -90,7 +90,7 @@ export const PurchasesPage: React.FC = () => {
       const updated = { ...item, [field]: value, errors: [] };
       
       // Auto-fill when medicine is selected from existing
-      if (field === 'medicineName') {
+      if (field === 'brandName') {
         const existingMedicine = (medicines || []).find(m => 
           m.name.toLowerCase() === value.toLowerCase()
         );
@@ -127,7 +127,7 @@ export const PurchasesPage: React.FC = () => {
     const validatedItems = (items || []).map(item => {
       const errors: string[] = [];
       
-      if (!item.medicineName.trim()) errors.push('Medicine name required');
+      if (!item.brandName.trim()) errors.push('Brand name required');
       if (!item.batchNumber.trim()) errors.push('Batch number required');
       if (!item.quantity || Number(item.quantity) <= 0) errors.push('Invalid quantity');
       if (!item.purchasePrice || Number(item.purchasePrice) <= 0) errors.push('Invalid purchase price');
@@ -139,7 +139,7 @@ export const PurchasesPage: React.FC = () => {
       const duplicateBatch = (items || []).find(i => 
         i.id !== item.id && 
         i.batchNumber.toLowerCase() === item.batchNumber.toLowerCase() &&
-        i.medicineName.toLowerCase() === item.medicineName.toLowerCase()
+        i.brandName.toLowerCase() === item.brandName.toLowerCase()
       );
       if (duplicateBatch) errors.push('Duplicate batch number');
       
@@ -187,7 +187,7 @@ export const PurchasesPage: React.FC = () => {
         id: generateId(),
         purchaseId: '',
         medicineId: medicineId,
-        medicineName: item.medicineName,
+        brandName: item.brandName,
         genericName: item.genericName,
         categoryId: item.categoryId || categories[0]?.id || '',
         categoryName: item.categoryName || categories[0]?.name || 'General',
@@ -331,7 +331,7 @@ export const PurchasesPage: React.FC = () => {
           <Search className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} />
           <input
             type="text"
-            placeholder="Search by purchase number, supplier, medicine name, or batch number..."
+            placeholder="Search by purchase number, supplier, brand name, or batch number..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className={inputClass}
@@ -473,7 +473,7 @@ export const PurchasesPage: React.FC = () => {
                   <thead className={`sticky top-0 z-10 ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
                     <tr className={isDark ? 'bg-gray-700' : 'bg-gray-50'}>
                       <th className={`px-3 py-2 text-left text-xs font-semibold uppercase ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>#</th>
-                      <th className={`px-3 py-2 text-left text-xs font-semibold uppercase ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Medicine Name</th>
+                      <th className={`px-3 py-2 text-left text-xs font-semibold uppercase ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Brand Name</th>
                       <th className={`px-3 py-2 text-left text-xs font-semibold uppercase ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Category</th>
                       <th className={`px-3 py-2 text-left text-xs font-semibold uppercase ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Batch #</th>
                       <th className={`px-3 py-2 text-left text-xs font-semibold uppercase ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Qty</th>
@@ -491,9 +491,9 @@ export const PurchasesPage: React.FC = () => {
                           <div className="relative">
                             <input
                               type="text"
-                              value={item.medicineName}
-                              onChange={(e) => handleItemChange(item.id, 'medicineName', e.target.value)}
-                              placeholder="Medicine name"
+                              value={item.brandName}
+                              onChange={(e) => handleItemChange(item.id, 'brandName', e.target.value)}
+                              placeholder="Brand name"
                               className={`${smallInputClass} min-w-[140px] sm:min-w-[180px]`}
                               list={`medicines-${item.id}`}
                             />
@@ -502,7 +502,7 @@ export const PurchasesPage: React.FC = () => {
                                 <option key={m.id} value={m.name} />
                               ))}
                             </datalist>
-                            {item.isNewMedicine && item.medicineName && (
+                            {item.isNewMedicine && item.brandName && (
                               <span className={`absolute right-2 top-1/2 -translate-y-1/2 text-xs px-1.5 py-0.5 rounded ${
                                 isDark ? 'bg-emerald-900/30 text-emerald-400' : 'bg-emerald-100 text-emerald-700'
                               }`}>NEW</span>
@@ -856,7 +856,7 @@ export const PurchasesPage: React.FC = () => {
               <tbody className={`divide-y ${isDark ? 'divide-gray-700' : 'divide-gray-100'}`}>
                 {selectedPurchase.items.map(item => (
                   <tr key={item.id}>
-                    <td className={`px-3 py-2 font-medium ${isDark ? 'text-white' : ''}`}>{item.medicineName}</td>
+                    <td className={`px-3 py-2 font-medium ${isDark ? 'text-white' : ''}`}>{item.brandName}</td>
                     <td className={`px-3 py-2 font-mono ${isDark ? 'text-gray-300' : ''}`}>{item.batchNumber}</td>
                     <td className={`px-3 py-2 ${isDark ? 'text-gray-300' : ''}`}>{item.quantity}</td>
                     <td className={`px-3 py-2 ${isDark ? 'text-gray-300' : ''}`}>{item.purchasePrice} ETB</td>

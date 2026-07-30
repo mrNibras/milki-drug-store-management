@@ -203,7 +203,7 @@ export const MedicinesPage: React.FC = () => {
             <Search className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} />
             <input
               type="text"
-              placeholder="Search by medicine name, generic name, or category..."
+              placeholder="Search by brand name, generic name, or category..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className={`w-full pl-9 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm ${
@@ -365,7 +365,7 @@ export const MedicinesPage: React.FC = () => {
             <div className="space-y-4">
               <div>
                 <label className={`flex items-center gap-2 text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                  <Pill className="h-4 w-4" /> Medicine Name <span className="text-red-500">*</span>
+                  <Pill className="h-4 w-4" /> Brand Name <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -472,7 +472,7 @@ export const MedicinesPage: React.FC = () => {
               <div className="space-y-4">
                 <div>
                   <label className={`flex items-center gap-2 text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                    <Pill className="h-4 w-4" /> Medicine Name
+                    <Pill className="h-4 w-4" /> Brand Name
                   </label>
                   <input
                     type="text"

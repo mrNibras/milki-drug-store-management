@@ -45,7 +45,7 @@ public class SaleServiceReferenceNumberTests
     [Fact]
     public async Task CreateAsync_WithBankTransfer_ReturnsReferenceNumber()
     {
-        var medicine = new Medicine { MedicineId = 1, MedicineName = "Amoxicillin", LowStockThreshold = 10 };
+        var medicine = new Medicine { MedicineId = 1, BrandName = "Amoxicillin", LowStockThreshold = 10 };
         var batch = new MedicineBatch
         {
             BatchId = 1,
@@ -82,7 +82,7 @@ public class SaleServiceReferenceNumberTests
     [Fact]
     public async Task CreateAsync_WithoutReferenceNumber_ReturnsNull()
     {
-        var medicine = new Medicine { MedicineId = 1, MedicineName = "Amoxicillin", LowStockThreshold = 10 };
+        var medicine = new Medicine { MedicineId = 1, BrandName = "Amoxicillin", LowStockThreshold = 10 };
         var batch = new MedicineBatch
         {
             BatchId = 1,

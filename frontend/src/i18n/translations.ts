@@ -219,17 +219,7 @@ export interface Translations {
     noBranches: string;
     createFirstBranch: string;
   };
-  cosmetics: {
-    title: string;
-    productName: string;
-    description: string;
-    category: string;
-    price: string;
-    addCosmetic: string;
-    editCosmetic: string;
-    searchPlaceholder: string;
-    batches: string;
-  };
+};
   users: {
     title: string;
     fullName: string;
@@ -324,7 +314,7 @@ export const translations: Record<Language, Translations> = {
     },
     medicines: {
       title: 'Medicines',
-      name: 'Medicine Name',
+       name: 'Brand Name',
       genericName: 'Generic Name',
       category: 'Category',
       batchNumber: 'Batch Number',
@@ -475,17 +465,7 @@ export const translations: Record<Language, Translations> = {
       noBranches: 'No branches found',
       createFirstBranch: 'Create your first branch to get started',
     },
-    cosmetics: {
-      title: 'Cosmetics',
-      productName: 'Product Name',
-      description: 'Use Description',
-      category: 'Category',
-      price: 'Price',
-      addCosmetic: 'Add Cosmetic',
-      editCosmetic: 'Edit Cosmetic',
-      searchPlaceholder: 'Search cosmetics...',
-      batches: 'Batches',
-    },
+
     users: {
       title: 'Users',
       fullName: 'Full Name',
@@ -729,17 +709,7 @@ export const translations: Record<Language, Translations> = {
       noBranches: 'ምንም ጅምላ አልተገኘም',
       createFirstBranch: 'ለመጀመር የመጀመሪያ ጅምላ ይፍጠሩ',
     },
-    cosmetics: {
-      title: 'ሸማቾች',
-      productName: 'የምርት ስም',
-      description: 'መግለጫ',
-      category: 'ምድብ',
-      price: 'ዋጋ',
-      addCosmetic: 'ሸማታ አክል',
-      editCosmetic: 'ሸማታ አርትዕ',
-      searchPlaceholder: 'ሸማታ ፈልግ...',
-      batches: 'ባትቾች',
-    },
+
     users: {
       title: 'ተጠቃሚዎች',
       fullName: 'ሙሉ ስም',

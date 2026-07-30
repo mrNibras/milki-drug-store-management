@@ -31,7 +31,7 @@ public class MedicineService : IMedicineService
         var query = (await _medicineRepo.GetAllAsync()).AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(search))
-            query = query.Where(m => m.MedicineName.Contains(search) || m.GenericName.Contains(search));
+            query = query.Where(m => m.BrandName.Contains(search) || m.GenericName.Contains(search));
 
         if (categoryId.HasValue)
             query = query.Where(m => m.CategoryId == categoryId.Value);
@@ -40,7 +40,7 @@ public class MedicineService : IMedicineService
             .Include(m => m.Category)
             .Include(m => m.UnitType)
             .Include(m => m.Batches)
-            .OrderBy(m => m.MedicineName)
+            .OrderBy(m => m.BrandName)
             .ToList();
 
         if (branchId.HasValue)
@@ -70,7 +70,7 @@ public class MedicineService : IMedicineService
     {
         var medicine = new Medicine
         {
-            MedicineName = request.MedicineName,
+            BrandName = request.BrandName,
             GenericName = request.GenericName,
             CategoryId = request.CategoryId,
             UnitTypeId = request.UnitTypeId,
@@ -82,7 +82,7 @@ public class MedicineService : IMedicineService
         await _medicineRepo.AddAsync(medicine);
         await _unitOfWork.SaveChangesAsync();
 
-        await _auditLog.LogAsync(userId, $"Created medicine: {medicine.MedicineName}", "Medicines", medicine.MedicineId);
+        await _auditLog.LogAsync(userId, $"Created medicine: {medicine.BrandName}", "Medicines", medicine.MedicineId);
 
         return await GetByIdAsync(medicine.MedicineId) ?? throw new Exception("Failed to create medicine");
     }
@@ -93,7 +93,7 @@ public class MedicineService : IMedicineService
         var medicine = medicines.FirstOrDefault();
         if (medicine == null) return null;
 
-        medicine.MedicineName = request.MedicineName;
+        medicine.BrandName = request.BrandName;
         medicine.GenericName = request.GenericName;
         medicine.CategoryId = request.CategoryId;
         medicine.UnitTypeId = request.UnitTypeId;
@@ -104,7 +104,7 @@ public class MedicineService : IMedicineService
         await _medicineRepo.UpdateAsync(medicine);
         await _unitOfWork.SaveChangesAsync();
 
-        await _auditLog.LogAsync(userId, $"Updated medicine: {medicine.MedicineName}", "Medicines", medicine.MedicineId);
+        await _auditLog.LogAsync(userId, $"Updated medicine: {medicine.BrandName}", "Medicines", medicine.MedicineId);
 
         return await GetByIdAsync(id);
     }
@@ -119,7 +119,7 @@ public class MedicineService : IMedicineService
         await _medicineRepo.UpdateAsync(medicine);
         await _unitOfWork.SaveChangesAsync();
 
-        await _auditLog.LogAsync(userId, $"Deleted medicine: {medicine.MedicineName}", "Medicines", medicine.MedicineId);
+        await _auditLog.LogAsync(userId, $"Deleted medicine: {medicine.BrandName}", "Medicines", medicine.MedicineId);
     }
 
     public async Task<MedicineResponse> AddBatchAsync(AddBatchRequest request, int userId, int? branchId = null)
@@ -154,7 +154,7 @@ public class MedicineService : IMedicineService
 
         await _unitOfWork.SaveChangesAsync();
 
-        await _auditLog.LogAsync(userId, $"Added batch {batch.BatchNumber} to {medicine.MedicineName}", "MedicineBatches", batch.BatchId);
+        await _auditLog.LogAsync(userId, $"Added batch {batch.BatchNumber} to {medicine.BrandName}", "MedicineBatches", batch.BatchId);
 
         return await GetByIdAsync(request.MedicineId) ?? throw new Exception("Failed to add batch");
     }
@@ -164,7 +164,7 @@ public class MedicineService : IMedicineService
         return new MedicineResponse
         {
             MedicineId = m.MedicineId,
-            MedicineName = m.MedicineName,
+            BrandName = m.BrandName,
             GenericName = m.GenericName,
             CategoryId = m.CategoryId,
             CategoryName = m.Category?.Name ?? "",

@@ -26,14 +26,6 @@ export interface UnitType {
   isActive: boolean;
 }
 
-export interface CosmeticCategory {
-  id: string;
-  name: string;
-  description?: string;
-  isActive: boolean;
-  createdAt: string;
-}
-
 export interface Medicine {
   id: string;
   name: string;
@@ -58,34 +50,7 @@ export interface MedicineBatch {
   createdAt: string;
 }
 
-export interface Cosmetic {
-  id: string;
-  productName: string;
-  description: string;
-  cosmeticCategoryId: string;
-  cosmeticCategoryName: string;
-  unitType: string;
-  unitTypeId: number;
-  price: number;
-  isActive: boolean;
-  createdAt: string;
-  batches: CosmeticBatch[];
-}
-
-export interface CosmeticBatch {
-  id: string;
-  cosmeticId: string;
-  batchNumber: string;
-  quantityReceived: number;
-  quantityIssued: number;
-  quantityDamaged: number;
-  quantityExpired: number;
-  balance: number;
-  expiryDate: string;
-  dateReceived: string;
-}
-
-export interface Supplier {
+export interface Branch {
   id: string;
   name: string;
   phone: string;
@@ -114,7 +79,7 @@ export interface PurchaseItem {
   id: string;
   purchaseId: string;
   medicineId: string;
-  medicineName: string;
+  brandName: string;
   batchNumber: string;
   quantity: number;
   purchasePrice: number;
@@ -123,7 +88,7 @@ export interface PurchaseItem {
 
 export interface BulkPurchaseItem {
   id: string;
-  medicineName: string;
+  brandName: string;
   genericName: string;
   categoryId: string;
   categoryName: string;
@@ -162,7 +127,7 @@ export interface SaleItem {
   id: string;
   saleId: string;
   medicineId: string;
-  medicineName: string;
+  brandName: string;
   batchId: string;
   quantity: number;
   unitPrice: number;
@@ -193,7 +158,7 @@ export interface AuditLog {
 
 export interface CartItem {
   medicineId: string;
-  medicineName: string;
+  brandName: string;
   batchId: string;
   batchNumber: string;
   quantity: number;
@@ -242,7 +207,7 @@ export interface DamageResponse {
   recordedBy: number;
   recordedDate: string;
   batchNumber?: string;
-  medicineName?: string;
+  brandName?: string;
 }
 
 export interface ExpiredResponse {
@@ -252,7 +217,7 @@ export interface ExpiredResponse {
   recordedDate: string;
   recordedBy: number;
   batchNumber?: string;
-  medicineName?: string;
+  brandName?: string;
 }
 
 export interface Branch {

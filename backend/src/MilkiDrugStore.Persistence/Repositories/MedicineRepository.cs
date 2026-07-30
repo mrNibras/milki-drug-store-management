@@ -12,7 +12,7 @@ public class MedicineRepository : Repository<Medicine>, IMedicineRepository
     public async Task<IEnumerable<Medicine>> SearchAsync(string searchTerm)
     {
         return await _dbSet
-            .Where(m => m.MedicineName.Contains(searchTerm) || m.GenericName.Contains(searchTerm))
+            .Where(m => m.BrandName.Contains(searchTerm) || m.GenericName.Contains(searchTerm))
             .Include(m => m.Category)
             .Include(m => m.Batches)
             .ToListAsync();

@@ -124,8 +124,8 @@ export const mockPurchases: Purchase[] = [
     purchaseDate: '2026-01-10T10:00:00', totalAmount: 3000,
     paymentStatus: 'paid', paymentMethod: 'bank_transfer', amountPaid: 3000, remainingDebt: 0,
     items: [
-      { id: '1', purchaseId: '1', medicineId: '1', medicineName: 'Paracetamol 500mg', batchNumber: 'B001', quantity: 200, purchasePrice: 3, expiryDate: '2027-06-15' },
-      { id: '2', purchaseId: '1', medicineId: '2', medicineName: 'Amoxicillin 250mg', batchNumber: 'B003', quantity: 100, purchasePrice: 15, expiryDate: '2027-03-20' },
+      { id: '1', purchaseId: '1', medicineId: '1', brandName: 'Paracetamol 500mg', batchNumber: 'B001', quantity: 200, purchasePrice: 3, expiryDate: '2027-06-15' },
+      { id: '2', purchaseId: '1', medicineId: '2', brandName: 'Amoxicillin 250mg', batchNumber: 'B003', quantity: 100, purchasePrice: 15, expiryDate: '2027-03-20' },
     ]
   },
   {
@@ -133,8 +133,8 @@ export const mockPurchases: Purchase[] = [
     purchaseDate: '2026-02-01T14:30:00', totalAmount: 2500,
     paymentStatus: 'partial', paymentMethod: 'cash', amountPaid: 1500, remainingDebt: 1000,
     items: [
-      { id: '3', purchaseId: '2', medicineId: '3', medicineName: 'Vitamin C 1000mg', batchNumber: 'B005', quantity: 200, purchasePrice: 5, expiryDate: '2028-01-10' },
-      { id: '4', purchaseId: '2', medicineId: '5', medicineName: 'Ibuprofen 400mg', batchNumber: 'B007', quantity: 100, purchasePrice: 4, expiryDate: '2027-05-15' },
+      { id: '3', purchaseId: '2', medicineId: '3', brandName: 'Vitamin C 1000mg', batchNumber: 'B005', quantity: 200, purchasePrice: 5, expiryDate: '2028-01-10' },
+      { id: '4', purchaseId: '2', medicineId: '5', brandName: 'Ibuprofen 400mg', batchNumber: 'B007', quantity: 100, purchasePrice: 4, expiryDate: '2027-05-15' },
     ]
   },
   {
@@ -142,9 +142,9 @@ export const mockPurchases: Purchase[] = [
     purchaseDate: '2026-03-05T09:00:00', totalAmount: 4200,
     paymentStatus: 'unpaid', paymentMethod: 'credit', amountPaid: 0, remainingDebt: 4200,
     items: [
-      { id: '5', purchaseId: '3', medicineId: '6', medicineName: 'Omeprazole 20mg', batchNumber: 'B009', quantity: 60, purchasePrice: 8, expiryDate: '2027-11-30' },
-      { id: '6', purchaseId: '3', medicineId: '7', medicineName: 'Metformin 500mg', batchNumber: 'B010', quantity: 100, purchasePrice: 6, expiryDate: '2027-08-15' },
-      { id: '7', purchaseId: '3', medicineId: '9', medicineName: 'Salbutamol Inhaler', batchNumber: 'B012', quantity: 25, purchasePrice: 45, expiryDate: '2027-02-28' },
+      { id: '5', purchaseId: '3', medicineId: '6', brandName: 'Omeprazole 20mg', batchNumber: 'B009', quantity: 60, purchasePrice: 8, expiryDate: '2027-11-30' },
+      { id: '6', purchaseId: '3', medicineId: '7', brandName: 'Metformin 500mg', batchNumber: 'B010', quantity: 100, purchasePrice: 6, expiryDate: '2027-08-15' },
+      { id: '7', purchaseId: '3', medicineId: '9', brandName: 'Salbutamol Inhaler', batchNumber: 'B012', quantity: 25, purchasePrice: 45, expiryDate: '2027-02-28' },
     ]
   },
 ];
@@ -153,38 +153,38 @@ export const mockSales: Sale[] = [
   {
     id: '1', saleNumber: 'SAL-2026-00001', saleDate: '2026-06-19T08:30:00', totalAmount: 170, totalDiscount: 0, discountReason: '', approvedBy: null, profit: 50, userId: '2', userName: 'Ahmed Hassan',
     items: [
-      { id: '1', saleId: '1', medicineId: '1', medicineName: 'Paracetamol 500mg', batchId: 'b2', quantity: 10, unitPrice: 10, standardUnitPrice: 10, actualUnitPrice: 10, discountAmount: 0, totalPrice: 100 },
-      { id: '2', saleId: '1', medicineId: '2', medicineName: 'Amoxicillin 250mg', batchId: 'b4', quantity: 2, unitPrice: 50, standardUnitPrice: 50, actualUnitPrice: 50, discountAmount: 0, totalPrice: 100 },
+      { id: '1', saleId: '1', medicineId: '1', brandName: 'Paracetamol 500mg', batchId: 'b2', quantity: 10, unitPrice: 10, standardUnitPrice: 10, actualUnitPrice: 10, discountAmount: 0, totalPrice: 100 },
+      { id: '2', saleId: '1', medicineId: '2', brandName: 'Amoxicillin 250mg', batchId: 'b4', quantity: 2, unitPrice: 50, standardUnitPrice: 50, actualUnitPrice: 50, discountAmount: 0, totalPrice: 100 },
     ]
   },
   {
     id: '2', saleNumber: 'SAL-2026-00002', saleDate: '2026-06-19T10:15:00', totalAmount: 45, totalDiscount: 0, discountReason: '', approvedBy: null, profit: 12, userId: '3', userName: 'Sara Mohammed',
     items: [
-      { id: '3', saleId: '2', medicineId: '3', medicineName: 'Vitamin C 1000mg', batchId: 'b5', quantity: 3, unitPrice: 15, standardUnitPrice: 15, actualUnitPrice: 15, discountAmount: 0, totalPrice: 45 },
+      { id: '3', saleId: '2', medicineId: '3', brandName: 'Vitamin C 1000mg', batchId: 'b5', quantity: 3, unitPrice: 15, standardUnitPrice: 15, actualUnitPrice: 15, discountAmount: 0, totalPrice: 45 },
     ]
   },
   {
     id: '3', saleNumber: 'SAL-2026-00003', saleDate: '2026-06-18T14:00:00', totalAmount: 300, totalDiscount: 20, discountReason: 'Family Assistance', approvedBy: null, profit: 75, userId: '2', userName: 'Ahmed Hassan',
     items: [
-      { id: '4', saleId: '3', medicineId: '9', medicineName: 'Salbutamol Inhaler', batchId: 'b12', quantity: 2, unitPrice: 120, standardUnitPrice: 120, actualUnitPrice: 110, discountAmount: 20, totalPrice: 220 },
-      { id: '5', saleId: '3', medicineId: '8', medicineName: 'Clotrimazole Cream', batchId: 'b11', quantity: 1, unitPrice: 35, standardUnitPrice: 35, actualUnitPrice: 35, discountAmount: 0, totalPrice: 35 },
-      { id: '6', saleId: '3', medicineId: '4', medicineName: 'Cetirizine 10mg', batchId: 'b6', quantity: 5, unitPrice: 8, standardUnitPrice: 8, actualUnitPrice: 8, discountAmount: 0, totalPrice: 40 },
+      { id: '4', saleId: '3', medicineId: '9', brandName: 'Salbutamol Inhaler', batchId: 'b12', quantity: 2, unitPrice: 120, standardUnitPrice: 120, actualUnitPrice: 110, discountAmount: 20, totalPrice: 220 },
+      { id: '5', saleId: '3', medicineId: '8', brandName: 'Clotrimazole Cream', batchId: 'b11', quantity: 1, unitPrice: 35, standardUnitPrice: 35, actualUnitPrice: 35, discountAmount: 0, totalPrice: 35 },
+      { id: '6', saleId: '3', medicineId: '4', brandName: 'Cetirizine 10mg', batchId: 'b6', quantity: 5, unitPrice: 8, standardUnitPrice: 8, actualUnitPrice: 8, discountAmount: 0, totalPrice: 40 },
     ]
   },
   {
     id: '4', saleNumber: 'SAL-2026-00004', saleDate: '2026-06-17T09:45:00', totalAmount: 550, totalDiscount: 0, discountReason: '', approvedBy: null, profit: 170, userId: '3', userName: 'Sara Mohammed',
     items: [
-      { id: '7', saleId: '4', medicineId: '12', medicineName: 'Nivea Face Cream', batchId: 'b15', quantity: 2, unitPrice: 150, standardUnitPrice: 150, actualUnitPrice: 150, discountAmount: 0, totalPrice: 300 },
-      { id: '8', saleId: '4', medicineId: '7', medicineName: 'Metformin 500mg', batchId: 'b10', quantity: 5, unitPrice: 18, standardUnitPrice: 18, actualUnitPrice: 18, discountAmount: 0, totalPrice: 90 },
-      { id: '9', saleId: '4', medicineId: '10', medicineName: 'Diclofenac Gel', batchId: 'b13', quantity: 2, unitPrice: 55, standardUnitPrice: 55, actualUnitPrice: 55, discountAmount: 0, totalPrice: 110 },
+      { id: '7', saleId: '4', medicineId: '12', brandName: 'Nivea Face Cream', batchId: 'b15', quantity: 2, unitPrice: 150, standardUnitPrice: 150, actualUnitPrice: 150, discountAmount: 0, totalPrice: 300 },
+      { id: '8', saleId: '4', medicineId: '7', brandName: 'Metformin 500mg', batchId: 'b10', quantity: 5, unitPrice: 18, standardUnitPrice: 18, actualUnitPrice: 18, discountAmount: 0, totalPrice: 90 },
+      { id: '9', saleId: '4', medicineId: '10', brandName: 'Diclofenac Gel', batchId: 'b13', quantity: 2, unitPrice: 55, standardUnitPrice: 55, actualUnitPrice: 55, discountAmount: 0, totalPrice: 110 },
     ]
   },
   {
     id: '5', saleNumber: 'SAL-2026-00005', saleDate: '2026-06-16T11:20:00', totalAmount: 285, totalDiscount: 0, discountReason: '', approvedBy: null, profit: 80, userId: '2', userName: 'Ahmed Hassan',
     items: [
-      { id: '10', saleId: '5', medicineId: '11', medicineName: 'Baby Lotion', batchId: 'b14', quantity: 2, unitPrice: 85, standardUnitPrice: 85, actualUnitPrice: 85, discountAmount: 0, totalPrice: 170 },
-      { id: '11', saleId: '5', medicineId: '5', medicineName: 'Ibuprofen 400mg', batchId: 'b7', quantity: 5, unitPrice: 12, standardUnitPrice: 12, actualUnitPrice: 12, discountAmount: 0, totalPrice: 60 },
-      { id: '12', saleId: '5', medicineId: '1', medicineName: 'Paracetamol 500mg', batchId: 'b1', quantity: 5, unitPrice: 10, standardUnitPrice: 10, actualUnitPrice: 10, discountAmount: 0, totalPrice: 50 },
+      { id: '10', saleId: '5', medicineId: '11', brandName: 'Baby Lotion', batchId: 'b14', quantity: 2, unitPrice: 85, standardUnitPrice: 85, actualUnitPrice: 85, discountAmount: 0, totalPrice: 170 },
+      { id: '11', saleId: '5', medicineId: '5', brandName: 'Ibuprofen 400mg', batchId: 'b7', quantity: 5, unitPrice: 12, standardUnitPrice: 12, actualUnitPrice: 12, discountAmount: 0, totalPrice: 60 },
+      { id: '12', saleId: '5', medicineId: '1', brandName: 'Paracetamol 500mg', batchId: 'b1', quantity: 5, unitPrice: 10, standardUnitPrice: 10, actualUnitPrice: 10, discountAmount: 0, totalPrice: 50 },
     ]
   },
 ];

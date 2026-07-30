@@ -34,13 +34,13 @@ public class ExpiryCheckBackgroundService : BackgroundService
                 var expiringMedicines = await medicineRepo.GetExpiringAsync(6);
                 foreach (var medicine in expiringMedicines)
                 {
-                    var recentAlert = await notificationRepo.GetRecentExpiryAlertAsync(medicine.MedicineName, 15);
+                    var recentAlert = await notificationRepo.GetRecentExpiryAlertAsync(medicine.BrandName, 15);
                     if (recentAlert == null)
                     {
                         await notificationRepo.AddAsync(new Notification
                         {
                             Title = "Expiry Alert",
-                            Message = $"{medicine.MedicineName} is expiring within 6 months",
+                            Message = $"{medicine.BrandName} is expiring within 6 months",
                             NotificationType = NotificationTypeStrings.ExpiryAlert
                         });
                     }

@@ -87,7 +87,7 @@ public class PurchaseService : IPurchaseService
                 // Auto-create the medicine if it does not exist yet.
                 if (medicine == null)
                 {
-                    if (string.IsNullOrWhiteSpace(item.MedicineName))
+                    if (string.IsNullOrWhiteSpace(item.BrandName))
                         throw new Exception($"Medicine ID {item.MedicineId} not found and no name was provided to create it");
 
                     var categoryId = item.CategoryId;
@@ -105,8 +105,8 @@ public class PurchaseService : IPurchaseService
 
                     medicine = new Medicine
                     {
-                        MedicineName = item.MedicineName,
-                        GenericName = item.GenericName ?? item.MedicineName,
+                        BrandName = item.BrandName,
+                        GenericName = item.GenericName ?? item.BrandName,
                         CategoryId = categoryId.Value,
                         UnitTypeId = unitTypeId,
                         LowStockThreshold = item.LowStockThreshold > 0 ? item.LowStockThreshold : 10,
@@ -116,7 +116,7 @@ public class PurchaseService : IPurchaseService
                     await _medicineRepo.AddAsync(medicine);
                     await _unitOfWork.SaveChangesAsync();
 
-                    await _auditLog.LogAsync(createdBy, $"Auto-created medicine: {medicine.MedicineName}", "Medicines", medicine.MedicineId);
+                    await _auditLog.LogAsync(createdBy, $"Auto-created medicine: {medicine.BrandName}", "Medicines", medicine.MedicineId);
                 }
 
                 var batch = new MedicineBatch
@@ -206,7 +206,7 @@ public class PurchaseService : IPurchaseService
                 {
                     PurchaseItemId = pi.PurchaseItemId,
                     MedicineId = pi.MedicineId,
-                    MedicineName = pi.Medicine?.MedicineName ?? "",
+                    BrandName = pi.Medicine?.BrandName ?? "",
                     BatchNumber = pi.BatchNumber,
                     Quantity = pi.Quantity,
                     PurchasePrice = pi.PurchasePrice,
@@ -243,7 +243,7 @@ public class PurchaseService : IPurchaseService
             {
                 PurchaseItemId = pi.PurchaseItemId,
                 MedicineId = pi.MedicineId,
-                MedicineName = pi.Medicine?.MedicineName ?? "",
+                BrandName = pi.Medicine?.BrandName ?? "",
                 BatchNumber = pi.BatchNumber,
                 Quantity = pi.Quantity,
                 PurchasePrice = pi.PurchasePrice,

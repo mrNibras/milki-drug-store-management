@@ -22,11 +22,11 @@ public class MappingProfile : AutoMapper.Profile
 
         CreateMap<CreatePurchaseRequest, Purchase>();
         CreateMap<PurchaseItem, PurchaseItemResponse>()
-            .ForMember(d => d.MedicineName, opt => opt.MapFrom(s => s.Medicine != null ? s.Medicine.MedicineName : ""));
+            .ForMember(d => d.BrandName, opt => opt.MapFrom(s => s.Medicine != null ? s.Medicine.BrandName : ""));
 
         CreateMap<CreateSaleRequest, Sale>();
         CreateMap<SaleItem, SaleItemResponse>()
-            .ForMember(d => d.MedicineName, opt => opt.MapFrom(s => s.Medicine != null ? s.Medicine.MedicineName : ""))
+            .ForMember(d => d.BrandName, opt => opt.MapFrom(s => s.Medicine != null ? s.Medicine.BrandName : ""))
             .ForMember(d => d.BatchNumber, opt => opt.MapFrom(s => s.Batch != null ? s.Batch.BatchNumber : ""));
 
         CreateMap<CreateSupplierRequest, Supplier>();

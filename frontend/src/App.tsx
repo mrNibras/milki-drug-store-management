@@ -6,8 +6,6 @@ import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
 import { ResetPasswordPage } from './pages/ResetPasswordPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { MedicinesPage } from './pages/MedicinesPage';
-import { CategoriesPage } from './pages/CategoriesPage';
-import { UnitTypesPage } from './pages/UnitTypesPage';
 import { POSPage } from './pages/POSPage';
 import { InventoryPage } from './pages/InventoryPage';
 import { PurchasesPage } from './pages/PurchasesPage';
@@ -19,8 +17,6 @@ import { UsersPage } from './pages/UsersPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { AuditLogsPage } from './pages/AuditLogsPage';
 import { BranchesPage } from './pages/BranchesPage';
-import { CosmeticsPage } from './pages/CosmeticsPage';
-import { CosmeticCategoriesPage } from './pages/CosmeticCategoriesPage';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { useAppStore } from './store/appStore';
@@ -99,8 +95,6 @@ function AppContent() {
             </ErrorBoundary>
           } />
           <Route path="medicines" element={<MedicinesPage />} />
-          <Route path="categories" element={<CategoriesPage />} />
-          <Route path="unit-types" element={<UnitTypesPage />} />
           <Route path="pos" element={<POSPage />} />
           <Route path="inventory" element={<InventoryPage />} />
           <Route path="damages" element={<DamageExpiryPage />} />
@@ -112,8 +106,6 @@ function AppContent() {
           <Route path="settings" element={<ProtectedRoute roles={['admin']}><SettingsPage /></ProtectedRoute>} />
           <Route path="audit-logs" element={<ProtectedRoute roles={['admin']}><AuditLogsPage /></ProtectedRoute>} />
           <Route path="branches" element={<ProtectedRoute roles={['admin']}><BranchesPage /></ProtectedRoute>} />
-          <Route path="cosmetics" element={<ProtectedRoute roles={['admin']}><CosmeticsPage /></ProtectedRoute>} />
-          <Route path="cosmetic-categories" element={<ProtectedRoute roles={['admin']}><CosmeticCategoriesPage /></ProtectedRoute>} />
         </Route>
         <Route path="*" element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />} />
       </Routes>

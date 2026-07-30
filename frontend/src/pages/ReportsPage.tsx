@@ -63,7 +63,7 @@ export const ReportsPage: React.FC = () => {
       
       sale.items.forEach(item => {
         if (!months[month][item.medicineId]) {
-          months[month][item.medicineId] = { name: item.medicineName, quantity: 0, revenue: 0 };
+          months[month][item.medicineId] = { name: item.brandName, quantity: 0, revenue: 0 };
         }
         months[month][item.medicineId].quantity += item.quantity;
         months[month][item.medicineId].revenue += item.totalPrice;
@@ -130,7 +130,7 @@ export const ReportsPage: React.FC = () => {
     (sales || []).forEach(sale => {
       sale.items.forEach(item => {
         if (!itemSales[item.medicineId]) {
-          itemSales[item.medicineId] = { name: item.medicineName, quantity: 0, revenue: 0 };
+          itemSales[item.medicineId] = { name: item.brandName, quantity: 0, revenue: 0 };
         }
         itemSales[item.medicineId].quantity += item.quantity;
         itemSales[item.medicineId].revenue += item.totalPrice;

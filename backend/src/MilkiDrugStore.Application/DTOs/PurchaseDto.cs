@@ -14,7 +14,7 @@ public class PurchaseItemRequest
 {
     public int MedicineId { get; set; }
     /// <summary>Provided when the medicine does not exist yet (auto-creation).</summary>
-    public string? MedicineName { get; set; }
+    public string? BrandName { get; set; }
     public string? GenericName { get; set; }
     public int? CategoryId { get; set; }
     public string? UnitType { get; set; }
@@ -46,7 +46,7 @@ public class PurchaseItemResponse
 {
     public int PurchaseItemId { get; set; }
     public int MedicineId { get; set; }
-    public string MedicineName { get; set; } = string.Empty;
+    public string BrandName { get; set; } = string.Empty;
     public string BatchNumber { get; set; } = string.Empty;
     public int Quantity { get; set; }
     public decimal PurchasePrice { get; set; }

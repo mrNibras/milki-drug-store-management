@@ -33,7 +33,7 @@ export const DamageExpiryPage: React.FC = () => {
         })
         .map(batch => ({
           ...batch,
-          medicineName: medicine.name,
+          brandName: medicine.name,
           genericName: medicine.genericName,
           categoryName: medicine.categoryName,
           unitType: medicine.unitType,
@@ -49,7 +49,7 @@ export const DamageExpiryPage: React.FC = () => {
         .filter(b => getDaysUntilExpiry(b.expiryDate) <= 0 && b.quantity > 0)
         .map(batch => ({
           ...batch,
-          medicineName: medicine.name,
+          brandName: medicine.name,
           genericName: medicine.genericName,
           daysOverdue: Math.abs(getDaysUntilExpiry(batch.expiryDate)),
         }))
@@ -225,7 +225,7 @@ export const DamageExpiryPage: React.FC = () => {
                 {(expiringMedicines || []).map(item => (
                   <tr key={item.id} className={isDark ? 'hover:bg-gray-700/50' : 'hover:bg-gray-50'}>
                     <td className="px-6 py-3">
-                      <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{item.medicineName}</p>
+                      <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{item.brandName}</p>
                       <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{item.genericName}</p>
                     </td>
                     <td className={`px-6 py-3 font-mono text-sm ${isDark ? 'text-gray-300' : ''}`}>{item.batchNumber}</td>
@@ -312,7 +312,7 @@ export const DamageExpiryPage: React.FC = () => {
                 {(expiredMedicines || []).map(item => (
                   <tr key={item.id} className={isDark ? 'hover:bg-red-900/10' : 'hover:bg-red-50/50'}>
                     <td className="px-6 py-3">
-                      <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{item.medicineName}</p>
+                      <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{item.brandName}</p>
                       <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{item.genericName}</p>
                     </td>
                     <td className={`px-6 py-3 font-mono text-sm ${isDark ? 'text-gray-300' : ''}`}>{item.batchNumber}</td>
@@ -381,7 +381,7 @@ export const DamageExpiryPage: React.FC = () => {
                 <tbody className={`divide-y ${isDark ? 'divide-gray-700' : 'divide-gray-100'}`}>
                   {(damages || []).map(damage => (
                     <tr key={damage.damageId} className={isDark ? 'hover:bg-gray-700/50' : 'hover:bg-gray-50'}>
-                      <td className={`px-6 py-3 font-medium text-sm ${isDark ? 'text-white' : ''}`}>{damage.medicineName || '-'}</td>
+                      <td className={`px-6 py-3 font-medium text-sm ${isDark ? 'text-white' : ''}`}>{damage.brandName || '-'}</td>
                       <td className={`px-6 py-3 font-mono text-sm ${isDark ? 'text-gray-300' : ''}`}>{damage.batchNumber || '-'}</td>
                       <td className="px-6 py-3 text-sm text-red-500 font-semibold">{damage.quantity}</td>
                       <td className={`px-6 py-3 text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{damage.reason}</td>
