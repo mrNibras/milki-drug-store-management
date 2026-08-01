@@ -250,7 +250,7 @@ export const MedicinesPage: React.FC = () => {
           <table className="w-full">
             <thead>
               <tr className={isDark ? 'bg-gray-700' : 'bg-gray-50'}>
-                <th className={thClass}>Medicine</th>
+                <th className={thClass}>Brand Name</th>
                 <th className={thClass}>Category</th>
                 <th className={thClass}>Unit Type</th>
                 <th className={thClass}>Batches</th>

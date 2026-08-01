@@ -213,7 +213,7 @@ export const DamageExpiryPage: React.FC = () => {
             <table className="w-full">
               <thead>
                 <tr className={isDark ? 'bg-gray-700' : 'bg-gray-50'}>
-                  <th className={thClass}>Medicine</th>
+                  <th className={thClass}>Brand Name</th>
                   <th className={thClass}>Batch</th>
                   <th className={thClass}>Stock</th>
                   <th className={thClass}>Expiry Date</th>
@@ -300,7 +300,7 @@ export const DamageExpiryPage: React.FC = () => {
             <table className="w-full">
               <thead>
                 <tr className={isDark ? 'bg-gray-700' : 'bg-gray-50'}>
-                  <th className={thClass}>Medicine</th>
+                  <th className={thClass}>Brand Name</th>
                   <th className={thClass}>Batch</th>
                   <th className={thClass}>Stock</th>
                   <th className={thClass}>Expiry Date</th>
@@ -371,7 +371,7 @@ export const DamageExpiryPage: React.FC = () => {
               <table className="w-full">
                 <thead>
                   <tr className={isDark ? 'bg-gray-700' : 'bg-gray-50'}>
-                    <th className={thClass}>Medicine</th>
+                    <th className={thClass}>Brand Name</th>
                     <th className={thClass}>Batch</th>
                     <th className={thClass}>Quantity</th>
                     <th className={thClass}>Reason</th>
@@ -418,14 +418,14 @@ export const DamageExpiryPage: React.FC = () => {
             <div className="space-y-4">
               <div>
                 <label className={labelClass}>
-                  <Package className="h-4 w-4" /> Medicine <span className="text-red-500">*</span>
+                  <Package className="h-4 w-4" /> Brand <span className="text-red-500">*</span>
                 </label>
                 <select
                   value={damageForm.medicineId}
                   onChange={e => setDamageForm({ ...damageForm, medicineId: e.target.value, batchId: '' })}
                   className={inputClass}
                 >
-                  <option value="">Select Medicine</option>
+                  <option value="">Select Brand</option>
                   {(medicines || []).filter(m => m.batches.some(b => b.quantity > 0)).map(m => (
                     <option key={m.id} value={m.id}>{m.name}</option>
                   ))}
@@ -506,14 +506,14 @@ export const DamageExpiryPage: React.FC = () => {
             <div className="space-y-4">
               <div>
                 <label className={labelClass}>
-                  <Package className="h-4 w-4" /> Medicine <span className="text-red-500">*</span>
+                  <Package className="h-4 w-4" /> Brand <span className="text-red-500">*</span>
                 </label>
                 <select
                   value={expiredForm.medicineId}
                   onChange={e => setExpiredForm({ ...expiredForm, medicineId: e.target.value, batchId: '' })}
                   className={inputClass}
                 >
-                  <option value="">Select Medicine</option>
+                  <option value="">Select Brand</option>
                   {(medicines || []).filter(m => m.batches.some(b => b.quantity > 0)).map(m => (
                     <option key={m.id} value={m.id}>{m.name}</option>
                   ))}

@@ -176,7 +176,7 @@ export const InventoryPage: React.FC = () => {
           <table className="w-full">
             <thead>
               <tr className={isDark ? 'bg-gray-700' : 'bg-gray-50'}>
-                <th className={`${thClass} text-left`}>Medicine</th>
+                <th className={`${thClass} text-left`}>Brand Name</th>
                 <th className={`${thClass} text-left`}>Category</th>
                 <th className={`${thClass} text-left`}>Batch #</th>
                 <th className={`${thClass} text-left`}>Expiry Date</th>

@@ -846,7 +846,7 @@ export const PurchasesPage: React.FC = () => {
             <table className="w-full text-sm">
               <thead>
                 <tr className={isDark ? 'bg-gray-700' : 'bg-gray-50'}>
-                  <th className={`text-left px-3 py-2 text-xs font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Medicine</th>
+                  <th className={`text-left px-3 py-2 text-xs font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Brand Name</th>
                   <th className={`text-left px-3 py-2 text-xs font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Batch</th>
                   <th className={`text-left px-3 py-2 text-xs font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Qty</th>
                   <th className={`text-left px-3 py-2 text-xs font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Price</th>
