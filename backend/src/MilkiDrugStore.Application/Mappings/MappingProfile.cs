@@ -15,8 +15,6 @@ public class MappingProfile : AutoMapper.Profile
         CreateMap<CreateMedicineRequest, Medicine>();
         CreateMap<UpdateMedicineRequest, Medicine>();
         CreateMap<Medicine, MedicineResponse>()
-            .ForMember(d => d.CategoryName, opt => opt.MapFrom(s => s.Category != null ? s.Category.Name : ""))
-            .ForMember(d => d.UnitTypeName, opt => opt.MapFrom(s => s.UnitType != null ? s.UnitType.Name : ""))
             .ForMember(d => d.Batches, opt => opt.MapFrom(s => s.Batches));
 
         CreateMap<MedicineBatch, BatchResponse>()

@@ -1,5 +1,6 @@
 using MilkiDrugStore.Application.DTOs.Purchase;
 using MilkiDrugStore.Application.Interfaces;
+using MilkiDrugStore.Domain.Catalog;
 using MilkiDrugStore.Domain.Entities;
 using MilkiDrugStore.Domain.Enums;
 using MilkiDrugStore.Domain.Interfaces.Repositories;
@@ -15,8 +16,7 @@ public class PurchaseService : IPurchaseService
         private readonly IRepository<Medicine> _medicineRepo;
         private readonly IRepository<MedicineBatch> _batchRepo;
         private readonly IRepository<Supplier> _supplierRepo;
-        private readonly IRepository<Category> _categoryRepo;
-        private readonly IRepository<UnitType> _unitTypeRepo;
+        private readonly ICatalogService _catalog;
         private readonly IRepository<InventoryTransaction> _transactionRepo;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IAuditLogService _auditLog;
@@ -27,8 +27,7 @@ public class PurchaseService : IPurchaseService
             IRepository<Medicine> medicineRepo,
             IRepository<MedicineBatch> batchRepo,
             IRepository<Supplier> supplierRepo,
-            IRepository<Category> categoryRepo,
-            IRepository<UnitType> unitTypeRepo,
+            ICatalogService catalog,
             IRepository<InventoryTransaction> transactionRepo,
             IUnitOfWork unitOfWork,
             IAuditLogService auditLog)
@@ -38,8 +37,7 @@ public class PurchaseService : IPurchaseService
         _medicineRepo = medicineRepo;
             _batchRepo = batchRepo;
             _supplierRepo = supplierRepo;
-            _categoryRepo = categoryRepo;
-            _unitTypeRepo = unitTypeRepo;
+            _catalog = catalog;
             _transactionRepo = transactionRepo;
             _unitOfWork = unitOfWork;
             _auditLog = auditLog;
@@ -92,18 +90,35 @@ public class PurchaseService : IPurchaseService
                     if (string.IsNullOrWhiteSpace(item.BrandName))
                         throw new Exception($"Product ID {item.ProductId} not found and no name was provided to create it");
 
-                    var categoryId = item.CategoryId;
-                    if (categoryId == null || (await _categoryRepo.GetByIdAsync(categoryId.Value)) == null)
+                    int categoryId;
+                    if (item.CategoryId.HasValue && await _catalog.IsValidCategoryIdAsync(item.CategoryId.Value))
                     {
-                        categoryId = (await _categoryRepo.GetAllAsync()).FirstOrDefault()?.CategoryId;
-                        if (categoryId == null)
+                        categoryId = item.CategoryId.Value;
+                    }
+                    else if (!string.IsNullOrWhiteSpace(item.CategoryName))
+                    {
+                        var resolvedCategory = await _catalog.ResolveCategoryIdAsync(item.CategoryName, createdBy);
+                        if (!resolvedCategory.HasValue)
                             throw new Exception("No category exists to assign the new medicine");
+                        categoryId = resolvedCategory.Value;
+                    }
+                    else
+                    {
+                        categoryId = MedicineCatalog.Categories[0].Id;
                     }
 
-                    var unitTypeId = (await _unitTypeRepo.GetAllAsync())
-                        .FirstOrDefault(u => u.Name.Equals(item.UnitType, StringComparison.OrdinalIgnoreCase))?.UnitTypeId
-                        ?? (await _unitTypeRepo.GetAllAsync()).FirstOrDefault()?.UnitTypeId
-                        ?? 1;
+                    int unitTypeId;
+                    if (!string.IsNullOrWhiteSpace(item.UnitType))
+                    {
+                        var resolvedUnitType = await _catalog.ResolveUnitTypeIdAsync(item.UnitType, createdBy);
+                        if (!resolvedUnitType.HasValue)
+                            throw new Exception("No unit type exists to assign the new medicine");
+                        unitTypeId = resolvedUnitType.Value;
+                    }
+                    else
+                    {
+                        unitTypeId = MedicineCatalog.UnitTypes[0].Id;
+                    }
 
                     medicine = new Medicine
                     {
@@ -113,7 +128,7 @@ public class PurchaseService : IPurchaseService
                         Strength = item.Strength,
                         DosageForm = item.DosageForm,
                         Barcode = item.Barcode,
-                        CategoryId = categoryId.Value,
+                        CategoryId = categoryId,
                         UnitTypeId = unitTypeId,
                         ReorderLevel = item.ReorderLevel > 0 ? item.ReorderLevel : 10,
                         IsActive = true,

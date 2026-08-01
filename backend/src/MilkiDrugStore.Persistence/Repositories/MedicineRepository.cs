@@ -19,7 +19,6 @@ public class MedicineRepository : Repository<Medicine>, IMedicineRepository
                      || (m.Barcode != null && m.Barcode.Contains(term))
                      || (m.Strength != null && m.Strength.Contains(term))
                      || (m.DosageForm != null && m.DosageForm.Contains(term)))
-            .Include(m => m.Category)
             .Include(m => m.Batches)
             .ToListAsync();
     }

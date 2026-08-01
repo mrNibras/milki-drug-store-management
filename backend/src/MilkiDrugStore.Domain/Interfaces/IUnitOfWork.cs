@@ -26,7 +26,6 @@ public interface IUnitOfWork : IDisposable
     IRepository<PasswordReset> PasswordResets { get; }
     IRepository<Cosmetic> Cosmetics { get; }
     IRepository<CosmeticBatch> CosmeticBatches { get; }
-    IRepository<CosmeticCategory> CosmeticCategories { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
     Task BeginTransactionAsync();

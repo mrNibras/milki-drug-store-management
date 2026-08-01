@@ -26,8 +26,12 @@ public class CreateMedicineRequestValidator : AbstractValidator<MilkiDrugStore.A
     public CreateMedicineRequestValidator()
     {
         RuleFor(x => x.BrandName).NotEmpty().MaximumLength(150);
-        RuleFor(x => x.CategoryId).GreaterThan(0);
-        RuleFor(x => x.UnitTypeId).NotEmpty().GreaterThan(0);
+        RuleFor(x => x.CategoryId).NotEqual(0).When(x => string.IsNullOrWhiteSpace(x.NewCategoryName));
+        RuleFor(x => x.UnitTypeId).NotEqual(0).When(x => string.IsNullOrWhiteSpace(x.NewUnitTypeName));
+        RuleFor(x => x.NewCategoryName).Must(name => string.IsNullOrWhiteSpace(name) || !string.IsNullOrWhiteSpace(name.Trim()))
+            .WithMessage("Category name must not be blank.");
+        RuleFor(x => x.NewUnitTypeName).Must(name => string.IsNullOrWhiteSpace(name) || !string.IsNullOrWhiteSpace(name.Trim()))
+            .WithMessage("Unit type name must not be blank.");
     }
 }
 

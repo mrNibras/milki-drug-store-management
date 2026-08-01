@@ -29,7 +29,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IBranchService, BranchService>();
         services.AddScoped<IBackupService, BackupService>();
         services.AddScoped<ICosmeticService, CosmeticService>();
-        services.AddScoped<ICosmeticCategoryService, CosmeticCategoryService>();
+        services.AddScoped<ICatalogService, CatalogService>();
 
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(BackupService).Assembly));
 
@@ -42,7 +42,6 @@ public static class ServiceCollectionExtensions
         services.AddScoped<INotificationRepository, NotificationRepository>();
         services.AddScoped<IAuditLogRepository, AuditLogRepository>();
         services.AddScoped<ICosmeticRepository, CosmeticRepository>();
-        services.AddScoped<ICosmeticCategoryRepository, CosmeticCategoryRepository>();
 
         return services;
     }

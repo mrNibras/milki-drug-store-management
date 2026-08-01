@@ -17,6 +17,9 @@ public class PurchaseItemRequest
     public string? BrandName { get; set; }
     public string? GenericName { get; set; }
     public int? CategoryId { get; set; }
+
+    /// <summary>Provided when the medicine does not exist yet (auto-creation).</summary>
+    public string? CategoryName { get; set; }
     public string? UnitType { get; set; }
     public string? ProductCode { get; set; }
     public string? Strength { get; set; }

@@ -13,8 +13,6 @@ public class CosmeticRepository : Repository<Cosmetic>, ICosmeticRepository
     {
         return await _dbSet
             .Where(c => c.ProductName.Contains(searchTerm) || c.Description.Contains(searchTerm))
-            .Include(c => c.CosmeticCategory)
-            .Include(c => c.UnitType)
             .Include(c => c.Batches)
             .ToListAsync();
     }

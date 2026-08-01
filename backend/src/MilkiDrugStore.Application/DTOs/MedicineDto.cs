@@ -12,6 +12,21 @@ public class CreateMedicineRequest
     public string? Description { get; set; }
     public int CategoryId { get; set; }
     public int UnitTypeId { get; set; }
+
+    /// <summary>
+    /// Optional category name entered via the "Other" option. When provided,
+    /// it is resolved against built-ins/customs and takes precedence over
+    /// <see cref="CategoryId"/>.
+    /// </summary>
+    public string? NewCategoryName { get; set; }
+
+    /// <summary>
+    /// Optional unit type name entered via the "Other" option. When provided,
+    /// it is resolved against built-ins/customs and takes precedence over
+    /// <see cref="UnitTypeId"/>.
+    /// </summary>
+    public string? NewUnitTypeName { get; set; }
+
     public decimal PurchasePrice { get; set; }
     public decimal SellingPrice { get; set; }
     public int ReorderLevel { get; set; } = 10;
@@ -29,6 +44,21 @@ public class UpdateMedicineRequest
     public string? Description { get; set; }
     public int CategoryId { get; set; }
     public int UnitTypeId { get; set; }
+
+    /// <summary>
+    /// Optional category name entered via the "Other" option. When provided,
+    /// it is resolved against built-ins/customs and takes precedence over
+    /// <see cref="CategoryId"/>.
+    /// </summary>
+    public string? NewCategoryName { get; set; }
+
+    /// <summary>
+    /// Optional unit type name entered via the "Other" option. When provided,
+    /// it is resolved against built-ins/customs and takes precedence over
+    /// <see cref="UnitTypeId"/>.
+    /// </summary>
+    public string? NewUnitTypeName { get; set; }
+
     public decimal PurchasePrice { get; set; }
     public decimal SellingPrice { get; set; }
     public int ReorderLevel { get; set; } = 10;

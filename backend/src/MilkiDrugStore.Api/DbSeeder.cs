@@ -93,62 +93,6 @@ public static class DbSeeder
                 }
             }
 
-            if (!context.UnitTypes.Any())
-            {
-                context.UnitTypes.AddRange(
-                    new UnitType { Name = "Tablet", Description = "Solid dosage form" },
-                    new UnitType { Name = "Capsule", Description = "Gelatinous shell" },
-                    new UnitType { Name = "Bottle", Description = "Liquid container" },
-                    new UnitType { Name = "Tube", Description = "Ointment/cream tube" },
-                    new UnitType { Name = "Piece", Description = "Single item" },
-                    new UnitType { Name = "Strip", Description = "Blister strip" },
-                    new UnitType { Name = "Box", Description = "Box packaging" },
-                    new UnitType { Name = "Packet", Description = "Packet packaging" },
-                    new UnitType { Name = "Vial", Description = "Injectable vial" },
-                    new UnitType { Name = "Injection", Description = "Injectable form" },
-                    new UnitType { Name = "Cream", Description = "Topical cream" },
-                    new UnitType { Name = "Drops", Description = "Eye/ear drops" },
-                    new UnitType { Name = "Inhaler", Description = "Inhalation device" },
-                    new UnitType { Name = "Patch", Description = "Transdermal patch" },
-                    new UnitType { Name = "Syrup", Description = "Oral liquid" }
-                );
-                await context.SaveChangesAsync();
-                logger.LogInformation("Unit types seeded successfully.");
-            }
-
-            if (!context.CosmeticCategories.Any())
-            {
-                context.CosmeticCategories.AddRange(
-                    new CosmeticCategory { Name = "Skin Care", Description = "Creams, lotions, and skincare products" },
-                    new CosmeticCategory { Name = "Hair Care", Description = "Shampoos, conditioners, and hair treatments" },
-                    new CosmeticCategory { Name = "Makeup", Description = "Foundations, lipsticks, and cosmetics" },
-                    new CosmeticCategory { Name = "Body Care", Description = "Soaps, body washes, and moisturizers" },
-                    new CosmeticCategory { Name = "Fragrances", Description = "Perfumes and deodorants" }
-                );
-                await context.SaveChangesAsync();
-                logger.LogInformation("Cosmetic categories seeded successfully.");
-            }
-
-            if (!context.Categories.Any())
-            {
-                var tablet = await context.UnitTypes.FirstAsync(u => u.Name == "Tablet");
-                var capsule = await context.UnitTypes.FirstAsync(u => u.Name == "Capsule");
-                var bottle = await context.UnitTypes.FirstAsync(u => u.Name == "Bottle");
-                var tube = await context.UnitTypes.FirstAsync(u => u.Name == "Tube");
-                var piece = await context.UnitTypes.FirstAsync(u => u.Name == "Piece");
-
-                context.Categories.AddRange(
-                    new Category { Name = "Antibiotic", UnitTypeId = tablet.UnitTypeId },
-                    new Category { Name = "Pain Killer", UnitTypeId = tablet.UnitTypeId },
-                    new Category { Name = "Vitamin", UnitTypeId = tablet.UnitTypeId },
-                    new Category { Name = "Respiratory", UnitTypeId = capsule.UnitTypeId },
-                    new Category { Name = "Dermatology", UnitTypeId = tube.UnitTypeId },
-                    new Category { Name = "Baby Supplies", UnitTypeId = piece.UnitTypeId }
-                );
-                await context.SaveChangesAsync();
-                logger.LogInformation("Categories seeded successfully.");
-            }
-
             if (!context.Settings.Any())
             {
                 var mainBranch = await context.Branches.FirstOrDefaultAsync(b => b.BranchName == "Main Branch");

@@ -5,8 +5,8 @@ public class CosmeticResponse
     public int CosmeticId { get; set; }
     public string ProductName { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
-    public int CosmeticCategoryId { get; set; }
-    public string CosmeticCategoryName { get; set; } = string.Empty;
+    public int CategoryId { get; set; }
+    public string CategoryName { get; set; } = string.Empty;
     public int UnitTypeId { get; set; }
     public string UnitTypeName { get; set; } = string.Empty;
     public decimal Price { get; set; }
@@ -33,8 +33,23 @@ public class CreateCosmeticRequest
 {
     public string ProductName { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
-    public int CosmeticCategoryId { get; set; }
+    public int CategoryId { get; set; }
     public int UnitTypeId { get; set; }
+
+    /// <summary>
+    /// Optional category name entered via the "Other" option. When provided,
+    /// it is resolved against built-ins/customs and takes precedence over
+    /// <see cref="CategoryId"/>.
+    /// </summary>
+    public string? NewCategoryName { get; set; }
+
+    /// <summary>
+    /// Optional unit type name entered via the "Other" option. When provided,
+    /// it is resolved against built-ins/customs and takes precedence over
+    /// <see cref="UnitTypeId"/>.
+    /// </summary>
+    public string? NewUnitTypeName { get; set; }
+
     public decimal Price { get; set; }
 }
 
@@ -42,8 +57,23 @@ public class UpdateCosmeticRequest
 {
     public string ProductName { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
-    public int CosmeticCategoryId { get; set; }
+    public int CategoryId { get; set; }
     public int UnitTypeId { get; set; }
+
+    /// <summary>
+    /// Optional category name entered via the "Other" option. When provided,
+    /// it is resolved against built-ins/customs and takes precedence over
+    /// <see cref="CategoryId"/>.
+    /// </summary>
+    public string? NewCategoryName { get; set; }
+
+    /// <summary>
+    /// Optional unit type name entered via the "Other" option. When provided,
+    /// it is resolved against built-ins/customs and takes precedence over
+    /// <see cref="UnitTypeId"/>.
+    /// </summary>
+    public string? NewUnitTypeName { get; set; }
+
     public decimal Price { get; set; }
     public bool? IsActive { get; set; }
 }

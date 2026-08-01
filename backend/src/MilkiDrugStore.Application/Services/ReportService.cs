@@ -12,19 +12,22 @@ public class ReportService : IReportService
     private readonly IRepository<Medicine> _medicineRepo;
     private readonly IRepository<Supplier> _supplierRepo;
     private readonly IRepository<User> _userRepo;
+    private readonly ICatalogService _catalog;
 
     public ReportService(
         IRepository<Sale> saleRepo,
         IRepository<Purchase> purchaseRepo,
         IRepository<Medicine> medicineRepo,
         IRepository<Supplier> supplierRepo,
-        IRepository<User> userRepo)
+        IRepository<User> userRepo,
+        ICatalogService catalog)
     {
         _saleRepo = saleRepo;
         _purchaseRepo = purchaseRepo;
         _medicineRepo = medicineRepo;
         _supplierRepo = supplierRepo;
         _userRepo = userRepo;
+        _catalog = catalog;
     }
 
     public async Task<DashboardSummaryResponse> GetDashboardSummaryAsync(int? branchId = null)
@@ -94,6 +97,8 @@ public class ReportService : IReportService
     public async Task<IEnumerable<InventoryReportResponse>> GetInventoryReportAsync(int? branchId = null)
     {
         var medicines = (await _medicineRepo.GetAllAsync()).ToList();
+        var categoryNames = await _catalog.GetCategoryNamesAsync(medicines.Select(m => m.CategoryId));
+
         return medicines.Select(m =>
         {
             var batches = m.Batches.AsQueryable();
@@ -108,7 +113,7 @@ public class ReportService : IReportService
                 ProductId = m.ProductId,
                 ProductCode = m.ProductCode,
                 BrandName = m.BrandName,
-                CategoryName = m.Category?.Name ?? "",
+                CategoryName = categoryNames.TryGetValue(m.CategoryId, out var name) ? name : "",
                 Quantity = totalQty,
                 Value = totalValue,
                 Status = status

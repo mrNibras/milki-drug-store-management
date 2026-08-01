@@ -21,8 +21,8 @@
         builder.Property(m => m.Description).HasMaxLength(500);
         builder.Property(m => m.PurchasePrice).HasColumnType("decimal(18,2)");
         builder.Property(m => m.SellingPrice).HasColumnType("decimal(18,2)");
-        builder.HasOne(m => m.Category).WithMany(c => c.Medicines).HasForeignKey(m => m.CategoryId);
-        builder.HasOne(m => m.UnitType).WithMany(u => u.Medicines).HasForeignKey(m => m.UnitTypeId);
+        builder.Property(m => m.CategoryId);
+        builder.Property(m => m.UnitTypeId);
         builder.HasIndex(m => m.BrandName);
     }
  }

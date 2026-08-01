@@ -11,17 +11,18 @@ namespace MilkiDrugStore.Application.Services;
 public class MedicineService : IMedicineService
 {
     private readonly IRepository<Medicine> _medicineRepo;
-    private readonly IRepository<Category> _categoryRepo;
     private readonly IRepository<MedicineBatch> _batchRepo;
+    private readonly ICatalogService _catalog;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IAuditLogService _auditLog;
 
-    public MedicineService(IRepository<Medicine> medicineRepo, IRepository<Category> categoryRepo,
-        IRepository<MedicineBatch> batchRepo, IUnitOfWork unitOfWork, IAuditLogService auditLog)
+    public MedicineService(IRepository<Medicine> medicineRepo,
+        IRepository<MedicineBatch> batchRepo, ICatalogService catalog,
+        IUnitOfWork unitOfWork, IAuditLogService auditLog)
     {
         _medicineRepo = medicineRepo;
-        _categoryRepo = categoryRepo;
         _batchRepo = batchRepo;
+        _catalog = catalog;
         _unitOfWork = unitOfWork;
         _auditLog = auditLog;
     }
@@ -45,8 +46,6 @@ public class MedicineService : IMedicineService
             query = query.Where(m => m.CategoryId == categoryId.Value);
 
         var medicines = query
-            .Include(m => m.Category)
-            .Include(m => m.UnitType)
             .Include(m => m.Batches)
             .OrderBy(m => m.BrandName)
             .ToList();
@@ -59,23 +58,26 @@ public class MedicineService : IMedicineService
             }
         }
 
-        return medicines.Select(MapToResponse);
+        return await MapToResponsesAsync(medicines);
     }
 
     public async Task<MedicineResponse?> GetByIdAsync(int id, int? branchId = null)
     {
         var medicines = await _medicineRepo.FindAsync(m => m.ProductId == id);
-        var medicine = medicines.Include(m => m.Category).Include(m => m.UnitType).Include(m => m.Batches).FirstOrDefault();
+        var medicine = medicines.Include(m => m.Batches).FirstOrDefault();
         if (medicine == null) return null;
 
         if (branchId.HasValue)
             medicine.Batches = medicine.Batches.Where(b => b.BranchId == branchId.Value).ToList();
 
-        return MapToResponse(medicine);
+        return await MapToResponseAsync(medicine);
     }
 
     public async Task<MedicineResponse> CreateAsync(CreateMedicineRequest request, int userId)
     {
+        var categoryId = await ResolveCategoryIdAsync(request.CategoryId, request.NewCategoryName, userId);
+        var unitTypeId = await ResolveUnitTypeIdAsync(request.UnitTypeId, request.NewUnitTypeName, userId);
+
         var medicine = new Medicine
         {
             ProductCode = await ResolveProductCodeAsync(request.ProductCode),
@@ -86,8 +88,8 @@ public class MedicineService : IMedicineService
             Barcode = request.Barcode,
             Manufacturer = request.Manufacturer,
             Description = request.Description,
-            CategoryId = request.CategoryId,
-            UnitTypeId = request.UnitTypeId,
+            CategoryId = categoryId,
+            UnitTypeId = unitTypeId,
             PurchasePrice = request.PurchasePrice,
             SellingPrice = request.SellingPrice,
             ReorderLevel = request.ReorderLevel,
@@ -109,6 +111,9 @@ public class MedicineService : IMedicineService
         var medicine = medicines.FirstOrDefault();
         if (medicine == null) return null;
 
+        var categoryId = await ResolveCategoryIdAsync(request.CategoryId, request.NewCategoryName, userId);
+        var unitTypeId = await ResolveUnitTypeIdAsync(request.UnitTypeId, request.NewUnitTypeName, userId);
+
         medicine.ProductCode = string.IsNullOrWhiteSpace(request.ProductCode) ? medicine.ProductCode : request.ProductCode.Trim().ToUpper();
         medicine.BrandName = request.BrandName;
         medicine.GenericName = request.GenericName;
@@ -117,8 +122,8 @@ public class MedicineService : IMedicineService
         medicine.Barcode = request.Barcode;
         medicine.Manufacturer = request.Manufacturer;
         medicine.Description = request.Description;
-        medicine.CategoryId = request.CategoryId;
-        medicine.UnitTypeId = request.UnitTypeId;
+        medicine.CategoryId = categoryId;
+        medicine.UnitTypeId = unitTypeId;
         medicine.PurchasePrice = request.PurchasePrice;
         medicine.SellingPrice = request.SellingPrice;
         medicine.ReorderLevel = request.ReorderLevel;
@@ -186,6 +191,36 @@ public class MedicineService : IMedicineService
         return await GetByIdAsync(request.ProductId) ?? throw new Exception("Failed to add batch");
     }
 
+    private async Task<int> ResolveCategoryIdAsync(int requested, string? newName, int userId)
+    {
+        if (!string.IsNullOrWhiteSpace(newName))
+        {
+            var resolved = await _catalog.ResolveCategoryIdAsync(newName, userId);
+            if (resolved.HasValue)
+                return resolved.Value;
+        }
+
+        if (await _catalog.IsValidCategoryIdAsync(requested))
+            return requested;
+
+        throw new Exception("A valid category is required.");
+    }
+
+    private async Task<int> ResolveUnitTypeIdAsync(int requested, string? newName, int userId)
+    {
+        if (!string.IsNullOrWhiteSpace(newName))
+        {
+            var resolved = await _catalog.ResolveUnitTypeIdAsync(newName, userId);
+            if (resolved.HasValue)
+                return resolved.Value;
+        }
+
+        if (await _catalog.IsValidUnitTypeIdAsync(requested))
+            return requested;
+
+        throw new Exception("A valid unit type is required.");
+    }
+
     private async Task<string> ResolveProductCodeAsync(string? requested)
     {
         if (!string.IsNullOrWhiteSpace(requested))
@@ -195,7 +230,23 @@ public class MedicineService : IMedicineService
         return $"MED-{(count + 1):D5}";
     }
 
-    private static MedicineResponse MapToResponse(Medicine m)
+    private async Task<List<MedicineResponse>> MapToResponsesAsync(IEnumerable<Medicine> medicines)
+    {
+        var list = medicines.ToList();
+        var categoryNames = await _catalog.GetCategoryNamesAsync(list.Select(m => m.CategoryId));
+        var unitTypeNames = await _catalog.GetUnitTypeNamesAsync(list.Select(m => m.UnitTypeId));
+
+        return list.Select(m => MapToResponse(m, categoryNames, unitTypeNames)).ToList();
+    }
+
+    private async Task<MedicineResponse> MapToResponseAsync(Medicine m)
+    {
+        var categoryNames = await _catalog.GetCategoryNamesAsync(new[] { m.CategoryId });
+        var unitTypeNames = await _catalog.GetUnitTypeNamesAsync(new[] { m.UnitTypeId });
+        return MapToResponse(m, categoryNames, unitTypeNames);
+    }
+
+    private static MedicineResponse MapToResponse(Medicine m, IDictionary<int, string> categoryNames, IDictionary<int, string> unitTypeNames)
     {
         return new MedicineResponse
         {
@@ -209,9 +260,9 @@ public class MedicineService : IMedicineService
             Manufacturer = m.Manufacturer,
             Description = m.Description,
             CategoryId = m.CategoryId,
-            CategoryName = m.Category?.Name ?? "",
+            CategoryName = categoryNames.TryGetValue(m.CategoryId, out var categoryName) ? categoryName : "",
             UnitTypeId = m.UnitTypeId,
-            UnitTypeName = m.UnitType?.Name ?? "",
+            UnitTypeName = unitTypeNames.TryGetValue(m.UnitTypeId, out var unitTypeName) ? unitTypeName : "",
             PurchasePrice = m.PurchasePrice,
             SellingPrice = m.SellingPrice,
             ReorderLevel = m.ReorderLevel,

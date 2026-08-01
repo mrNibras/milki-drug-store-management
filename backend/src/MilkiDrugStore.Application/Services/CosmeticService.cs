@@ -1,8 +1,6 @@
 using MilkiDrugStore.Application.DTOs.Cosmetic;
 using MilkiDrugStore.Application.Interfaces;
 using MilkiDrugStore.Domain.Entities;
-using MilkiDrugStore.Domain.Enums;
-using MilkiDrugStore.Domain.Exceptions;
 using MilkiDrugStore.Domain.Interfaces.Repositories;
 using MilkiDrugStore.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -14,8 +12,7 @@ public class CosmeticService : ICosmeticService
 {
     private readonly ICosmeticRepository _cosmeticRepo;
     private readonly IRepository<CosmeticBatch> _batchRepo;
-    private readonly IRepository<CosmeticCategory> _categoryRepo;
-    private readonly IRepository<UnitType> _unitTypeRepo;
+    private readonly ICatalogService _catalog;
     private readonly IAuditLogService _auditLog;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<CosmeticService> _logger;
@@ -23,16 +20,14 @@ public class CosmeticService : ICosmeticService
     public CosmeticService(
         ICosmeticRepository cosmeticRepo,
         IRepository<CosmeticBatch> batchRepo,
-        IRepository<CosmeticCategory> categoryRepo,
-        IRepository<UnitType> unitTypeRepo,
+        ICatalogService catalog,
         IAuditLogService auditLog,
         IUnitOfWork unitOfWork,
         ILogger<CosmeticService> logger)
     {
         _cosmeticRepo = cosmeticRepo;
         _batchRepo = batchRepo;
-        _categoryRepo = categoryRepo;
-        _unitTypeRepo = unitTypeRepo;
+        _catalog = catalog;
         _auditLog = auditLog;
         _unitOfWork = unitOfWork;
         _logger = logger;
@@ -46,34 +41,35 @@ public class CosmeticService : ICosmeticService
             query = query.Where(c => c.ProductName.Contains(search) || c.Description.Contains(search));
 
         if (categoryId.HasValue)
-            query = query.Where(c => c.CosmeticCategoryId == categoryId.Value);
+            query = query.Where(c => c.CategoryId == categoryId.Value);
 
         var cosmetics = query
-            .Include(c => c.CosmeticCategory)
-            .Include(c => c.UnitType)
             .Include(c => c.Batches)
             .OrderBy(c => c.ProductName)
             .ToList();
 
-        return cosmetics.Select(MapToResponse);
+        return await MapToResponsesAsync(cosmetics);
     }
 
     public async Task<CosmeticResponse?> GetByIdAsync(int id)
     {
         var cosmetics = await _cosmeticRepo.FindAsync(c => c.CosmeticId == id);
-        var cosmetic = cosmetics.Include(c => c.CosmeticCategory).Include(c => c.UnitType).Include(c => c.Batches).FirstOrDefault();
+        var cosmetic = cosmetics.Include(c => c.Batches).FirstOrDefault();
         if (cosmetic == null) return null;
-        return MapToResponse(cosmetic);
+        return await MapToResponseAsync(cosmetic);
     }
 
     public async Task<CosmeticResponse> CreateAsync(CreateCosmeticRequest request, int userId)
     {
+        var categoryId = await ResolveCategoryIdAsync(request.CategoryId, request.NewCategoryName, userId);
+        var unitTypeId = await ResolveUnitTypeIdAsync(request.UnitTypeId, request.NewUnitTypeName, userId);
+
         var cosmetic = new Cosmetic
         {
             ProductName = request.ProductName,
             Description = request.Description,
-            CosmeticCategoryId = request.CosmeticCategoryId,
-            UnitTypeId = request.UnitTypeId,
+            CategoryId = categoryId,
+            UnitTypeId = unitTypeId,
             Price = request.Price,
             IsActive = true
         };
@@ -83,7 +79,7 @@ public class CosmeticService : ICosmeticService
 
         await _auditLog.LogAsync(userId, $"Created cosmetic: {cosmetic.ProductName}", "Cosmetics", cosmetic.CosmeticId);
 
-        return MapToResponse(cosmetic);
+        return await MapToResponseAsync(cosmetic);
     }
 
     public async Task<CosmeticResponse?> UpdateAsync(int id, UpdateCosmeticRequest request, int userId)
@@ -92,10 +88,13 @@ public class CosmeticService : ICosmeticService
         var cosmetic = cosmetics.FirstOrDefault();
         if (cosmetic == null) return null;
 
+        var categoryId = await ResolveCategoryIdAsync(request.CategoryId, request.NewCategoryName, userId);
+        var unitTypeId = await ResolveUnitTypeIdAsync(request.UnitTypeId, request.NewUnitTypeName, userId);
+
         cosmetic.ProductName = request.ProductName;
         cosmetic.Description = request.Description;
-        cosmetic.CosmeticCategoryId = request.CosmeticCategoryId;
-        cosmetic.UnitTypeId = request.UnitTypeId;
+        cosmetic.CategoryId = categoryId;
+        cosmetic.UnitTypeId = unitTypeId;
         cosmetic.Price = request.Price;
         if (request.IsActive.HasValue)
             cosmetic.IsActive = request.IsActive.Value;
@@ -105,7 +104,7 @@ public class CosmeticService : ICosmeticService
 
         await _auditLog.LogAsync(userId, $"Updated cosmetic: {cosmetic.ProductName}", "Cosmetics", cosmetic.CosmeticId);
 
-        return MapToResponse(cosmetic);
+        return await MapToResponseAsync(cosmetic);
     }
 
     public async Task DeleteAsync(int id, int userId)
@@ -145,20 +144,66 @@ public class CosmeticService : ICosmeticService
 
         await _auditLog.LogAsync(userId, $"Added batch {request.BatchNumber} to cosmetic: {cosmetic.ProductName}", "CosmeticBatches", batch.BatchId);
 
-        return MapToResponse(cosmetic);
+        return await MapToResponseAsync(cosmetic);
     }
 
-    private static CosmeticResponse MapToResponse(Cosmetic c)
+    private async Task<int> ResolveCategoryIdAsync(int requested, string? newName, int userId)
+    {
+        if (!string.IsNullOrWhiteSpace(newName))
+        {
+            var resolved = await _catalog.ResolveCategoryIdAsync(newName, userId);
+            if (resolved.HasValue)
+                return resolved.Value;
+        }
+
+        if (await _catalog.IsValidCategoryIdAsync(requested))
+            return requested;
+
+        throw new Exception("A valid category is required.");
+    }
+
+    private async Task<int> ResolveUnitTypeIdAsync(int requested, string? newName, int userId)
+    {
+        if (!string.IsNullOrWhiteSpace(newName))
+        {
+            var resolved = await _catalog.ResolveUnitTypeIdAsync(newName, userId);
+            if (resolved.HasValue)
+                return resolved.Value;
+        }
+
+        if (await _catalog.IsValidUnitTypeIdAsync(requested))
+            return requested;
+
+        throw new Exception("A valid unit type is required.");
+    }
+
+    private async Task<List<CosmeticResponse>> MapToResponsesAsync(IEnumerable<Cosmetic> cosmetics)
+    {
+        var list = cosmetics.ToList();
+        var categoryNames = await _catalog.GetCategoryNamesAsync(list.Select(c => c.CategoryId));
+        var unitTypeNames = await _catalog.GetUnitTypeNamesAsync(list.Select(c => c.UnitTypeId));
+
+        return list.Select(c => MapToResponse(c, categoryNames, unitTypeNames)).ToList();
+    }
+
+    private async Task<CosmeticResponse> MapToResponseAsync(Cosmetic c)
+    {
+        var categoryNames = await _catalog.GetCategoryNamesAsync(new[] { c.CategoryId });
+        var unitTypeNames = await _catalog.GetUnitTypeNamesAsync(new[] { c.UnitTypeId });
+        return MapToResponse(c, categoryNames, unitTypeNames);
+    }
+
+    private static CosmeticResponse MapToResponse(Cosmetic c, IDictionary<int, string> categoryNames, IDictionary<int, string> unitTypeNames)
     {
         return new CosmeticResponse
         {
             CosmeticId = c.CosmeticId,
             ProductName = c.ProductName,
             Description = c.Description,
-            CosmeticCategoryId = c.CosmeticCategoryId,
-            CosmeticCategoryName = c.CosmeticCategory != null ? c.CosmeticCategory.Name : "",
+            CategoryId = c.CategoryId,
+            CategoryName = categoryNames.TryGetValue(c.CategoryId, out var categoryName) ? categoryName : "",
             UnitTypeId = c.UnitTypeId,
-            UnitTypeName = c.UnitType != null ? c.UnitType.Name : "",
+            UnitTypeName = unitTypeNames.TryGetValue(c.UnitTypeId, out var unitTypeName) ? unitTypeName : "",
             Price = c.Price,
             IsActive = c.IsActive,
             CreatedAt = c.CreatedAt,

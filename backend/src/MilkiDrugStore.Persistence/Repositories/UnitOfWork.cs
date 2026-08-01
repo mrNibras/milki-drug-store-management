@@ -36,7 +36,6 @@ public class UnitOfWork : IUnitOfWork
         PasswordResets = new Repository<PasswordReset>(_context);
         Cosmetics = new Repository<Cosmetic>(_context);
         CosmeticBatches = new Repository<CosmeticBatch>(_context);
-        CosmeticCategories = new Repository<CosmeticCategory>(_context);
     }
 
     public IRepository<Role> Roles { get; }
@@ -60,7 +59,6 @@ public class UnitOfWork : IUnitOfWork
     public IRepository<PasswordReset> PasswordResets { get; }
     public IRepository<Cosmetic> Cosmetics { get; }
     public IRepository<CosmeticBatch> CosmeticBatches { get; }
-    public IRepository<CosmeticCategory> CosmeticCategories { get; }
 
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
