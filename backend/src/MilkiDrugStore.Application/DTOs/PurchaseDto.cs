@@ -12,18 +12,24 @@ public class CreatePurchaseRequest
 
 public class PurchaseItemRequest
 {
-    public int MedicineId { get; set; }
+    public int? ProductId { get; set; }
     /// <summary>Provided when the medicine does not exist yet (auto-creation).</summary>
     public string? BrandName { get; set; }
     public string? GenericName { get; set; }
     public int? CategoryId { get; set; }
     public string? UnitType { get; set; }
-    public int LowStockThreshold { get; set; } = 10;
+    public string? ProductCode { get; set; }
+    public string? Strength { get; set; }
+    public string? DosageForm { get; set; }
+    public string? Barcode { get; set; }
+    public int ReorderLevel { get; set; } = 10;
     public string BatchNumber { get; set; } = string.Empty;
     public int Quantity { get; set; }
     public decimal PurchasePrice { get; set; }
     public decimal SellingPrice { get; set; }
     public DateTime? ExpiryDate { get; set; }
+    public DateTime? ManufacturingDate { get; set; }
+    public int? SupplierId { get; set; }
 }
 
 public class PurchaseResponse
@@ -45,7 +51,7 @@ public class PurchaseResponse
 public class PurchaseItemResponse
 {
     public int PurchaseItemId { get; set; }
-    public int MedicineId { get; set; }
+    public int ProductId { get; set; }
     public string BrandName { get; set; } = string.Empty;
     public string BatchNumber { get; set; } = string.Empty;
     public int Quantity { get; set; }

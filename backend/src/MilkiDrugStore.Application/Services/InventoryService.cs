@@ -30,9 +30,9 @@ public class InventoryService : IInventoryService
         _auditLog = auditLog;
     }
 
-    public async Task<int> GetCurrentStockAsync(int medicineId, int? branchId = null)
+    public async Task<int> GetCurrentStockAsync(int productId, int? branchId = null)
     {
-        var batches = (await _batchRepo.FindAsync(b => b.MedicineId == medicineId)).ToList();
+        var batches = (await _batchRepo.FindAsync(b => b.ProductId == productId)).ToList();
         if (branchId.HasValue)
             batches = batches.Where(b => b.BranchId == branchId.Value).ToList();
         return batches.Sum(b => b.Balance);
@@ -50,7 +50,7 @@ public class InventoryService : IInventoryService
 
         await _unitOfWork.InventoryTransactions.AddAsync(new InventoryTransaction
         {
-            MedicineId = batch.MedicineId,
+            ProductId = batch.ProductId,
             BatchId = batchId,
             TransactionType = TransactionType.Damage.ToString(),
             Quantity = quantity,
@@ -76,7 +76,7 @@ public class InventoryService : IInventoryService
 
         await _unitOfWork.InventoryTransactions.AddAsync(new InventoryTransaction
         {
-            MedicineId = batch.MedicineId,
+            ProductId = batch.ProductId,
             BatchId = batchId,
             TransactionType = TransactionType.Expired.ToString(),
             Quantity = quantity,

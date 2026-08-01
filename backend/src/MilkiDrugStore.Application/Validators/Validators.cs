@@ -35,7 +35,7 @@ public class AddBatchRequestValidator : AbstractValidator<MilkiDrugStore.Applica
 {
     public AddBatchRequestValidator()
     {
-        RuleFor(x => x.MedicineId).GreaterThan(0);
+        RuleFor(x => x.ProductId).GreaterThan(0);
         RuleFor(x => x.BatchNumber).NotEmpty();
         RuleFor(x => x.Quantity).GreaterThan(0);
         RuleFor(x => x.PurchasePrice).GreaterThan(0);

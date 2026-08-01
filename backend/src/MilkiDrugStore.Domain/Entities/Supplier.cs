@@ -11,4 +11,5 @@ public class Supplier
     public DateTime CreatedAt { get; set; } = DateTime.Now;
 
     public List<Purchase> Purchases { get; set; } = new();
+    public List<MedicineBatch> MedicineBatches { get; set; } = new();
 }

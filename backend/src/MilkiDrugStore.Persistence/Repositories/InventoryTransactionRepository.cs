@@ -9,10 +9,10 @@ public class InventoryTransactionRepository : Repository<InventoryTransaction>, 
 {
     public InventoryTransactionRepository(AppDbContext context) : base(context) { }
 
-    public async Task<IEnumerable<InventoryTransaction>> GetByMedicineAsync(int medicineId)
+    public async Task<IEnumerable<InventoryTransaction>> GetByMedicineAsync(int productId)
     {
         return await _dbSet
-            .Where(it => it.MedicineId == medicineId)
+            .Where(it => it.ProductId == productId)
             .OrderByDescending(it => it.CreatedAt)
             .ToListAsync();
     }

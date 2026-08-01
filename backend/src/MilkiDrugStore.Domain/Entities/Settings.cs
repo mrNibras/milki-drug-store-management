@@ -1,5 +1,7 @@
 namespace MilkiDrugStore.Domain.Entities;
 
+using MilkiDrugStore.Domain.Enums;
+
 public class Settings
 {
     public int SettingId { get; set; }
@@ -12,6 +14,7 @@ public class Settings
     public int LowStockThreshold { get; set; } = 10;
     public int ExpiryAlertMonths { get; set; } = 6;
     public string Currency { get; set; } = "ETB";
+    public BatchSelectionMode BatchSelectionMode { get; set; } = BatchSelectionMode.AutomaticFefo;
 
     public Branch? Branch { get; set; }
 }

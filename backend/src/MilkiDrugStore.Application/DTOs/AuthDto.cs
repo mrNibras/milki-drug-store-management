@@ -71,6 +71,7 @@ public class UpdateSettingsRequest
     public int LowStockThreshold { get; set; } = 10;
     public int ExpiryAlertMonths { get; set; } = 6;
     public string Currency { get; set; } = "ETB";
+    public string BatchSelectionMode { get; set; } = "AutomaticFefo";
 }
 
 public class ChangePasswordRequest

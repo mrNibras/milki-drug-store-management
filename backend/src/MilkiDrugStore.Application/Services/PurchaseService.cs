@@ -82,13 +82,15 @@ public class PurchaseService : IPurchaseService
 
             foreach (var item in request.Items)
             {
-                var medicine = (await _medicineRepo.FindAsync(m => m.MedicineId == item.MedicineId)).FirstOrDefault();
+                var medicine = (await _medicineRepo.FindAsync(m => m.ProductId == (item.ProductId ?? 0))).FirstOrDefault()
+                    ?? (await _medicineRepo.FindAsync(m => !string.IsNullOrWhiteSpace(item.ProductCode) && m.ProductCode == item.ProductCode.Trim().ToUpper())).FirstOrDefault()
+                    ?? (await _medicineRepo.FindAsync(m => !string.IsNullOrWhiteSpace(item.Barcode) && m.Barcode == item.Barcode.Trim())).FirstOrDefault();
 
                 // Auto-create the medicine if it does not exist yet.
                 if (medicine == null)
                 {
                     if (string.IsNullOrWhiteSpace(item.BrandName))
-                        throw new Exception($"Medicine ID {item.MedicineId} not found and no name was provided to create it");
+                        throw new Exception($"Product ID {item.ProductId} not found and no name was provided to create it");
 
                     var categoryId = item.CategoryId;
                     if (categoryId == null || (await _categoryRepo.GetByIdAsync(categoryId.Value)) == null)
@@ -105,29 +107,35 @@ public class PurchaseService : IPurchaseService
 
                     medicine = new Medicine
                     {
+                        ProductCode = await ResolveProductCodeAsync(item.ProductCode),
                         BrandName = item.BrandName,
                         GenericName = item.GenericName ?? item.BrandName,
+                        Strength = item.Strength,
+                        DosageForm = item.DosageForm,
+                        Barcode = item.Barcode,
                         CategoryId = categoryId.Value,
                         UnitTypeId = unitTypeId,
-                        LowStockThreshold = item.LowStockThreshold > 0 ? item.LowStockThreshold : 10,
+                        ReorderLevel = item.ReorderLevel > 0 ? item.ReorderLevel : 10,
                         IsActive = true,
                         CreatedAt = DateTime.Now
                     };
                     await _medicineRepo.AddAsync(medicine);
                     await _unitOfWork.SaveChangesAsync();
 
-                    await _auditLog.LogAsync(createdBy, $"Auto-created medicine: {medicine.BrandName}", "Medicines", medicine.MedicineId);
+                    await _auditLog.LogAsync(createdBy, $"Auto-created medicine: {medicine.BrandName}", "Medicines", medicine.ProductId);
                 }
 
                 var batch = new MedicineBatch
                 {
-                    MedicineId = medicine.MedicineId,
+                    ProductId = medicine.ProductId,
                     BranchId = branchId ?? 0,
                     BatchNumber = item.BatchNumber,
                     QuantityReceived = item.Quantity,
                     PurchasePrice = item.PurchasePrice,
                     SellingPrice = item.SellingPrice,
                     ExpiryDate = item.ExpiryDate ?? DateTime.Now.AddYears(2),
+                    ManufacturingDate = item.ManufacturingDate,
+                    SupplierId = item.SupplierId ?? request.SupplierId,
                     DateReceived = DateTime.Now
                 };
 
@@ -137,7 +145,7 @@ public class PurchaseService : IPurchaseService
                 var purchaseItem = new PurchaseItem
                 {
                     PurchaseId = purchase.PurchaseId,
-                    MedicineId = medicine.MedicineId,
+                    ProductId = medicine.ProductId,
                     BatchId = batch.BatchId,
                     BatchNumber = item.BatchNumber,
                     Quantity = item.Quantity,
@@ -150,7 +158,7 @@ public class PurchaseService : IPurchaseService
 
                 await _transactionRepo.AddAsync(new InventoryTransaction
                 {
-                    MedicineId = medicine.MedicineId,
+                    ProductId = medicine.ProductId,
                     BatchId = batch.BatchId,
                     TransactionType = TransactionType.Purchase.ToString(),
                     Quantity = item.Quantity,
@@ -205,7 +213,7 @@ public class PurchaseService : IPurchaseService
                 Items = items.Select(pi => new PurchaseItemResponse
                 {
                     PurchaseItemId = pi.PurchaseItemId,
-                    MedicineId = pi.MedicineId,
+                    ProductId = pi.ProductId,
                     BrandName = pi.Medicine?.BrandName ?? "",
                     BatchNumber = pi.BatchNumber,
                     Quantity = pi.Quantity,
@@ -242,7 +250,7 @@ public class PurchaseService : IPurchaseService
             Items = purchase.Items.Select(pi => new PurchaseItemResponse
             {
                 PurchaseItemId = pi.PurchaseItemId,
-                MedicineId = pi.MedicineId,
+                ProductId = pi.ProductId,
                 BrandName = pi.Medicine?.BrandName ?? "",
                 BatchNumber = pi.BatchNumber,
                 Quantity = pi.Quantity,
@@ -250,5 +258,14 @@ public class PurchaseService : IPurchaseService
                 SubTotal = pi.SubTotal
             }).ToList()
         };
+    }
+
+    private async Task<string> ResolveProductCodeAsync(string? requested)
+    {
+        if (!string.IsNullOrWhiteSpace(requested))
+            return requested.Trim().ToUpper();
+
+        var count = (await _medicineRepo.GetAllAsync()).Count();
+        return $"MED-{(count + 1):D5}";
     }
 }

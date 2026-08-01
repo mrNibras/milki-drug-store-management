@@ -3,7 +3,7 @@ namespace MilkiDrugStore.Domain.Entities;
 public class InventoryTransaction
 {
     public int TransactionId { get; set; }
-    public int MedicineId { get; set; }
+    public int ProductId { get; set; }
     public int? BatchId { get; set; }
     public string TransactionType { get; set; } = string.Empty;
     public int Quantity { get; set; }

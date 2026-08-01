@@ -23,6 +23,12 @@ public enum NotificationType
     SystemAlert = 4
 }
 
+public enum BatchSelectionMode
+{
+    AutomaticFefo = 1,
+    ManualSelection = 2
+}
+
 public static class NotificationTypeStrings
 {
     public const string LowStock = "LOW_STOCK";

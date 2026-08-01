@@ -107,7 +107,7 @@ public class NotificationService : INotificationService
                     await _notificationRepo.AddAsync(notification);
                 }
             }
-            else if (totalStock <= medicine.LowStockThreshold && totalStock > 0)
+            else if (totalStock <= medicine.ReorderLevel && totalStock > 0)
             {
                 if (await _notificationRepo.GetActiveByTypeAndMedicineAsync(NotificationTypeStrings.LowStock, medicine.BrandName) == null)
                 {
@@ -115,7 +115,7 @@ public class NotificationService : INotificationService
                     {
                         BranchId = branchId ?? 0,
                         Title = "Low Stock",
-                        Message = $"{medicine.BrandName} stock is below threshold ({totalStock}/{medicine.LowStockThreshold})",
+                        Message = $"{medicine.BrandName} stock is below threshold ({totalStock}/{medicine.ReorderLevel})",
                         NotificationType = NotificationTypeStrings.LowStock
                     };
                     await _notificationRepo.AddAsync(notification);

@@ -18,6 +18,7 @@ public class SaleService : ISaleService
     private readonly IRepository<MedicineBatch> _batchRepo;
     private readonly IRepository<InventoryTransaction> _transactionRepo;
     private readonly IRepository<Notification> _notificationRepo;
+    private readonly IRepository<Settings> _settingsRepo;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IAuditLogService _auditLog;
     private readonly List<IDomainEvent> _domainEvents = new();
@@ -32,6 +33,7 @@ public class SaleService : ISaleService
         IRepository<MedicineBatch> batchRepo,
         IRepository<InventoryTransaction> transactionRepo,
         IRepository<Notification> notificationRepo,
+        IRepository<Settings> settingsRepo,
         IUnitOfWork unitOfWork,
         IAuditLogService auditLog)
     {
@@ -41,6 +43,7 @@ public class SaleService : ISaleService
         _batchRepo = batchRepo;
         _transactionRepo = transactionRepo;
         _notificationRepo = notificationRepo;
+        _settingsRepo = settingsRepo;
         _unitOfWork = unitOfWork;
         _auditLog = auditLog;
     }
@@ -63,9 +66,10 @@ public class SaleService : ISaleService
 
             foreach (var item in request.Items)
             {
-                var batches = await GetAvailableBatchesAsync(item.MedicineId, branchId);
+                var manualBatchMode = await IsManualBatchModeAsync(branchId);
+                var batches = await GetAvailableBatchesAsync(item.ProductId, branchId, manualBatchMode ? item.BatchId : null);
                 if (!batches.Any())
-                    throw new InsufficientStockException($"No stock available for medicine ID {item.MedicineId}");
+                    throw new InsufficientStockException($"No stock available for product ID {item.ProductId}");
 
                 var remainingQty = item.Quantity;
                 var requestedDiscount = Math.Max(0m, item.DiscountAmount);
@@ -96,7 +100,7 @@ public class SaleService : ISaleService
 
                     saleItems.Add(new SaleItem
                     {
-                        MedicineId = item.MedicineId,
+                        ProductId = item.ProductId,
                         BatchId = batch.BatchId,
                         Quantity = deductQty,
                         UnitPrice = batch.SellingPrice,
@@ -108,7 +112,7 @@ public class SaleService : ISaleService
 
                     await _transactionRepo.AddAsync(new InventoryTransaction
                     {
-                        MedicineId = item.MedicineId,
+                        ProductId = item.ProductId,
                         BatchId = batch.BatchId,
                         TransactionType = TransactionType.Sale.ToString(),
                         Quantity = deductQty,
@@ -120,7 +124,7 @@ public class SaleService : ISaleService
                 }
 
                 if (remainingQty > 0)
-                    throw new InsufficientStockException($"Insufficient stock for medicine ID {item.MedicineId}");
+                    throw new InsufficientStockException($"Insufficient stock for product ID {item.ProductId}");
             }
 
             // A reason must accompany any applied discount.
@@ -172,18 +176,18 @@ public class SaleService : ISaleService
 
             foreach (var si in saleItems)
             {
-                var med = (await _medicineRepo.FindAsync(m => m.MedicineId == si.MedicineId)).FirstOrDefault();
+                var med = (await _medicineRepo.FindAsync(m => m.ProductId == si.ProductId)).FirstOrDefault();
                 if (med != null)
                 {
-                    var batches = await GetAvailableBatchesAsync(med.MedicineId, branchId);
+                    var batches = await GetAvailableBatchesAsync(med.ProductId, branchId);
                     var currentStock = batches.Sum(b => b.Balance);
-                    if (currentStock <= med.LowStockThreshold && currentStock > 0)
+                    if (currentStock <= med.ReorderLevel && currentStock > 0)
                     {
-                        _domainEvents.Add(new StockLowEvent(med.MedicineId, currentStock));
+                        _domainEvents.Add(new StockLowEvent(med.ProductId, currentStock));
                     }
                     if (currentStock == 0 && batches.Any())
                     {
-                        _domainEvents.Add(new StockLowEvent(med.MedicineId, 0));
+                        _domainEvents.Add(new StockLowEvent(med.ProductId, 0));
                     }
                 }
             }
@@ -217,9 +221,16 @@ public class SaleService : ISaleService
         return MapToResponse(sale);
     }
 
-    private async Task<List<MedicineBatch>> GetAvailableBatchesAsync(int medicineId, int? branchId = null)
+    private async Task<bool> IsManualBatchModeAsync(int? branchId = null)
     {
-        var batches = (await _batchRepo.FindAsync(b => b.MedicineId == medicineId))
+        var settings = (await _settingsRepo.FindAsync(s => s.BranchId == (branchId ?? 0))).FirstOrDefault()
+            ?? (await _settingsRepo.GetAllAsync()).FirstOrDefault();
+        return settings?.BatchSelectionMode == BatchSelectionMode.ManualSelection;
+    }
+
+    private async Task<List<MedicineBatch>> GetAvailableBatchesAsync(int productId, int? branchId = null, int? manualBatchId = null)
+    {
+        var batches = (await _batchRepo.FindAsync(b => b.ProductId == productId))
             .OrderBy(b => b.ExpiryDate)
             .ThenBy(b => b.BatchId)
             .ToList();
@@ -227,7 +238,15 @@ public class SaleService : ISaleService
         if (branchId.HasValue)
             batches = batches.Where(b => b.BranchId == branchId.Value).ToList();
 
-        return batches.Where(b => b.Balance > 0).ToList();
+        batches = batches.Where(b => b.Balance > 0).ToList();
+
+        if (manualBatchId.HasValue)
+        {
+            var selected = batches.FirstOrDefault(b => b.BatchId == manualBatchId.Value);
+            return selected == null ? new List<MedicineBatch>() : new List<MedicineBatch> { selected };
+        }
+
+        return batches;
     }
 
     private static SaleResponse MapToResponse(Sale s)
@@ -252,7 +271,7 @@ public class SaleService : ISaleService
             Items = s.Items.Select(i => new SaleItemResponse
             {
                 SaleItemId = i.SaleItemId,
-                MedicineId = i.MedicineId,
+                ProductId = i.ProductId,
                 BrandName = i.Medicine?.BrandName ?? "",
                 BatchId = i.BatchId,
                 BatchNumber = i.Batch?.BatchNumber ?? "",

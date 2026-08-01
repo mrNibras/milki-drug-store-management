@@ -15,6 +15,6 @@ public class SaleItemConfiguration : IEntityTypeConfiguration<SaleItem>
         builder.Property(si => si.Profit).HasColumnType("decimal(18,2)");
         builder.Property(si => si.SubTotal).HasColumnType("decimal(18,2)");
         builder.HasOne(si => si.Sale).WithMany(s => s.Items).HasForeignKey(si => si.SaleId);
-        builder.HasOne(si => si.Medicine).WithMany(m => m.SaleItems).HasForeignKey(si => si.MedicineId);
+        builder.HasOne(si => si.Medicine).WithMany(m => m.SaleItems).HasForeignKey(si => si.ProductId);
     }
 }

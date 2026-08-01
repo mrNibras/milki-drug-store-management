@@ -16,9 +16,11 @@ public class MappingProfile : AutoMapper.Profile
         CreateMap<UpdateMedicineRequest, Medicine>();
         CreateMap<Medicine, MedicineResponse>()
             .ForMember(d => d.CategoryName, opt => opt.MapFrom(s => s.Category != null ? s.Category.Name : ""))
+            .ForMember(d => d.UnitTypeName, opt => opt.MapFrom(s => s.UnitType != null ? s.UnitType.Name : ""))
             .ForMember(d => d.Batches, opt => opt.MapFrom(s => s.Batches));
 
-        CreateMap<MedicineBatch, BatchResponse>();
+        CreateMap<MedicineBatch, BatchResponse>()
+            .ForMember(d => d.SupplierName, opt => opt.MapFrom(s => s.Supplier != null ? s.Supplier.SupplierName : ""));
 
         CreateMap<CreatePurchaseRequest, Purchase>();
         CreateMap<PurchaseItem, PurchaseItemResponse>()

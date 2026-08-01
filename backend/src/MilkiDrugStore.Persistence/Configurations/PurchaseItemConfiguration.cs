@@ -13,6 +13,6 @@ public class PurchaseItemConfiguration : IEntityTypeConfiguration<PurchaseItem>
         builder.Property(pi => pi.PurchasePrice).HasColumnType("decimal(18,2)");
         builder.Property(pi => pi.SubTotal).HasColumnType("decimal(18,2)");
         builder.HasOne(pi => pi.Purchase).WithMany(p => p.Items).HasForeignKey(pi => pi.PurchaseId);
-        builder.HasOne(pi => pi.Medicine).WithMany(m => m.PurchaseItems).HasForeignKey(pi => pi.MedicineId);
+        builder.HasOne(pi => pi.Medicine).WithMany(m => m.PurchaseItems).HasForeignKey(pi => pi.ProductId);
     }
 }

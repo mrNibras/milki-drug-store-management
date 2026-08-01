@@ -43,7 +43,7 @@ public class ReportService : IReportService
         var monthlyProfit = sales.Where(s => s.SaleDate >= currentMonth).Sum(s => s.TotalProfit);
 
         var inventoryValue = medicines.Sum(m => m.Batches.Sum(b => b.Balance * b.PurchasePrice));
-        var lowStockCount = medicines.Count(m => m.Batches.Sum(b => b.Balance) <= m.LowStockThreshold && m.Batches.Sum(b => b.Balance) > 0);
+        var lowStockCount = medicines.Count(m => m.Batches.Sum(b => b.Balance) <= m.ReorderLevel && m.Batches.Sum(b => b.Balance) > 0);
         var expiringCount = medicines.Count(m => m.Batches.Any(b => b.ExpiryDate <= DateTime.Now.AddMonths(6) && b.Balance > 0));
         var outOfStockCount = medicines.Count(m => m.Batches.All(b => b.Balance <= 0));
 
@@ -101,11 +101,12 @@ public class ReportService : IReportService
                 batches = batches.Where(b => b.BranchId == branchId.Value);
             var totalQty = batches.Sum(b => b.Balance);
             var totalValue = batches.Sum(b => b.Balance * b.PurchasePrice);
-            var status = totalQty == 0 ? "Out of Stock" : totalQty <= m.LowStockThreshold ? "Low Stock" : "In Stock";
+            var status = totalQty == 0 ? "Out of Stock" : totalQty <= m.ReorderLevel ? "Low Stock" : "In Stock";
 
             return new InventoryReportResponse
             {
-                MedicineId = m.MedicineId,
+                ProductId = m.ProductId,
+                ProductCode = m.ProductCode,
                 BrandName = m.BrandName,
                 CategoryName = m.Category?.Name ?? "",
                 Quantity = totalQty,

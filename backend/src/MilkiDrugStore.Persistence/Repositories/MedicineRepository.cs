@@ -11,8 +11,14 @@ public class MedicineRepository : Repository<Medicine>, IMedicineRepository
 
     public async Task<IEnumerable<Medicine>> SearchAsync(string searchTerm)
     {
+        var term = searchTerm.Trim();
         return await _dbSet
-            .Where(m => m.BrandName.Contains(searchTerm) || m.GenericName.Contains(searchTerm))
+            .Where(m => m.BrandName.Contains(term)
+                     || m.GenericName.Contains(term)
+                     || (m.ProductCode != null && m.ProductCode.Contains(term))
+                     || (m.Barcode != null && m.Barcode.Contains(term))
+                     || (m.Strength != null && m.Strength.Contains(term))
+                     || (m.DosageForm != null && m.DosageForm.Contains(term)))
             .Include(m => m.Category)
             .Include(m => m.Batches)
             .ToListAsync();
@@ -22,7 +28,7 @@ public class MedicineRepository : Repository<Medicine>, IMedicineRepository
     {
         return await _dbSet
             .Include(m => m.Batches)
-            .Where(m => m.Batches.Sum(b => b.QuantityReceived - b.QuantityIssued - b.QuantityDamaged - b.QuantityExpired) <= m.LowStockThreshold
+            .Where(m => m.Batches.Sum(b => b.QuantityReceived - b.QuantityIssued - b.QuantityDamaged - b.QuantityExpired) <= m.ReorderLevel
                      && m.Batches.Sum(b => b.QuantityReceived - b.QuantityIssued - b.QuantityDamaged - b.QuantityExpired) > 0)
             .ToListAsync();
     }

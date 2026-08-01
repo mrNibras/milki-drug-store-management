@@ -282,6 +282,9 @@ public class AuthService : IAuthService
         settings.LowStockThreshold = request.LowStockThreshold;
         settings.ExpiryAlertMonths = request.ExpiryAlertMonths;
         settings.Currency = request.Currency;
+        settings.BatchSelectionMode = Enum.TryParse<BatchSelectionMode>(request.BatchSelectionMode, true, out var mode)
+            ? mode
+            : BatchSelectionMode.AutomaticFefo;
 
         await _unitOfWork.Settings.UpdateAsync(settings);
         await _unitOfWork.SaveChangesAsync();

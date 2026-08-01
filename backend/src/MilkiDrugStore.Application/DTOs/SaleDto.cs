@@ -11,10 +11,12 @@ public class CreateSaleRequest
 
 public class SaleItemRequest
 {
-    public int MedicineId { get; set; }
+    public int ProductId { get; set; }
     public int Quantity { get; set; }
     /// <summary>Per-unit discount amount requested by the cashier.</summary>
     public decimal DiscountAmount { get; set; }
+    /// <summary>Optional manually selected batch (required when manual batch mode is enabled).</summary>
+    public int? BatchId { get; set; }
 }
 
 public class SaleResponse
@@ -40,7 +42,7 @@ public class SaleResponse
 public class SaleItemResponse
 {
     public int SaleItemId { get; set; }
-    public int MedicineId { get; set; }
+    public int ProductId { get; set; }
     public string BrandName { get; set; } = string.Empty;
     public int? BatchId { get; set; }
     public string BatchNumber { get; set; } = string.Empty;
