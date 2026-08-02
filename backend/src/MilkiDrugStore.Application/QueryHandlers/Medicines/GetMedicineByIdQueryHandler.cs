@@ -16,6 +16,6 @@ public class GetMedicineByIdQueryHandler : IRequestHandler<GetMedicineByIdQuery,
 
     public async Task<MedicineResponse?> Handle(GetMedicineByIdQuery request, CancellationToken cancellationToken)
     {
-        return await _medicineService.GetByIdAsync(request.Id);
+        return await _medicineService.GetByIdAsync(request.Id, request.BranchId);
     }
 }

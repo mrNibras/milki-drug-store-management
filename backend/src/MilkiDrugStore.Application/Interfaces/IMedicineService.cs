@@ -10,4 +10,5 @@ public interface IMedicineService
     Task<MedicineResponse?> UpdateAsync(int id, UpdateMedicineRequest request, int userId);
     Task DeleteAsync(int id, int userId);
     Task<MedicineResponse> AddBatchAsync(AddBatchRequest request, int userId, int? branchId = null);
+    Task<IEnumerable<MedicineSearchResponse>> SearchAsync(string query, int? branchId = null);
 }

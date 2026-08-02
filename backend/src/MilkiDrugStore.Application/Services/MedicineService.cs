@@ -94,7 +94,7 @@ public class MedicineService : IMedicineService
             SellingPrice = request.SellingPrice,
             ReorderLevel = request.ReorderLevel,
             IsActive = true,
-            CreatedAt = DateTime.Now
+            CreatedDate = DateTime.Now
         };
 
         await _medicineRepo.AddAsync(medicine);
@@ -221,6 +221,47 @@ public class MedicineService : IMedicineService
         throw new Exception("A valid unit type is required.");
     }
 
+    public async Task<IEnumerable<MedicineSearchResponse>> SearchAsync(string query, int? branchId = null)
+    {
+        var allMedicines = await _medicineRepo.GetAllAsync();
+        var medicines = allMedicines.AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(query))
+        {
+            var term = query.Trim();
+            medicines = medicines.Where(m =>
+                m.BrandName.Contains(term)
+                || m.GenericName.Contains(term)
+                || (m.ProductCode != null && m.ProductCode.Contains(term))
+                || (m.Barcode != null && m.Barcode.Contains(term))
+                || (m.Strength != null && m.Strength.Contains(term))
+                || (m.DosageForm != null && m.DosageForm.Contains(term)));
+        }
+
+        var filtered = medicines.ToList();
+
+        if (branchId.HasValue)
+        {
+            foreach (var m in filtered)
+            {
+                m.Batches = m.Batches.Where(b => b.BranchId == branchId.Value).ToList();
+            }
+        }
+
+        return filtered.Select(m => new MedicineSearchResponse
+        {
+            ProductId = m.ProductId,
+            ProductCode = m.ProductCode,
+            BrandName = m.BrandName,
+            GenericName = m.GenericName,
+            Strength = m.Strength,
+            DosageForm = m.DosageForm,
+            Barcode = m.Barcode,
+            TotalStock = m.Batches.Sum(b => b.RemainingQuantity),
+            SellingPrice = m.SellingPrice
+        }).ToList();
+    }
+
     private async Task<string> ResolveProductCodeAsync(string? requested)
     {
         if (!string.IsNullOrWhiteSpace(requested))
@@ -266,9 +307,10 @@ public class MedicineService : IMedicineService
             PurchasePrice = m.PurchasePrice,
             SellingPrice = m.SellingPrice,
             ReorderLevel = m.ReorderLevel,
-            IsActive = m.IsActive,
-            CreatedAt = m.CreatedAt,
-            UpdatedDate = m.UpdatedDate,
+             IsActive = m.IsActive,
+             CreatedDate = m.CreatedDate,
+             UpdatedDate = m.UpdatedDate,
+             TotalStock = m.Batches.Sum(b => b.RemainingQuantity),
             Batches = m.Batches.Select(b => new BatchResponse
             {
                 BatchId = b.BatchId,
@@ -280,7 +322,7 @@ public class MedicineService : IMedicineService
                 QuantityIssued = b.QuantityIssued,
                 QuantityDamaged = b.QuantityDamaged,
                 QuantityExpired = b.QuantityExpired,
-                Balance = b.Balance,
+                RemainingQuantity = b.RemainingQuantity,
                 ExpiryDate = b.ExpiryDate,
                 ManufacturingDate = b.ManufacturingDate,
                 SupplierId = b.SupplierId,

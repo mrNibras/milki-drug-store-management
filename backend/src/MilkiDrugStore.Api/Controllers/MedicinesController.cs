@@ -21,16 +21,23 @@ public class MedicinesController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll([FromQuery] string? search, [FromQuery] int? categoryId)
+    public async Task<IActionResult> GetAll([FromQuery] string? search, [FromQuery] int? categoryId, [FromQuery] int? branchId)
     {
-        var result = await _mediator.Send(new Application.Queries.Medicines.GetMedicinesQuery(search, categoryId));
+        var result = await _mediator.Send(new Application.Queries.Medicines.GetMedicinesQuery(search, categoryId, branchId));
+        return Ok(result);
+    }
+
+    [HttpGet("search")]
+    public async Task<IActionResult> Search([FromQuery] string q, [FromQuery] int? branchId)
+    {
+        var result = await _mediator.Send(new Application.Queries.Medicines.SearchMedicinesQuery(q, branchId));
         return Ok(result);
     }
 
     [HttpGet("{id}")]
-    public async Task<IActionResult> GetById(int id)
+    public async Task<IActionResult> GetById(int id, [FromQuery] int? branchId)
     {
-        var result = await _mediator.Send(new Application.Queries.Medicines.GetMedicineByIdQuery(id));
+        var result = await _mediator.Send(new Application.Queries.Medicines.GetMedicineByIdQuery(id, branchId));
         if (result == null) return NotFound();
         return Ok(result);
     }

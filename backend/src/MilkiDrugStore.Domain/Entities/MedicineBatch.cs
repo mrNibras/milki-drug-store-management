@@ -12,6 +12,7 @@ public class MedicineBatch
     public int QuantityIssued { get; set; }
     public int QuantityDamaged { get; set; }
     public int QuantityExpired { get; set; }
+    public int RemainingQuantity => QuantityReceived - QuantityIssued - QuantityDamaged - QuantityExpired;
     public DateTime ExpiryDate { get; set; }
     public DateTime? ManufacturingDate { get; set; }
     public DateTime DateReceived { get; set; } = DateTime.Now;
@@ -26,6 +27,4 @@ public class MedicineBatch
     public List<InventoryTransaction> InventoryTransactions { get; set; } = new();
     public List<DamageRecord> DamageRecords { get; set; } = new();
     public List<ExpiredRecord> ExpiredRecords { get; set; } = new();
-
-    public int Balance => QuantityReceived - QuantityIssued - QuantityDamaged - QuantityExpired;
 }

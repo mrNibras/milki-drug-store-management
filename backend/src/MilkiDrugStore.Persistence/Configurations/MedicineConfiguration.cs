@@ -1,11 +1,11 @@
- using Microsoft.EntityFrameworkCore;
- using Microsoft.EntityFrameworkCore.Metadata.Builders;
- using MilkiDrugStore.Domain.Entities;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using MilkiDrugStore.Domain.Entities;
 
- namespace MilkiDrugStore.Persistence.Configurations;
+namespace MilkiDrugStore.Persistence.Configurations;
 
- public class MedicineConfiguration : IEntityTypeConfiguration<Medicine>
- {
+public class MedicineConfiguration : IEntityTypeConfiguration<Medicine>
+{
     public void Configure(EntityTypeBuilder<Medicine> builder)
     {
         builder.HasKey(m => m.ProductId);
@@ -24,5 +24,8 @@
         builder.Property(m => m.CategoryId);
         builder.Property(m => m.UnitTypeId);
         builder.HasIndex(m => m.BrandName);
+        builder.HasIndex(m => m.GenericName);
+        builder.HasIndex(m => m.Strength);
+        builder.HasIndex(m => m.DosageForm);
     }
- }
+}

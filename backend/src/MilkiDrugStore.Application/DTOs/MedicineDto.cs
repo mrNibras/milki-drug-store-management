@@ -75,6 +75,7 @@ public class AddBatchRequest
     public DateTime ExpiryDate { get; set; }
     public DateTime? ManufacturingDate { get; set; }
     public int? SupplierId { get; set; }
+    public string? Remarks { get; set; }
 }
 
 public class MedicineResponse
@@ -96,8 +97,9 @@ public class MedicineResponse
     public decimal SellingPrice { get; set; }
     public int ReorderLevel { get; set; }
     public bool IsActive { get; set; }
-    public DateTime CreatedAt { get; set; }
+    public DateTime CreatedDate { get; set; }
     public DateTime? UpdatedDate { get; set; }
+    public int TotalStock { get; set; }
     public List<BatchResponse> Batches { get; set; } = new();
 }
 
@@ -113,10 +115,23 @@ public class BatchResponse
     public int QuantityIssued { get; set; }
     public int QuantityDamaged { get; set; }
     public int QuantityExpired { get; set; }
-    public int Balance { get; set; }
+    public int RemainingQuantity { get; set; }
     public DateTime ExpiryDate { get; set; }
     public DateTime? ManufacturingDate { get; set; }
     public DateTime DateReceived { get; set; }
     public int? SupplierId { get; set; }
     public string SupplierName { get; set; } = string.Empty;
+}
+
+public class MedicineSearchResponse
+{
+    public int ProductId { get; set; }
+    public string ProductCode { get; set; } = string.Empty;
+    public string BrandName { get; set; } = string.Empty;
+    public string GenericName { get; set; } = string.Empty;
+    public string? Strength { get; set; }
+    public string? DosageForm { get; set; }
+    public string? Barcode { get; set; }
+    public int TotalStock { get; set; }
+    public decimal SellingPrice { get; set; }
 }

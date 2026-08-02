@@ -120,20 +120,20 @@ public class PurchaseService : IPurchaseService
                         unitTypeId = MedicineCatalog.UnitTypes[0].Id;
                     }
 
-                    medicine = new Medicine
-                    {
-                        ProductCode = await ResolveProductCodeAsync(item.ProductCode),
-                        BrandName = item.BrandName,
-                        GenericName = item.GenericName ?? item.BrandName,
-                        Strength = item.Strength,
-                        DosageForm = item.DosageForm,
-                        Barcode = item.Barcode,
-                        CategoryId = categoryId,
-                        UnitTypeId = unitTypeId,
-                        ReorderLevel = item.ReorderLevel > 0 ? item.ReorderLevel : 10,
-                        IsActive = true,
-                        CreatedAt = DateTime.Now
-                    };
+                     medicine = new Medicine
+                     {
+                         ProductCode = await ResolveProductCodeAsync(item.ProductCode),
+                         BrandName = item.BrandName,
+                         GenericName = item.GenericName ?? item.BrandName,
+                         Strength = item.Strength,
+                         DosageForm = item.DosageForm,
+                         Barcode = item.Barcode,
+                         CategoryId = categoryId,
+                         UnitTypeId = unitTypeId,
+                         ReorderLevel = item.ReorderLevel > 0 ? item.ReorderLevel : 10,
+                         IsActive = true,
+                         CreatedDate = DateTime.Now
+                     };
                     await _medicineRepo.AddAsync(medicine);
                     await _unitOfWork.SaveChangesAsync();
 

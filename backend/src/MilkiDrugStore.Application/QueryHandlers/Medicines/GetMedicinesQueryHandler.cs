@@ -16,6 +16,6 @@ public class GetMedicinesQueryHandler : IRequestHandler<GetMedicinesQuery, IEnum
 
     public async Task<IEnumerable<MedicineResponse>> Handle(GetMedicinesQuery request, CancellationToken cancellationToken)
     {
-        return await _medicineService.GetAllAsync(request.SearchTerm, request.CategoryId);
+        return await _medicineService.GetAllAsync(request.SearchTerm, request.CategoryId, request.BranchId);
     }
 }
