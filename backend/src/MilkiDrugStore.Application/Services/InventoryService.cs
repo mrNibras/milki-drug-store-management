@@ -35,7 +35,7 @@ public class InventoryService : IInventoryService
         var batches = (await _batchRepo.FindAsync(b => b.ProductId == productId)).ToList();
         if (branchId.HasValue)
             batches = batches.Where(b => b.BranchId == branchId.Value).ToList();
-        return batches.Sum(b => b.Balance);
+        return batches.Sum(b => b.RemainingQuantity);
     }
 
     public async Task RecordDamageAsync(int batchId, int quantity, string reason, int recordedBy)
@@ -43,7 +43,7 @@ public class InventoryService : IInventoryService
         var batches = await _batchRepo.FindAsync(b => b.BatchId == batchId);
         var batch = batches.FirstOrDefault();
         if (batch == null) throw new Exception("Batch not found");
-        if (quantity > batch.Balance) throw new Exception("Insufficient stock");
+        if (quantity > batch.RemainingQuantity) throw new Exception("Insufficient stock");
 
         batch.QuantityDamaged += quantity;
         await _batchRepo.UpdateAsync(batch);
@@ -69,7 +69,7 @@ public class InventoryService : IInventoryService
         var batches = await _batchRepo.FindAsync(b => b.BatchId == batchId);
         var batch = batches.FirstOrDefault();
         if (batch == null) throw new Exception("Batch not found");
-        if (quantity > batch.Balance) throw new Exception("Insufficient stock");
+        if (quantity > batch.RemainingQuantity) throw new Exception("Insufficient stock");
 
         batch.QuantityExpired += quantity;
         await _batchRepo.UpdateAsync(batch);

@@ -78,7 +78,7 @@ public class SaleService : ISaleService
                 {
                     if (remainingQty <= 0) break;
 
-                    var deductQty = Math.Min(remainingQty, batch.Balance);
+                    var deductQty = Math.Min(remainingQty, batch.RemainingQuantity);
                     if (deductQty <= 0) continue;
 
                     batch.QuantityIssued += deductQty;
@@ -180,7 +180,7 @@ public class SaleService : ISaleService
                 if (med != null)
                 {
                     var batches = await GetAvailableBatchesAsync(med.ProductId, branchId);
-                    var currentStock = batches.Sum(b => b.Balance);
+                    var currentStock = batches.Sum(b => b.RemainingQuantity);
                     if (currentStock <= med.ReorderLevel && currentStock > 0)
                     {
                         _domainEvents.Add(new StockLowEvent(med.ProductId, currentStock));
@@ -238,7 +238,7 @@ public class SaleService : ISaleService
         if (branchId.HasValue)
             batches = batches.Where(b => b.BranchId == branchId.Value).ToList();
 
-        batches = batches.Where(b => b.Balance > 0).ToList();
+        batches = batches.Where(b => b.RemainingQuantity > 0).ToList();
 
         if (manualBatchId.HasValue)
         {

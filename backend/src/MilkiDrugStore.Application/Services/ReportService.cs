@@ -45,10 +45,10 @@ public class ReportService : IReportService
         var monthlySales = sales.Where(s => s.SaleDate >= currentMonth).Sum(s => s.TotalAmount);
         var monthlyProfit = sales.Where(s => s.SaleDate >= currentMonth).Sum(s => s.TotalProfit);
 
-        var inventoryValue = medicines.Sum(m => m.Batches.Sum(b => b.Balance * b.PurchasePrice));
-        var lowStockCount = medicines.Count(m => m.Batches.Sum(b => b.Balance) <= m.ReorderLevel && m.Batches.Sum(b => b.Balance) > 0);
-        var expiringCount = medicines.Count(m => m.Batches.Any(b => b.ExpiryDate <= DateTime.Now.AddMonths(6) && b.Balance > 0));
-        var outOfStockCount = medicines.Count(m => m.Batches.All(b => b.Balance <= 0));
+        var inventoryValue = medicines.Sum(m => m.Batches.Sum(b => b.RemainingQuantity * b.PurchasePrice));
+        var lowStockCount = medicines.Count(m => m.Batches.Sum(b => b.RemainingQuantity) <= m.ReorderLevel && m.Batches.Sum(b => b.RemainingQuantity) > 0);
+        var expiringCount = medicines.Count(m => m.Batches.Any(b => b.ExpiryDate <= DateTime.Now.AddMonths(6) && b.RemainingQuantity > 0));
+        var outOfStockCount = medicines.Count(m => m.Batches.All(b => b.RemainingQuantity <= 0));
 
         return new DashboardSummaryResponse
         {
@@ -104,8 +104,8 @@ public class ReportService : IReportService
             var batches = m.Batches.AsQueryable();
             if (branchId.HasValue)
                 batches = batches.Where(b => b.BranchId == branchId.Value);
-            var totalQty = batches.Sum(b => b.Balance);
-            var totalValue = batches.Sum(b => b.Balance * b.PurchasePrice);
+            var totalQty = batches.Sum(b => b.RemainingQuantity);
+            var totalValue = batches.Sum(b => b.RemainingQuantity * b.PurchasePrice);
             var status = totalQty == 0 ? "Out of Stock" : totalQty <= m.ReorderLevel ? "Low Stock" : "In Stock";
 
             return new InventoryReportResponse

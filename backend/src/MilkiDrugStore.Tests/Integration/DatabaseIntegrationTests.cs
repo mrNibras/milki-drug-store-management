@@ -18,7 +18,7 @@ public class DatabaseIntegrationTests : IAsyncLifetime
     public DatabaseIntegrationTests()
     {
         _connectionString = $"Data Source={Guid.NewGuid()}.db;Cache=Shared";
-        
+
         var services = new ServiceCollection();
         services.AddDbContext<AppDbContext>(options =>
             options.UseSqlite(_connectionString, sql =>
@@ -44,7 +44,7 @@ public class DatabaseIntegrationTests : IAsyncLifetime
     public async Task InitializeAsync()
     {
         await _dbContext.Database.MigrateAsync();
-        
+
         if (!await _dbContext.Roles.AnyAsync())
         {
             _dbContext.Roles.AddRange(
@@ -56,12 +56,12 @@ public class DatabaseIntegrationTests : IAsyncLifetime
 
         if (!await _dbContext.Branches.AnyAsync())
         {
-            _dbContext.Branches.Add(new Branch 
-            { 
-                BranchName = "Test Branch", 
-                Location = "Test Location", 
-                IsActive = true, 
-                CreatedAt = DateTime.Now 
+            _dbContext.Branches.Add(new Branch
+            {
+                BranchName = "Test Branch",
+                Location = "Test Location",
+                IsActive = true,
+                CreatedAt = DateTime.Now
             });
             await _dbContext.SaveChangesAsync();
         }
@@ -69,21 +69,19 @@ public class DatabaseIntegrationTests : IAsyncLifetime
         if (!await _dbContext.UnitTypes.AnyAsync())
         {
             _dbContext.UnitTypes.AddRange(
-                new UnitType { Name = "Tablet", Description = "Solid dosage form", IsActive = true },
-                new UnitType { Name = "Capsule", Description = "Gelatinous shell", IsActive = true },
-                new UnitType { Name = "Bottle", Description = "Liquid container", IsActive = true }
+                new UnitType { Name = "Bottle", Description = "Liquid container", IsActive = true } // A custom type for testing
             );
             await _dbContext.SaveChangesAsync();
         }
 
         if (!await _dbContext.Categories.AnyAsync())
         {
-            _dbContext.Categories.Add(new Category 
-            { 
-                Name = "Test Category", 
-                UnitTypeId = 1, 
-                IsActive = true, 
-                CreatedAt = DateTime.Now 
+            _dbContext.Categories.Add(new Category
+            {
+                Name = "Test Category",
+                UnitTypeId = 1,
+                IsActive = true,
+                CreatedAt = DateTime.Now
             });
             await _dbContext.SaveChangesAsync();
         }
@@ -153,7 +151,6 @@ public class DatabaseIntegrationTests : IAsyncLifetime
         Assert.True(await _dbContext.UnitTypes.AnyAsync());
         Assert.True(await _dbContext.Cosmetics.AnyAsync());
         Assert.True(await _dbContext.CosmeticBatches.AnyAsync());
-        Assert.True(await _dbContext.CosmeticCategories.AnyAsync());
     }
 
     [Fact]

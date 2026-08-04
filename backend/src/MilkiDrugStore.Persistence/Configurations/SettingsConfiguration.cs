@@ -15,6 +15,7 @@ public class SettingsConfiguration : IEntityTypeConfiguration<Settings>
         builder.Property(s => s.Email).HasMaxLength(150);
         builder.Property(s => s.Language).HasMaxLength(20);
         builder.Property(s => s.Currency).HasMaxLength(10);
-        builder.HasOne(s => s.Branch).WithOne(b => b.Settings).HasForeignKey<Settings>(s => s.BranchId);
-    }
-}
+         builder.Property(s => s.BatchSelectionMode).IsRequired();
+         builder.HasOne(s => s.Branch).WithOne(b => b.Settings).HasForeignKey<Settings>(s => s.BranchId);
+     }
+ }

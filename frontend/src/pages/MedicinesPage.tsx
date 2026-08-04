@@ -1,10 +1,10 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Plus, Search, Edit2, Trash2, Eye, Package, Pill, Layers, Info } from 'lucide-react';
-import { useAppStore } from '../store/appStore';
+import { useAppStore, Category, UnitType } from '../store/appStore';
 import { useThemeStore } from '../store/themeStore';
 import { Modal } from '../components/ui/Modal';
 import { Badge } from '../components/ui/Badge';
-import { formatDate, getExpiryStatus, getExpiryColor, getStockStatus, getStockColor, generateId } from '../utils/helpers';
+import { formatDate, getExpiryStatus, getExpiryColor, getStockStatus, getStockColor } from '../utils/helpers';
 import { Medicine } from '../types';
 
 export const MedicinesPage: React.FC = () => {
@@ -19,8 +19,15 @@ export const MedicinesPage: React.FC = () => {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedMedicine, setSelectedMedicine] = useState<Medicine | null>(null);
   const [formData, setFormData] = useState({
-    name: '', genericName: '', categoryId: '', unitTypeId: 1, lowStockThreshold: 10,
+    name: '', genericName: '', categoryId: '', unitTypeId: '', lowStockThreshold: 10,
   });
+
+  // State for "Other" option
+  const [showCustomCategory, setShowCustomCategory] = useState(false);
+  const [customCategoryName, setCustomCategoryName] = useState('');
+  const [showCustomUnitType, setShowCustomUnitType] = useState(false);
+  const [customUnitTypeName, setCustomUnitTypeName] = useState('');
+
 
   useEffect(() => {
     fetchMedicines();
@@ -44,7 +51,12 @@ export const MedicinesPage: React.FC = () => {
   const getMedicineStock = (m: Medicine) => (m.batches || []).reduce((sum, b) => sum + (b.quantity || 0), 0);
 
   const handleAdd = () => {
-    setFormData({ name: '', genericName: '', categoryId: '', unitTypeId: 1, lowStockThreshold: 10 });
+    setFormData({ name: '', genericName: '', categoryId: '', unitTypeId: '', lowStockThreshold: 10 });
+    setShowCustomCategory(false);
+    setCustomCategoryName('');
+    setShowCustomUnitType(false);
+    setCustomUnitTypeName('');
+    setSelectedMedicine(null);
     setShowAddModal(true);
   };
 
@@ -54,9 +66,13 @@ export const MedicinesPage: React.FC = () => {
       name: medicine.name,
       genericName: medicine.genericName,
       categoryId: medicine.categoryId,
-      unitTypeId: medicine.unitTypeId,
+      unitTypeId: String(medicine.unitTypeId),
       lowStockThreshold: medicine.lowStockThreshold,
     });
+    setShowCustomCategory(false);
+    setCustomCategoryName('');
+    setShowCustomUnitType(false);
+    setCustomUnitTypeName('');
     setShowEditModal(true);
   };
 
@@ -65,38 +81,48 @@ export const MedicinesPage: React.FC = () => {
     setShowDetailModal(true);
   };
 
-  const handleSave = () => {
-    const newMedicine: Medicine = {
-      id: generateId(),
+  const handleSave = async () => {
+    const categoryName = showCustomCategory ? customCategoryName : categories.find(c => c.id === formData.categoryId)?.name;
+    const unitTypeName = showCustomUnitType ? customUnitTypeName : unitTypes.find(u => u.id === formData.unitTypeId)?.name;
+
+    if (!formData.name || !categoryName || !unitTypeName) {
+      alert('Please fill all required fields.');
+      return;
+    }
+
+    const medicineDto = {
       name: formData.name,
       genericName: formData.genericName,
-      categoryId: formData.categoryId,
-      categoryName: (categories || []).find(c => c.id === formData.categoryId)?.name || '',
-      unitType: (unitTypes || []).find(u => u.id === String(formData.unitTypeId))?.name || 'Tablet',
-      unitTypeId: formData.unitTypeId,
+      categoryName,
+      unitTypeName,
       lowStockThreshold: formData.lowStockThreshold,
-      createdAt: new Date().toISOString(),
-      batches: [],
     };
-    addMedicine(newMedicine);
+
+    await addMedicine(medicineDto);
     setShowAddModal(false);
+    // The store should refetch medicines and catalogs after a successful add
   };
 
-  const handleUpdate = () => {
+  const handleUpdate = async () => {
     if (!selectedMedicine) return;
-    updateMedicine(selectedMedicine.id, {
+
+    const categoryName = showCustomCategory ? customCategoryName : categories.find(c => c.id === formData.categoryId)?.name;
+    const unitTypeName = showCustomUnitType ? customUnitTypeName : unitTypes.find(u => u.id === formData.unitTypeId)?.name;
+
+    const medicineDto = {
       name: formData.name,
       genericName: formData.genericName,
-      categoryId: formData.categoryId,
-      categoryName: categories.find(c => c.id === formData.categoryId)?.name || '',
-      unitTypeId: formData.unitTypeId,
+      categoryName,
+      unitTypeName,
       lowStockThreshold: formData.lowStockThreshold,
-      isActive: selectedMedicine.isActive,
-    });
+    };
+
+    await updateMedicine(selectedMedicine.id, medicineDto);
     setShowEditModal(false);
+    // The store should refetch medicines and catalogs after a successful update
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = (id: number | string) => {
     if (window.confirm('Are you sure you want to delete this medicine?')) {
       deleteMedicine(id);
     }
@@ -104,14 +130,14 @@ export const MedicinesPage: React.FC = () => {
 
   const categoryList = useMemo(() => {
     const seen = new Set<string>();
-    return (medicines || []).reduce<{ id: string; name: string }[]>((acc, m) => {
+    return (medicines || []).reduce<Category[]>((acc, m) => {
       if (!seen.has(m.categoryId)) {
         seen.add(m.categoryId);
         acc.push({ id: m.categoryId, name: m.categoryName });
       }
       return acc;
     }, []);
-  }, [medicines]);
+  }, [medicines, categories]);
 
   const inputClass = `w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
     isDark 
@@ -394,12 +420,27 @@ export const MedicinesPage: React.FC = () => {
                   </label>
                   <select
                     value={formData.categoryId}
-                    onChange={e => setFormData({ ...formData, categoryId: e.target.value })}
+                    onChange={e => {
+                      const isOther = e.target.value === 'other';
+                      setShowCustomCategory(isOther);
+                      if (!isOther) setCustomCategoryName('');
+                      setFormData({ ...formData, categoryId: e.target.value });
+                    }}
                     className={inputClass}
                   >
                       <option value="">Select Category</option>
                       {(categories || []).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                      <option value="other">Other...</option>
                     </select>
+                </div>
+                <div className={`transition-all duration-300 ${showCustomCategory ? 'opacity-100' : 'opacity-0 h-0 overflow-hidden'}`}>
+                  <label className={`flex items-center gap-2 text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                    New Category Name
+                  </label>
+                  <input type="text"
+                    value={customCategoryName}
+                    onChange={e => setCustomCategoryName(e.target.value)}
+                    className={inputClass} />
                 </div>
                 <div>
                   <label className={`flex items-center gap-2 text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
@@ -407,11 +448,27 @@ export const MedicinesPage: React.FC = () => {
                   </label>
                   <select
                     value={String(formData.unitTypeId)}
-                    onChange={e => setFormData({ ...formData, unitTypeId: Number(e.target.value) })}
+                    onChange={e => {
+                      const isOther = e.target.value === 'other';
+                      setShowCustomUnitType(isOther);
+                      if (!isOther) setCustomUnitTypeName('');
+                      setFormData({ ...formData, unitTypeId: e.target.value });
+                    }}
                     className={inputClass}
                    >
-                     {(unitTypes || []).map(u => <option key={u.id} value={Number(u.id)}>{u.name}</option>)}
+                     <option value="">Select Unit Type</option>
+                     {(unitTypes || []).map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+                     <option value="other">Other...</option>
                    </select>
+                </div>
+                <div className={`transition-all duration-300 ${showCustomUnitType ? 'opacity-100' : 'opacity-0 h-0 overflow-hidden'}`}>
+                  <label className={`flex items-center gap-2 text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                    New Unit Type Name
+                  </label>
+                  <input type="text"
+                    value={customUnitTypeName}
+                    onChange={e => setCustomUnitTypeName(e.target.value)}
+                    className={inputClass} />
                 </div>
               </div>
               <div>
@@ -499,11 +556,27 @@ export const MedicinesPage: React.FC = () => {
                     </label>
                     <select
                       value={formData.categoryId}
-                      onChange={e => setFormData({ ...formData, categoryId: e.target.value })}
+                      onChange={e => {
+                        const isOther = e.target.value === 'other';
+                        setShowCustomCategory(isOther);
+                        if (!isOther) setCustomCategoryName('');
+                        setFormData({ ...formData, categoryId: e.target.value });
+                      }}
                       className={inputClass}
                      >
+                       <option value="">Select Category</option>
                        {(categories || []).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                       <option value="other">Other...</option>
                      </select>
+                  </div>
+                  <div className={`transition-all duration-300 ${showCustomCategory ? 'opacity-100' : 'opacity-0 h-0 overflow-hidden'}`}>
+                    <label className={`flex items-center gap-2 text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                      New Category Name
+                    </label>
+                    <input type="text"
+                      value={customCategoryName}
+                      onChange={e => setCustomCategoryName(e.target.value)}
+                      className={inputClass} />
                   </div>
                   <div>
                     <label className={`flex items-center gap-2 text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
@@ -511,11 +584,27 @@ export const MedicinesPage: React.FC = () => {
                     </label>
                     <select
                       value={String(formData.unitTypeId)}
-                      onChange={e => setFormData({ ...formData, unitTypeId: Number(e.target.value) })}
+                      onChange={e => {
+                        const isOther = e.target.value === 'other';
+                        setShowCustomUnitType(isOther);
+                        if (!isOther) setCustomUnitTypeName('');
+                        setFormData({ ...formData, unitTypeId: e.target.value });
+                      }}
                       className={inputClass}
                     >
-                      {(unitTypes || []).map(u => <option key={u.id} value={Number(u.id)}>{u.name}</option>)}
+                      <option value="">Select Unit Type</option>
+                      {(unitTypes || []).map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+                      <option value="other">Other...</option>
                     </select>
+                  </div>
+                  <div className={`transition-all duration-300 ${showCustomUnitType ? 'opacity-100' : 'opacity-0 h-0 overflow-hidden'}`}>
+                    <label className={`flex items-center gap-2 text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                      New Unit Type Name
+                    </label>
+                    <input type="text"
+                      value={customUnitTypeName}
+                      onChange={e => setCustomUnitTypeName(e.target.value)}
+                      className={inputClass} />
                   </div>
                 </div>
                 <div>
