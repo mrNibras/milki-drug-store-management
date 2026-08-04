@@ -459,9 +459,11 @@ export const useAppStore = create<AppState>((set, get) => ({
         newCategoryName: medicine.newCategoryName,
         unitTypeId: medicine.unitTypeId,
         newUnitTypeName: medicine.newUnitTypeName,
-        reorderLevel: medicine.reorderLevel,
+        reorderLevel: medicine.lowStockThreshold,
       });
       await get().fetchMedicines();
+      await get().fetchCategories();
+      await get().fetchUnitTypes();
     } catch (e: any) {
       set({ error: e.response?.data?.message || 'Failed to add medicine', loading: false });
       throw e;
@@ -481,6 +483,8 @@ export const useAppStore = create<AppState>((set, get) => ({
         isActive: updates.isActive,
       });
       await get().fetchMedicines();
+      await get().fetchCategories();
+      await get().fetchUnitTypes();
     } catch (e: any) {
       set({ error: e.response?.data?.message || 'Failed to update medicine' });
       throw e;

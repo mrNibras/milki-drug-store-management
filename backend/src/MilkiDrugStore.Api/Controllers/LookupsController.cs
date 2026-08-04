@@ -7,7 +7,6 @@ namespace MilkiDrugStore.Api.Controllers;
 
 [ApiController]
 [Route("api/lookups")]
-[Authorize]
 public class LookupsController : ControllerBase
 {
     private readonly ICatalogService _catalog;

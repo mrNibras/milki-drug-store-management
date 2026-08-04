@@ -84,10 +84,42 @@ export const MedicinesPage: React.FC = () => {
   };
 
   const handleSave = async () => {
-    const categoryId = showCustomCategory ? 0 : Number(formData.categoryId);
-    const newCategoryName = showCustomCategory ? customCategoryName.trim() : null;
-    const unitTypeId = showCustomUnitType ? 0 : Number(formData.unitTypeId);
-    const newUnitTypeName = showCustomUnitType ? customUnitTypeName.trim() : null;
+    const builtInOtherCategory = (categories || []).find(c => c.name === 'Other' && c.isBuiltIn);
+    const builtInOtherUnitType = (unitTypes || []).find(u => u.name === 'Other' && u.isBuiltIn);
+
+    let categoryId: number;
+    let newCategoryName: string | null;
+
+    if (showCustomCategory) {
+      const trimmedName = customCategoryName.trim();
+      if (trimmedName) {
+        categoryId = 0;
+        newCategoryName = trimmedName;
+      } else {
+        categoryId = builtInOtherCategory ? Number(builtInOtherCategory.id) : 0;
+        newCategoryName = null;
+      }
+    } else {
+      categoryId = Number(formData.categoryId);
+      newCategoryName = null;
+    }
+
+    let unitTypeId: number;
+    let newUnitTypeName: string | null;
+
+    if (showCustomUnitType) {
+      const trimmedName = customUnitTypeName.trim();
+      if (trimmedName) {
+        unitTypeId = 0;
+        newUnitTypeName = trimmedName;
+      } else {
+        unitTypeId = builtInOtherUnitType ? Number(builtInOtherUnitType.id) : 0;
+        newUnitTypeName = null;
+      }
+    } else {
+      unitTypeId = Number(formData.unitTypeId);
+      newUnitTypeName = null;
+    }
 
     if (!formData.name || (categoryId === 0 && !newCategoryName) || (unitTypeId === 0 && !newUnitTypeName)) {
       alert('Please fill all required fields.');
@@ -113,10 +145,42 @@ export const MedicinesPage: React.FC = () => {
   const handleUpdate = async () => {
     if (!selectedMedicine) return;
 
-    const categoryId = showCustomCategory ? 0 : Number(formData.categoryId);
-    const newCategoryName = showCustomCategory ? customCategoryName.trim() : null;
-    const unitTypeId = showCustomUnitType ? 0 : Number(formData.unitTypeId);
-    const newUnitTypeName = showCustomUnitType ? customUnitTypeName.trim() : null;
+    const builtInOtherCategory = (categories || []).find(c => c.name === 'Other' && c.isBuiltIn);
+    const builtInOtherUnitType = (unitTypes || []).find(u => u.name === 'Other' && u.isBuiltIn);
+
+    let categoryId: number;
+    let newCategoryName: string | null;
+
+    if (showCustomCategory) {
+      const trimmedName = customCategoryName.trim();
+      if (trimmedName) {
+        categoryId = 0;
+        newCategoryName = trimmedName;
+      } else {
+        categoryId = builtInOtherCategory ? Number(builtInOtherCategory.id) : 0;
+        newCategoryName = null;
+      }
+    } else {
+      categoryId = Number(formData.categoryId);
+      newCategoryName = null;
+    }
+
+    let unitTypeId: number;
+    let newUnitTypeName: string | null;
+
+    if (showCustomUnitType) {
+      const trimmedName = customUnitTypeName.trim();
+      if (trimmedName) {
+        unitTypeId = 0;
+        newUnitTypeName = trimmedName;
+      } else {
+        unitTypeId = builtInOtherUnitType ? Number(builtInOtherUnitType.id) : 0;
+        newUnitTypeName = null;
+      }
+    } else {
+      unitTypeId = Number(formData.unitTypeId);
+      newUnitTypeName = null;
+    }
 
     if (categoryId === 0 && !newCategoryName) {
       alert('Please select or enter a category.');
@@ -442,7 +506,8 @@ export const MedicinesPage: React.FC = () => {
                   <select
                     value={formData.categoryId}
                     onChange={e => {
-                      const isOther = e.target.value === 'other';
+                      const selectedCategory = (categories || []).find(c => c.id === e.target.value);
+                      const isOther = selectedCategory?.name === 'Other';
                       setShowCustomCategory(isOther);
                       if (!isOther) setCustomCategoryName('');
                       setFormData({ ...formData, categoryId: e.target.value });
@@ -451,7 +516,6 @@ export const MedicinesPage: React.FC = () => {
                   >
                       <option value="">Select Category</option>
                       {(categories || []).filter(c => c.name.toLowerCase().includes(categorySearch.toLowerCase())).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                      <option value="other">Other...</option>
                     </select>
                 </div>
                 <div className={`transition-all duration-300 ${showCustomCategory ? 'opacity-100' : 'opacity-0 h-0 overflow-hidden'}`}>
@@ -474,22 +538,22 @@ export const MedicinesPage: React.FC = () => {
                     placeholder="Search unit types..."
                     className={`${inputClass} mb-2`}
                   />
-                  <select
-                    value={String(formData.unitTypeId)}
-                    onChange={e => {
-                      const isOther = e.target.value === 'other';
-                      setShowCustomUnitType(isOther);
-                      if (!isOther) setCustomUnitTypeName('');
-                      setFormData({ ...formData, unitTypeId: e.target.value });
-                    }}
-                    className={inputClass}
-                   >
-                      <option value="">Select Unit Type</option>
-                      {(unitTypes || []).filter(u => u.name.toLowerCase().includes(unitTypeSearch.toLowerCase())).map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
-                      <option value="other">Other...</option>
-                    </select>
-                </div>
-                <div className={`transition-all duration-300 ${showCustomUnitType ? 'opacity-100' : 'opacity-0 h-0 overflow-hidden'}`}>
+                   <select
+                     value={String(formData.unitTypeId)}
+                     onChange={e => {
+                       const selectedUnitType = (unitTypes || []).find(u => u.id === e.target.value);
+                       const isOther = selectedUnitType?.name === 'Other';
+                       setShowCustomUnitType(isOther);
+                       if (!isOther) setCustomUnitTypeName('');
+                       setFormData({ ...formData, unitTypeId: e.target.value });
+                     }}
+                     className={inputClass}
+                    >
+                       <option value="">Select Unit Type</option>
+                       {(unitTypes || []).filter(u => u.name.toLowerCase().includes(unitTypeSearch.toLowerCase())).map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+                     </select>
+                 </div>
+                 <div className={`transition-all duration-300 ${showCustomUnitType ? 'opacity-100' : 'opacity-0 h-0 overflow-hidden'}`}>
                   <label className={`flex items-center gap-2 text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                     New Unit Type Name
                   </label>
@@ -589,22 +653,22 @@ export const MedicinesPage: React.FC = () => {
                       placeholder="Search categories..."
                       className={`${inputClass} mb-2`}
                     />
-                    <select
-                      value={formData.categoryId}
-                      onChange={e => {
-                        const isOther = e.target.value === 'other';
-                        setShowCustomCategory(isOther);
-                        if (!isOther) setCustomCategoryName('');
-                        setFormData({ ...formData, categoryId: e.target.value });
-                      }}
-                      className={inputClass}
-                     >
-                        <option value="">Select Category</option>
-                        {(categories || []).filter(c => c.name.toLowerCase().includes(categorySearch.toLowerCase())).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                        <option value="other">Other...</option>
-                      </select>
-                  </div>
-                  <div className={`transition-all duration-300 ${showCustomCategory ? 'opacity-100' : 'opacity-0 h-0 overflow-hidden'}`}>
+                     <select
+                       value={formData.categoryId}
+                       onChange={e => {
+                         const selectedCategory = (categories || []).find(c => c.id === e.target.value);
+                         const isOther = selectedCategory?.name === 'Other';
+                         setShowCustomCategory(isOther);
+                         if (!isOther) setCustomCategoryName('');
+                         setFormData({ ...formData, categoryId: e.target.value });
+                       }}
+                       className={inputClass}
+                      >
+                         <option value="">Select Category</option>
+                         {(categories || []).filter(c => c.name.toLowerCase().includes(categorySearch.toLowerCase())).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                       </select>
+                   </div>
+                   <div className={`transition-all duration-300 ${showCustomCategory ? 'opacity-100' : 'opacity-0 h-0 overflow-hidden'}`}>
                     <label className={`flex items-center gap-2 text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                       New Category Name
                     </label>
@@ -624,22 +688,22 @@ export const MedicinesPage: React.FC = () => {
                       placeholder="Search unit types..."
                       className={`${inputClass} mb-2`}
                     />
-                    <select
-                      value={String(formData.unitTypeId)}
-                      onChange={e => {
-                        const isOther = e.target.value === 'other';
-                        setShowCustomUnitType(isOther);
-                        if (!isOther) setCustomUnitTypeName('');
-                        setFormData({ ...formData, unitTypeId: e.target.value });
-                      }}
-                      className={inputClass}
-                    >
-                      <option value="">Select Unit Type</option>
-                      {(unitTypes || []).filter(u => u.name.toLowerCase().includes(unitTypeSearch.toLowerCase())).map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
-                      <option value="other">Other...</option>
-                    </select>
-                  </div>
-                  <div className={`transition-all duration-300 ${showCustomUnitType ? 'opacity-100' : 'opacity-0 h-0 overflow-hidden'}`}>
+                     <select
+                       value={String(formData.unitTypeId)}
+                       onChange={e => {
+                         const selectedUnitType = (unitTypes || []).find(u => u.id === e.target.value);
+                         const isOther = selectedUnitType?.name === 'Other';
+                         setShowCustomUnitType(isOther);
+                         if (!isOther) setCustomUnitTypeName('');
+                         setFormData({ ...formData, unitTypeId: e.target.value });
+                       }}
+                       className={inputClass}
+                     >
+                       <option value="">Select Unit Type</option>
+                       {(unitTypes || []).filter(u => u.name.toLowerCase().includes(unitTypeSearch.toLowerCase())).map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+                     </select>
+                   </div>
+                   <div className={`transition-all duration-300 ${showCustomUnitType ? 'opacity-100' : 'opacity-0 h-0 overflow-hidden'}`}>
                     <label className={`flex items-center gap-2 text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                       New Unit Type Name
                     </label>

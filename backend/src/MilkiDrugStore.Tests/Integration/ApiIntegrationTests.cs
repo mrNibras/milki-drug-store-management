@@ -23,6 +23,7 @@ public class ApiIntegrationTests : IAsyncLifetime
     private readonly WebApplicationFactory<Program> _factory;
     private readonly HttpClient _client;
     private readonly string _connectionString;
+    private string _authToken = string.Empty;
 
     public ApiIntegrationTests()
     {
@@ -85,6 +86,19 @@ public class ApiIntegrationTests : IAsyncLifetime
                 CreatedAt = DateTime.Now 
             });
             await db.SaveChangesAsync();
+        }
+
+        var loginRequest = new LoginRequest
+        {
+            Email = "admin@milki.com",
+            Password = "Admin123"
+        };
+        var loginResponse = await _client.PostAsJsonAsync("/api/auth/login", loginRequest);
+        if (loginResponse.StatusCode == HttpStatusCode.OK)
+        {
+            var loginData = await loginResponse.Content.ReadFromJsonAsync<LoginResponse>();
+            _authToken = loginData?.Token ?? string.Empty;
+            _client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _authToken);
         }
     }
 
@@ -170,5 +184,35 @@ public class ApiIntegrationTests : IAsyncLifetime
         var response = await _client.GetAsync("/api/health");
         
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetCategories_Should_Return_BuiltIn_And_Custom()
+    {
+        var request = new HttpRequestMessage(HttpMethod.Get, "/api/lookups/categories");
+        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _authToken);
+        var response = await _client.SendAsync(request);
+        var content = await response.Content.ReadAsStringAsync();
+        
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.NotEmpty(content);
+        Assert.Contains("Antibiotics", content);
+        Assert.Contains("Antivirals", content);
+        Assert.Contains("Other", content);
+    }
+
+    [Fact]
+    public async Task GetUnitTypes_Should_Return_BuiltIn_And_Custom()
+    {
+        var request = new HttpRequestMessage(HttpMethod.Get, "/api/lookups/unit-types");
+        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _authToken);
+        var response = await _client.SendAsync(request);
+        var content = await response.Content.ReadAsStringAsync();
+        
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.NotEmpty(content);
+        Assert.Contains("Tablet", content);
+        Assert.Contains("Capsule", content);
+        Assert.Contains("Other", content);
     }
 }
