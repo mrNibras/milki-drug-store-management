@@ -266,6 +266,7 @@ using (var scope = app.Services.CreateScope())
         await DbSeeder.SeedAsync(db, logger);
         logger.LogInformation("Database seeded successfully.");
         await CatalogMigrator.MigrateAsync(db, logger);
+        await BackfillMedicineFieldsAsync(db, logger);
         logger.LogInformation("=== Database Initialization Complete ===");
     }
     catch (Exception ex)
@@ -285,6 +286,33 @@ static string MaskConnectionString(string? connectionString)
            connectionString.Contains("UserID=", StringComparison.OrdinalIgnoreCase)
            ? "***masked***"
            : connectionString;
+}
+
+static async Task BackfillMedicineFieldsAsync(AppDbContext db, ILogger logger)
+{
+    var medicines = await db.Medicines
+        .Where(m => string.IsNullOrEmpty(m.ProductCode) || m.UpdatedDate == null)
+        .ToListAsync();
+
+    if (medicines.Count == 0)
+    {
+        logger.LogInformation("No medicine fields to backfill.");
+        return;
+    }
+
+    logger.LogInformation("Backfilling fields for {Count} medicine(s)...", medicines.Count);
+
+    foreach (var medicine in medicines)
+    {
+        if (string.IsNullOrEmpty(medicine.ProductCode))
+            medicine.ProductCode = $"MED-{medicine.ProductId:D6}";
+
+        if (medicine.UpdatedDate == null)
+            medicine.UpdatedDate = medicine.CreatedDate;
+    }
+
+    await db.SaveChangesAsync();
+    logger.LogInformation("Medicine field backfill completed.");
 }
 
 // Forwarded headers for Render proxy.

@@ -21,6 +21,10 @@ public static class CatalogMigrator
                 foreach (var m in medicines)
                     m.CategoryId = builtInId;
 
+                var cosmetics = await db.Cosmetics.Where(c => c.CategoryId == cat.CategoryId).ToListAsync();
+                foreach (var c in cosmetics)
+                    c.CategoryId = builtInId;
+
                 db.Categories.Remove(cat);
                 logger.LogInformation("Migrated category '{Name}' (id {OldId}) -> built-in id {NewId}", cat.Name, cat.CategoryId, builtInId);
             }
@@ -34,6 +38,10 @@ public static class CatalogMigrator
                 var medicines = await db.Medicines.Where(m => m.UnitTypeId == ut.UnitTypeId).ToListAsync();
                 foreach (var m in medicines)
                     m.UnitTypeId = builtInId;
+
+                var cosmetics = await db.Cosmetics.Where(c => c.UnitTypeId == ut.UnitTypeId).ToListAsync();
+                foreach (var c in cosmetics)
+                    c.UnitTypeId = builtInId;
 
                 db.UnitTypes.Remove(ut);
                 logger.LogInformation("Migrated unit type '{Name}' (id {OldId}) -> built-in id {NewId}", ut.Name, ut.UnitTypeId, builtInId);
