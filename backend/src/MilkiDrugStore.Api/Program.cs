@@ -214,6 +214,7 @@ using (var scope = app.Services.CreateScope())
         logger.LogInformation("Starting database seeding...");
         await DbSeeder.SeedAsync(db, logger);
         logger.LogInformation("Database seeded successfully.");
+        await CatalogMigrator.MigrateAsync(db, logger);
         logger.LogInformation("=== Database Initialization Complete ===");
     }
     catch (Exception ex)

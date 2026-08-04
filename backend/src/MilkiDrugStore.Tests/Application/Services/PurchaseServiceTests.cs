@@ -16,8 +16,7 @@ public class PurchaseServiceTests
     private readonly Mock<IRepository<Supplier>> _supplierRepo = new();
     private readonly Mock<IRepository<Medicine>> _medicineRepo = new();
     private readonly Mock<IRepository<MedicineBatch>> _batchRepo = new();
-    private readonly Mock<IRepository<Category>> _categoryRepo = new();
-    private readonly Mock<IRepository<UnitType>> _unitTypeRepo = new();
+    private readonly Mock<ICatalogService> _catalog = new();
     private readonly Mock<IRepository<InventoryTransaction>> _transactionRepo = new();
     private readonly Mock<IAuditLogService> _auditLog = new();
     private readonly Mock<IUnitOfWork> _unitOfWork = new();
@@ -32,8 +31,7 @@ public class PurchaseServiceTests
             _medicineRepo.Object,
             _batchRepo.Object,
             _supplierRepo.Object,
-            _categoryRepo.Object,
-            _unitTypeRepo.Object,
+            _catalog.Object,
             _transactionRepo.Object,
             _unitOfWork.Object,
             _auditLog.Object
@@ -45,8 +43,7 @@ public class PurchaseServiceTests
         _unitOfWork.Setup(u => u.RollbackTransactionAsync()).Returns(Task.CompletedTask);
 
         _supplierRepo.Setup(r => r.GetAllAsync()).ReturnsAsync(new List<Supplier>().AsQueryable());
-        _categoryRepo.Setup(r => r.GetAllAsync()).ReturnsAsync(new List<Category>().AsQueryable());
-        _unitTypeRepo.Setup(r => r.GetAllAsync()).ReturnsAsync(new List<UnitType>().AsQueryable());
+
         _purchaseRepo.Setup(r => r.GetAllAsync()).ReturnsAsync(new List<Purchase>().AsQueryable());
 
         _purchaseItemRepo.Setup(r => r.AddAsync(It.IsAny<PurchaseItem>())).ReturnsAsync(new PurchaseItem { PurchaseItemId = 1 });
@@ -67,7 +64,7 @@ public class PurchaseServiceTests
             AmountPaid = 1000,
             Items = new List<MilkiDrugStore.Application.DTOs.Purchase.PurchaseItemRequest>
             {
-                new MilkiDrugStore.Application.DTOs.Purchase.PurchaseItemRequest { MedicineId = 1, BatchNumber = "B1", Quantity = 10, PurchasePrice = 100, SellingPrice = 150, ExpiryDate = DateTime.Now.AddYears(1) }
+                new MilkiDrugStore.Application.DTOs.Purchase.PurchaseItemRequest { ProductId = 1, BatchNumber = "B1", Quantity = 10, PurchasePrice = 100, SellingPrice = 150, ExpiryDate = DateTime.Now.AddYears(1) }
             }
         };
 
@@ -81,11 +78,10 @@ public class PurchaseServiceTests
                 return new List<Purchase> { capturedPurchase }.AsQueryable().Where(predicate.Compile()).AsQueryable();
             });
 
-        _medicineRepo.Setup(r => r.GetByIdAsync(It.IsAny<int>())).ReturnsAsync(new Medicine { MedicineId = 1 });
+        _medicineRepo.Setup(r => r.GetByIdAsync(It.IsAny<int>())).ReturnsAsync(new Medicine { ProductId = 1 });
         _medicineRepo.Setup(r => r.FindAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Medicine, bool>>>()))
-            .ReturnsAsync(new List<Medicine> { new Medicine { MedicineId = 1 } }.AsQueryable());
-        _categoryRepo.Setup(r => r.GetByIdAsync(It.IsAny<int>())).ReturnsAsync(new Category { CategoryId = 1 });
-        _unitTypeRepo.Setup(r => r.GetByIdAsync(It.IsAny<int>())).ReturnsAsync(new UnitType { UnitTypeId = 1 });
+            .ReturnsAsync(new List<Medicine> { new Medicine { ProductId = 1 } }.AsQueryable());
+
         _batchRepo.Setup(r => r.GetByIdAsync(It.IsAny<int>())).ReturnsAsync((MedicineBatch?)null);
         _batchRepo.Setup(r => r.AddAsync(It.IsAny<MedicineBatch>())).ReturnsAsync(new MedicineBatch { BatchId = 1 });
 
@@ -112,7 +108,7 @@ public class PurchaseServiceTests
             AmountPaid = 500,
             Items = new List<MilkiDrugStore.Application.DTOs.Purchase.PurchaseItemRequest>
             {
-                new MilkiDrugStore.Application.DTOs.Purchase.PurchaseItemRequest { MedicineId = 1, BatchNumber = "B1", Quantity = 10, PurchasePrice = 100, SellingPrice = 150, ExpiryDate = DateTime.Now.AddYears(1) }
+                new MilkiDrugStore.Application.DTOs.Purchase.PurchaseItemRequest { ProductId = 1, BatchNumber = "B1", Quantity = 10, PurchasePrice = 100, SellingPrice = 150, ExpiryDate = DateTime.Now.AddYears(1) }
             }
         };
 
@@ -126,11 +122,10 @@ public class PurchaseServiceTests
                 return new List<Purchase> { capturedPurchase }.AsQueryable().Where(predicate.Compile()).AsQueryable();
             });
 
-        _medicineRepo.Setup(r => r.GetByIdAsync(It.IsAny<int>())).ReturnsAsync(new Medicine { MedicineId = 1 });
+        _medicineRepo.Setup(r => r.GetByIdAsync(It.IsAny<int>())).ReturnsAsync(new Medicine { ProductId = 1 });
         _medicineRepo.Setup(r => r.FindAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Medicine, bool>>>()))
-            .ReturnsAsync(new List<Medicine> { new Medicine { MedicineId = 1 } }.AsQueryable());
-        _categoryRepo.Setup(r => r.GetByIdAsync(It.IsAny<int>())).ReturnsAsync(new Category { CategoryId = 1 });
-        _unitTypeRepo.Setup(r => r.GetByIdAsync(It.IsAny<int>())).ReturnsAsync(new UnitType { UnitTypeId = 1 });
+            .ReturnsAsync(new List<Medicine> { new Medicine { ProductId = 1 } }.AsQueryable());
+
         _batchRepo.Setup(r => r.GetByIdAsync(It.IsAny<int>())).ReturnsAsync((MedicineBatch?)null);
         _batchRepo.Setup(r => r.AddAsync(It.IsAny<MedicineBatch>())).ReturnsAsync(new MedicineBatch { BatchId = 1 });
 
@@ -156,7 +151,7 @@ public class PurchaseServiceTests
             AmountPaid = 0,
             Items = new List<MilkiDrugStore.Application.DTOs.Purchase.PurchaseItemRequest>
             {
-                new MilkiDrugStore.Application.DTOs.Purchase.PurchaseItemRequest { MedicineId = 1, BatchNumber = "B1", Quantity = 10, PurchasePrice = 100, SellingPrice = 150, ExpiryDate = DateTime.Now.AddYears(1) }
+                new MilkiDrugStore.Application.DTOs.Purchase.PurchaseItemRequest { ProductId = 1, BatchNumber = "B1", Quantity = 10, PurchasePrice = 100, SellingPrice = 150, ExpiryDate = DateTime.Now.AddYears(1) }
             }
         };
 
@@ -170,11 +165,10 @@ public class PurchaseServiceTests
                 return new List<Purchase> { capturedPurchase }.AsQueryable().Where(predicate.Compile()).AsQueryable();
             });
 
-        _medicineRepo.Setup(r => r.GetByIdAsync(It.IsAny<int>())).ReturnsAsync(new Medicine { MedicineId = 1 });
+        _medicineRepo.Setup(r => r.GetByIdAsync(It.IsAny<int>())).ReturnsAsync(new Medicine { ProductId = 1 });
         _medicineRepo.Setup(r => r.FindAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Medicine, bool>>>()))
-            .ReturnsAsync(new List<Medicine> { new Medicine { MedicineId = 1 } }.AsQueryable());
-        _categoryRepo.Setup(r => r.GetByIdAsync(It.IsAny<int>())).ReturnsAsync(new Category { CategoryId = 1 });
-        _unitTypeRepo.Setup(r => r.GetByIdAsync(It.IsAny<int>())).ReturnsAsync(new UnitType { UnitTypeId = 1 });
+            .ReturnsAsync(new List<Medicine> { new Medicine { ProductId = 1 } }.AsQueryable());
+
         _batchRepo.Setup(r => r.GetByIdAsync(It.IsAny<int>())).ReturnsAsync((MedicineBatch?)null);
         _batchRepo.Setup(r => r.AddAsync(It.IsAny<MedicineBatch>())).ReturnsAsync(new MedicineBatch { BatchId = 1 });
 

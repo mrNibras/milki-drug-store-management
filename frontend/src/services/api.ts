@@ -155,23 +155,44 @@ export interface UnitType {
   isActive: boolean;
 }
 
+export interface CatalogOptionDto {
+  id: number;
+  name: string;
+  isBuiltIn: boolean;
+}
+
+export interface CreateCatalogOptionRequest {
+  name: string;
+}
+
 export interface MedicineResponse {
-  medicineId: number;
+  productId: number;
+  productCode: string;
   brandName: string;
   genericName: string;
+  strength?: string;
+  dosageForm?: string;
+  barcode?: string;
+  manufacturer?: string;
+  description?: string;
   categoryId: number;
   categoryName: string;
   unitTypeId: number;
   unitTypeName: string;
-  lowStockThreshold: number;
+  purchasePrice: number;
+  sellingPrice: number;
+  reorderLevel: number;
   isActive: boolean;
-  createdAt: string;
+  createdDate: string;
+  updatedDate?: string;
+  totalStock: number;
   batches: BatchResponse[];
 }
 
 export interface BatchResponse {
   batchId: number;
-  medicineId: number;
+  productId: number;
+  branchId: number;
   batchNumber: string;
   purchasePrice: number;
   sellingPrice: number;
@@ -179,9 +200,11 @@ export interface BatchResponse {
   quantityIssued: number;
   quantityDamaged: number;
   quantityExpired: number;
-  balance: number;
+  remainingQuantity: number;
   expiryDate: string;
   dateReceived: string;
+  supplierId?: number;
+  supplierName?: string;
 }
 
 export interface SupplierResponse {

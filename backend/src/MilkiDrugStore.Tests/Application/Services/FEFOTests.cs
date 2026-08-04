@@ -20,6 +20,7 @@ public class FEFOTests
     private readonly Mock<IRepository<Notification>> _notificationRepo = new();
     private readonly Mock<IUnitOfWork> _unitOfWork = new();
     private readonly Mock<IAuditLogService> _auditLog = new();
+    private readonly Mock<IRepository<Settings>> _settingsRepo = new();
     private readonly Mock<ILogger<SaleService>> _logger = new();
     private readonly SaleService _sut;
 
@@ -32,6 +33,7 @@ public class FEFOTests
             _batchRepo.Object,
             _transactionRepo.Object,
             _notificationRepo.Object,
+            _settingsRepo.Object,
             _unitOfWork.Object,
             _auditLog.Object
         );
@@ -40,9 +42,9 @@ public class FEFOTests
     [Fact]
     public async Task CreateAsync_Should_Throw_When_Batch_Not_Found()
     {
-        _medicineRepo.Setup(r => r.GetByIdAsync(It.IsAny<int>())).ReturnsAsync(new Medicine { MedicineId = 1 });
+        _medicineRepo.Setup(r => r.GetByIdAsync(It.IsAny<int>())).ReturnsAsync(new Medicine { ProductId = 1 });
         _medicineRepo.Setup(r => r.FindAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Medicine, bool>>>()))
-            .ReturnsAsync(new List<Medicine> { new Medicine { MedicineId = 1 } }.AsQueryable());
+            .ReturnsAsync(new List<Medicine> { new Medicine { ProductId = 1 } }.AsQueryable());
         _batchRepo.Setup(r => r.FindAsync(It.IsAny<System.Linq.Expressions.Expression<Func<MedicineBatch, bool>>>()))
             .Returns(Task.FromResult((System.Linq.IQueryable<MedicineBatch>)new List<MedicineBatch>().AsQueryable()));
 
@@ -50,7 +52,7 @@ public class FEFOTests
         {
             Items = new List<MilkiDrugStore.Application.DTOs.Sale.SaleItemRequest>
             {
-                new MilkiDrugStore.Application.DTOs.Sale.SaleItemRequest { MedicineId = 1, Quantity = 5 }
+                new MilkiDrugStore.Application.DTOs.Sale.SaleItemRequest { ProductId = 1, Quantity = 5 }
             },
             PaymentMethod = "cash",
             AmountPaid = 500
@@ -67,13 +69,13 @@ public class FEFOTests
         
         var batches = new List<MedicineBatch>
         {
-            new MedicineBatch { MedicineId = 1, BatchId = 1, BatchNumber = "B1", QuantityReceived = 10, QuantityIssued = 0, QuantityDamaged = 0, QuantityExpired = 0, ExpiryDate = DateTime.Now.AddMonths(12), BranchId = 1 },
-            new MedicineBatch { MedicineId = 1, BatchId = 2, BatchNumber = "B2", QuantityReceived = 10, QuantityIssued = 0, QuantityDamaged = 0, QuantityExpired = 0, ExpiryDate = DateTime.Now.AddMonths(3), BranchId = 2 }
+            new MedicineBatch { ProductId = 1, BatchId = 1, BatchNumber = "B1", QuantityReceived = 10, QuantityIssued = 0, QuantityDamaged = 0, QuantityExpired = 0, ExpiryDate = DateTime.Now.AddMonths(12), BranchId = 1 },
+            new MedicineBatch { ProductId = 1, BatchId = 2, BatchNumber = "B2", QuantityReceived = 10, QuantityIssued = 0, QuantityDamaged = 0, QuantityExpired = 0, ExpiryDate = DateTime.Now.AddMonths(3), BranchId = 2 }
         };
         _batchRepo.Setup(r => r.FindAsync(It.IsAny<System.Linq.Expressions.Expression<Func<MedicineBatch, bool>>>()))
             .Returns(Task.FromResult((System.Linq.IQueryable<MedicineBatch>)batches.AsQueryable()));
 
-        var task = (Task<List<MedicineBatch>>)method!.Invoke(_sut, new object[] { 1, 1 })!;
+        var task = (Task<List<MedicineBatch>>)method!.Invoke(_sut, new object[] { 1, 1, null })!;
         var result = await task;
 
         Assert.Single(result);

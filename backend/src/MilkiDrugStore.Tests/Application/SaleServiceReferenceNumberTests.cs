@@ -21,6 +21,7 @@ public class SaleServiceReferenceNumberTests
     private readonly Mock<IRepository<Notification>> _notificationRepo = new();
     private readonly Mock<IUnitOfWork> _unitOfWork = new();
     private readonly Mock<IAuditLogService> _auditLog = new();
+    private readonly Mock<IRepository<Settings>> _settingsRepo = new();
     private readonly Mock<ILogger<SaleService>> _logger = new();
     private readonly SaleService _sut;
 
@@ -37,6 +38,7 @@ public class SaleServiceReferenceNumberTests
             _batchRepo.Object,
             _transactionRepo.Object,
             _notificationRepo.Object,
+            _settingsRepo.Object,
             _unitOfWork.Object,
             _auditLog.Object
         );
@@ -45,11 +47,11 @@ public class SaleServiceReferenceNumberTests
     [Fact]
     public async Task CreateAsync_WithBankTransfer_ReturnsReferenceNumber()
     {
-        var medicine = new Medicine { MedicineId = 1, BrandName = "Amoxicillin", LowStockThreshold = 10 };
+        var medicine = new Medicine { ProductId = 1, BrandName = "Amoxicillin", ReorderLevel = 10 };
         var batch = new MedicineBatch
         {
             BatchId = 1,
-            MedicineId = 1,
+            ProductId = 1,
             BatchNumber = "B002",
             QuantityReceived = 100,
             QuantityIssued = 0,
@@ -66,7 +68,7 @@ public class SaleServiceReferenceNumberTests
 
         var request = new CreateSaleRequest
         {
-            Items = new List<SaleItemRequest> { new() { MedicineId = 1, Quantity = 1 } },
+            Items = new List<SaleItemRequest> { new() { ProductId = 1, Quantity = 1 } },
             PaymentMethod = "bank_transfer",
             AmountPaid = 50,
             ReferenceNumber = "TXN-12345"
@@ -82,11 +84,11 @@ public class SaleServiceReferenceNumberTests
     [Fact]
     public async Task CreateAsync_WithoutReferenceNumber_ReturnsNull()
     {
-        var medicine = new Medicine { MedicineId = 1, BrandName = "Amoxicillin", LowStockThreshold = 10 };
+        var medicine = new Medicine { ProductId = 1, BrandName = "Amoxicillin", ReorderLevel = 10 };
         var batch = new MedicineBatch
         {
             BatchId = 1,
-            MedicineId = 1,
+            ProductId = 1,
             BatchNumber = "B002",
             QuantityReceived = 100,
             QuantityIssued = 0,
@@ -103,7 +105,7 @@ public class SaleServiceReferenceNumberTests
 
         var request = new CreateSaleRequest
         {
-            Items = new List<SaleItemRequest> { new() { MedicineId = 1, Quantity = 1 } },
+            Items = new List<SaleItemRequest> { new() { ProductId = 1, Quantity = 1 } },
             PaymentMethod = "cash",
             AmountPaid = 50
         };

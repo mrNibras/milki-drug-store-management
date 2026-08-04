@@ -1,6 +1,6 @@
 import { create } from 'zustand';
-import { User, Medicine, Supplier, Purchase, Sale, Notification, CartItem, PharmacySettings, AuditLog, Category, UnitType, Branch } from '../types';
-import { api, LoginRequest, LoginResponse, CreateSaleRequest, CreatePurchaseRequest, RecordDamageRequest, RecordExpiredRequest, ChangePasswordRequest, DamageResponse, ExpiredResponse, AuditLogResponse, BranchResponse, CreateBranchRequest, UpdateBranchRequest } from '../services/api';
+import { User, Medicine, Supplier, Purchase, Sale, Notification, CartItem, PharmacySettings, AuditLog, Category, UnitType, Branch, CatalogOption } from '../types';
+import { api, LoginRequest, LoginResponse, CreateSaleRequest, CreatePurchaseRequest, RecordDamageRequest, RecordExpiredRequest, ChangePasswordRequest, DamageResponse, ExpiredResponse, AuditLogResponse, BranchResponse, CreateBranchRequest, UpdateBranchRequest, CatalogOptionDto } from '../services/api';
 import { getSettings, updateSettings } from '../services/settingsApi';
 import { getDaysUntilExpiry, generateId } from '../utils/helpers';
 
@@ -62,11 +62,13 @@ interface AppState {
   markAllNotificationsRead: () => Promise<void>;
   generateExpiryNotifications: () => void;
 
-  categories: Category[];
+  categories: CatalogOption[];
   fetchCategories: () => Promise<void>;
+  createCustomCategory: (name: string) => Promise<void>;
 
-  unitTypes: UnitType[];
+  unitTypes: CatalogOption[];
   fetchUnitTypes: () => Promise<void>;
+  createCustomUnitType: (name: string) => Promise<void>;
 
   auditLogs: AuditLog[];
   fetchAuditLogs: () => Promise<void>;
@@ -101,39 +103,23 @@ const toUser = (r: { userId: number; fullName: string; email: string; roleName: 
   createdAt: r.createdAt,
 });
 
-const toCategory = (r: { categoryId: number; name: string; unitTypeId: number; unitTypeName: string; isActive: boolean; createdAt: string }): Category => ({
-  id: String(r.categoryId),
-  name: r.name,
-  unitTypeId: r.unitTypeId,
-  unitTypeName: r.unitTypeName,
-  isActive: r.isActive,
-  createdAt: r.createdAt,
-});
-
-const toUnitType = (r: { unitTypeId: number; name: string; description?: string; isActive: boolean }): UnitType => ({
-  id: String(r.unitTypeId),
-  name: r.name,
-  description: r.description,
-  isActive: r.isActive,
-});
-
 const toMedicine = (r: MedicineResponse): Medicine => ({
-  id: String(r.medicineId),
-  brandName: r.brandName,
+  id: String(r.productId),
+  name: r.brandName,
   genericName: r.genericName,
   categoryId: String(r.categoryId),
   categoryName: r.categoryName,
   unitType: r.unitTypeName,
   unitTypeId: r.unitTypeId,
-  lowStockThreshold: r.lowStockThreshold,
-  createdAt: r.createdAt,
+  lowStockThreshold: r.reorderLevel,
+  createdAt: r.createdDate,
   batches: r.batches.map(b => ({
     id: String(b.batchId),
-    medicineId: String(b.medicineId),
+    medicineId: String(b.productId),
     batchNumber: b.batchNumber,
     purchasePrice: b.purchasePrice,
     sellingPrice: b.sellingPrice,
-    quantity: b.balance,
+    quantity: b.remainingQuantity,
     expiryDate: b.expiryDate,
     createdAt: b.dateReceived,
   })),
@@ -437,15 +423,13 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
   },
 
-fetchCategories: async () => {
+  fetchCategories: async () => {
     try {
-      const res = await api.get<Category[]>('/categories');
+      const res = await api.get<CatalogOptionDto[]>('/lookups/categories');
       set({ categories: (Array.isArray(res.data) ? res.data : []).map(c => ({
-        id: String(c.categoryId),
+        id: String(c.id),
         name: c.name,
-        unitTypeId: c.unitTypeId || 1,
-        isActive: c.isActive ?? true,
-        createdAt: new Date().toISOString(),
+        isBuiltIn: c.isBuiltIn,
       })) });
     } catch (e) {
       console.error('Failed to fetch categories', e);
@@ -455,12 +439,40 @@ fetchCategories: async () => {
   fetchUnitTypes: async () => {
     set({ loading: true, error: null });
     try {
-      const res = await api.get<MedicineResponse[]>('/medicines');
-      set({ medicines: (Array.isArray(res.data) ? res.data : []).map(toMedicine), loading: false });
+      const res = await api.get<CatalogOptionDto[]>('/lookups/unit-types');
+      set({ unitTypes: (Array.isArray(res.data) ? res.data : []).map(c => ({
+        id: String(c.id),
+        name: c.name,
+        isBuiltIn: c.isBuiltIn,
+      })) });
+      set({ loading: false });
     } catch (e: any) {
-      set({ error: e.response?.data?.message || 'Failed to fetch medicines', loading: false });
+      set({ error: e.response?.data?.message || 'Failed to fetch unit types', loading: false });
     }
   },
+
+  createCustomCategory: async (name: string) => {
+    set({ loading: true, error: null });
+    try {
+      await api.post('/lookups/categories', { name });
+      await get().fetchCategories();
+    } catch (e: any) {
+      set({ error: e.response?.data?.message || 'Failed to create category', loading: false });
+      throw e;
+    }
+  },
+
+  createCustomUnitType: async (name: string) => {
+    set({ loading: true, error: null });
+    try {
+      await api.post('/lookups/unit-types', { name });
+      await get().fetchUnitTypes();
+    } catch (e: any) {
+      set({ error: e.response?.data?.message || 'Failed to create unit type', loading: false });
+      throw e;
+    }
+  },
+
 
   addMedicine: async (medicine) => {
     set({ loading: true, error: null });
@@ -468,9 +480,11 @@ fetchCategories: async () => {
       await api.post('/medicines', {
         brandName: medicine.name,
         genericName: medicine.genericName,
-        categoryId: Number(medicine.categoryId),
+        categoryId: medicine.categoryId,
+        newCategoryName: medicine.newCategoryName,
         unitTypeId: medicine.unitTypeId,
-        lowStockThreshold: medicine.lowStockThreshold,
+        newUnitTypeName: medicine.newUnitTypeName,
+        reorderLevel: medicine.reorderLevel,
       });
       await get().fetchMedicines();
     } catch (e: any) {
@@ -485,8 +499,10 @@ fetchCategories: async () => {
         brandName: updates.name,
         genericName: updates.genericName,
         categoryId: Number(updates.categoryId),
+        newCategoryName: updates.newCategoryName,
         unitTypeId: updates.unitTypeId,
-        lowStockThreshold: updates.lowStockThreshold,
+        newUnitTypeName: updates.newUnitTypeName,
+        reorderLevel: updates.reorderLevel,
         isActive: updates.isActive,
       });
       await get().fetchMedicines();
@@ -506,13 +522,13 @@ fetchCategories: async () => {
     }
   },
 
-fetchMedicines: async () => {
+  fetchMedicines: async () => {
     set({ loading: true, error: null });
     try {
-      const res = await api.get<SupplierResponse[]>('/suppliers');
-      set({ suppliers: (Array.isArray(res.data) ? res.data : []).map(toSupplier), loading: false });
+      const res = await api.get<MedicineResponse[]>('/medicines');
+      set({ medicines: (Array.isArray(res.data) ? res.data : []).map(toMedicine), loading: false });
     } catch (e: any) {
-      set({ error: e.response?.data?.message || 'Failed to fetch suppliers', loading: false });
+      set({ error: e.response?.data?.message || 'Failed to fetch medicines', loading: false });
     }
   },
 

@@ -26,6 +26,12 @@ export interface UnitType {
   isActive: boolean;
 }
 
+export interface CatalogOption {
+  id: string;
+  name: string;
+  isBuiltIn: boolean;
+}
+
 export interface Medicine {
   id: string;
   name: string;

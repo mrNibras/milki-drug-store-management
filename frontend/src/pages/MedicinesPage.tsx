@@ -27,6 +27,8 @@ export const MedicinesPage: React.FC = () => {
   const [customCategoryName, setCustomCategoryName] = useState('');
   const [showCustomUnitType, setShowCustomUnitType] = useState(false);
   const [customUnitTypeName, setCustomUnitTypeName] = useState('');
+  const [categorySearch, setCategorySearch] = useState('');
+  const [unitTypeSearch, setUnitTypeSearch] = useState('');
 
 
   useEffect(() => {
@@ -82,10 +84,12 @@ export const MedicinesPage: React.FC = () => {
   };
 
   const handleSave = async () => {
-    const categoryName = showCustomCategory ? customCategoryName : categories.find(c => c.id === formData.categoryId)?.name;
-    const unitTypeName = showCustomUnitType ? customUnitTypeName : unitTypes.find(u => u.id === formData.unitTypeId)?.name;
+    const categoryId = showCustomCategory ? 0 : Number(formData.categoryId);
+    const newCategoryName = showCustomCategory ? customCategoryName.trim() : null;
+    const unitTypeId = showCustomUnitType ? 0 : Number(formData.unitTypeId);
+    const newUnitTypeName = showCustomUnitType ? customUnitTypeName.trim() : null;
 
-    if (!formData.name || !categoryName || !unitTypeName) {
+    if (!formData.name || (categoryId === 0 && !newCategoryName) || (unitTypeId === 0 && !newUnitTypeName)) {
       alert('Please fill all required fields.');
       return;
     }
@@ -93,33 +97,50 @@ export const MedicinesPage: React.FC = () => {
     const medicineDto = {
       name: formData.name,
       genericName: formData.genericName,
-      categoryName,
-      unitTypeName,
-      lowStockThreshold: formData.lowStockThreshold,
+      categoryId,
+      newCategoryName,
+      unitTypeId,
+      newUnitTypeName,
+      reorderLevel: formData.lowStockThreshold,
     };
 
     await addMedicine(medicineDto);
     setShowAddModal(false);
-    // The store should refetch medicines and catalogs after a successful add
+    setCategorySearch('');
+    setUnitTypeSearch('');
   };
 
   const handleUpdate = async () => {
     if (!selectedMedicine) return;
 
-    const categoryName = showCustomCategory ? customCategoryName : categories.find(c => c.id === formData.categoryId)?.name;
-    const unitTypeName = showCustomUnitType ? customUnitTypeName : unitTypes.find(u => u.id === formData.unitTypeId)?.name;
+    const categoryId = showCustomCategory ? 0 : Number(formData.categoryId);
+    const newCategoryName = showCustomCategory ? customCategoryName.trim() : null;
+    const unitTypeId = showCustomUnitType ? 0 : Number(formData.unitTypeId);
+    const newUnitTypeName = showCustomUnitType ? customUnitTypeName.trim() : null;
+
+    if (categoryId === 0 && !newCategoryName) {
+      alert('Please select or enter a category.');
+      return;
+    }
+    if (unitTypeId === 0 && !newUnitTypeName) {
+      alert('Please select or enter a unit type.');
+      return;
+    }
 
     const medicineDto = {
       name: formData.name,
       genericName: formData.genericName,
-      categoryName,
-      unitTypeName,
-      lowStockThreshold: formData.lowStockThreshold,
+      categoryId,
+      newCategoryName,
+      unitTypeId,
+      newUnitTypeName,
+      reorderLevel: formData.lowStockThreshold,
     };
 
     await updateMedicine(selectedMedicine.id, medicineDto);
     setShowEditModal(false);
-    // The store should refetch medicines and catalogs after a successful update
+    setCategorySearch('');
+    setUnitTypeSearch('');
   };
 
   const handleDelete = (id: number | string) => {
@@ -418,6 +439,13 @@ export const MedicinesPage: React.FC = () => {
                   <label className={`flex items-center gap-2 text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                     Category <span className="text-red-500">*</span>
                   </label>
+                  <input
+                    type="text"
+                    value={categorySearch}
+                    onChange={e => setCategorySearch(e.target.value)}
+                    placeholder="Search categories..."
+                    className={`${inputClass} mb-2`}
+                  />
                   <select
                     value={formData.categoryId}
                     onChange={e => {
@@ -429,7 +457,7 @@ export const MedicinesPage: React.FC = () => {
                     className={inputClass}
                   >
                       <option value="">Select Category</option>
-                      {(categories || []).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                      {(categories || []).filter(c => c.name.toLowerCase().includes(categorySearch.toLowerCase())).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                       <option value="other">Other...</option>
                     </select>
                 </div>
@@ -446,6 +474,13 @@ export const MedicinesPage: React.FC = () => {
                   <label className={`flex items-center gap-2 text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                     Unit Type
                   </label>
+                  <input
+                    type="text"
+                    value={unitTypeSearch}
+                    onChange={e => setUnitTypeSearch(e.target.value)}
+                    placeholder="Search unit types..."
+                    className={`${inputClass} mb-2`}
+                  />
                   <select
                     value={String(formData.unitTypeId)}
                     onChange={e => {
@@ -456,10 +491,10 @@ export const MedicinesPage: React.FC = () => {
                     }}
                     className={inputClass}
                    >
-                     <option value="">Select Unit Type</option>
-                     {(unitTypes || []).map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
-                     <option value="other">Other...</option>
-                   </select>
+                      <option value="">Select Unit Type</option>
+                      {(unitTypes || []).filter(u => u.name.toLowerCase().includes(unitTypeSearch.toLowerCase())).map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+                      <option value="other">Other...</option>
+                    </select>
                 </div>
                 <div className={`transition-all duration-300 ${showCustomUnitType ? 'opacity-100' : 'opacity-0 h-0 overflow-hidden'}`}>
                   <label className={`flex items-center gap-2 text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
@@ -554,6 +589,13 @@ export const MedicinesPage: React.FC = () => {
                     <label className={`flex items-center gap-2 text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                       Category
                     </label>
+                    <input
+                      type="text"
+                      value={categorySearch}
+                      onChange={e => setCategorySearch(e.target.value)}
+                      placeholder="Search categories..."
+                      className={`${inputClass} mb-2`}
+                    />
                     <select
                       value={formData.categoryId}
                       onChange={e => {
@@ -564,10 +606,10 @@ export const MedicinesPage: React.FC = () => {
                       }}
                       className={inputClass}
                      >
-                       <option value="">Select Category</option>
-                       {(categories || []).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                       <option value="other">Other...</option>
-                     </select>
+                        <option value="">Select Category</option>
+                        {(categories || []).filter(c => c.name.toLowerCase().includes(categorySearch.toLowerCase())).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                        <option value="other">Other...</option>
+                      </select>
                   </div>
                   <div className={`transition-all duration-300 ${showCustomCategory ? 'opacity-100' : 'opacity-0 h-0 overflow-hidden'}`}>
                     <label className={`flex items-center gap-2 text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
@@ -582,6 +624,13 @@ export const MedicinesPage: React.FC = () => {
                     <label className={`flex items-center gap-2 text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                       Unit Type
                     </label>
+                    <input
+                      type="text"
+                      value={unitTypeSearch}
+                      onChange={e => setUnitTypeSearch(e.target.value)}
+                      placeholder="Search unit types..."
+                      className={`${inputClass} mb-2`}
+                    />
                     <select
                       value={String(formData.unitTypeId)}
                       onChange={e => {
@@ -593,7 +642,7 @@ export const MedicinesPage: React.FC = () => {
                       className={inputClass}
                     >
                       <option value="">Select Unit Type</option>
-                      {(unitTypes || []).map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+                      {(unitTypes || []).filter(u => u.name.toLowerCase().includes(unitTypeSearch.toLowerCase())).map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
                       <option value="other">Other...</option>
                     </select>
                   </div>

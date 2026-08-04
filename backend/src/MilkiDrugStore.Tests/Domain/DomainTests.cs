@@ -51,7 +51,7 @@ public class MedicineEntityTests
       medicine.BrandName.Should().Be(string.Empty);
       medicine.GenericName.Should().Be(string.Empty);
       medicine.UnitTypeId.Should().Be(0);
-      medicine.LowStockThreshold.Should().Be(10);
+      medicine.ReorderLevel.Should().Be(10);
       medicine.IsActive.Should().BeTrue();
       medicine.Batches.Should().BeEmpty();
   }
@@ -69,7 +69,7 @@ public class MedicineBatchEntityTests
             QuantityDamaged = 5,
             QuantityExpired = 2
         };
-        batch.Balance.Should().Be(63);
+        batch.RemainingQuantity.Should().Be(63);
     }
 
     [Fact]
@@ -82,7 +82,7 @@ public class MedicineBatchEntityTests
             QuantityDamaged = 0,
             QuantityExpired = 0
         };
-        batch.Balance.Should().Be(0);
+        batch.RemainingQuantity.Should().Be(0);
     }
 }
 

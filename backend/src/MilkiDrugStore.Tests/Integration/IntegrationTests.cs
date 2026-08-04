@@ -31,7 +31,6 @@ public class IntegrationTests : IAsyncLifetime
         services.AddScoped<IAuditLogService, MilkiDrugStore.Application.Services.AuditLogService>();
         services.AddScoped<IBranchService, MilkiDrugStore.Application.Services.BranchService>();
         services.AddScoped<ICosmeticService, MilkiDrugStore.Application.Services.CosmeticService>();
-        services.AddScoped<ICosmeticCategoryService, MilkiDrugStore.Application.Services.CosmeticCategoryService>();
         services.AddScoped<IBackupService, MilkiDrugStore.Application.Services.BackupService>();
 
         services.AddLogging();
@@ -53,23 +52,22 @@ public class IntegrationTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task CosmeticCategory_Should_Be_Persisted()
+    public async Task Category_Should_Be_Persisted()
     {
         _dbContext.Database.EnsureCreated();
 
-        var category = new CosmeticCategory
+        var category = new Category
         {
             Name = "Test Category",
-            Description = "Test Description",
-            IsActive = true
+            IsActive = true,
+            CreatedAt = DateTime.Now
         };
 
-        _dbContext.CosmeticCategories.Add(category);
+        _dbContext.Categories.Add(category);
         await _dbContext.SaveChangesAsync();
 
-        var saved = await _dbContext.CosmeticCategories.FirstOrDefaultAsync(c => c.Name == "Test Category");
+        var saved = await _dbContext.Categories.FirstOrDefaultAsync(c => c.Name == "Test Category");
         Assert.NotNull(saved);
-        Assert.Equal("Test Description", saved.Description);
     }
 
     [Fact]
@@ -81,7 +79,7 @@ public class IntegrationTests : IAsyncLifetime
         {
             ProductName = "Test Cream",
             Description = "Test Description",
-            CosmeticCategoryId = 1,
+            CategoryId = 1,
             UnitTypeId = 1,
             Price = 99.99m,
             IsActive = true

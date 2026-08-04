@@ -21,6 +21,7 @@ public class SaleServiceTests
     private readonly Mock<IRepository<Notification>> _notificationRepo = new();
     private readonly Mock<IUnitOfWork> _unitOfWork = new();
     private readonly Mock<IAuditLogService> _auditLog = new();
+    private readonly Mock<IRepository<Settings>> _settingsRepo = new();
     private readonly Mock<ILogger<SaleService>> _logger = new();
     private readonly SaleService _sut;
 
@@ -37,6 +38,7 @@ public class SaleServiceTests
             _batchRepo.Object,
             _transactionRepo.Object,
             _notificationRepo.Object,
+            _settingsRepo.Object,
             _unitOfWork.Object,
             _auditLog.Object
         );
@@ -45,11 +47,11 @@ public class SaleServiceTests
     [Fact]
     public async Task CreateAsync_WithCashPayment_SetsPaymentStatusPaid()
     {
-        var medicine = new Medicine { MedicineId = 1, BrandName = "Paracetamol", LowStockThreshold = 10 };
+        var medicine = new Medicine { ProductId = 1, BrandName = "Paracetamol", ReorderLevel = 10 };
         var batch = new MedicineBatch
         {
             BatchId = 1,
-            MedicineId = 1,
+            ProductId = 1,
             BatchNumber = "B001",
             QuantityReceived = 100,
             QuantityIssued = 0,
@@ -66,7 +68,7 @@ public class SaleServiceTests
 
         var request = new CreateSaleRequest
         {
-            Items = new List<SaleItemRequest> { new() { MedicineId = 1, Quantity = 2 } },
+            Items = new List<SaleItemRequest> { new() { ProductId = 1, Quantity = 2 } },
             PaymentMethod = "cash",
             AmountPaid = 20
         };
@@ -83,11 +85,11 @@ public class SaleServiceTests
     [Fact]
     public async Task CreateAsync_WithPartialPayment_SetsPaymentStatusPartial()
     {
-        var medicine = new Medicine { MedicineId = 1, BrandName = "Paracetamol", LowStockThreshold = 10 };
+        var medicine = new Medicine { ProductId = 1, BrandName = "Paracetamol", ReorderLevel = 10 };
         var batch = new MedicineBatch
         {
             BatchId = 1,
-            MedicineId = 1,
+            ProductId = 1,
             BatchNumber = "B001",
             QuantityReceived = 100,
             QuantityIssued = 0,
@@ -104,7 +106,7 @@ public class SaleServiceTests
 
         var request = new CreateSaleRequest
         {
-            Items = new List<SaleItemRequest> { new() { MedicineId = 1, Quantity = 2 } },
+            Items = new List<SaleItemRequest> { new() { ProductId = 1, Quantity = 2 } },
             PaymentMethod = "credit",
             AmountPaid = 5
         };
@@ -121,11 +123,11 @@ public class SaleServiceTests
     [Fact]
     public async Task CreateAsync_WithZeroPayment_SetsPaymentStatusUnpaid()
     {
-        var medicine = new Medicine { MedicineId = 1, BrandName = "Paracetamol", LowStockThreshold = 10 };
+        var medicine = new Medicine { ProductId = 1, BrandName = "Paracetamol", ReorderLevel = 10 };
         var batch = new MedicineBatch
         {
             BatchId = 1,
-            MedicineId = 1,
+            ProductId = 1,
             BatchNumber = "B001",
             QuantityReceived = 100,
             QuantityIssued = 0,
@@ -142,7 +144,7 @@ public class SaleServiceTests
 
         var request = new CreateSaleRequest
         {
-            Items = new List<SaleItemRequest> { new() { MedicineId = 1, Quantity = 2 } },
+            Items = new List<SaleItemRequest> { new() { ProductId = 1, Quantity = 2 } },
             PaymentMethod = "credit",
             AmountPaid = 0
         };
@@ -157,11 +159,11 @@ public class SaleServiceTests
     [Fact]
     public async Task CreateAsync_WithDiscount_PreservesDiscountForAdmin()
     {
-        var medicine = new Medicine { MedicineId = 1, BrandName = "Paracetamol", LowStockThreshold = 10 };
+        var medicine = new Medicine { ProductId = 1, BrandName = "Paracetamol", ReorderLevel = 10 };
         var batch = new MedicineBatch
         {
             BatchId = 1,
-            MedicineId = 1,
+            ProductId = 1,
             BatchNumber = "B001",
             QuantityReceived = 100,
             QuantityIssued = 0,
@@ -178,7 +180,7 @@ public class SaleServiceTests
 
         var request = new CreateSaleRequest
         {
-            Items = new List<SaleItemRequest> { new() { MedicineId = 1, Quantity = 2, DiscountAmount = 10 } },
+            Items = new List<SaleItemRequest> { new() { ProductId = 1, Quantity = 2, DiscountAmount = 10 } },
             PaymentMethod = "cash",
             AmountPaid = 180,
             DiscountReason = "Customer loyalty"
@@ -197,11 +199,11 @@ public class SaleServiceTests
     [Fact]
     public async Task CreateAsync_WithDiscount_CapsDiscountForPharmacist()
     {
-        var medicine = new Medicine { MedicineId = 1, BrandName = "Paracetamol", LowStockThreshold = 10 };
+        var medicine = new Medicine { ProductId = 1, BrandName = "Paracetamol", ReorderLevel = 10 };
         var batch = new MedicineBatch
         {
             BatchId = 1,
-            MedicineId = 1,
+            ProductId = 1,
             BatchNumber = "B001",
             QuantityReceived = 100,
             QuantityIssued = 0,
@@ -218,7 +220,7 @@ public class SaleServiceTests
 
         var request = new CreateSaleRequest
         {
-            Items = new List<SaleItemRequest> { new() { MedicineId = 1, Quantity = 2, DiscountAmount = 10 } },
+            Items = new List<SaleItemRequest> { new() { ProductId = 1, Quantity = 2, DiscountAmount = 10 } },
             PaymentMethod = "cash",
             AmountPaid = 190,
             DiscountReason = "Customer loyalty"
@@ -238,8 +240,8 @@ public class SaleServiceTests
     public async Task GetAllAsync_ReturnsSalesWithItemsAndTotals()
     {
         var user = new User { UserId = 1, FullName = "Admin" };
-        var medicine = new Medicine { MedicineId = 1, BrandName = "Paracetamol" };
-        var batch = new MedicineBatch { BatchId = 1, MedicineId = 1, BatchNumber = "B001", SellingPrice = 100, PurchasePrice = 50 };
+        var medicine = new Medicine { ProductId = 1, BrandName = "Paracetamol" };
+        var batch = new MedicineBatch { BatchId = 1, ProductId = 1, BatchNumber = "B001", SellingPrice = 100, PurchasePrice = 50 };
         var sale = new Sale
         {
             SaleId = 1,
@@ -260,7 +262,7 @@ public class SaleServiceTests
                 {
                     SaleItemId = 1,
                     SaleId = 1,
-                    MedicineId = 1,
+                    ProductId = 1,
                     BatchId = 1,
                     Quantity = 2,
                     UnitPrice = 100,
