@@ -16,31 +16,82 @@ using Microsoft.Extensions.Logging;
 var builder = WebApplication.CreateBuilder(args);
 
 // Ensure data directory exists for SQLite and Data Protection keys.
+// Render mounts the Persistent Disk at /var/data, so everything stored
+// under this path survives container restarts and redeployments.
 var dataDir = builder.Configuration.GetValue<string>("DataDirectory") ?? "/var/data";
+
+// Validate and prepare the data directory.
+var dataDirInfo = new DirectoryInfo(dataDir);
 try
 {
-    Directory.CreateDirectory(dataDir);
+    dataDirInfo.Create();
+    dataDirInfo.Refresh();
 }
-catch
+catch (Exception ex)
 {
-    dataDir = Path.Combine(Path.GetTempPath(), "MilkiDrugStore_Data");
-    Directory.CreateDirectory(dataDir);
+    Console.Error.WriteLine($"FATAL: Failed to create data directory at {dataDir}. Application cannot start. Error: {ex.Message}");
+    throw;
 }
 
+// Validate that the data directory is writable.
+var dataDirTestPath = Path.Combine(dataDir, ".write-test");
+try
+{
+    File.WriteAllText(dataDirTestPath, string.Empty);
+    File.Delete(dataDirTestPath);
+}
+catch (Exception ex)
+{
+    Console.Error.WriteLine($"FATAL: Data directory at {dataDir} is not writable. Application cannot start. Error: {ex.Message}");
+    throw;
+}
+
+// Prepare Data Protection key directory under the persistent disk.
 var keysDir = Path.Combine(dataDir, "keys");
+var keysDirInfo = new DirectoryInfo(keysDir);
 try
 {
-    Directory.CreateDirectory(keysDir);
+    keysDirInfo.Create();
+    keysDirInfo.Refresh();
 }
-catch
+catch (Exception ex)
 {
-    keysDir = Path.Combine(Path.GetTempPath(), "MilkiDrugStore_Keys");
-    Directory.CreateDirectory(keysDir);
+    Console.Error.WriteLine($"FATAL: Failed to create Data Protection key directory at {keysDir}. Application cannot start. Error: {ex.Message}");
+    throw;
 }
 
-// Data Protection: persist keys to persistent disk so they survive container restarts.
+// Validate that the key directory is writable.
+var keysDirTestPath = Path.Combine(keysDir, ".write-test");
+try
+{
+    File.WriteAllText(keysDirTestPath, string.Empty);
+    File.Delete(keysDirTestPath);
+}
+catch (Exception ex)
+{
+    Console.Error.WriteLine($"FATAL: Data Protection key directory at {keysDir} is not writable. Application cannot start. Error: {ex.Message}");
+    throw;
+}
+
+// Data Protection configuration.
+// Keys are persisted to the Render Persistent Disk at /var/data/keys.
+// This ensures JWT authentication cookies, CSRF tokens, and other
+// protected payloads survive container restarts.
+//
+// Warning: No XML encryptor is configured. This means keys are stored
+// in unencrypted form on disk. This is acceptable for this deployment
+// because:
+//   1. Render Persistent Disks are encrypted at rest by the Render platform.
+//   2. The keys protect ASP.NET Core Data Protection payloads (cookies,
+//      CSRF tokens), not direct authentication secrets.
+//   3. The main security boundary is Render's platform-level access control.
+//
+// If you need key encryption (e.g., for compliance requirements), the
+// recommended production solution is to provision an X.509 certificate
+// and call .ProtectKeysWithCertificate(cert) here. For Render, this would
+// require mounting the certificate as a secret file or environment variable.
 builder.Services.AddDataProtection()
-    .PersistKeysToFileSystem(new DirectoryInfo(keysDir))
+    .PersistKeysToFileSystem(keysDirInfo)
     .SetApplicationName("MilkiDrugStore")
     .SetDefaultKeyLifetime(TimeSpan.FromDays(90));
 
@@ -271,8 +322,13 @@ app.Urls.Add($"http://0.0.0.0:{port}");
 
 // Log Data Protection and HTTPS configuration.
 var startupLogger = app.Services.GetRequiredService<ILogger<Program>>();
-startupLogger.LogInformation("Data Protection keys stored at: {KeysPath}", keysDir);
+startupLogger.LogInformation("=== Data Protection Configuration ===");
+startupLogger.LogInformation("Data Protection key path: {KeysPath}", keysDir);
+startupLogger.LogInformation("Data Protection key directory exists: {Exists}", keysDirInfo.Exists);
 startupLogger.LogInformation("Data Protection Application Name: MilkiDrugStore");
+startupLogger.LogInformation("Data Protection key lifetime: 90 days");
+startupLogger.LogInformation("Data Protection key encryption: None (unencrypted XML)");
+startupLogger.LogInformation("Data Directory: {DataDirectory} (exists: {Exists}, writable: true)", dataDir, dataDirInfo.Exists);
 startupLogger.LogInformation("Forwarded headers enabled: XForwardedFor, XForwardedProto");
 startupLogger.LogInformation("HTTPS redirection enabled: {HttpsEnabled}", !string.IsNullOrEmpty(httpsPort) || app.Environment.IsDevelopment());
 if (!string.IsNullOrEmpty(httpsPort))

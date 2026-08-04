@@ -20,7 +20,12 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 WORKDIR /app
 EXPOSE 8080
 
-RUN mkdir -p /app/data/keys
+# Create data directories on the persistent disk mount point.
+# Render mounts the Persistent Disk at /var/data, so keys stored under
+# /var/data/keys survive container restarts and redeployments.
+RUN mkdir -p /var/data/keys && \
+    chmod 755 /var/data && \
+    chmod 755 /var/data/keys
 
 COPY --from=publish /app/publish .
 

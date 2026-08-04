@@ -6,11 +6,10 @@ export const mockCategories: Category[] = [
   { id: '3', name: 'Vitamin' },
   { id: '4', name: 'Respiratory' },
   { id: '5', name: 'Dermatology' },
-  { id: '6', name: 'Cosmetics' },
-  { id: '7', name: 'Baby Supplies' },
-  { id: '8', name: 'Cardiovascular' },
-  { id: '9', name: 'Gastrointestinal' },
-  { id: '10', name: 'Anti-inflammatory' },
+  { id: '6', name: 'Baby Supplies' },
+  { id: '7', name: 'Cardiovascular' },
+  { id: '8', name: 'Gastrointestinal' },
+  { id: '9', name: 'Anti-inflammatory' },
 ];
 
 export const mockUsers: User[] = [
@@ -102,8 +101,8 @@ export const mockMedicines: Medicine[] = [
     ]
   },
   {
-    id: '12', name: 'Nivea Face Cream', genericName: 'Face Cream', categoryId: '6', categoryName: 'Cosmetics',
-    unitType: 'Piece', lowStockThreshold: 10, createdAt: '2026-03-20T00:00:00',
+    id: '12', name: 'Nivea Face Cream', genericName: 'Face Cream', categoryId: '5', categoryName: 'Dermatology',
+    unitType: 'Tube', lowStockThreshold: 10, createdAt: '2026-03-20T00:00:00',
     batches: [
       { id: 'b15', medicineId: '12', batchNumber: 'B015', purchasePrice: 50, sellingPrice: 150, quantity: 35, expiryDate: '2028-06-01', createdAt: '2026-03-20' },
     ]
@@ -268,7 +267,6 @@ export const categoryDistribution = [
   { name: 'Pain Killer', value: 20 },
   { name: 'Vitamin', value: 15 },
   { name: 'Respiratory', value: 12 },
-  { name: 'Dermatology', value: 10 },
-  { name: 'Cosmetics', value: 8 },
+  { name: 'Dermatology', value: 18 },
   { name: 'Others', value: 10 },
 ];

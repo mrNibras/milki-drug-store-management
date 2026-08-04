@@ -64,11 +64,9 @@ interface AppState {
 
   categories: CatalogOption[];
   fetchCategories: () => Promise<void>;
-  createCustomCategory: (name: string) => Promise<void>;
 
   unitTypes: CatalogOption[];
   fetchUnitTypes: () => Promise<void>;
-  createCustomUnitType: (name: string) => Promise<void>;
 
   auditLogs: AuditLog[];
   fetchAuditLogs: () => Promise<void>;
@@ -450,29 +448,6 @@ export const useAppStore = create<AppState>((set, get) => ({
       set({ error: e.response?.data?.message || 'Failed to fetch unit types', loading: false });
     }
   },
-
-  createCustomCategory: async (name: string) => {
-    set({ loading: true, error: null });
-    try {
-      await api.post('/lookups/categories', { name });
-      await get().fetchCategories();
-    } catch (e: any) {
-      set({ error: e.response?.data?.message || 'Failed to create category', loading: false });
-      throw e;
-    }
-  },
-
-  createCustomUnitType: async (name: string) => {
-    set({ loading: true, error: null });
-    try {
-      await api.post('/lookups/unit-types', { name });
-      await get().fetchUnitTypes();
-    } catch (e: any) {
-      set({ error: e.response?.data?.message || 'Failed to create unit type', loading: false });
-      throw e;
-    }
-  },
-
 
   addMedicine: async (medicine) => {
     set({ loading: true, error: null });

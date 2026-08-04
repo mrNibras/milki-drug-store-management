@@ -12,8 +12,6 @@ public interface ICatalogService
 {
     Task<IEnumerable<CatalogOptionDto>> GetCategoryOptionsAsync();
     Task<IEnumerable<CatalogOptionDto>> GetUnitTypeOptionsAsync();
-    Task<CatalogOptionDto> CreateCustomCategoryAsync(string name, int userId);
-    Task<CatalogOptionDto> CreateCustomUnitTypeAsync(string name, int userId);
 
     /// <summary>
     /// Resolves a display name to a category id. Matches a built-in category

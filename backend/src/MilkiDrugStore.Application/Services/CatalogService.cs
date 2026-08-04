@@ -44,11 +44,20 @@ public class CatalogService : ICatalogService
             options.TryAdd(name, c.CategoryId);
         }
 
-        return MedicineCatalog.Categories
-            .Select(c => new CatalogOptionDto { Id = c.Id, Name = c.Name, IsBuiltIn = true })
-            .Concat(options
-                .OrderBy(kv => kv.Key, StringComparer.OrdinalIgnoreCase)
-                .Select(kv => new CatalogOptionDto { Id = kv.Value, Name = kv.Key, IsBuiltIn = false }))
+        var builtIns = MedicineCatalog.CategoriesWithoutOther
+            .Select(c => new CatalogOptionDto { Id = c.Id, Name = c.Name, IsBuiltIn = true });
+
+        var customOptions = options
+            .OrderBy(kv => kv.Key, StringComparer.OrdinalIgnoreCase)
+            .Select(kv => new CatalogOptionDto { Id = kv.Value, Name = kv.Key, IsBuiltIn = false });
+
+        var other = MedicineCatalog.Categories
+            .Where(c => c.Name == MedicineCatalog.OtherLabel)
+            .Select(c => new CatalogOptionDto { Id = c.Id, Name = c.Name, IsBuiltIn = true });
+
+        return builtIns
+            .Concat(customOptions)
+            .Concat(other)
             .ToList();
     }
 
@@ -69,56 +78,21 @@ public class CatalogService : ICatalogService
             options.TryAdd(name, u.UnitTypeId);
         }
 
-        return MedicineCatalog.UnitTypes
-            .Select(u => new CatalogOptionDto { Id = u.Id, Name = u.Name, IsBuiltIn = true })
-            .Concat(options
-                .OrderBy(kv => kv.Key, StringComparer.OrdinalIgnoreCase)
-                .Select(kv => new CatalogOptionDto { Id = kv.Value, Name = kv.Key, IsBuiltIn = false }))
+        var builtIns = MedicineCatalog.UnitTypesWithoutOther
+            .Select(u => new CatalogOptionDto { Id = u.Id, Name = u.Name, IsBuiltIn = true });
+
+        var customOptions = options
+            .OrderBy(kv => kv.Key, StringComparer.OrdinalIgnoreCase)
+            .Select(kv => new CatalogOptionDto { Id = kv.Value, Name = kv.Key, IsBuiltIn = false });
+
+        var other = MedicineCatalog.UnitTypes
+            .Where(u => u.Name == MedicineCatalog.OtherLabel)
+            .Select(u => new CatalogOptionDto { Id = u.Id, Name = u.Name, IsBuiltIn = true });
+
+        return builtIns
+            .Concat(customOptions)
+            .Concat(other)
             .ToList();
-    }
-
-    public async Task<CatalogOptionDto> CreateCustomCategoryAsync(string name, int userId)
-    {
-        var trimmed = name?.Trim();
-        if (string.IsNullOrEmpty(trimmed))
-            throw new DomainException("Category name is required.");
-
-        if (MedicineCatalog.FindCategoryId(trimmed) is not null)
-            throw new DomainException($"\"{trimmed}\" is a built-in category.");
-
-        var existing = await _categoryRepo.FindAsync(c => c.Name.Equals(trimmed, StringComparison.OrdinalIgnoreCase));
-        if (existing.Any())
-            throw new DomainException($"Category \"{trimmed}\" already exists.");
-
-        var category = new Category { Name = trimmed, IsActive = true, CreatedAt = DateTime.Now };
-        await _categoryRepo.AddAsync(category);
-        await _unitOfWork.SaveChangesAsync();
-
-        await _auditLog.LogAsync(userId, $"Created custom category: {category.Name}", "Categories", category.CategoryId);
-
-        return new CatalogOptionDto { Id = category.CategoryId, Name = category.Name, IsBuiltIn = false };
-    }
-
-    public async Task<CatalogOptionDto> CreateCustomUnitTypeAsync(string name, int userId)
-    {
-        var trimmed = name?.Trim();
-        if (string.IsNullOrEmpty(trimmed))
-            throw new DomainException("Unit type name is required.");
-
-        if (MedicineCatalog.FindUnitTypeId(trimmed) is not null)
-            throw new DomainException($"\"{trimmed}\" is a built-in unit type.");
-
-        var existing = await _unitTypeRepo.FindAsync(u => u.Name.Equals(trimmed, StringComparison.OrdinalIgnoreCase));
-        if (existing.Any())
-            throw new DomainException($"Unit type \"{trimmed}\" already exists.");
-
-        var unitType = new UnitType { Name = trimmed, IsActive = true };
-        await _unitTypeRepo.AddAsync(unitType);
-        await _unitOfWork.SaveChangesAsync();
-
-        await _auditLog.LogAsync(userId, $"Created custom unit type: {unitType.Name}", "UnitTypes", unitType.UnitTypeId);
-
-        return new CatalogOptionDto { Id = unitType.UnitTypeId, Name = unitType.Name, IsBuiltIn = false };
     }
 
     public async Task<int?> ResolveCategoryIdAsync(string? name, int userId)

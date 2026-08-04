@@ -6,8 +6,3 @@ public class CatalogOptionDto
     public string Name { get; set; } = string.Empty;
     public bool IsBuiltIn { get; set; }
 }
-
-public class CreateCatalogOptionRequest
-{
-    public string Name { get; set; } = string.Empty;
-}

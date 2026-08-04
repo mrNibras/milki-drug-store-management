@@ -161,10 +161,6 @@ export interface CatalogOptionDto {
   isBuiltIn: boolean;
 }
 
-export interface CreateCatalogOptionRequest {
-  name: string;
-}
-
 export interface MedicineResponse {
   productId: number;
   productCode: string;

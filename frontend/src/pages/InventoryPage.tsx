@@ -6,7 +6,7 @@ import { Badge } from '../components/ui/Badge';
 import { formatDate, getDaysUntilExpiry, getExpiryStatus, getStockStatus, getStockColor, formatCurrency } from '../utils/helpers';
 
 export const InventoryPage: React.FC = () => {
-  const { medicines, fetchMedicines, loading } = useAppStore();
+  const { medicines, categories, fetchMedicines, fetchCategories, loading } = useAppStore();
   const { theme } = useThemeStore();
   const isDark = theme === 'dark';
   const [search, setSearch] = useState('');
@@ -15,18 +15,8 @@ export const InventoryPage: React.FC = () => {
 
   useEffect(() => {
     fetchMedicines();
-  }, [fetchMedicines]);
-
-  const categories = useMemo(() => {
-    const seen = new Set<string>();
-    return (medicines || []).reduce<{ id: string; name: string }[]>((acc, m) => {
-      if (!seen.has(m.categoryId)) {
-        seen.add(m.categoryId);
-        acc.push({ id: m.categoryId, name: m.categoryName });
-      }
-      return acc;
-    }, []);
-  }, [medicines]);
+    fetchCategories();
+  }, [fetchMedicines, fetchCategories]);
 
   const filteredMedicines = useMemo(() => {
     return (medicines || []).filter(medicine => {

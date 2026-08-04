@@ -150,15 +150,8 @@ export const MedicinesPage: React.FC = () => {
   };
 
   const categoryList = useMemo(() => {
-    const seen = new Set<string>();
-    return (medicines || []).reduce<Category[]>((acc, m) => {
-      if (!seen.has(m.categoryId)) {
-        seen.add(m.categoryId);
-        acc.push({ id: m.categoryId, name: m.categoryName });
-      }
-      return acc;
-    }, []);
-  }, [medicines, categories]);
+    return (categories || []).map(c => ({ id: c.id, name: c.name }));
+  }, [categories]);
 
   const inputClass = `w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
     isDark 

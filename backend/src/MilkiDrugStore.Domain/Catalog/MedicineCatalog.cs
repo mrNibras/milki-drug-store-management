@@ -58,6 +58,46 @@ public static class MedicineCatalog
     };
 
     /// <summary>
+    /// Built-in medicine categories without the "Other" entry, in display order.
+    /// </summary>
+    public static IReadOnlyList<CatalogItem> CategoriesWithoutOther { get; } = new[]
+    {
+        new CatalogItem(-1, "Antibiotics"),
+        new CatalogItem(-2, "Antivirals"),
+        new CatalogItem(-3, "Antifungals"),
+        new CatalogItem(-4, "Antipain"),
+        new CatalogItem(-5, "Antihistamines"),
+        new CatalogItem(-6, "GIT Drugs"),
+        new CatalogItem(-7, "Hormonal Drugs"),
+        new CatalogItem(-8, "CVS Drugs"),
+        new CatalogItem(-9, "CNS Drugs"),
+        new CatalogItem(-10, "Vitamins and Minerals"),
+        new CatalogItem(-11, "Vaccines"),
+        new CatalogItem(-12, "ENT Drugs"),
+        new CatalogItem(-13, "Dermatologic Drugs"),
+        new CatalogItem(-14, "Antiepileptics")
+    };
+
+    /// <summary>
+    /// Built-in unit types without the "Other" entry, in display order.
+    /// </summary>
+    public static IReadOnlyList<CatalogItem> UnitTypesWithoutOther { get; } = new[]
+    {
+        new CatalogItem(-1, "Tablet"),
+        new CatalogItem(-2, "Capsule"),
+        new CatalogItem(-3, "Suspension"),
+        new CatalogItem(-4, "Syrup"),
+        new CatalogItem(-5, "Solution"),
+        new CatalogItem(-6, "Injection"),
+        new CatalogItem(-7, "Oral Drop"),
+        new CatalogItem(-8, "Cream"),
+        new CatalogItem(-9, "Ointment"),
+        new CatalogItem(-10, "Shampoo"),
+        new CatalogItem(-11, "Powder"),
+        new CatalogItem(-12, "Drop")
+    };
+
+    /// <summary>
     /// Looks up a built-in category id by name, ignoring case.
     /// </summary>
     public static int? FindCategoryId(string name)
