@@ -209,7 +209,9 @@ export const useAppStore = create<AppState>((set, get) => ({
   login: async (email: string, password: string) => {
     set({ loading: true, error: null });
     try {
+      console.log('[login] attempting login for', email, 'to', api.defaults.baseURL);
       const res = await api.post<LoginResponse>('/auth/login', { email, password });
+      console.log('[login] login response', res.status, res.data);
       const token = res.data.token;
       const user: User = {
         id: String(res.data.userId),
@@ -233,7 +235,10 @@ export const useAppStore = create<AppState>((set, get) => ({
       set({ token, currentUser: user, currentBranch: branch, isAuthenticated: true, loading: false });
       return true;
     } catch (e: any) {
-      set({ error: e.response?.data?.message || 'Login failed', loading: false });
+      const status = e?.response?.status;
+      const message = e?.response?.data?.message;
+      console.warn('[login] login failed', { status, message, url: e?.config?.url, baseURL: api.defaults.baseURL });
+      set({ error: message || 'Login failed', loading: false });
       return false;
     }
   },

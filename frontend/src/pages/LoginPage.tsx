@@ -22,14 +22,21 @@ export const LoginPage: React.FC = () => {
 
     await new Promise(resolve => setTimeout(resolve, 800));
 
-    const success = await login(email, password);
-    if (success) {
-      navigate('/dashboard');
-    } else {
-      const storeError = useAppStore.getState().error;
-      setError(storeError || 'Invalid email or password');
+    try {
+      const success = await login(email, password);
+      console.log('[LoginPage] login result', success);
+      if (success) {
+        navigate('/dashboard');
+      } else {
+        const storeError = useAppStore.getState().error;
+        setError(storeError || 'Invalid email or password');
+      }
+    } catch (err) {
+      console.error('[LoginPage] login threw', err);
+      setError('Login failed');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (

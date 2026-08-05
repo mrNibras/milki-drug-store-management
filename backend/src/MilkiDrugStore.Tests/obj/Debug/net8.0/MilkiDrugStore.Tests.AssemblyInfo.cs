@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("MilkiDrugStore.Tests")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+7d17336f766ed607358b9e3955cf321a85e9173c")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+05a4a748b53334e8287ac731e7244bc569ac0af3")]
 [assembly: System.Reflection.AssemblyProductAttribute("MilkiDrugStore.Tests")]
 [assembly: System.Reflection.AssemblyTitleAttribute("MilkiDrugStore.Tests")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
