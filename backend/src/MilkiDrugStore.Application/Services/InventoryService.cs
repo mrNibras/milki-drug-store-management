@@ -93,10 +93,12 @@ public class InventoryService : IInventoryService
     public async Task<IEnumerable<DamageRecordResponse>> GetDamagesAsync(int? branchId = null)
     {
         var query = await _unitOfWork.DamageRecords.GetAllAsync();
+#pragma warning disable CS8602
         var damages = await query
             .Include(d => d.Batch)
             .ThenInclude(b => b.Medicine)
             .ToListAsync();
+#pragma warning restore CS8602
 
         if (branchId.HasValue)
             damages = damages.Where(d => d.BranchId == branchId.Value).ToList();
@@ -118,10 +120,12 @@ public class InventoryService : IInventoryService
     public async Task<IEnumerable<ExpiredRecordResponse>> GetExpiredAsync(int? branchId = null)
     {
         var query = await _unitOfWork.ExpiredRecords.GetAllAsync();
+#pragma warning disable CS8602
         var expired = await query
             .Include(e => e.Batch)
             .ThenInclude(b => b.Medicine)
             .ToListAsync();
+#pragma warning restore CS8602
 
         if (branchId.HasValue)
             expired = expired.Where(e => e.BranchId == branchId.Value).ToList();

@@ -1,9 +1,3 @@
-/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Application/obj/Debug/net8.0/MilkiDrugStore.Application.csproj.AssemblyReference.cache
-/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Application/obj/Debug/net8.0/MilkiDrugStore.Application.GeneratedMSBuildEditorConfig.editorconfig
-/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Application/obj/Debug/net8.0/MilkiDrugStore.Application.AssemblyInfoInputs.cache
-/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Application/obj/Debug/net8.0/MilkiDrugStore.Application.AssemblyInfo.cs
-/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Application/obj/Debug/net8.0/MilkiDrugStore.Application.csproj.CoreCompileInputs.cache
-/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Application/obj/Debug/net8.0/MilkiDrugStore.Application.sourcelink.json
 /home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Application/bin/Debug/net8.0/MilkiDrugStore.Application.deps.json
 /home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Application/bin/Debug/net8.0/MilkiDrugStore.Application.dll
 /home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Application/bin/Debug/net8.0/MilkiDrugStore.Application.pdb
@@ -11,6 +5,12 @@
 /home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Application/bin/Debug/net8.0/MilkiDrugStore.Persistence.dll
 /home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Application/bin/Debug/net8.0/MilkiDrugStore.Domain.pdb
 /home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Application/bin/Debug/net8.0/MilkiDrugStore.Persistence.pdb
+/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Application/obj/Debug/net8.0/MilkiDrugStore.Application.csproj.AssemblyReference.cache
+/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Application/obj/Debug/net8.0/MilkiDrugStore.Application.GeneratedMSBuildEditorConfig.editorconfig
+/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Application/obj/Debug/net8.0/MilkiDrugStore.Application.AssemblyInfoInputs.cache
+/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Application/obj/Debug/net8.0/MilkiDrugStore.Application.AssemblyInfo.cs
+/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Application/obj/Debug/net8.0/MilkiDrugStore.Application.csproj.CoreCompileInputs.cache
+/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Application/obj/Debug/net8.0/MilkiDrugStore.Application.sourcelink.json
 /home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Application/obj/Debug/net8.0/MilkiDrugStore.Application.csproj.CopyComplete
 /home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Application/obj/Debug/net8.0/MilkiDrugStore.Application.dll
 /home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Application/obj/Debug/net8.0/refint/MilkiDrugStore.Application.dll
