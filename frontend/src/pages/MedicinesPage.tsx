@@ -1,10 +1,11 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Plus, Search, Edit2, Trash2, Eye, Package, Pill, Layers, Info } from 'lucide-react';
-import { useAppStore, Category, UnitType } from '../store/appStore';
+import { useAppStore } from '../store/appStore';
 import { useThemeStore } from '../store/themeStore';
 import { Modal } from '../components/ui/Modal';
 import { Badge } from '../components/ui/Badge';
 import { formatDate, getExpiryStatus, getExpiryColor, getStockStatus, getStockColor } from '../utils/helpers';
+import { BUILT_IN_CATEGORIES, BUILT_IN_UNIT_TYPES, OTHER_OPTION } from '../lib/constants';
 import { Medicine } from '../types';
 
 export const MedicinesPage: React.FC = () => {
@@ -19,7 +20,7 @@ export const MedicinesPage: React.FC = () => {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedMedicine, setSelectedMedicine] = useState<Medicine | null>(null);
   const [formData, setFormData] = useState({
-    name: '', genericName: '', categoryId: '', unitTypeId: '', lowStockThreshold: 10,
+    name: '', genericName: '', categoryId: '', unitTypeId: '', lowStockThreshold: 10
   });
 
   // State for "Other" option
@@ -36,6 +37,36 @@ export const MedicinesPage: React.FC = () => {
     fetchCategories();
     fetchUnitTypes();
   }, [fetchMedicines, fetchCategories, fetchUnitTypes]);
+
+  const allCategories = useMemo(() => {
+    const customFromApi = categories || [];
+    const customOnly = customFromApi.filter(
+      (c) => !BUILT_IN_CATEGORIES.some((b) => b.toLowerCase() === c.name.toLowerCase()) && c.name.toLowerCase() !== 'other'
+    );
+
+    const builtInWithIds = BUILT_IN_CATEGORIES.map((name) => {
+      const existing = customFromApi.find((c) => c.name.toLowerCase() === name.toLowerCase());
+      return existing ? { id: existing.id, name } : { id: name, name };
+    });
+
+    const merged = [...builtInWithIds, ...customOnly].sort((a, b) => a.name.localeCompare(b.name));
+    merged.push(OTHER_OPTION);
+    return merged;
+  }, [categories]);
+
+  const allUnitTypes = useMemo(() => {
+    const customFromApi = unitTypes || [];
+    const customOnly = customFromApi.filter(
+      (u) => !BUILT_IN_UNIT_TYPES.some((b) => b.toLowerCase() === u.name.toLowerCase()) && u.name.toLowerCase() !== 'other'
+    );
+    const builtInWithIds = BUILT_IN_UNIT_TYPES.map((name) => {
+      const existing = customFromApi.find((u) => u.name.toLowerCase() === name.toLowerCase());
+      return existing ? { id: existing.id, name } : { id: name, name };
+    });
+    const merged = [...builtInWithIds, ...customOnly].sort((a, b) => a.name.localeCompare(b.name));
+    merged.push(OTHER_OPTION);
+    return merged;
+  }, [unitTypes]);
 
   const filteredMedicines = useMemo(() => {
     return (medicines || []).filter(m => {
@@ -84,44 +115,59 @@ export const MedicinesPage: React.FC = () => {
   };
 
   const handleSave = async () => {
-    const builtInOtherCategory = (categories || []).find(c => c.name === 'Other' && c.isBuiltIn);
-    const builtInOtherUnitType = (unitTypes || []).find(u => u.name === 'Other' && u.isBuiltIn);
-
     let categoryId: number;
-    let newCategoryName: string | null;
+    let newCategoryName: string | null = null;
 
-    if (showCustomCategory) {
+    if (formData.categoryId === 'other') {
       const trimmedName = customCategoryName.trim();
-      if (trimmedName) {
+      if (!trimmedName) {
+        alert('Please enter a name for the new category.');
+        return;
+      }
+      const existing = (categories || []).find(c => c.name.toLowerCase() === trimmedName.toLowerCase());
+      if (existing) {
+        categoryId = Number(existing.id);
+      } else {
         categoryId = 0;
         newCategoryName = trimmedName;
-      } else {
-        categoryId = builtInOtherCategory ? Number(builtInOtherCategory.id) : 0;
-        newCategoryName = null;
       }
     } else {
-      categoryId = Number(formData.categoryId);
-      newCategoryName = null;
+      const selectedId = formData.categoryId;
+      if (isNaN(Number(selectedId))) {
+        categoryId = 0;
+        newCategoryName = String(selectedId);
+      } else {
+        categoryId = Number(selectedId);
+      }
     }
 
     let unitTypeId: number;
-    let newUnitTypeName: string | null;
+    let newUnitTypeName: string | null = null;
 
-    if (showCustomUnitType) {
+    if (formData.unitTypeId === 'other') {
       const trimmedName = customUnitTypeName.trim();
-      if (trimmedName) {
+      if (!trimmedName) {
+        alert('Please enter a name for the new unit type.');
+        return;
+      }
+      const existing = (unitTypes || []).find(u => u.name.toLowerCase() === trimmedName.toLowerCase());
+      if (existing) {
+        unitTypeId = Number(existing.id);
+      } else {
         unitTypeId = 0;
         newUnitTypeName = trimmedName;
-      } else {
-        unitTypeId = builtInOtherUnitType ? Number(builtInOtherUnitType.id) : 0;
-        newUnitTypeName = null;
       }
     } else {
-      unitTypeId = Number(formData.unitTypeId);
-      newUnitTypeName = null;
+      const selectedId = formData.unitTypeId;
+      if (isNaN(Number(selectedId))) {
+        unitTypeId = 0;
+        newUnitTypeName = String(selectedId);
+      } else {
+        unitTypeId = Number(selectedId);
+      }
     }
 
-    if (!formData.name || (categoryId === 0 && !newCategoryName) || (unitTypeId === 0 && !newUnitTypeName)) {
+    if (!formData.name || !formData.categoryId) {
       alert('Please fill all required fields.');
       return;
     }
@@ -145,50 +191,56 @@ export const MedicinesPage: React.FC = () => {
   const handleUpdate = async () => {
     if (!selectedMedicine) return;
 
-    const builtInOtherCategory = (categories || []).find(c => c.name === 'Other' && c.isBuiltIn);
-    const builtInOtherUnitType = (unitTypes || []).find(u => u.name === 'Other' && u.isBuiltIn);
-
     let categoryId: number;
-    let newCategoryName: string | null;
+    let newCategoryName: string | null = null;
 
-    if (showCustomCategory) {
+    if (formData.categoryId === 'other') {
       const trimmedName = customCategoryName.trim();
-      if (trimmedName) {
+      if (!trimmedName) {
+        alert('Please enter a name for the new category.');
+        return;
+      }
+      const existing = (categories || []).find(c => c.name.toLowerCase() === trimmedName.toLowerCase());
+      if (existing) {
+        categoryId = Number(existing.id);
+      } else {
         categoryId = 0;
         newCategoryName = trimmedName;
-      } else {
-        categoryId = builtInOtherCategory ? Number(builtInOtherCategory.id) : 0;
-        newCategoryName = null;
       }
     } else {
-      categoryId = Number(formData.categoryId);
-      newCategoryName = null;
+      const selectedId = formData.categoryId;
+      if (isNaN(Number(selectedId))) {
+        categoryId = 0;
+        newCategoryName = String(selectedId);
+      } else {
+        categoryId = Number(selectedId);
+      }
     }
 
     let unitTypeId: number;
-    let newUnitTypeName: string | null;
+    let newUnitTypeName: string | null = null;
 
-    if (showCustomUnitType) {
+    if (formData.unitTypeId === 'other') {
       const trimmedName = customUnitTypeName.trim();
-      if (trimmedName) {
+      if (!trimmedName) {
+        alert('Please enter a name for the new unit type.');
+        return;
+      }
+      const existing = (unitTypes || []).find(u => u.name.toLowerCase() === trimmedName.toLowerCase());
+      if (existing) {
+        unitTypeId = Number(existing.id);
+      } else {
         unitTypeId = 0;
         newUnitTypeName = trimmedName;
-      } else {
-        unitTypeId = builtInOtherUnitType ? Number(builtInOtherUnitType.id) : 0;
-        newUnitTypeName = null;
       }
     } else {
-      unitTypeId = Number(formData.unitTypeId);
-      newUnitTypeName = null;
-    }
-
-    if (categoryId === 0 && !newCategoryName) {
-      alert('Please select or enter a category.');
-      return;
-    }
-    if (unitTypeId === 0 && !newUnitTypeName) {
-      alert('Please select or enter a unit type.');
-      return;
+      const selectedId = formData.unitTypeId;
+      if (isNaN(Number(selectedId))) {
+        unitTypeId = 0;
+        newUnitTypeName = String(selectedId);
+      } else {
+        unitTypeId = Number(selectedId);
+      }
     }
 
     const medicineDto = {
@@ -212,10 +264,6 @@ export const MedicinesPage: React.FC = () => {
       deleteMedicine(id);
     }
   };
-
-  const categoryList = useMemo(() => {
-    return (categories || []).map(c => ({ id: c.id, name: c.name }));
-  }, [categories]);
 
   const inputClass = `w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
     isDark 
@@ -272,7 +320,7 @@ export const MedicinesPage: React.FC = () => {
             </div>
             <div>
               <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Categories</p>
-              <p className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{categoryList.length}</p>
+              <p className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{allCategories.length - 1}</p>
             </div>
           </div>
         </div>
@@ -323,7 +371,7 @@ export const MedicinesPage: React.FC = () => {
             }`}
           >
             <option value="all">All Categories</option>
-            {categoryList.map(cat => (
+            {allCategories.filter(c => c.id !== 'other').map(cat => (
               <option key={cat.id} value={cat.id}>{cat.name}</option>
             ))}
           </select>
@@ -506,16 +554,15 @@ export const MedicinesPage: React.FC = () => {
                   <select
                     value={formData.categoryId}
                     onChange={e => {
-                      const selectedCategory = (categories || []).find(c => c.id === e.target.value);
-                      const isOther = selectedCategory?.name === 'Other';
+                      const isOther = e.target.value === 'other';
                       setShowCustomCategory(isOther);
                       if (!isOther) setCustomCategoryName('');
                       setFormData({ ...formData, categoryId: e.target.value });
                     }}
                     className={inputClass}
                   >
-                      <option value="">Select Category</option>
-                      {(categories || []).filter(c => c.name.toLowerCase().includes(categorySearch.toLowerCase())).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                      <option value="" disabled>Select Category</option>
+                      {allCategories.filter(c => c.name.toLowerCase().includes(categorySearch.toLowerCase())).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                     </select>
                 </div>
                 <div className={`transition-all duration-300 ${showCustomCategory ? 'opacity-100' : 'opacity-0 h-0 overflow-hidden'}`}>
@@ -541,16 +588,15 @@ export const MedicinesPage: React.FC = () => {
                    <select
                      value={String(formData.unitTypeId)}
                      onChange={e => {
-                       const selectedUnitType = (unitTypes || []).find(u => u.id === e.target.value);
-                       const isOther = selectedUnitType?.name === 'Other';
+                       const isOther = e.target.value === 'other';
                        setShowCustomUnitType(isOther);
                        if (!isOther) setCustomUnitTypeName('');
                        setFormData({ ...formData, unitTypeId: e.target.value });
                      }}
                      className={inputClass}
                     >
-                       <option value="">Select Unit Type</option>
-                       {(unitTypes || []).filter(u => u.name.toLowerCase().includes(unitTypeSearch.toLowerCase())).map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+                       <option value="" disabled>Select Unit Type</option>
+                       {(allUnitTypes || []).filter(u => u.name.toLowerCase().includes(unitTypeSearch.toLowerCase())).map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
                      </select>
                  </div>
                  <div className={`transition-all duration-300 ${showCustomUnitType ? 'opacity-100' : 'opacity-0 h-0 overflow-hidden'}`}>
@@ -656,16 +702,15 @@ export const MedicinesPage: React.FC = () => {
                      <select
                        value={formData.categoryId}
                        onChange={e => {
-                         const selectedCategory = (categories || []).find(c => c.id === e.target.value);
-                         const isOther = selectedCategory?.name === 'Other';
+                         const isOther = e.target.value === 'other';
                          setShowCustomCategory(isOther);
                          if (!isOther) setCustomCategoryName('');
                          setFormData({ ...formData, categoryId: e.target.value });
                        }}
                        className={inputClass}
                       >
-                         <option value="">Select Category</option>
-                         {(categories || []).filter(c => c.name.toLowerCase().includes(categorySearch.toLowerCase())).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                         <option value="" disabled>Select Category</option>
+                         {allCategories.filter(c => c.name.toLowerCase().includes(categorySearch.toLowerCase())).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                        </select>
                    </div>
                    <div className={`transition-all duration-300 ${showCustomCategory ? 'opacity-100' : 'opacity-0 h-0 overflow-hidden'}`}>
@@ -691,16 +736,15 @@ export const MedicinesPage: React.FC = () => {
                      <select
                        value={String(formData.unitTypeId)}
                        onChange={e => {
-                         const selectedUnitType = (unitTypes || []).find(u => u.id === e.target.value);
-                         const isOther = selectedUnitType?.name === 'Other';
+                         const isOther = e.target.value === 'other';
                          setShowCustomUnitType(isOther);
                          if (!isOther) setCustomUnitTypeName('');
                          setFormData({ ...formData, unitTypeId: e.target.value });
                        }}
                        className={inputClass}
                      >
-                       <option value="">Select Unit Type</option>
-                       {(unitTypes || []).filter(u => u.name.toLowerCase().includes(unitTypeSearch.toLowerCase())).map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+                       <option value="" disabled>Select Unit Type</option>
+                       {allUnitTypes.filter(u => u.name.toLowerCase().includes(unitTypeSearch.toLowerCase())).map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
                      </select>
                    </div>
                    <div className={`transition-all duration-300 ${showCustomUnitType ? 'opacity-100' : 'opacity-0 h-0 overflow-hidden'}`}>
