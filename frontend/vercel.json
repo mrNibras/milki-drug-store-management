@@ -7,7 +7,7 @@
       "source": "/(.*)",
       "headers": [
         { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "X-Frame-Options", "value": "DENY" },scm-history-item:/home/mrnibra/milki-drug-store-management?%7B%22repositoryId%22%3A%22scm0%22%2C%22historyItemId%22%3A%2207e614db7f611920c5205e9476567b60d309661a%22%2C%22historyItemParentId%22%3A%22d53cc6204e4b1262a3f53a4284af0bac0fdd9d4b%22%2C%22historyItemDisplayId%22%3A%2207e614d%22%7D
+        { "key": "X-Frame-Options", "value": "DENY" },
         { "key": "X-XSS-Protection", "value": "1; mode=block" }
       ]
     }

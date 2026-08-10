@@ -6,7 +6,6 @@ import { Modal } from '../components/ui/Modal';
 import { Badge } from '../components/ui/Badge';
 import { formatDate, getExpiryStatus, getExpiryColor, getStockStatus, getStockColor } from '../utils/helpers';
 import { BUILT_IN_CATEGORIES, BUILT_IN_UNIT_TYPES, OTHER_OPTION } from '../lib/constants';
-import { BUILT_IN_CATEGORIES, BUILT_IN_UNIT_TYPES, OTHER_OPTION } from '/src/lib/constants';
 import { Medicine } from '../types';
 
 export const MedicinesPage: React.FC = () => {
