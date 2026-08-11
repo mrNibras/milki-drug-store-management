@@ -5,7 +5,7 @@ using MilkiDrugStore.Application.Interfaces;
 namespace MilkiDrugStore.Api.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/audit-logs")]
 [Authorize(Roles = "Admin")]
 public class AuditLogsController : ControllerBase
 {
