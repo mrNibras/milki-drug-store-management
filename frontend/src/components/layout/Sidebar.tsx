@@ -2,10 +2,11 @@ import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
+  Building2,
+  ChevronDown,
   Pill,
   Package,
   ShoppingCart,
-  Truck,
   Users,
   BarChart3,
   Bell,
@@ -13,6 +14,7 @@ import {
   LogOut,
   ChevronLeft,
   Store,
+  Truck,
   ClipboardList,
   AlertTriangle,
   Sun,
@@ -161,7 +163,7 @@ export const Sidebar: React.FC = () => {
                 className="w-full flex items-center gap-2 px-3 py-2 bg-slate-700/50 hover:bg-slate-700 rounded-lg text-sm text-slate-300 transition-colors"
               >
                 <Building2 className="h-4 w-4 flex-shrink-0" />
-                <span className="truncate">{currentBranch?.name || 'Select Branch'}</span>
+                <span className="truncate">{currentBranch?.name || 'Select Branch'}</span> 
                 <ChevronDown className="h-4 w-4 ml-auto flex-shrink-0" />
               </button>
               {branchMenuOpen && (
