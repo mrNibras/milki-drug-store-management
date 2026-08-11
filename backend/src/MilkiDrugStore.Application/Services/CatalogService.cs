@@ -45,15 +45,15 @@ public class CatalogService : ICatalogService
         }
 
         var builtIns = MedicineCatalog.CategoriesWithoutOther
-            .Select(c => new CatalogOptionDto { Id = c.Id, Name = c.Name, IsBuiltIn = true });
+            .Select(c => new CatalogOptionDto { Id = c.Id, Name = c.Name, IsSystem = true });
 
         var customOptions = options
             .OrderBy(kv => kv.Key, StringComparer.OrdinalIgnoreCase)
-            .Select(kv => new CatalogOptionDto { Id = kv.Value, Name = kv.Key, IsBuiltIn = false });
+            .Select(kv => new CatalogOptionDto { Id = kv.Value, Name = kv.Key, IsSystem = false });
 
         var other = MedicineCatalog.Categories
             .Where(c => c.Name == MedicineCatalog.OtherLabel)
-            .Select(c => new CatalogOptionDto { Id = c.Id, Name = c.Name, IsBuiltIn = true });
+            .Select(c => new CatalogOptionDto { Id = c.Id, Name = c.Name, IsSystem = true });
 
         return builtIns
             .Concat(customOptions)
@@ -79,15 +79,15 @@ public class CatalogService : ICatalogService
         }
 
         var builtIns = MedicineCatalog.UnitTypesWithoutOther
-            .Select(u => new CatalogOptionDto { Id = u.Id, Name = u.Name, IsBuiltIn = true });
+            .Select(u => new CatalogOptionDto { Id = u.Id, Name = u.Name, IsSystem = true });
 
         var customOptions = options
             .OrderBy(kv => kv.Key, StringComparer.OrdinalIgnoreCase)
-            .Select(kv => new CatalogOptionDto { Id = kv.Value, Name = kv.Key, IsBuiltIn = false });
+            .Select(kv => new CatalogOptionDto { Id = kv.Value, Name = kv.Key, IsSystem = false });
 
         var other = MedicineCatalog.UnitTypes
             .Where(u => u.Name == MedicineCatalog.OtherLabel)
-            .Select(u => new CatalogOptionDto { Id = u.Id, Name = u.Name, IsBuiltIn = true });
+            .Select(u => new CatalogOptionDto { Id = u.Id, Name = u.Name, IsSystem = true });
 
         return builtIns
             .Concat(customOptions)
@@ -106,9 +106,14 @@ public class CatalogService : ICatalogService
         if (builtIn.HasValue)
             return builtIn.Value;
 
-        var existing = await _categoryRepo.FindAsync(c => c.Name.Equals(trimmed, StringComparison.OrdinalIgnoreCase));
-        if (existing.Any())
-            return existing.First().CategoryId;
+        var categories = (await _categoryRepo.GetAllAsync()).ToList();
+        var existing = categories.FirstOrDefault(c =>
+            c.IsActive &&
+            !string.IsNullOrWhiteSpace(c.Name) &&
+            c.Name.Trim().Equals(trimmed, StringComparison.OrdinalIgnoreCase));
+
+        if (existing is not null)
+            return existing.CategoryId;
 
         var category = new Category { Name = trimmed, IsActive = true, CreatedAt = DateTime.Now };
         await _categoryRepo.AddAsync(category);
@@ -130,9 +135,14 @@ public class CatalogService : ICatalogService
         if (builtIn.HasValue)
             return builtIn.Value;
 
-        var existing = await _unitTypeRepo.FindAsync(u => u.Name.Equals(trimmed, StringComparison.OrdinalIgnoreCase));
-        if (existing.Any())
-            return existing.First().UnitTypeId;
+        var unitTypes = (await _unitTypeRepo.GetAllAsync()).ToList();
+        var existing = unitTypes.FirstOrDefault(u =>
+            u.IsActive &&
+            !string.IsNullOrWhiteSpace(u.Name) &&
+            u.Name.Trim().Equals(trimmed, StringComparison.OrdinalIgnoreCase));
+
+        if (existing is not null)
+            return existing.UnitTypeId;
 
         var unitType = new UnitType { Name = trimmed, IsActive = true };
         await _unitTypeRepo.AddAsync(unitType);

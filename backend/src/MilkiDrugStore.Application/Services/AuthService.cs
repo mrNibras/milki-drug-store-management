@@ -56,6 +56,7 @@ public class AuthService : IAuthService
 
         var role = await _roleRepo.GetByIdAsync(user.RoleId);
         var branch = await _branchRepo.GetByIdAsync(user.BranchId);
+        user.Role = role;
         var token = _jwtTokenService.GenerateToken(user);
 
         var refreshToken = new RefreshToken

@@ -14,6 +14,7 @@ using MilkiDrugStore.Domain.Interfaces.Repositories;
 using MilkiDrugStore.Domain.Entities;
 using MilkiDrugStore.Infrastructure.Services;
 using MilkiDrugStore.Application.DTOs.Auth;
+using MilkiDrugStore.Application.DTOs.Medicine;
 using Xunit;
 
 namespace MilkiDrugStore.Tests.Integration;
@@ -84,6 +85,24 @@ public class ApiIntegrationTests : IAsyncLifetime
                 Location = "Test Location", 
                 IsActive = true, 
                 CreatedAt = DateTime.Now 
+            });
+            await db.SaveChangesAsync();
+        }
+
+        if (!await db.Users.AnyAsync())
+        {
+            var adminRole = await db.Roles.SingleAsync(r => r.Name == "Admin");
+            var branch = await db.Branches.FirstAsync();
+            db.Users.Add(new User
+            {
+                FullName = "Admin User",
+                Email = "admin@milki.com",
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin123"),
+                RoleId = adminRole.RoleId,
+                BranchId = branch.BranchId,
+                IsApproved = true,
+                IsActive = true,
+                CreatedAt = DateTime.Now
             });
             await db.SaveChangesAsync();
         }
@@ -189,30 +208,90 @@ public class ApiIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task GetCategories_Should_Return_BuiltIn_And_Custom()
     {
-        var request = new HttpRequestMessage(HttpMethod.Get, "/api/lookups/categories");
+        var request = new HttpRequestMessage(HttpMethod.Get, "/api/catalog/categories");
         request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _authToken);
         var response = await _client.SendAsync(request);
         var content = await response.Content.ReadAsStringAsync();
-        
+
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.NotEmpty(content);
         Assert.Contains("Antibiotics", content);
         Assert.Contains("Antivirals", content);
         Assert.Contains("Other", content);
+        Assert.Contains("isSystem", content);
+        Assert.Contains("\"isSystem\":true", content);
     }
 
     [Fact]
     public async Task GetUnitTypes_Should_Return_BuiltIn_And_Custom()
     {
-        var request = new HttpRequestMessage(HttpMethod.Get, "/api/lookups/unit-types");
+        var request = new HttpRequestMessage(HttpMethod.Get, "/api/catalog/unit-types");
         request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _authToken);
         var response = await _client.SendAsync(request);
         var content = await response.Content.ReadAsStringAsync();
-        
+
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.NotEmpty(content);
         Assert.Contains("Tablet", content);
         Assert.Contains("Capsule", content);
         Assert.Contains("Other", content);
+        Assert.Contains("isSystem", content);
+        Assert.Contains("\"isSystem\":true", content);
+    }
+
+    [Fact]
+    public async Task CustomCategoryAndUnitType_Should_Persist_And_Not_Duplicate()
+    {
+        var create = new CreateMedicineRequest
+        {
+            BrandName = "Test Supplements",
+            GenericName = "Multivitamin",
+            CategoryId = 0,
+            NewCategoryName = "  Supplements  ",
+            UnitTypeId = 0,
+            NewUnitTypeName = "  Sachet  ",
+            ReorderLevel = 5
+        };
+        var createResponse = await _client.PostAsJsonAsync("/api/medicines", create);
+        if (createResponse.StatusCode != HttpStatusCode.OK)
+        {
+            var dbg = await createResponse.Content.ReadAsStringAsync();
+            var parts = _authToken.Split('.');
+            var payload = parts[1];
+            payload += new string('=', (4 - payload.Length % 4) % 4);
+            var decoded = System.Text.Encoding.UTF8.GetString(System.Convert.FromBase64String(payload));
+            var getMedicines = await _client.GetAsync("/api/medicines");
+            var getSettings = await _client.GetAsync("/api/settings");
+            throw new Exception($"POST /api/medicines failed with {createResponse.StatusCode}: {dbg} | GET /api/medicines -> {getMedicines.StatusCode} | GET /api/settings -> {getSettings.StatusCode} | claims: {decoded}");
+        }
+
+        var categoriesResponse = await _client.GetAsync("/api/catalog/categories");
+        var categoriesContent = await categoriesResponse.Content.ReadAsStringAsync();
+        Assert.Equal(HttpStatusCode.OK, categoriesResponse.StatusCode);
+        Assert.Contains("Supplements", categoriesContent);
+
+        var unitTypesResponse = await _client.GetAsync("/api/catalog/unit-types");
+        var unitTypesContent = await unitTypesResponse.Content.ReadAsStringAsync();
+        Assert.Equal(HttpStatusCode.OK, unitTypesResponse.StatusCode);
+        Assert.Contains("Sachet", unitTypesContent);
+
+        var duplicate = new CreateMedicineRequest
+        {
+            BrandName = "Test Supplements Duplicate",
+            GenericName = "Multivitamin 2",
+            CategoryId = 0,
+            NewCategoryName = "SUPPLEMENTS",
+            UnitTypeId = 0,
+            NewUnitTypeName = "sachet",
+            ReorderLevel = 5
+        };
+        var duplicateResponse = await _client.PostAsJsonAsync("/api/medicines", duplicate);
+        Assert.Equal(HttpStatusCode.OK, duplicateResponse.StatusCode);
+
+        var categoriesAfter = await (await _client.GetAsync("/api/catalog/categories")).Content.ReadAsStringAsync();
+        Assert.Equal(1, System.Text.RegularExpressions.Regex.Matches(categoriesAfter, "Supplements").Count);
+
+        var unitTypesAfter = await (await _client.GetAsync("/api/catalog/unit-types")).Content.ReadAsStringAsync();
+        Assert.Equal(1, System.Text.RegularExpressions.Regex.Matches(unitTypesAfter, "Sachet").Count);
     }
 }

@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MilkiDrugStore.Application.DTOs.Catalog;
 using MilkiDrugStore.Application.Interfaces;
@@ -6,20 +5,20 @@ using MilkiDrugStore.Application.Interfaces;
 namespace MilkiDrugStore.Api.Controllers;
 
 [ApiController]
-[Route("api/lookups")]
-public class LookupsController : ControllerBase
+[Route("api/catalog")]
+public class CatalogController : ControllerBase
 {
     private readonly ICatalogService _catalog;
 
-    public LookupsController(ICatalogService catalog)
+    public CatalogController(ICatalogService catalog)
     {
         _catalog = catalog;
     }
 
     /// <summary>
-    /// Returns medicine/cosmetic categories: built-in categories first
-    /// (in their fixed order, "Other" last), then user-defined custom
-    /// categories sorted alphabetically.
+    /// Returns medicine/cosmetic categories: built-in (system) categories first
+    /// (in their fixed order, "Other" last), then user-defined custom categories
+    /// sorted alphabetically.
     /// </summary>
     [HttpGet("categories")]
     public async Task<IActionResult> GetCategories()
@@ -29,7 +28,7 @@ public class LookupsController : ControllerBase
     }
 
     /// <summary>
-    /// Returns unit types: built-in unit types first (in their fixed order,
+    /// Returns unit types: built-in (system) unit types first (in their fixed order,
     /// "Other" last), then user-defined custom unit types sorted alphabetically.
     /// </summary>
     [HttpGet("unit-types")]

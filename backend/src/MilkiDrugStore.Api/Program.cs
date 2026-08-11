@@ -147,7 +147,10 @@ builder.Services.AddAuthentication(options =>
         {
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(
-                System.Text.Encoding.UTF8.GetBytes(jwtSettings.Secret)),
+                System.Text.Encoding.UTF8.GetBytes(jwtSettings.Secret))
+            {
+                KeyId = "milki-signing-key"
+            },
             ValidateIssuer = !string.IsNullOrEmpty(jwtSettings.Issuer),
             ValidateAudience = !string.IsNullOrEmpty(jwtSettings.Audience),
             ValidIssuer = jwtSettings.Issuer,
@@ -155,6 +158,14 @@ builder.Services.AddAuthentication(options =>
             ClockSkew = TimeSpan.Zero,
             RoleClaimType = System.Security.Claims.ClaimTypes.Role,
             NameClaimType = System.Security.Claims.ClaimTypes.NameIdentifier
+        };
+        options.Events = new Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerEvents
+        {
+            OnAuthenticationFailed = context =>
+            {
+                Console.WriteLine($"[AUTH-DEBUG] Token validation failed: {context.Exception}");
+                return System.Threading.Tasks.Task.CompletedTask;
+            }
         };
     });
 
