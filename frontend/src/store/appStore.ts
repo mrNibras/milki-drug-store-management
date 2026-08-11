@@ -432,7 +432,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       set({ categories: (Array.isArray(res.data) ? res.data : []).map(c => ({
         id: String(c.id),
         name: c.name,
-        isBuiltIn: c.isBuiltIn,
+        isSystem: c.isSystem,
       })) });
     } catch (e) {
       console.error('Failed to fetch categories', e);
@@ -446,7 +446,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       set({ unitTypes: (Array.isArray(res.data) ? res.data : []).map(c => ({
         id: String(c.id),
         name: c.name,
-        isBuiltIn: c.isBuiltIn,
+        isSystem: c.isSystem,
       })) });
       set({ loading: false });
     } catch (e: any) {

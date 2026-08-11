@@ -29,7 +29,7 @@ export interface UnitType {
 export interface CatalogOption {
   id: string;
   name: string;
-  isBuiltIn: boolean;
+  isSystem: boolean;
 }
 
 export interface Medicine {

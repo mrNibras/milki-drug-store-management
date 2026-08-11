@@ -158,7 +158,7 @@ export interface UnitType {
 export interface CatalogOptionDto {
   id: number;
   name: string;
-  isBuiltIn: boolean;
+  isSystem: boolean;
 }
 
 export interface MedicineResponse {

@@ -46,10 +46,10 @@ public class AuditLogService : IAuditLogService
 
     public async Task<IEnumerable<AuditLogDto>> GetAllAsync(int? branchId = null)
     {
-        var query = _auditLogRepo.GetAllQueryable();
+        var query = await _auditLogRepo.GetAllAsync();
         if (branchId.HasValue)
             query = query.Where(al => al.BranchId == branchId.Value);
-        var logs = await query // The query is now executed here
+        var logs = await query
             .OrderByDescending(al => al.CreatedAt)
             .Include(al => al.User)
             .ToListAsync();
