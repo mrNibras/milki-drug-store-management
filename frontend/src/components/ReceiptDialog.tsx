@@ -17,7 +17,7 @@ export const ReceiptDialog: React.FC<ReceiptDialogProps> = ({ open, onOpenChange
   const { theme } = useThemeStore();
   const isDark = theme === 'dark';
   const { settings } = useAppStore();
-
+ 
   const handlePrint = () => {
     window.print();
   };

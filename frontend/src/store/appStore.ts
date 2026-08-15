@@ -516,6 +516,16 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
   },
 
+  fetchSuppliers: async () => {
+    set({ loading: true, error: null });
+    try {
+      const res = await api.get<SupplierResponse[]>('/suppliers');
+      set({ suppliers: (Array.isArray(res.data) ? res.data : []).map(toSupplier), loading: false });
+    } catch (e: any) {
+      set({ error: e.response?.data?.message || 'Failed to fetch suppliers', loading: false });
+    }
+  },
+
   addSupplier: async (supplier) => {
     set({ loading: true, error: null });
     try {
