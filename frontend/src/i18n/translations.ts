@@ -242,6 +242,8 @@ export interface Translations {
     addUser: string;
     editUser: string;
     status: string;
+    admin: string;
+    pharmacist: string;
   };
   audit: {
     title: string;
@@ -488,6 +490,8 @@ export const translations: Record<Language, Translations> = {
       addUser: 'Add User',
       editUser: 'Edit User',
       status: 'Status',
+      admin: 'Admin',
+      pharmacist: 'Pharmacist',
     },
     audit: {
       title: 'Audit Logs',
@@ -732,6 +736,8 @@ export const translations: Record<Language, Translations> = {
       addUser: 'ተጠቃሚ አክል',
       editUser: 'ተጠቃሚ አርትዕ',
       status: 'ሁኔታ',
+      admin: 'አስተዳዳሪ',
+      pharmacist: 'ፋርማሲስት',
     },
     audit: {
       title: 'የኦዲት ምዘና',

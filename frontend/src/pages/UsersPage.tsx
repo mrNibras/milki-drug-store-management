@@ -8,7 +8,7 @@ import { Modal } from '../components/ui/Modal';
 import { formatDate, generateId } from '../utils/helpers';
 import { User } from '../types';
 
-export const UsersPage: React.FC = () => {
+const UsersPage: React.FC = () => {
   const { users, fetchUsers, addUser, updateUser, deleteUser, toggleUserActive, currentUser, loading } = useAppStore();
   const { theme } = useThemeStore();
   const isDark = theme === 'dark';
@@ -60,6 +60,12 @@ export const UsersPage: React.FC = () => {
     if (!formData.fullName || !formData.email) return;
     if (!validatePassword()) return;
 
+    // Security check: Only Admins can create other Admins
+    if (currentUser?.role !== 'admin' && formData.role === 'admin') {
+      // Ideally, show a toast notification here
+      return;
+    }
+
     addUser({
       fullName: formData.fullName,
       email: formData.email,
@@ -85,6 +91,13 @@ export const UsersPage: React.FC = () => {
 
   const handleUpdateUser = () => {
     if (!selectedUser) return;
+
+    // Security check: Only Admins can assign Admin role
+    if (currentUser?.role !== 'admin' && formData.role === 'admin' && selectedUser.role !== 'admin') {
+      // Ideally, show a toast notification here
+      return;
+    }
+
     updateUser(selectedUser.id, {
       fullName: formData.fullName,
       email: formData.email,
@@ -118,6 +131,11 @@ export const UsersPage: React.FC = () => {
       setIsToggling(null);
     }
   };
+
+  if (currentUser?.role !== 'admin') {
+    // In a real app, you'd use a router to redirect or show a proper 403 component.
+    return <div className={`p-6 rounded-lg ${isDark ? 'bg-gray-800 text-red-400' : 'bg-red-50 text-red-700'}`}>Access Denied. You must be an administrator to view this page.</div>;
+  }
 
   const inputClass = `w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
     isDark 
@@ -621,3 +639,5 @@ export const UsersPage: React.FC = () => {
     </div>
   );
 };
+
+export default UsersPage;

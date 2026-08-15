@@ -133,7 +133,7 @@ builder.Services.AddAutoMapper(typeof(MappingProfile));
 builder.Services.AddApplicationServices();
 
 // JWT with strongly typed configuration.
-var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>() 
+var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>()
                   ?? new JwtSettings();
 
 builder.Services.AddAuthentication(options =>
@@ -171,10 +171,12 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization(options =>
 {
+    options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
+    options.AddPolicy("PharmacistAllowed", policy => policy.RequireRole("Admin", "Pharmacist"));
 });
 
 // CORS from configuration.
-var corsSettings = builder.Configuration.GetSection("Cors").Get<CorsSettings>() 
+var corsSettings = builder.Configuration.GetSection("Cors").Get<CorsSettings>()
                    ?? new CorsSettings();
 
 if (corsSettings.AllowedOrigins.Count > 0)
@@ -238,24 +240,24 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-    
+
     try
     {
         var contextType = db.GetType().FullName;
         var provider = db.Database.ProviderName ?? "Unknown";
-        
+
         logger.LogInformation("=== Database Initialization Starting ===");
         logger.LogInformation("Context Type: {ContextType}", contextType);
         logger.LogInformation("Database Provider: {Provider}", provider);
         logger.LogInformation("Migration Assembly: MilkiDrugStore.Persistence");
-        logger.LogInformation("Connection String: {ConnectionString}", 
+        logger.LogInformation("Connection String: {ConnectionString}",
             MaskConnectionString(connectionString));
-        
+
         var pendingMigrations = db.Database.GetPendingMigrations();
         var pendingCount = pendingMigrations.Count();
-        
+
         logger.LogInformation("Pending Migrations Count: {PendingCount}", pendingCount);
-        
+
         if (pendingCount > 0)
         {
             logger.LogInformation("Applying {Count} pending migration(s)...", pendingCount);
@@ -264,14 +266,14 @@ using (var scope = app.Services.CreateScope())
                 logger.LogInformation("  Applying Migration: {MigrationId}", migrationId);
             }
         }
-        
+
         logger.LogInformation("Starting database migration...");
         db.Database.Migrate();
         logger.LogInformation("Database migration completed successfully.");
-        
+
         var appliedMigrations = db.Database.GetAppliedMigrations();
         logger.LogInformation("Total Applied Migrations: {Count}", appliedMigrations.Count());
-        
+
         logger.LogInformation("Starting database seeding...");
         await DbSeeder.SeedAsync(db, logger);
         logger.LogInformation("Database seeded successfully.");
@@ -290,7 +292,7 @@ static string MaskConnectionString(string? connectionString)
 {
     if (string.IsNullOrEmpty(connectionString))
         return "Not configured";
-    
+
     return connectionString.Contains("Password=", StringComparison.OrdinalIgnoreCase) ||
            connectionString.Contains("User Id=", StringComparison.OrdinalIgnoreCase) ||
            connectionString.Contains("UserID=", StringComparison.OrdinalIgnoreCase)
@@ -373,7 +375,7 @@ if (!string.IsNullOrEmpty(httpsPort))
 {
     startupLogger.LogInformation("HTTPS port: {HttpsPort}", httpsPort);
 }
-startupLogger.LogInformation("Application starting in {Environment} mode on port {Port}", 
+startupLogger.LogInformation("Application starting in {Environment} mode on port {Port}",
     app.Environment.EnvironmentName, port);
 
 app.Run();
