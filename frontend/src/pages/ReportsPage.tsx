@@ -7,12 +7,12 @@ import { Button } from '../components/ui/Button';
 type ReportTab = 'sales' | 'mostSelling' | 'inventory' | 'profit' | 'suppliers' | 'staff';
 
 // Lazy load the report components
-const SalesReport = lazy(() => import('./reports/SalesReport'));
-const MostSellingReport = lazy(() => import('./reports/MostSellingReport'));
-const InventoryReport = lazy(() => import('./reports/InventoryReport'));
-const ProfitReport = lazy(() => import('./reports/ProfitReport'));
-const SupplierReport = lazy(() => import('./reports/SupplierReport'));
-const StaffReport = lazy(() => import('./reports/StaffReport'));
+const SalesReport = lazy(() => import('./SalesReport'));
+const MostSellingReport = lazy(() => import('./MostSellingReport'));
+const InventoryReport = lazy(() => import('./InventoryReport'));
+const ProfitReport = lazy(() => import('./ProfitReport'));
+const SupplierReport = lazy(() => import('./SupplierReport'));
+const StaffReport = lazy(() => import('./StaffReport'));
 
 const reportComponents: Record<ReportTab, React.LazyExoticComponent<React.FC<{}>>> = {
   sales: SalesReport,
