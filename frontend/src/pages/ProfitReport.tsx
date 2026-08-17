@@ -1,8 +1,8 @@
 import React, { useMemo, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { useAppStore } from '../../store/appStore';
-import { useThemeStore } from '../../store/themeStore';
-import { formatCurrency } from '../../utils/helpers';
+import { useAppStore } from '../store/appStore';
+import { useThemeStore } from '../store/themeStore';
+import { formatCurrency } from '../utils/helpers';
 
 const ProfitReport: React.FC = () => {
   const { sales, fetchSales, loading } = useAppStore();

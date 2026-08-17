@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Shield, UserCheck, UserX, Plus, Edit2, Trash2, Mail } from 'lucide-react';
+import { Users, Shield, UserCheck, UserX, Plus, Edit2, Trash2, Mail, CheckCircle, AlertCircle } from 'lucide-react';
 import { useAppStore } from '../store/appStore';
 import { useThemeStore } from '../store/themeStore';
 import { Button } from '../components/ui/Button';
@@ -7,6 +7,7 @@ import { Badge } from '../components/ui/Badge';
 import { Modal } from '../components/ui/Modal';
 import { formatDate, generateId } from '../utils/helpers';
 import { User } from '../types';
+import axios from 'axios';
 
 const UsersPage: React.FC = () => {
   const { users, fetchUsers, addUser, updateUser, deleteUser, toggleUserActive, currentUser, loading } = useAppStore();
@@ -30,6 +31,8 @@ const UsersPage: React.FC = () => {
   });
   const [passwordError, setPasswordError] = useState('');
   const [isToggling, setIsToggling] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formMessage, setFormMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const activeUsers = (users || []).filter(u => u.isActive).length;
   const inactiveUsers = (users || []).filter(u => !u.isActive).length;
@@ -37,6 +40,7 @@ const UsersPage: React.FC = () => {
   const resetForm = () => {
     setFormData({ fullName: '', email: '', role: 'pharmacist', password: '', confirmPassword: '', isActive: true });
     setPasswordError('');
+    setFormMessage(null);
   };
 
   const validatePassword = () => {
@@ -56,24 +60,57 @@ const UsersPage: React.FC = () => {
     return true;
   };
 
-  const handleAddUser = () => {
-    if (!formData.fullName || !formData.email) return;
+  const handleAddUser = async () => {
+    if (!formData.fullName || !formData.email) {
+      setFormMessage({ type: 'error', text: 'Full name and email are required.' });
+      return;
+    }
     if (!validatePassword()) return;
 
     // Security check: Only Admins can create other Admins
     if (currentUser?.role !== 'admin' && formData.role === 'admin') {
-      // Ideally, show a toast notification here
+      setFormMessage({ type: 'error', text: 'You do not have permission to create admin users.' });
       return;
     }
 
-    addUser({
-      fullName: formData.fullName,
-      email: formData.email,
-      role: formData.role,
-      password: formData.password,
-    } as any);
-    setShowAddModal(false);
-    resetForm();
+    setIsSubmitting(true);
+    setFormMessage(null);
+    try {
+      await addUser({
+        fullName: formData.fullName,
+        email: formData.email,
+        role: formData.role,
+        password: formData.password,
+      } as any);
+      setFormMessage({ type: 'success', text: 'User created successfully!' });
+      await fetchUsers();
+      setTimeout(() => {
+        setShowAddModal(false);
+        resetForm();
+      }, 1000);
+    } catch (error: any) {
+      let errorMessage = 'Failed to create user.';
+      if (axios.isAxiosError(error)) {
+        const status = error.response?.status;
+        const data = error.response?.data;
+        if (status === 400) {
+          errorMessage = data?.message || 'Validation failed. Please check your input.';
+        } else if (status === 401) {
+          errorMessage = 'Your session has expired. Please log in again.';
+        } else if (status === 403) {
+          errorMessage = 'You do not have permission to perform this action.';
+        } else if (status === 409) {
+          errorMessage = 'A user with this email already exists.';
+        } else if (status === 500) {
+          errorMessage = 'A server error occurred. Please try again later.';
+        } else if (data?.message) {
+          errorMessage = data.message;
+        }
+      }
+      setFormMessage({ type: 'error', text: errorMessage });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleEditClick = (user: User) => {
@@ -89,24 +126,41 @@ const UsersPage: React.FC = () => {
     setShowEditModal(true);
   };
 
-  const handleUpdateUser = () => {
+  const handleUpdateUser = async () => {
     if (!selectedUser) return;
 
     // Security check: Only Admins can assign Admin role
     if (currentUser?.role !== 'admin' && formData.role === 'admin' && selectedUser.role !== 'admin') {
-      // Ideally, show a toast notification here
+      setFormMessage({ type: 'error', text: 'You do not have permission to assign admin role.' });
       return;
     }
 
-    updateUser(selectedUser.id, {
-      fullName: formData.fullName,
-      email: formData.email,
-      role: formData.role,
-      isActive: formData.isActive,
-    });
-    setShowEditModal(false);
-    setSelectedUser(null);
-    resetForm();
+    setIsSubmitting(true);
+    setFormMessage(null);
+    try {
+      await updateUser(selectedUser.id, {
+        fullName: formData.fullName,
+        email: formData.email,
+        role: formData.role,
+        isActive: formData.isActive,
+      });
+      setFormMessage({ type: 'success', text: 'User updated successfully!' });
+      await fetchUsers();
+      setTimeout(() => {
+        setShowEditModal(false);
+        setSelectedUser(null);
+        resetForm();
+      }, 1000);
+    } catch (error: any) {
+      let errorMessage = 'Failed to update user.';
+      if (axios.isAxiosError(error)) {
+        const data = error.response?.data;
+        if (data?.message) errorMessage = data.message;
+      }
+      setFormMessage({ type: 'error', text: errorMessage });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleDeleteClick = (user: User) => {
@@ -114,11 +168,24 @@ const UsersPage: React.FC = () => {
     setShowDeleteModal(true);
   };
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (!selectedUser) return;
-    deleteUser(selectedUser.id);
-    setShowDeleteModal(false);
-    setSelectedUser(null);
+    setIsSubmitting(true);
+    try {
+      await deleteUser(selectedUser.id);
+      await fetchUsers();
+      setShowDeleteModal(false);
+      setSelectedUser(null);
+    } catch (error: any) {
+      let errorMessage = 'Failed to delete user.';
+      if (axios.isAxiosError(error)) {
+        const data = error.response?.data;
+        if (data?.message) errorMessage = data.message;
+      }
+      setFormMessage({ type: 'error', text: errorMessage });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleToggleActive = async (userId: string) => {
@@ -422,22 +489,55 @@ const UsersPage: React.FC = () => {
             </p>
           </div>
 
+          {/* Success/Error Message */}
+          {formMessage && (
+            <div className={`rounded-lg p-4 flex items-center gap-3 ${
+              formMessage.type === 'success'
+                ? isDark ? 'bg-green-900/20 border border-green-800' : 'bg-green-50 border border-green-200'
+                : isDark ? 'bg-red-900/20 border border-red-800' : 'bg-red-50 border border-red-200'
+            }`}>
+              {formMessage.type === 'success' ? (
+                <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
+              ) : (
+                <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0" />
+              )}
+              <p className={`text-sm ${
+                formMessage.type === 'success'
+                  ? isDark ? 'text-green-300' : 'text-green-700'
+                  : isDark ? 'text-red-300' : 'text-red-700'
+              }`}>{formMessage.text}</p>
+            </div>
+          )}
+
           {/* Actions */}
           <div className={`flex justify-end gap-3 pt-4 border-t ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
             <button
-              onClick={() => setShowAddModal(false)}
+              onClick={() => { setShowAddModal(false); resetForm(); }}
+              disabled={isSubmitting}
               className={`px-5 py-2.5 rounded-xl text-sm font-medium transition-colors ${
                 isDark ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
+              } ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               Cancel
             </button>
             <button
               onClick={handleAddUser}
-              className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-sm font-medium transition-all shadow-lg shadow-blue-200 dark:shadow-blue-900/30 flex items-center gap-2"
+              disabled={isSubmitting}
+              className={`px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-sm font-medium transition-all shadow-lg shadow-blue-200 dark:shadow-blue-900/30 flex items-center gap-2 ${
+                isSubmitting ? 'opacity-70 cursor-not-allowed' : ''
+              }`}
             >
-              <Plus className="h-4 w-4" />
-              Add User
+              {isSubmitting ? (
+                <>
+                  <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Creating...
+                </>
+              ) : (
+                <>
+                  <Plus className="h-4 w-4" />
+                  Add User
+                </>
+              )}
             </button>
           </div>
         </div>
@@ -562,22 +662,55 @@ const UsersPage: React.FC = () => {
               </div>
             </div>
 
+            {/* Success/Error Message */}
+            {formMessage && (
+              <div className={`rounded-lg p-4 flex items-center gap-3 ${
+                formMessage.type === 'success'
+                  ? isDark ? 'bg-green-900/20 border border-green-800' : 'bg-green-50 border border-green-200'
+                  : isDark ? 'bg-red-900/20 border border-red-800' : 'bg-red-50 border border-red-200'
+              }`}>
+                {formMessage.type === 'success' ? (
+                  <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
+                ) : (
+                  <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0" />
+                )}
+                <p className={`text-sm ${
+                  formMessage.type === 'success'
+                    ? isDark ? 'text-green-300' : 'text-green-700'
+                    : isDark ? 'text-red-300' : 'text-red-700'
+                }`}>{formMessage.text}</p>
+              </div>
+            )}
+
             {/* Actions */}
             <div className={`flex justify-end gap-3 pt-4 border-t ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
               <button
-                onClick={() => setShowEditModal(false)}
+                onClick={() => { setShowEditModal(false); setSelectedUser(null); resetForm(); }}
+                disabled={isSubmitting}
                 className={`px-5 py-2.5 rounded-xl text-sm font-medium transition-colors ${
                   isDark ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
+                } ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 Cancel
               </button>
               <button
                 onClick={handleUpdateUser}
-                className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-sm font-medium transition-all shadow-lg shadow-blue-200 dark:shadow-blue-900/30 flex items-center gap-2"
+                disabled={isSubmitting}
+                className={`px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-sm font-medium transition-all shadow-lg shadow-blue-200 dark:shadow-blue-900/30 flex items-center gap-2 ${
+                  isSubmitting ? 'opacity-70 cursor-not-allowed' : ''
+                }`}
               >
-                <Edit2 className="h-4 w-4" />
-                Update User
+                {isSubmitting ? (
+                  <>
+                    <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Updating...
+                  </>
+                ) : (
+                  <>
+                    <Edit2 className="h-4 w-4" />
+                    Update User
+                  </>
+                )}
               </button>
             </div>
           </div>
@@ -616,21 +749,44 @@ const UsersPage: React.FC = () => {
               </div>
             </div>
 
+            {/* Error Message */}
+            {formMessage && formMessage.type === 'error' && (
+              <div className={`rounded-lg p-4 flex items-center gap-3 ${
+                isDark ? 'bg-red-900/20 border border-red-800' : 'bg-red-50 border border-red-200'
+              }`}>
+                <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0" />
+                <p className={`text-sm ${isDark ? 'text-red-300' : 'text-red-700'}`}>{formMessage.text}</p>
+              </div>
+            )}
+
             <div className={`flex justify-end gap-3 pt-4 border-t ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
               <button
-                onClick={() => setShowDeleteModal(false)}
+                onClick={() => { setShowDeleteModal(false); setSelectedUser(null); setFormMessage(null); }}
+                disabled={isSubmitting}
                 className={`px-5 py-2.5 rounded-xl text-sm font-medium transition-colors ${
                   isDark ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
+                } ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 Cancel
               </button>
               <button
                 onClick={handleConfirmDelete}
-                className="px-5 py-2.5 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white rounded-xl text-sm font-medium transition-all shadow-lg shadow-red-200 dark:shadow-red-900/30 flex items-center gap-2"
+                disabled={isSubmitting}
+                className={`px-5 py-2.5 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white rounded-xl text-sm font-medium transition-all shadow-lg shadow-red-200 dark:shadow-red-900/30 flex items-center gap-2 ${
+                  isSubmitting ? 'opacity-70 cursor-not-allowed' : ''
+                }`}
               >
-                <Trash2 className="h-4 w-4" />
-                Delete User
+                {isSubmitting ? (
+                  <>
+                    <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="h-4 w-4" />
+                    Delete User
+                  </>
+                )}
               </button>
             </div>
           </div>

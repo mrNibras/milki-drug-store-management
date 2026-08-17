@@ -1,8 +1,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { useAppStore } from '../../store/appStore';
-import { useThemeStore } from '../../store/themeStore';
-import { formatCurrency, formatDate } from '../../utils/helpers';
+import { useAppStore } from '../store/appStore';
+import { useThemeStore } from '../store/themeStore';
+import { formatCurrency, formatDate } from '../utils/helpers';
 import { BarChart3 } from 'lucide-react';
 
 const SalesReport: React.FC = () => {

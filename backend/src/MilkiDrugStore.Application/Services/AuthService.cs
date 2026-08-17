@@ -142,9 +142,28 @@ public class AuthService : IAuthService
         if (string.IsNullOrWhiteSpace(request.Password))
             throw new Exception("Password is required");
 
+        if (string.IsNullOrWhiteSpace(request.FullName))
+            throw new Exception("Full name is required");
+
+        if (string.IsNullOrWhiteSpace(request.Email))
+            throw new Exception("Email is required");
+
         var existing = (await _userRepo.FindAsync(u => u.Email == request.Email)).FirstOrDefault();
         if (existing != null)
-            throw new Exception("Email already registered");
+            throw new Exception("A user with this email already exists.");
+
+        var branchId = request.BranchId;
+        if (branchId <= 0)
+        {
+            var defaultBranch = (await _branchRepo.GetAllAsync()).FirstOrDefault();
+            if (defaultBranch == null)
+                throw new Exception("No branch available. Please create a branch first.");
+            branchId = defaultBranch.BranchId;
+        }
+
+        var role = await _roleRepo.GetByIdAsync(request.RoleId);
+        if (role == null)
+            throw new Exception("Invalid role specified.");
 
         var user = new User
         {
@@ -152,7 +171,7 @@ public class AuthService : IAuthService
             Email = request.Email,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
             RoleId = request.RoleId,
-            BranchId = request.BranchId,
+            BranchId = branchId,
             IsApproved = true,
             IsActive = true
         };
@@ -160,7 +179,7 @@ public class AuthService : IAuthService
         await _userRepo.AddAsync(user);
         await _unitOfWork.SaveChangesAsync();
 
-        await _auditLog.LogAsync(user.UserId, $"Created user: {user.FullName}", "Users", user.UserId);
+        await _auditLog.LogAsync(user.UserId, $"Created user: {user.FullName} with role {role.Name}", "Users", user.UserId);
 
         return "User created successfully.";
     }

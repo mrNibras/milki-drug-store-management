@@ -1,8 +1,8 @@
 import React, { useMemo, useEffect } from 'react';
 import { Award } from 'lucide-react';
-import { useAppStore } from '../../store/appStore';
-import { useThemeStore } from '../../store/themeStore';
-import { formatCurrency } from '../../utils/helpers';
+import { useAppStore } from '../store/appStore';
+import { useThemeStore } from '../store/themeStore';
+import { formatCurrency } from '../utils/helpers';
 
 const MostSellingReport: React.FC = () => {
   const { sales, fetchSales, loading } = useAppStore();

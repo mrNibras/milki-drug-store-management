@@ -1,7 +1,7 @@
 import React, { useMemo, useEffect } from 'react';
-import { useAppStore } from '../../store/appStore';
-import { useThemeStore } from '../../store/themeStore';
-import { formatCurrency } from '../../utils/helpers';
+import { useAppStore } from '../store/appStore';
+import { useThemeStore } from '../store/themeStore';
+import { formatCurrency } from '../utils/helpers';
 
 const InventoryReport: React.FC = () => {
   const { medicines, fetchMedicines, loading } = useAppStore();
