@@ -94,11 +94,11 @@ function AppContent() {
               <DashboardPage />
             </ErrorBoundary>
           } />
-          <Route path="medicines" element={<MedicinesPage />} />
+          <Route path="medicines" element={<ProtectedRoute roles={['admin']}><MedicinesPage /></ProtectedRoute>} />
           <Route path="pos" element={<POSPage />} />
           <Route path="inventory" element={<InventoryPage />} />
           <Route path="damages" element={<DamageExpiryPage />} />
-          <Route path="reports" element={<ReportsPage />} />
+          <Route path="reports" element={<ProtectedRoute roles={['admin']}><ReportsPage /></ProtectedRoute>} />
           <Route path="notifications" element={<NotificationsPage />} />
           <Route path="purchases" element={<ProtectedRoute roles={['admin']}><PurchasesPage /></ProtectedRoute>} />
           <Route path="suppliers" element={<ProtectedRoute roles={['admin']}><SuppliersPage /></ProtectedRoute>} />

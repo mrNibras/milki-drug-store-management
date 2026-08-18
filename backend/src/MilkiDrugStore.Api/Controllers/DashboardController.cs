@@ -16,6 +16,9 @@ public class DashboardController : ControllerBase
         _dashboardService = dashboardService;
     }
 
+    // The summary includes financial aggregates. Operational dashboard data is
+    // assembled from the pharmacist-safe medicine/notification endpoints.
+    [Authorize(Roles = "Admin")]
     [HttpGet("summary")]
     public async Task<IActionResult> GetSummary()
     {

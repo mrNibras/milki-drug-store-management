@@ -7,7 +7,7 @@ namespace MilkiDrugStore.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = "Admin")]
+[Authorize(Roles = "Admin,Pharmacist")]
 public class NotificationsController : ControllerBase
 {
     private readonly INotificationService _notificationService;

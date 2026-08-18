@@ -20,6 +20,7 @@ public class SettingsController : ControllerBase
         _logger = logger;
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpGet]
     public async Task<IActionResult> GetSettings()
     {

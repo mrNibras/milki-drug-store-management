@@ -45,6 +45,13 @@ public class PurchaseService : IPurchaseService
 
     public async Task<PurchaseResponse> CreateAsync(CreatePurchaseRequest request, int createdBy, int? branchId = null)
     {
+        if (request.Items.Count == 0)
+            throw new InvalidOperationException("At least one purchase item is required.");
+        if (request.Items.Any(i => i.Quantity <= 0 || i.PurchasePrice <= 0 || i.SellingPrice <= 0 ||
+                                   string.IsNullOrWhiteSpace(i.BatchNumber) || !i.ExpiryDate.HasValue ||
+                                   i.ExpiryDate.Value.Date <= DateTime.UtcNow.Date))
+            throw new InvalidOperationException("Each item requires a batch number, positive quantity and prices, and a future expiry date.");
+
         await _unitOfWork.BeginTransactionAsync();
 
         try
@@ -56,6 +63,8 @@ public class PurchaseService : IPurchaseService
             if (supplier == null) throw new Exception("Supplier not found");
 
             var totalAmount = request.Items.Sum(i => i.Quantity * i.PurchasePrice);
+            if (request.AmountPaid < 0 || request.AmountPaid > totalAmount)
+                throw new InvalidOperationException("Amount paid must be between zero and the purchase total.");
 
             var purchase = new Purchase
             {
@@ -140,22 +149,41 @@ public class PurchaseService : IPurchaseService
                     await _auditLog.LogAsync(createdBy, $"Auto-created medicine: {medicine.BrandName}", "Medicines", medicine.ProductId);
                 }
 
-                var batch = new MedicineBatch
-                {
-                    ProductId = medicine.ProductId,
-                    BranchId = branchId ?? 0,
-                    BatchNumber = item.BatchNumber,
-                    QuantityReceived = item.Quantity,
-                    PurchasePrice = item.PurchasePrice,
-                    SellingPrice = item.SellingPrice,
-                    ExpiryDate = item.ExpiryDate ?? DateTime.Now.AddYears(2),
-                    ManufacturingDate = item.ManufacturingDate,
-                    SupplierId = item.SupplierId ?? request.SupplierId,
-                    DateReceived = DateTime.Now
-                };
+                var effectiveBranchId = branchId ?? 0;
+                var normalizedBatchNumber = item.BatchNumber.Trim();
+                var batch = (await _batchRepo.FindAsync(b => b.ProductId == medicine.ProductId &&
+                    b.BranchId == effectiveBranchId && b.BatchNumber == normalizedBatchNumber)).FirstOrDefault();
 
-                await _batchRepo.AddAsync(batch);
-                await _unitOfWork.SaveChangesAsync();
+                if (batch == null)
+                {
+                    batch = new MedicineBatch
+                    {
+                        ProductId = medicine.ProductId,
+                        BranchId = effectiveBranchId,
+                        BatchNumber = normalizedBatchNumber,
+                        QuantityReceived = item.Quantity,
+                        PurchasePrice = item.PurchasePrice,
+                        SellingPrice = item.SellingPrice,
+                        ExpiryDate = item.ExpiryDate!.Value,
+                        ManufacturingDate = item.ManufacturingDate,
+                        SupplierId = item.SupplierId ?? request.SupplierId,
+                        DateReceived = DateTime.Now
+                    };
+                    await _batchRepo.AddAsync(batch);
+                    await _unitOfWork.SaveChangesAsync();
+                }
+                else
+                {
+                    // Additional stock for the same batch increases that batch only;
+                    // a different batch remains a distinct record for FEFO tracking.
+                    batch.QuantityReceived += item.Quantity;
+                    batch.PurchasePrice = item.PurchasePrice;
+                    batch.SellingPrice = item.SellingPrice;
+                    batch.ExpiryDate = item.ExpiryDate!.Value;
+                    batch.ManufacturingDate = item.ManufacturingDate;
+                    batch.SupplierId = item.SupplierId ?? request.SupplierId;
+                    await _batchRepo.UpdateAsync(batch);
+                }
 
                 var purchaseItem = new PurchaseItem
                 {
