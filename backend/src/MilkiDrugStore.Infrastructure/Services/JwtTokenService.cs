@@ -21,7 +21,13 @@ public class JwtTokenService : IJwtTokenService
     {
         var jwtSettings = _configuration.GetSection("JwtSettings");
         var secretKey = jwtSettings["Secret"] ?? "SuperSecretKey12345SuperSecretKey12345";
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
+        // Must match the KeyId configured by the API's JWT bearer validator.
+        // Without this, tokens issued at login can be rejected before reaching
+        // protected endpoints such as POST /api/purchases.
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey))
+        {
+            KeyId = "milki-signing-key"
+        };
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         var claims = new[]
