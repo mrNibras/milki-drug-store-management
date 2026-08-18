@@ -232,7 +232,7 @@ export const PurchasesPage: React.FC = () => {
       : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
   }`;
 
-  const itemInputClass = `w-full px-3 py-2.5 border rounded-lg text-sm min-w-0 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
+  const itemInputClass = `w-full min-w-0 px-4 py-3 border rounded-lg text-base leading-5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
     isDark 
       ? 'bg-gray-800 border-gray-600 text-white placeholder-gray-500' 
       : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
@@ -450,8 +450,8 @@ export const PurchasesPage: React.FC = () => {
             </div>
             
             {(items || []).length > 0 ? (
-              <div className="p-3 space-y-2 max-h-[400px] overflow-y-auto">
-                <div className="hidden lg:grid lg:grid-cols-[2.5fr_1.3fr_1.3fr_0.8fr_1fr_1fr_1.2fr_auto] gap-3 px-3 pb-1 text-xs font-semibold uppercase tracking-wide">
+              <div className="p-3 space-y-3 max-h-[440px] overflow-y-auto">
+                <div className="hidden xl:grid xl:grid-cols-[minmax(10rem,1.5fr)_minmax(7rem,1fr)_minmax(8.5rem,1.2fr)_minmax(5.5rem,.7fr)_minmax(7.5rem,.9fr)_minmax(7.5rem,.9fr)_minmax(7.5rem,1fr)_2rem] gap-2 px-2 pb-1 text-xs font-semibold uppercase tracking-wide">
                   <div className={isDark ? 'text-gray-400' : 'text-gray-500'}>Medicine Name</div>
                   <div className={isDark ? 'text-gray-400' : 'text-gray-500'}>Category</div>
                   <div className={isDark ? 'text-gray-400' : 'text-gray-500'}>Batch #</div>
@@ -469,7 +469,7 @@ export const PurchasesPage: React.FC = () => {
                       isDark ? 'bg-gray-800/50 border-gray-700 hover:border-gray-600' : 'bg-white border-gray-200 hover:border-gray-300'
                     } ${item.errors.length > 0 ? isDark ? 'border-red-500/50 bg-red-900/10' : 'border-red-400 bg-red-50/50' : ''}`}
                   >
-                    <div className="flex items-center justify-between mb-2 lg:mb-0 lg:hidden">
+                    <div className="flex items-center justify-between mb-3 xl:hidden">
                       <span className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                         Item #{index + 1}
                       </span>
@@ -483,9 +483,9 @@ export const PurchasesPage: React.FC = () => {
                       </button>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[2.5fr_1.3fr_1.3fr_0.8fr_1fr_1fr_1.2fr_auto] gap-3 items-end">
-                      <div className="sm:col-span-2 lg:col-span-1">
-                        <label className={`text-xs font-medium mb-1 lg:hidden block ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-[minmax(10rem,1.5fr)_minmax(7rem,1fr)_minmax(8.5rem,1.2fr)_minmax(5.5rem,.7fr)_minmax(7.5rem,.9fr)_minmax(7.5rem,.9fr)_minmax(7.5rem,1fr)_2rem] gap-3 xl:gap-2 items-end">
+                      <div className="sm:col-span-2 xl:col-span-1">
+                        <label className={`text-xs font-medium mb-1 xl:hidden block ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                           Medicine Name {item.isNewMedicine && <span className="text-emerald-500">(New)</span>}
                         </label>
                         <div className="relative">
@@ -520,7 +520,7 @@ export const PurchasesPage: React.FC = () => {
                       </div>
 
                       <div>
-                        <label className={`text-xs font-medium mb-1 lg:hidden block ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                        <label className={`text-xs font-medium mb-1 xl:hidden block ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                           Category {item.isNewMedicine && <span className="text-red-500">*</span>}
                         </label>
                         <select
@@ -536,7 +536,7 @@ export const PurchasesPage: React.FC = () => {
                       </div>
 
                       <div>
-                        <label className={`text-xs font-medium mb-1 lg:hidden block ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                        <label className={`text-xs font-medium mb-1 xl:hidden block ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                           Batch # <span className="text-red-500">*</span>
                         </label>
                         <input
@@ -549,7 +549,7 @@ export const PurchasesPage: React.FC = () => {
                       </div>
 
                       <div>
-                        <label className={`text-xs font-medium mb-1 lg:hidden block ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                        <label className={`text-xs font-medium mb-1 xl:hidden block ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                           Qty <span className="text-red-500">*</span>
                         </label>
                         <input
@@ -563,7 +563,7 @@ export const PurchasesPage: React.FC = () => {
                       </div>
 
                       <div>
-                        <label className={`text-xs font-medium mb-1 lg:hidden block ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                        <label className={`text-xs font-medium mb-1 xl:hidden block ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                           Buy Price <span className="text-red-500">*</span>
                         </label>
                         <input
@@ -578,7 +578,7 @@ export const PurchasesPage: React.FC = () => {
                       </div>
 
                       <div>
-                        <label className={`text-xs font-medium mb-1 lg:hidden block ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                        <label className={`text-xs font-medium mb-1 xl:hidden block ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                           Sell Price <span className="text-red-500">*</span>
                         </label>
                         <input
@@ -593,7 +593,7 @@ export const PurchasesPage: React.FC = () => {
                       </div>
 
                       <div>
-                        <label className={`text-xs font-medium mb-1 lg:hidden block ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                        <label className={`text-xs font-medium mb-1 xl:hidden block ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                           Expiry <span className="text-red-500">*</span>
                         </label>
                         <input
@@ -604,7 +604,7 @@ export const PurchasesPage: React.FC = () => {
                         />
                       </div>
 
-                      <div className="hidden lg:flex justify-center">
+                      <div className="hidden xl:flex justify-center">
                         <button
                           onClick={() => handleRemoveRow(item.id)}
                           className={`p-2 rounded-lg transition-colors ${isDark ? 'hover:bg-red-900/30 text-red-400' : 'hover:bg-red-100 text-red-500'}`}
