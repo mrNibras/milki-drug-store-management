@@ -54,9 +54,9 @@ export const BranchesPage: React.FC = () => {
   };
 
   const handleUpdate = async () => {
-    if (!selectedBranch || !formData.name.trim()) return;
+    if (!selectedBranch || !formData.branchName.trim()) return;
     await updateBranch(selectedBranch.id, {
-      name: formData.name,
+      branchName: formData.branchName,
       location: formData.location,
       phone: formData.phone,
       email: formData.email,

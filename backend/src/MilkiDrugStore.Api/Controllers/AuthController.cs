@@ -21,9 +21,17 @@ public class AuthController : ControllerBase
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
-        var result = await _authService.LoginAsync(request);
-        if (result == null) return Unauthorized(new { message = "Invalid credentials" });
-        return Ok(result);
+        try
+        {
+            var result = await _authService.LoginAsync(request);
+            if (result == null) return Unauthorized(new { message = "Invalid email or password." });
+            return Ok(result);
+        }
+        catch (Exception)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError,
+                new { message = "An unexpected error occurred. Please try again later." });
+        }
     }
 
     [AllowAnonymous]

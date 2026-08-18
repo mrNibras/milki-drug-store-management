@@ -229,7 +229,7 @@ export interface PurchaseResponse {
 
 export interface PurchaseItemResponse {
   purchaseItemId: number;
-  medicineId: number;
+  productId: number;
   brandName: string;
   batchNumber: string;
   quantity: number;
@@ -244,12 +244,13 @@ export interface CreatePurchaseRequest {
   paymentStatus?: string;
   amountPaid: number;
   items: {
-    medicineId: number;
+    productId?: number;
     brandName?: string;
     genericName?: string;
     categoryId?: number;
+    categoryName?: string;
     unitType?: string;
-    lowStockThreshold?: number;
+    reorderLevel?: number;
     batchNumber: string;
     quantity: number;
     purchasePrice: number;

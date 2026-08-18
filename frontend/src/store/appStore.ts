@@ -41,7 +41,7 @@ interface AppState {
 
   purchases: Purchase[];
   fetchPurchases: () => Promise<void>;
-  addPurchase: (purchase: Purchase) => Promise<void>;
+  addPurchase: (purchase: CreatePurchaseRequest) => Promise<Purchase>;
 
   sales: Sale[];
   fetchSales: () => Promise<void>;
@@ -148,7 +148,7 @@ const toPurchase = (r: PurchaseResponse): Purchase => ({
   items: r.items.map(i => ({
     id: String(i.purchaseItemId),
     purchaseId: String(r.purchaseId),
-    medicineId: String(i.medicineId),
+    medicineId: String(i.productId),
     brandName: i.brandName,
     batchNumber: i.batchNumber,
     quantity: i.quantity,
@@ -209,14 +209,15 @@ export const useAppStore = create<AppState>((set, get) => ({
   login: async (email: string, password: string) => {
     set({ loading: true, error: null });
     try {
-      console.log('[login] attempting login for', email, 'to', api.defaults.baseURL);
-      const res = await api.post<LoginResponse>('/auth/login', { email, password });
+      const normalizedEmail = email.trim().toLowerCase();
+      console.log('[login] attempting login for', normalizedEmail, 'to', api.defaults.baseURL);
+      const res = await api.post<LoginResponse>('/auth/login', { email: normalizedEmail, password });
       console.log('[login] login response', res.status, res.data);
       const token = res.data.token;
       const user: User = {
         id: String(res.data.userId),
         fullName: res.data.fullName,
-        email,
+        email: normalizedEmail,
         role: res.data.role.toLowerCase() as 'admin' | 'pharmacist',
         branchId: res.data.branchId,
         branchName: res.data.branchName,
@@ -238,7 +239,15 @@ export const useAppStore = create<AppState>((set, get) => ({
       const status = e?.response?.status;
       const message = e?.response?.data?.message;
       console.warn('[login] login failed', { status, message, url: e?.config?.url, baseURL: api.defaults.baseURL });
-      set({ error: message || 'Login failed', loading: false });
+      if (status === 401) {
+        set({ error: message || 'Invalid email or password.', loading: false });
+      } else if (status === 403) {
+        set({ error: 'Your account does not have a valid role. Contact the administrator.', loading: false });
+      } else if (status >= 500) {
+        set({ error: 'Unable to log in due to a server error. Please try again later.', loading: false });
+      } else {
+        set({ error: message || 'Login failed. Please try again.', loading: false });
+      }
       return false;
     }
   },
@@ -345,7 +354,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   register: async (fullName: string, email: string, password: string) => {
     set({ loading: true, error: null });
     try {
-      await api.post('/auth/register', { fullName, email, password });
+      await api.post('/auth/register', { fullName: fullName.trim(), email: email.trim().toLowerCase(), password });
       set({ loading: false });
       return { ok: true };
     } catch (e: any) {
@@ -369,8 +378,8 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({ loading: true, error: null });
     try {
       await api.post('/users', {
-        fullName: user.fullName,
-        email: user.email,
+        fullName: user.fullName.trim(),
+        email: user.email.trim().toLowerCase(),
         password: user.password,
         roleId: user.role === 'admin' ? 1 : 2,
       });
@@ -386,8 +395,8 @@ export const useAppStore = create<AppState>((set, get) => ({
       const existing = get().users.find(u => u.id === id);
       const merged = { ...existing, ...updates } as User;
       await api.put(`/users/${id}`, {
-        fullName: merged.fullName,
-        email: merged.email,
+        fullName: (merged.fullName || '').trim(),
+        email: (merged.email || '').trim().toLowerCase(),
         roleId: merged.role === 'admin' ? 1 : 2,
         isActive: merged.isActive,
       });
@@ -414,8 +423,8 @@ export const useAppStore = create<AppState>((set, get) => ({
       if (!user) return;
       const newActive = !user.isActive;
       await api.put(`/users/${id}`, {
-        fullName: user.fullName,
-        email: user.email,
+        fullName: (user.fullName || '').trim(),
+        email: (user.email || '').trim().toLowerCase(),
         roleId: user.role === 'admin' ? 1 : 2,
         isActive: newActive,
       });
@@ -576,29 +585,13 @@ export const useAppStore = create<AppState>((set, get) => ({
   addPurchase: async (purchase) => {
     set({ loading: true, error: null });
     try {
-      const items = purchase.items.map(i => ({
-        medicineId: Number(i.medicineId),
-        brandName: (i as any).brandName,
-        genericName: (i as any).genericName,
-        categoryId: (i as any).categoryId ? Number((i as any).categoryId) : undefined,
-        unitType: (i as any).unitType,
-        lowStockThreshold: (i as any).lowStockThreshold,
-        batchNumber: i.batchNumber,
-        quantity: i.quantity,
-        purchasePrice: i.purchasePrice,
-        sellingPrice: i.sellingPrice,
-        expiryDate: i.expiryDate || undefined,
-      }));
-      const res = await api.post<PurchaseResponse>('/purchases', {
-        supplierId: Number(purchase.supplierId),
-        purchaseDate: purchase.purchaseDate,
-        paymentMethod: purchase.paymentMethod || 'cash',
-        paymentStatus: purchase.paymentStatus || undefined,
-        amountPaid: purchase.amountPaid || 0,
-        items,
-      });
+      // The API expects productId for existing medicines. Preserve the DTO rather
+      // than remapping it to the unrelated medicineId property.
+      const res = await api.post<PurchaseResponse>('/purchases', purchase);
+      const createdPurchase = toPurchase(res.data);
       await get().fetchPurchases();
       await get().fetchMedicines();
+      return createdPurchase;
     } catch (e: any) {
       set({ error: e.response?.data?.message || 'Failed to add purchase', loading: false });
       throw e;

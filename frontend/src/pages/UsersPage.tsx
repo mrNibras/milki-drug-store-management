@@ -9,7 +9,7 @@ import { formatDate, generateId } from '../utils/helpers';
 import { User } from '../types';
 import axios from 'axios';
 
-const UsersPage: React.FC = () => {
+export const UsersPage: React.FC = () => {
   const { users, fetchUsers, addUser, updateUser, deleteUser, toggleUserActive, currentUser, loading } = useAppStore();
   const { theme } = useThemeStore();
   const isDark = theme === 'dark';
@@ -795,5 +795,3 @@ const UsersPage: React.FC = () => {
     </div>
   );
 };
-
-export default UsersPage;

@@ -3,8 +3,9 @@ import { Plus, Search, Eye, ClipboardList, Truck, Package, X, AlertCircle, Check
 import { useAppStore } from '../store/appStore';
 import { useThemeStore } from '../store/themeStore';
 import { Modal } from '../components/ui/Modal';
-import { formatDate, formatCurrency, generateId, generatePurchaseNumber } from '../utils/helpers';
+import { formatDate, formatCurrency } from '../utils/helpers';
 import { BulkPurchaseItem } from '../types';
+import { CreatePurchaseRequest } from '../services/api';
 
 export const PurchasesPage: React.FC = () => {
   const { purchases, suppliers, medicines, categories, fetchPurchases, fetchSuppliers, fetchMedicines, fetchCategories, addPurchase } = useAppStore();
@@ -60,7 +61,7 @@ export const PurchasesPage: React.FC = () => {
   };
 
   const createEmptyItem = (): BulkPurchaseItem => ({
-    id: generateId(),
+    id: `temp_${new Date().getTime()}_${Math.random()}`,
     brandName: '',
     genericName: '',
     categoryId: '',
@@ -152,62 +153,16 @@ export const PurchasesPage: React.FC = () => {
   };
 
   const handleSave = async () => {
-    if (!selectedSupplier) {
-      alert('Please select a supplier');
-      return;
-    }
-    
-    if ((items || []).length === 0) {
-      alert('Please add at least one item');
-      return;
-    }
-    
-    if (!validateItems()) {
-      return;
-    }
-    
+    if (!selectedSupplier) { alert('Please select a supplier'); return; }
+    if ((items || []).length === 0) { alert('Please add at least one item'); return; }
+    if (!validateItems()) { return; }
+
     setIsProcessing(true);
-    
-    // Simulate processing delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    const supplier = (suppliers || []).find(s => s.id === selectedSupplier);
-    if (!supplier) {
-      setIsProcessing(false);
-      return;
-    }
-    
-    const purchaseNumber = generatePurchaseNumber((purchases || []).length);
-    
-    // Process each item - backend will auto-create medicines/batches as needed
-    const processedItems = (items || []).map(item => {
-      const medicineId = item.existingMedicineId || '0';
-      
-      return {
-        id: generateId(),
-        purchaseId: '',
-        medicineId: medicineId,
-        brandName: item.brandName,
-        genericName: item.genericName,
-        categoryId: item.categoryId || categories[0]?.id || '',
-        categoryName: item.categoryName || categories[0]?.name || 'General',
-        unitType: item.unitType,
-        lowStockThreshold: item.lowStockThreshold,
-        batchNumber: item.batchNumber,
-        quantity: Number(item.quantity),
-        purchasePrice: Number(item.purchasePrice),
-        sellingPrice: Number(item.sellingPrice),
-        expiryDate: item.expiryDate,
-      };
-    });
-    
-    // Create purchase record
-    // Calculate payment
+
     let finalAmountPaid = paymentStatus === 'paid' ? totalAmount : Number(amountPaid) || 0;
     let finalDebt = totalAmount - finalAmountPaid;
-    
-    // Auto-correct status
     let finalStatus = paymentStatus;
+
     if (finalDebt <= 0) {
       finalStatus = 'paid';
       finalAmountPaid = totalAmount;
@@ -218,30 +173,51 @@ export const PurchasesPage: React.FC = () => {
       finalStatus = 'partial';
     }
 
-    const purchase = {
-      id: generateId(),
-      purchaseNumber,
+    if (finalAmountPaid > totalAmount) {
+      alert('Amount paid cannot exceed the purchase total.');
+      return;
+    }
+
+    const purchaseRequest: CreatePurchaseRequest = {
       supplierId: selectedSupplier,
-      supplierName: supplier.name,
       purchaseDate: new Date(purchaseDate).toISOString(),
-      totalAmount,
-      paymentStatus: finalStatus as 'paid' | 'partial' | 'unpaid',
+      paymentStatus: finalStatus,
       paymentMethod: paymentMethod,
       amountPaid: finalAmountPaid,
-      remainingDebt: finalDebt,
-      items: processedItems.map(item => ({ ...item, purchaseId: '' })),
+      items: items.map(item => ({
+        productId: item.existingMedicineId,
+        brandName: item.isNewMedicine ? item.brandName : undefined,
+        genericName: item.isNewMedicine ? item.genericName : undefined,
+        categoryId: item.isNewMedicine ? (item.categoryId ? Number(item.categoryId) : undefined) : undefined,
+        categoryName: item.isNewMedicine ? item.categoryName : undefined,
+        unitType: item.isNewMedicine ? item.unitType : undefined,
+        reorderLevel: item.isNewMedicine ? (item.lowStockThreshold || 10) : undefined,
+        batchNumber: item.batchNumber,
+        quantity: Number(item.quantity),
+        purchasePrice: Number(item.purchasePrice),
+        sellingPrice: Number(item.sellingPrice),
+        expiryDate: item.expiryDate,
+      })),
     };
-    purchase.items.forEach(item => item.purchaseId = purchase.id);
-    
-    addPurchase(purchase);
-    
-    setLastPurchaseNumber(purchaseNumber);
-    setIsProcessing(false);
-    setShowBulkModal(false);
-    setShowSuccess(true);
-    resetForm();
-    
-    setTimeout(() => setShowSuccess(false), 5000);
+
+    try {
+      const newPurchase = await addPurchase(purchaseRequest);
+      setLastPurchaseNumber(newPurchase.purchaseNumber);
+      setShowBulkModal(false);
+      setShowSuccess(true);
+      resetForm();
+      setTimeout(() => setShowSuccess(false), 5000);
+    } catch (error) {
+      console.error("Failed to save purchase:", error);
+      const apiError = error as { response?: { data?: { message?: string; title?: string; errors?: Record<string, string[]> } } };
+      const validationErrors = apiError.response?.data?.errors;
+      const message = validationErrors
+        ? Object.values(validationErrors).flat().join('\n')
+        : apiError.response?.data?.message || apiError.response?.data?.title || 'An unexpected error occurred.';
+      alert(`Unable to save purchase: ${message}`);
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const inputClass = `w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-base ${
@@ -251,6 +227,12 @@ export const PurchasesPage: React.FC = () => {
   }`;
   
   const smallInputClass = `w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm transition-all ${
+    isDark 
+      ? 'bg-gray-800 border-gray-600 text-white placeholder-gray-500' 
+      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
+  }`;
+
+  const itemInputClass = `w-full px-3 py-2.5 border rounded-lg text-sm min-w-0 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
     isDark 
       ? 'bg-gray-800 border-gray-600 text-white placeholder-gray-500' 
       : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
@@ -408,7 +390,7 @@ export const PurchasesPage: React.FC = () => {
       </div>
 
       {/* ========== BULK PURCHASE MODAL ========== */}
-      <Modal isOpen={showBulkModal} onClose={() => setShowBulkModal(false)} title="Bulk Purchase Entry" size="xl">
+      <Modal isOpen={showBulkModal} onClose={() => setShowBulkModal(false)} title="Bulk Purchase Entry" size="2xl">
         <div className="space-y-5">
           {/* Header Info */}
           <div className="flex items-center gap-4 pb-2">
@@ -463,135 +445,182 @@ export const PurchasesPage: React.FC = () => {
                 onClick={handleAddRow}
                 className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-medium transition-colors flex items-center gap-1"
               >
-                <Plus className="h-3 w-3" /> Add Row
+                <Plus className="h-3 w-3" /> Add Item
               </button>
             </div>
             
             {(items || []).length > 0 ? (
-              <div className="overflow-x-auto max-h-[400px] overflow-y-auto">
-                <table className="w-full">
-                  <thead className={`sticky top-0 z-10 ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
-                    <tr className={isDark ? 'bg-gray-700' : 'bg-gray-50'}>
-                      <th className={`px-3 py-2 text-left text-xs font-semibold uppercase ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>#</th>
-                      <th className={`px-3 py-2 text-left text-xs font-semibold uppercase ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Brand Name</th>
-                      <th className={`px-3 py-2 text-left text-xs font-semibold uppercase ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Category</th>
-                      <th className={`px-3 py-2 text-left text-xs font-semibold uppercase ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Batch #</th>
-                      <th className={`px-3 py-2 text-left text-xs font-semibold uppercase ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Qty</th>
-                      <th className={`px-3 py-2 text-left text-xs font-semibold uppercase ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Buy Price</th>
-                      <th className={`px-3 py-2 text-left text-xs font-semibold uppercase ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Sell Price</th>
-                      <th className={`px-3 py-2 text-left text-xs font-semibold uppercase ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Expiry</th>
-                      <th className={`px-3 py-2 text-center text-xs font-semibold uppercase ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className={`divide-y ${isDark ? 'divide-gray-700' : 'divide-gray-100'}`}>
-                    {(items || []).map((item, index) => (
-                      <tr key={item.id} className={`${isDark ? 'hover:bg-gray-700/30' : 'hover:bg-gray-50'} ${item.errors.length > 0 ? isDark ? 'bg-red-900/10' : 'bg-red-50/50' : ''}`}>
-                        <td className={`px-3 py-2 text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{index + 1}</td>
-                        <td className="px-3 py-2">
-                          <div className="relative">
-                            <input
-                              type="text"
-                              value={item.brandName}
-                              onChange={(e) => handleItemChange(item.id, 'brandName', e.target.value)}
-                              placeholder="Brand name"
-                              className={`${smallInputClass} min-w-[140px] sm:min-w-[180px]`}
-                              list={`medicines-${item.id}`}
-                            />
-                            <datalist id={`medicines-${item.id}`}>
-                              {(medicines || []).map(m => (
-                                <option key={m.id} value={m.name} />
-                              ))}
-                            </datalist>
-                            {item.isNewMedicine && item.brandName && (
-                              <span className={`absolute right-2 top-1/2 -translate-y-1/2 text-xs px-1.5 py-0.5 rounded ${
-                                isDark ? 'bg-emerald-900/30 text-emerald-400' : 'bg-emerald-100 text-emerald-700'
-                              }`}>NEW</span>
-                            )}
-                          </div>
-                          {item.isNewMedicine && (
-                            <input
-                              type="text"
-                              value={item.genericName}
-                              onChange={(e) => handleItemChange(item.id, 'genericName', e.target.value)}
-                              placeholder="Generic name"
-                              className={`mt-1 w-full px-2 py-1 border rounded text-xs ${isDark ? 'bg-gray-800 border-gray-600 text-gray-300 placeholder-gray-500' : 'bg-white border-gray-200 text-gray-600 placeholder-gray-400'}`}
-                            />
-                          )}
-                        </td>
-                        <td className="px-3 py-2">
-                          <select
-                            value={item.categoryId}
-                            onChange={(e) => handleItemChange(item.id, 'categoryId', e.target.value)}
-                            className={`${smallInputClass} ${!item.categoryId && item.isNewMedicine ? 'border-red-400' : ''}`}
-                          >
-                            <option value="">Category</option>
-                            {(categories || []).map(c => (
-                              <option key={c.id} value={c.id}>{c.name}</option>
-                            ))}
-                          </select>
-                        </td>
-                        <td className="px-3 py-2">
+              <div className="p-3 space-y-2 max-h-[400px] overflow-y-auto">
+                <div className="hidden lg:grid lg:grid-cols-[2.5fr_1.3fr_1.3fr_0.8fr_1fr_1fr_1.2fr_auto] gap-3 px-3 pb-1 text-xs font-semibold uppercase tracking-wide">
+                  <div className={isDark ? 'text-gray-400' : 'text-gray-500'}>Medicine Name</div>
+                  <div className={isDark ? 'text-gray-400' : 'text-gray-500'}>Category</div>
+                  <div className={isDark ? 'text-gray-400' : 'text-gray-500'}>Batch #</div>
+                  <div className={isDark ? 'text-gray-400' : 'text-gray-500'}>Qty</div>
+                  <div className={isDark ? 'text-gray-400' : 'text-gray-500'}>Buy Price</div>
+                  <div className={isDark ? 'text-gray-400' : 'text-gray-500'}>Sell Price</div>
+                  <div className={isDark ? 'text-gray-400' : 'text-gray-500'}>Expiry</div>
+                  <div />
+                </div>
+
+                {(items || []).map((item, index) => (
+                  <div
+                    key={item.id}
+                    className={`rounded-lg border p-3 transition-colors ${
+                      isDark ? 'bg-gray-800/50 border-gray-700 hover:border-gray-600' : 'bg-white border-gray-200 hover:border-gray-300'
+                    } ${item.errors.length > 0 ? isDark ? 'border-red-500/50 bg-red-900/10' : 'border-red-400 bg-red-50/50' : ''}`}
+                  >
+                    <div className="flex items-center justify-between mb-2 lg:mb-0 lg:hidden">
+                      <span className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                        Item #{index + 1}
+                      </span>
+                      <button
+                        onClick={() => handleRemoveRow(item.id)}
+                        className={`text-xs font-medium px-2 py-1 rounded-lg transition-colors ${
+                          isDark ? 'text-red-400 hover:bg-red-900/30' : 'text-red-500 hover:bg-red-100'
+                        }`}
+                      >
+                        Remove
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[2.5fr_1.3fr_1.3fr_0.8fr_1fr_1fr_1.2fr_auto] gap-3 items-end">
+                      <div className="sm:col-span-2 lg:col-span-1">
+                        <label className={`text-xs font-medium mb-1 lg:hidden block ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                          Medicine Name {item.isNewMedicine && <span className="text-emerald-500">(New)</span>}
+                        </label>
+                        <div className="relative">
                           <input
                             type="text"
-                            value={item.batchNumber}
-                            onChange={(e) => handleItemChange(item.id, 'batchNumber', e.target.value)}
-                            placeholder="P001"
-                            className={`${smallInputClass} font-mono ${!item.batchNumber ? 'border-red-400' : ''}`}
+                            value={item.brandName}
+                            onChange={(e) => handleItemChange(item.id, 'brandName', e.target.value)}
+                            placeholder="Brand name"
+                            className={`${itemInputClass} ${!item.brandName ? 'border-red-400' : ''}`}
+                            list={`medicines-${item.id}`}
                           />
-                        </td>
-                        <td className="px-3 py-2">
+                          <datalist id={`medicines-${item.id}`}>
+                            {(medicines || []).map(m => (
+                              <option key={m.id} value={m.name} />
+                            ))}
+                          </datalist>
+                          {item.isNewMedicine && item.brandName && (
+                            <span className={`absolute right-2 top-1/2 -translate-y-1/2 text-xs px-1.5 py-0.5 rounded ${
+                              isDark ? 'bg-emerald-900/30 text-emerald-400' : 'bg-emerald-100 text-emerald-700'
+                            }`}>NEW</span>
+                          )}
+                        </div>
+                        {item.isNewMedicine && (
                           <input
-                            type="number"
-                            value={item.quantity}
-                            onChange={(e) => handleItemChange(item.id, 'quantity', e.target.value)}
-                            placeholder="0"
-                            className={`${smallInputClass} ${!item.quantity ? 'border-red-400' : ''}`}
+                            type="text"
+                            value={item.genericName}
+                            onChange={(e) => handleItemChange(item.id, 'genericName', e.target.value)}
+                            placeholder="Generic name"
+                            className={`mt-1 w-full px-3 py-1.5 border rounded-lg text-sm ${isDark ? 'bg-gray-800 border-gray-600 text-gray-300 placeholder-gray-500' : 'bg-white border-gray-200 text-gray-600 placeholder-gray-400'}`}
                           />
-                        </td>
-                        <td className="px-3 py-2">
-                          <input
-                            type="number"
-                            value={item.purchasePrice}
-                            onChange={(e) => handleItemChange(item.id, 'purchasePrice', e.target.value)}
-                            placeholder="0"
-                            className={`${smallInputClass} ${!item.purchasePrice ? 'border-red-400' : ''}`}
-                          />
-                        </td>
-                        <td className="px-3 py-2">
-                          <input
-                            type="number"
-                            value={item.sellingPrice}
-                            onChange={(e) => handleItemChange(item.id, 'sellingPrice', e.target.value)}
-                            placeholder="0"
-                            className={`${smallInputClass} ${!item.sellingPrice ? 'border-red-400' : ''}`}
-                          />
-                        </td>
-                        <td className="px-3 py-2">
-                          <input
-                            type="date"
-                            value={item.expiryDate}
-                            onChange={(e) => handleItemChange(item.id, 'expiryDate', e.target.value)}
-                            className={`${smallInputClass} ${!item.expiryDate ? 'border-red-400' : ''}`}
-                          />
-                        </td>
-                        <td className="px-3 py-2 text-center">
-                          <button
-                            onClick={() => handleRemoveRow(item.id)}
-                            className={`p-1.5 rounded-lg transition-colors ${isDark ? 'hover:bg-red-900/30 text-red-400' : 'hover:bg-red-100 text-red-500'}`}
-                          >
-                            <X className="h-4 w-4" />
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className={`text-xs font-medium mb-1 lg:hidden block ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                          Category {item.isNewMedicine && <span className="text-red-500">*</span>}
+                        </label>
+                        <select
+                          value={item.categoryId}
+                          onChange={(e) => handleItemChange(item.id, 'categoryId', e.target.value)}
+                          className={`${itemInputClass} ${!item.categoryId && item.isNewMedicine ? 'border-red-400' : ''}`}
+                        >
+                          <option value="">Select</option>
+                          {(categories || []).map(c => (
+                            <option key={c.id} value={c.id}>{c.name}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className={`text-xs font-medium mb-1 lg:hidden block ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                          Batch # <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={item.batchNumber}
+                          onChange={(e) => handleItemChange(item.id, 'batchNumber', e.target.value)}
+                          placeholder="e.g. P001"
+                          className={`${itemInputClass} font-mono ${!item.batchNumber ? 'border-red-400' : ''}`}
+                        />
+                      </div>
+
+                      <div>
+                        <label className={`text-xs font-medium mb-1 lg:hidden block ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                          Qty <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="number"
+                          value={item.quantity}
+                          onChange={(e) => handleItemChange(item.id, 'quantity', e.target.value)}
+                          placeholder="0"
+                          min="0"
+                          className={`${itemInputClass} ${!item.quantity ? 'border-red-400' : ''}`}
+                        />
+                      </div>
+
+                      <div>
+                        <label className={`text-xs font-medium mb-1 lg:hidden block ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                          Buy Price <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="number"
+                          value={item.purchasePrice}
+                          onChange={(e) => handleItemChange(item.id, 'purchasePrice', e.target.value)}
+                          placeholder="0.00"
+                          min="0"
+                          step="0.01"
+                          className={`${itemInputClass} ${!item.purchasePrice ? 'border-red-400' : ''}`}
+                        />
+                      </div>
+
+                      <div>
+                        <label className={`text-xs font-medium mb-1 lg:hidden block ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                          Sell Price <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="number"
+                          value={item.sellingPrice}
+                          onChange={(e) => handleItemChange(item.id, 'sellingPrice', e.target.value)}
+                          placeholder="0.00"
+                          min="0"
+                          step="0.01"
+                          className={`${itemInputClass} ${!item.sellingPrice ? 'border-red-400' : ''}`}
+                        />
+                      </div>
+
+                      <div>
+                        <label className={`text-xs font-medium mb-1 lg:hidden block ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                          Expiry <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="date"
+                          value={item.expiryDate}
+                          onChange={(e) => handleItemChange(item.id, 'expiryDate', e.target.value)}
+                          className={`${itemInputClass} ${!item.expiryDate ? 'border-red-400' : ''}`}
+                        />
+                      </div>
+
+                      <div className="hidden lg:flex justify-center">
+                        <button
+                          onClick={() => handleRemoveRow(item.id)}
+                          className={`p-2 rounded-lg transition-colors ${isDark ? 'hover:bg-red-900/30 text-red-400' : 'hover:bg-red-100 text-red-500'}`}
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : (
               <div className={`text-center py-12 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
                 <Package className="h-12 w-12 mx-auto mb-3 opacity-50" />
                 <p className="text-sm">No items added yet</p>
-                <p className="text-xs mt-1">Click "Add Row" to start adding medicines</p>
+                <p className="text-xs mt-1">Click "Add Item" to start adding medicines</p>
               </div>
             )}
           </div>

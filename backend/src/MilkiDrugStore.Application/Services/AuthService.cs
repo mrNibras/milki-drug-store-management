@@ -7,6 +7,7 @@ using MilkiDrugStore.Domain.Interfaces.Repositories;
 using MilkiDrugStore.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace MilkiDrugStore.Application.Services;
 
@@ -21,6 +22,7 @@ public class AuthService : IAuthService
     private readonly IConfiguration _configuration;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IAuditLogService _auditLog;
+    private readonly ILogger<AuthService> _logger;
 
     public AuthService(
         IRepository<User> userRepo,
@@ -31,7 +33,8 @@ public class AuthService : IAuthService
         IEmailService emailService,
         IConfiguration configuration,
         IUnitOfWork unitOfWork,
-        IAuditLogService auditLog)
+        IAuditLogService auditLog,
+        ILogger<AuthService> logger)
     {
         _userRepo = userRepo;
         _roleRepo = roleRepo;
@@ -42,19 +45,51 @@ public class AuthService : IAuthService
         _configuration = configuration;
         _unitOfWork = unitOfWork;
         _auditLog = auditLog;
+        _logger = logger;
     }
+
+    private static string NormalizeEmail(string email) =>
+        email.Trim().ToLowerInvariant();
 
     public async Task<LoginResponse?> LoginAsync(LoginRequest request)
     {
-        var users = await _userRepo.FindAsync(u => u.Email == request.Email);
-        var user = users.FirstOrDefault();
-        if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
-            return null;
+        var normalizedEmail = NormalizeEmail(request.Email);
+        _logger.LogInformation("Login attempt for email: {Email}", normalizedEmail);
 
-        if (!user.IsActive || !user.IsApproved)
+        var users = await _userRepo.FindAsync(u => u.Email == normalizedEmail);
+        var user = users.FirstOrDefault();
+
+        if (user == null)
+        {
+            _logger.LogWarning("Login failed: user not found for email {Email}", normalizedEmail);
             return null;
+        }
+
+        if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
+        {
+            _logger.LogWarning("Login failed: invalid password for user {UserId} ({Email})", user.UserId, normalizedEmail);
+            return null;
+        }
+
+        if (!user.IsActive)
+        {
+            _logger.LogWarning("Login failed: user {UserId} ({Email}) is inactive", user.UserId, normalizedEmail);
+            return null;
+        }
+
+        if (!user.IsApproved)
+        {
+            _logger.LogWarning("Login failed: user {UserId} ({Email}) is not approved", user.UserId, normalizedEmail);
+            return null;
+        }
 
         var role = await _roleRepo.GetByIdAsync(user.RoleId);
+        if (role == null)
+        {
+            _logger.LogWarning("Login failed: user {UserId} ({Email}) has no valid role assigned (RoleId={RoleId})", user.UserId, normalizedEmail, user.RoleId);
+            return null;
+        }
+
         var branch = await _branchRepo.GetByIdAsync(user.BranchId);
         user.Role = role;
         var token = _jwtTokenService.GenerateToken(user);
@@ -71,11 +106,13 @@ public class AuthService : IAuthService
         await _unitOfWork.RefreshTokens.AddAsync(refreshToken);
         await _unitOfWork.SaveChangesAsync();
 
+        _logger.LogInformation("Login successful for user {UserId} ({Email}) with role {Role}", user.UserId, normalizedEmail, role.Name);
+
         return new LoginResponse
         {
             Token = token,
             RefreshToken = refreshToken.Token,
-            Role = role?.Name ?? "Pharmacist",
+            Role = role.Name,
             UserId = user.UserId,
             FullName = user.FullName,
             BranchId = user.BranchId,
@@ -85,7 +122,8 @@ public class AuthService : IAuthService
 
     public async Task<string> RegisterAsync(RegisterRequest request)
     {
-        var existing = (await _userRepo.FindAsync(u => u.Email == request.Email)).FirstOrDefault();
+        var normalizedEmail = NormalizeEmail(request.Email);
+        var existing = (await _userRepo.FindAsync(u => u.Email == normalizedEmail)).FirstOrDefault();
         if (existing != null)
             throw new Exception("Email already registered");
 
@@ -98,8 +136,8 @@ public class AuthService : IAuthService
 
         var user = new User
         {
-            FullName = request.FullName,
-            Email = request.Email,
+            FullName = request.FullName.Trim(),
+            Email = normalizedEmail,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
             RoleId = roleId,
             BranchId = defaultBranch.BranchId,
@@ -148,7 +186,9 @@ public class AuthService : IAuthService
         if (string.IsNullOrWhiteSpace(request.Email))
             throw new Exception("Email is required");
 
-        var existing = (await _userRepo.FindAsync(u => u.Email == request.Email)).FirstOrDefault();
+        var normalizedEmail = NormalizeEmail(request.Email);
+
+        var existing = (await _userRepo.FindAsync(u => u.Email == normalizedEmail)).FirstOrDefault();
         if (existing != null)
             throw new Exception("A user with this email already exists.");
 
@@ -167,8 +207,8 @@ public class AuthService : IAuthService
 
         var user = new User
         {
-            FullName = request.FullName,
-            Email = request.Email,
+            FullName = request.FullName.Trim(),
+            Email = normalizedEmail,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
             RoleId = request.RoleId,
             BranchId = branchId,
@@ -180,6 +220,8 @@ public class AuthService : IAuthService
         await _unitOfWork.SaveChangesAsync();
 
         await _auditLog.LogAsync(user.UserId, $"Created user: {user.FullName} with role {role.Name}", "Users", user.UserId);
+
+        _logger.LogInformation("User created: {UserId} ({Email}) with role {Role}", user.UserId, normalizedEmail, role.Name);
 
         return "User created successfully.";
     }
@@ -228,8 +270,8 @@ public class AuthService : IAuthService
         var user = users.FirstOrDefault();
         if (user == null) return null;
 
-        user.FullName = request.FullName;
-        user.Email = request.Email;
+        user.FullName = request.FullName.Trim();
+        user.Email = NormalizeEmail(request.Email);
         if (request.RoleId > 0)
             user.RoleId = request.RoleId;
         if (request.BranchId > 0)
@@ -359,7 +401,8 @@ public class AuthService : IAuthService
 
     public async Task<ForgotPasswordResponse> RequestPasswordResetAsync(ForgotPasswordRequest request)
     {
-        var users = await _userRepo.FindAsync(u => u.Email == request.Email);
+        var normalizedEmail = NormalizeEmail(request.Email);
+        var users = await _userRepo.FindAsync(u => u.Email == normalizedEmail);
         var user = users.FirstOrDefault();
         if (user == null || !user.IsActive || !user.IsApproved)
             return new ForgotPasswordResponse { Message = "If an account with that email exists, a reset link has been sent." };

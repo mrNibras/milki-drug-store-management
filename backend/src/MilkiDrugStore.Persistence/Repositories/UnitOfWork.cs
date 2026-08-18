@@ -1,5 +1,5 @@
-using System.Transactions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using MilkiDrugStore.Domain.Entities;
 using MilkiDrugStore.Domain.Interfaces;
 using MilkiDrugStore.Domain.Interfaces.Repositories;
@@ -10,7 +10,7 @@ namespace MilkiDrugStore.Persistence.Repositories;
 public class UnitOfWork : IUnitOfWork
 {
     private readonly AppDbContext _context;
-    private bool _transactionActive;
+    private IDbContextTransaction? _transaction;
 
     public UnitOfWork(AppDbContext context)
     {
@@ -67,30 +67,34 @@ public class UnitOfWork : IUnitOfWork
 
     public async Task BeginTransactionAsync()
     {
-        _transactionActive = true;
-        await Task.CompletedTask;
+        if (_transaction != null)
+            throw new InvalidOperationException("A transaction is already active.");
+        _transaction = await _context.Database.BeginTransactionAsync();
     }
 
     public async Task CommitTransactionAsync()
     {
-        if (_transactionActive)
+        if (_transaction != null)
         {
-            _transactionActive = false;
-            await Task.CompletedTask;
+            await _transaction.CommitAsync();
+            await _transaction.DisposeAsync();
+            _transaction = null;
         }
     }
 
     public async Task RollbackTransactionAsync()
     {
-        if (_transactionActive)
+        if (_transaction != null)
         {
-            _transactionActive = false;
-            await Task.CompletedTask;
+            await _transaction.RollbackAsync();
+            await _transaction.DisposeAsync();
+            _transaction = null;
         }
     }
 
     public void Dispose()
     {
+        _transaction?.Dispose();
         _context.Dispose();
     }
 }

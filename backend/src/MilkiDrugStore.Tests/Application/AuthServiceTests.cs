@@ -24,6 +24,7 @@ public class AuthServiceTests
     private readonly Mock<IConfiguration> _configuration = new();
     private readonly Mock<IUnitOfWork> _unitOfWork = new();
     private readonly Mock<IAuditLogService> _auditLog = new();
+    private readonly Mock<ILogger<AuthService>> _logger = new();
     private readonly AuthService _sut;
 
     public AuthServiceTests()
@@ -45,7 +46,8 @@ public class AuthServiceTests
             _emailService.Object,
             _configuration.Object,
             _unitOfWork.Object,
-            _auditLog.Object
+            _auditLog.Object,
+            _logger.Object
         );
     }
 
