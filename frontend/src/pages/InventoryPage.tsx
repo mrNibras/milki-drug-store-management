@@ -6,9 +6,10 @@ import { Badge } from '../components/ui/Badge';
 import { formatDate, getDaysUntilExpiry, getExpiryStatus, getStockStatus, getStockColor, formatCurrency } from '../utils/helpers';
 
 export const InventoryPage: React.FC = () => {
-  const { medicines, categories, fetchMedicines, fetchCategories, loading } = useAppStore();
+  const { medicines, categories, fetchMedicines, fetchCategories, currentUser, loading } = useAppStore();
   const { theme } = useThemeStore();
   const isDark = theme === 'dark';
+  const isAdmin = currentUser?.role === 'admin';
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -67,8 +68,8 @@ export const InventoryPage: React.FC = () => {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-        <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl border p-4`}>
+      <div className={`grid grid-cols-2 ${isAdmin ? 'lg:grid-cols-5' : 'lg:grid-cols-3'} gap-4`}>
+        {isAdmin && <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl border p-4`}>
           <div className="flex items-center gap-3">
             <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${isDark ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-100 text-blue-600'}`}>
               <Package className="h-5 w-5" />
@@ -78,8 +79,8 @@ export const InventoryPage: React.FC = () => {
               <p className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{totalItems.toLocaleString()}</p>
             </div>
           </div>
-        </div>
-        <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl border p-4`}>
+        </div>}
+        {isAdmin && <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl border p-4`}>
           <div className="flex items-center gap-3">
             <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${isDark ? 'bg-violet-900/30 text-violet-400' : 'bg-violet-100 text-violet-600'}`}>
               <Layers className="h-5 w-5" />
@@ -89,7 +90,7 @@ export const InventoryPage: React.FC = () => {
               <p className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{totalBatches}</p>
             </div>
           </div>
-        </div>
+        </div>}
         <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl border p-4`}>
           <div className="flex items-center gap-3">
             <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${isDark ? 'bg-emerald-900/30 text-emerald-400' : 'bg-emerald-100 text-emerald-600'}`}>
@@ -170,10 +171,10 @@ export const InventoryPage: React.FC = () => {
                 <th className={`${thClass} text-left`}>Category</th>
                 <th className={`${thClass} text-left`}>Batch #</th>
                 <th className={`${thClass} text-left`}>Expiry Date</th>
-                <th className={`${thClass} text-right`}>Purchase Price</th>
-                <th className={`${thClass} text-right`}>Selling Price</th>
+                {isAdmin && <th className={`${thClass} text-right`}>Purchase Price</th>}
+                {isAdmin && <th className={`${thClass} text-right`}>Selling Price</th>}
                 <th className={`${thClass} text-center`}>Stock</th>
-                <th className={`${thClass} text-right`}>Batch Value</th>
+                {isAdmin && <th className={`${thClass} text-right`}>Batch Value</th>}
                 <th className={`${thClass} text-center`}>Status</th>
               </tr>
             </thead>
@@ -270,16 +271,16 @@ export const InventoryPage: React.FC = () => {
                       </td>
 
                       {/* ===== PURCHASE PRICE ===== */}
-                      <td className={`px-5 py-3 text-right whitespace-nowrap ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                      {isAdmin && <td className={`px-5 py-3 text-right whitespace-nowrap ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                         <span className="text-sm">{batch.purchasePrice.toLocaleString()}</span>
                         <span className={`text-xs ml-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>ETB</span>
-                      </td>
+                      </td>}
 
                       {/* ===== SELLING PRICE ===== */}
-                      <td className={`px-5 py-3 text-right whitespace-nowrap ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>
+                      {isAdmin && <td className={`px-5 py-3 text-right whitespace-nowrap ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>
                         <span className="text-sm font-semibold">{batch.sellingPrice.toLocaleString()}</span>
                         <span className={`text-xs ml-1 font-normal ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>ETB</span>
-                      </td>
+                      </td>}
 
                       {/* ===== STOCK ===== */}
                       <td className="px-5 py-3 text-center">
@@ -289,10 +290,10 @@ export const InventoryPage: React.FC = () => {
                       </td>
 
                       {/* ===== BATCH VALUE ===== */}
-                      <td className={`px-5 py-3 text-right whitespace-nowrap ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                      {isAdmin && <td className={`px-5 py-3 text-right whitespace-nowrap ${isDark ? 'text-white' : 'text-gray-900'}`}>
                         <span className="text-sm font-medium">{batchValue.toLocaleString()}</span>
                         <span className={`text-xs ml-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>ETB</span>
-                      </td>
+                      </td>}
 
                       {/* ===== STATUS ===== */}
                       <td className="px-5 py-3 text-center">

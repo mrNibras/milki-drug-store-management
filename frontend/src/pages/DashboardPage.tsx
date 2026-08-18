@@ -11,16 +11,19 @@ import { formatCurrency, formatDate, formatDateTime, getDaysUntilExpiry } from '
 const COLORS = ['#10B981', '#3B82F6', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#6B7280'];
 
 export const DashboardPage: React.FC = () => {
-  const { medicines, sales, notifications, auditLogs, fetchMedicines, fetchSales, fetchNotifications, fetchAuditLogs, loading } = useAppStore();
+  const { medicines, sales, notifications, auditLogs, fetchMedicines, fetchSales, fetchNotifications, fetchAuditLogs, currentUser, loading } = useAppStore();
   const { theme } = useThemeStore();
   const isDark = theme === 'dark';
+  const isAdmin = currentUser?.role === 'admin';
 
   useEffect(() => {
     fetchMedicines();
-    fetchSales();
     fetchNotifications();
-    fetchAuditLogs();
-  }, [fetchMedicines, fetchSales, fetchNotifications, fetchAuditLogs]);
+    if (isAdmin) {
+      fetchSales();
+      fetchAuditLogs();
+    }
+  }, [fetchMedicines, fetchSales, fetchNotifications, fetchAuditLogs, isAdmin]);
 
   // Calculate stats
   const totalMedicines = (medicines || []).length;
@@ -103,7 +106,7 @@ export const DashboardPage: React.FC = () => {
     { label: 'Low Stock', value: lowStockCount, icon: <AlertTriangle className="h-6 w-6" />, color: 'from-red-500 to-red-600', change: '-2', up: false },
     { label: 'Expiring Soon', value: expiringCount, icon: <Clock className="h-6 w-6" />, color: 'from-orange-500 to-amber-500', change: '', up: true },
     { label: 'Out of Stock', value: outOfStockCount, icon: <Package className="h-6 w-6" />, color: 'from-gray-500 to-gray-600', change: '', up: false },
-  ];
+  ].filter(card => isAdmin || ['Total Medicines', 'Low Stock', 'Expiring Soon', 'Out of Stock'].includes(card.label));
 
   return (
     <div className="space-y-6">
@@ -145,7 +148,7 @@ export const DashboardPage: React.FC = () => {
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Sales Chart */}
-        <div className={`lg:col-span-2 ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl border p-6`}>
+        {isAdmin && <div className={`lg:col-span-2 ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl border p-6`}>
           <div className="flex items-center justify-between mb-6">
             <div>
               <h3 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>Weekly Sales</h3>
@@ -179,7 +182,7 @@ export const DashboardPage: React.FC = () => {
               <Bar dataKey="profit" fill="#3B82F6" radius={[4, 4, 0, 0]} name="Profit" />
             </BarChart>
           </ResponsiveContainer>
-        </div>
+        </div>}
 
         {/* Category Distribution */}
         <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl border p-6`}>
@@ -225,7 +228,7 @@ export const DashboardPage: React.FC = () => {
       </div>
 
       {/* Most Selling Items */}
-      <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl border p-6`}>
+      {isAdmin && <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl border p-6`}>
         <div className="flex items-center justify-between mb-6">
           <div>
             <h3 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>Most Selling Items</h3>
@@ -266,10 +269,10 @@ export const DashboardPage: React.FC = () => {
             );
           })}
         </div>
-      </div>
+      </div>}
 
       {/* Bottom Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {isAdmin && <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Sales */}
         <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl border p-6`}>
           <div className="flex items-center justify-between mb-4">
@@ -341,7 +344,7 @@ export const DashboardPage: React.FC = () => {
             </div>
           </div>
         </div>
-      </div>
+      </div>}
     </div>
   );
 };
