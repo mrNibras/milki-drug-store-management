@@ -1,10 +1,15 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using MilkiDrugStore.Persistence.Context;
+using MilkiDrugStore.Domain.Entities;
 using MilkiDrugStore.Persistence.Repositories;
 using MilkiDrugStore.Domain.Interfaces;
 using MilkiDrugStore.Domain.Interfaces.Repositories;
-using MilkiDrugStore.Domain.Entities;
+using MilkiDrugStore.Application.Services;
+using MilkiDrugStore.Application.Interfaces;
+using MilkiDrugStore.Application.DTOs.Purchase;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Moq;
 using Xunit;
 
 namespace MilkiDrugStore.Tests.Integration.Database;
@@ -616,5 +621,76 @@ public class DatabaseIntegrationTests : IAsyncLifetime
         var savedUser = await _dbContext.Users.FirstAsync(u => u.Email == "branchuser@test.com");
         Assert.Equal(branch.BranchId, savedUser.BranchId);
         Assert.Equal("Integration Test Branch", savedUser.Branch!.BranchName);
+    }
+
+    [Fact]
+    public async Task PurchaseService_Should_Create_Purchase_With_Real_Database()
+    {
+        var branch = await _dbContext.Branches.FirstAsync();
+        var supplier = await _dbContext.Suppliers.FirstAsync();
+
+        var medicine = new Medicine
+        {
+            BrandName = "Integration Purchase Medicine",
+            CategoryId = 1,
+            UnitTypeId = 1,
+            IsActive = true,
+            CreatedDate = DateTime.Now
+        };
+        _dbContext.Medicines.Add(medicine);
+        await _dbContext.SaveChangesAsync();
+
+        var purchaseService = new PurchaseService(
+            new Repository<Purchase>(_dbContext),
+            new Repository<PurchaseItem>(_dbContext),
+            new Repository<Medicine>(_dbContext),
+            new Repository<MedicineBatch>(_dbContext),
+            new Repository<Supplier>(_dbContext),
+            new Mock<ICatalogService>().Object,
+            new Repository<InventoryTransaction>(_dbContext),
+            new UnitOfWork(_dbContext),
+            Mock.Of<IAuditLogService>(),
+            Mock.Of<ILogger<PurchaseService>>());
+
+        var request = new CreatePurchaseRequest
+        {
+            SupplierId = supplier.SupplierId,
+            PurchaseDate = DateTime.Now,
+            PaymentMethod = "cash",
+            AmountPaid = 500,
+            Items = new List<PurchaseItemRequest>
+            {
+                new PurchaseItemRequest
+                {
+                    ProductId = medicine.ProductId,
+                    BatchNumber = "INTEG-BATCH-001",
+                    Quantity = 100,
+                    PurchasePrice = 50,
+                    SellingPrice = 80,
+                    ExpiryDate = DateTime.Now.AddYears(1)
+                }
+            }
+        };
+
+        var result = await purchaseService.CreateAsync(request, 1, branch.BranchId);
+
+        Assert.NotNull(result);
+        Assert.Equal(supplier.SupplierId, result.SupplierId);
+        Assert.Single(result.Items);
+        Assert.Equal(medicine.ProductId, result.Items[0].ProductId);
+        Assert.Equal("INTEG-BATCH-001", result.Items[0].BatchNumber);
+        Assert.Equal(100, result.Items[0].Quantity);
+        Assert.Equal(5000, result.TotalAmount);
+        Assert.Equal(500, result.AmountPaid);
+        Assert.Equal("partial", result.PaymentStatus);
+
+        var savedPurchase = await _dbContext.Purchases.FirstAsync();
+        Assert.Equal(branch.BranchId, savedPurchase.BranchId);
+        Assert.StartsWith("PUR-", savedPurchase.PurchaseNumber);
+
+        var savedBatch = await _dbContext.MedicineBatches.FirstAsync();
+        Assert.Equal(medicine.ProductId, savedBatch.ProductId);
+        Assert.Equal(branch.BranchId, savedBatch.BranchId);
+        Assert.Equal(100, savedBatch.QuantityReceived);
     }
 }

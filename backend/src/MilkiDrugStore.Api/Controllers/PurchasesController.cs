@@ -40,7 +40,8 @@ public class PurchasesController : ControllerBase
     public async Task<IActionResult> Create([FromBody] MilkiDrugStore.Application.DTOs.Purchase.CreatePurchaseRequest request)
     {
         var userId = GetUserId();
-        var result = await _mediator.Send(new Application.Commands.Purchases.CreatePurchaseCommand(request, userId));
+        var branchId = GetBranchId();
+        var result = await _mediator.Send(new Application.Commands.Purchases.CreatePurchaseCommand(request, userId, branchId));
         return Ok(result);
     }
 

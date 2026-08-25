@@ -56,7 +56,7 @@ export interface MedicineBatch {
   createdAt: string;
 }
 
-export interface Branch {
+export interface Supplier {
   id: string;
   name: string;
   phone: string;

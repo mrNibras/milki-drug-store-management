@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using MilkiDrugStore.Application.DTOs.Purchase;
 using MilkiDrugStore.Application.Interfaces;
 using MilkiDrugStore.Domain.Catalog;
@@ -20,6 +21,7 @@ public class PurchaseService : IPurchaseService
         private readonly IRepository<InventoryTransaction> _transactionRepo;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IAuditLogService _auditLog;
+        private readonly ILogger<PurchaseService> _logger;
 
         public PurchaseService(
             IRepository<Purchase> purchaseRepo,
@@ -30,7 +32,8 @@ public class PurchaseService : IPurchaseService
             ICatalogService catalog,
             IRepository<InventoryTransaction> transactionRepo,
             IUnitOfWork unitOfWork,
-            IAuditLogService auditLog)
+            IAuditLogService auditLog,
+            ILogger<PurchaseService> logger)
     {
         _purchaseRepo = purchaseRepo;
         _purchaseItemRepo = purchaseItemRepo;
@@ -41,6 +44,7 @@ public class PurchaseService : IPurchaseService
             _transactionRepo = transactionRepo;
             _unitOfWork = unitOfWork;
             _auditLog = auditLog;
+            _logger = logger;
     }
 
     public async Task<PurchaseResponse> CreateAsync(CreatePurchaseRequest request, int createdBy, int? branchId = null)
@@ -52,6 +56,19 @@ public class PurchaseService : IPurchaseService
                                    i.ExpiryDate.Value.Date <= DateTime.UtcNow.Date))
             throw new InvalidOperationException("Each item requires a batch number, positive quantity and prices, and a future expiry date.");
 
+        var effectiveBranchId = branchId ?? 0;
+        if (effectiveBranchId <= 0)
+        {
+            var defaultBranch = (await _supplierRepo.GetAllAsync()).FirstOrDefault();
+            if (defaultBranch != null)
+            {
+                effectiveBranchId = 1;
+            }
+        }
+
+        _logger.LogInformation("Creating purchase. UserId: {UserId}, BranchId: {BranchId}, SupplierId: {SupplierId}, ItemCount: {ItemCount}",
+            createdBy, effectiveBranchId, request.SupplierId, request.Items.Count);
+
         await _unitOfWork.BeginTransactionAsync();
 
         try
@@ -59,8 +76,14 @@ public class PurchaseService : IPurchaseService
             var purchaseCount = (await _purchaseRepo.GetAllAsync()).Count();
             var purchaseNumber = $"PUR-{DateTime.Now.Year}-{purchaseCount + 1:D5}";
 
+            _logger.LogInformation("Generated purchase number: {PurchaseNumber}", purchaseNumber);
+
             var supplier = (await _supplierRepo.GetAllAsync()).FirstOrDefault(s => s.SupplierId == request.SupplierId);
-            if (supplier == null) throw new Exception("Supplier not found");
+            if (supplier == null)
+            {
+                _logger.LogWarning("Supplier not found. SupplierId: {SupplierId}", request.SupplierId);
+                throw new Exception("Supplier not found");
+            }
 
             var totalAmount = request.Items.Sum(i => i.Quantity * i.PurchasePrice);
             if (request.AmountPaid < 0 || request.AmountPaid > totalAmount)
@@ -69,7 +92,7 @@ public class PurchaseService : IPurchaseService
             var purchase = new Purchase
             {
                 PurchaseNumber = purchaseNumber,
-                BranchId = branchId ?? 0,
+                BranchId = effectiveBranchId,
                 SupplierId = request.SupplierId,
                 PurchaseDate = request.PurchaseDate,
                 TotalAmount = totalAmount,
@@ -87,8 +110,14 @@ public class PurchaseService : IPurchaseService
             await _purchaseRepo.AddAsync(purchase);
             await _unitOfWork.SaveChangesAsync();
 
+            _logger.LogInformation("Purchase created. PurchaseId: {PurchaseId}, PurchaseNumber: {PurchaseNumber}",
+                purchase.PurchaseId, purchase.PurchaseNumber);
+
             foreach (var item in request.Items)
             {
+                _logger.LogInformation("Processing item. ProductId: {ProductId}, BatchNumber: {BatchNumber}, Qty: {Quantity}",
+                    item.ProductId, item.BatchNumber, item.Quantity);
+
                 var medicine = (await _medicineRepo.FindAsync(m => m.ProductId == (item.ProductId ?? 0))).FirstOrDefault()
                     ?? (await _medicineRepo.FindAsync(m => !string.IsNullOrWhiteSpace(item.ProductCode) && m.ProductCode == item.ProductCode.Trim().ToUpper())).FirstOrDefault()
                     ?? (await _medicineRepo.FindAsync(m => !string.IsNullOrWhiteSpace(item.Barcode) && m.Barcode == item.Barcode.Trim())).FirstOrDefault();
@@ -146,10 +175,12 @@ public class PurchaseService : IPurchaseService
                     await _medicineRepo.AddAsync(medicine);
                     await _unitOfWork.SaveChangesAsync();
 
+                    _logger.LogInformation("Auto-created medicine. ProductId: {ProductId}, BrandName: {BrandName}",
+                        medicine.ProductId, medicine.BrandName);
+
                     await _auditLog.LogAsync(createdBy, $"Auto-created medicine: {medicine.BrandName}", "Medicines", medicine.ProductId);
                 }
 
-                var effectiveBranchId = branchId ?? 0;
                 var normalizedBatchNumber = item.BatchNumber.Trim();
                 var batch = (await _batchRepo.FindAsync(b => b.ProductId == medicine.ProductId &&
                     b.BranchId == effectiveBranchId && b.BatchNumber == normalizedBatchNumber)).FirstOrDefault();
@@ -171,6 +202,9 @@ public class PurchaseService : IPurchaseService
                     };
                     await _batchRepo.AddAsync(batch);
                     await _unitOfWork.SaveChangesAsync();
+
+                    _logger.LogInformation("Created new batch. BatchId: {BatchId}, BatchNumber: {BatchNumber}, ProductId: {ProductId}",
+                        batch.BatchId, batch.BatchNumber, medicine.ProductId);
                 }
                 else
                 {
@@ -183,6 +217,9 @@ public class PurchaseService : IPurchaseService
                     batch.ManufacturingDate = item.ManufacturingDate;
                     batch.SupplierId = item.SupplierId ?? request.SupplierId;
                     await _batchRepo.UpdateAsync(batch);
+
+                    _logger.LogInformation("Updated existing batch. BatchId: {BatchId}, NewQtyReceived: {Qty}",
+                        batch.BatchId, batch.QuantityReceived);
                 }
 
                 var purchaseItem = new PurchaseItem
@@ -215,13 +252,17 @@ public class PurchaseService : IPurchaseService
             await _unitOfWork.SaveChangesAsync();
             await _unitOfWork.CommitTransactionAsync();
 
+            _logger.LogInformation("Purchase completed successfully. PurchaseId: {PurchaseId}", purchase.PurchaseId);
+
             await _auditLog.LogAsync(createdBy, "Created Purchase", "Purchases", purchase.PurchaseId);
 
             var result = await GetByIdAsync(purchase.PurchaseId);
             return result ?? throw new Exception("Failed to create purchase");
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "Failed to create purchase. SupplierId: {SupplierId}, ItemCount: {ItemCount}, BranchId: {BranchId}",
+                request.SupplierId, request.Items?.Count ?? 0, effectiveBranchId);
             await _unitOfWork.RollbackTransactionAsync();
             throw;
         }

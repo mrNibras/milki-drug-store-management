@@ -1,9 +1,9 @@
+using Microsoft.Extensions.Logging;
 using MilkiDrugStore.Application.Interfaces;
 using MilkiDrugStore.Application.Services;
 using MilkiDrugStore.Domain.Entities;
 using MilkiDrugStore.Domain.Interfaces;
 using MilkiDrugStore.Domain.Interfaces.Repositories;
-using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 
@@ -34,8 +34,8 @@ public class PurchaseServiceTests
             _catalog.Object,
             _transactionRepo.Object,
             _unitOfWork.Object,
-            _auditLog.Object
-        );
+            _auditLog.Object,
+            Mock.Of<ILogger<PurchaseService>>());
 
         _unitOfWork.Setup(u => u.BeginTransactionAsync()).Returns(Task.CompletedTask);
         _unitOfWork.Setup(u => u.SaveChangesAsync(It.IsAny<System.Threading.CancellationToken>())).ReturnsAsync(1);

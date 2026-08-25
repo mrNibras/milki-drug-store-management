@@ -8,7 +8,7 @@ services:
       - key: ASPNETCORE_ENVIRONMENT
         value: Production
       - key: ASPNETCORE_URLS
-        value: http://+:8080
+        value: http+:8080
       - key: JwtSettings__Secret
         generateValue: true
       - key: JwtSettings__Issuer
@@ -21,6 +21,8 @@ services:
         value: admin@milki.com
       - key: AllowedOrigins
         value: https://milki-drug-store-management.vercel.app
+      - key: DataDirectory
+        value: /var/data
       - key: ConnectionStrings__DefaultConnection
         value: Data Source=/var/data/MilkiDrugStoreDB.db
     healthCheckPath: /health
