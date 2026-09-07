@@ -3,6 +3,7 @@ using MilkiDrugStore.Application.Interfaces;
 using MilkiDrugStore.Domain.Entities;
 using MilkiDrugStore.Domain.Interfaces;
 using MilkiDrugStore.Domain.Interfaces.Repositories;
+using Microsoft.EntityFrameworkCore;
 
 namespace MilkiDrugStore.Application.Services;
 
@@ -24,7 +25,8 @@ public class SupplierService : ISupplierService
     public async Task<IEnumerable<SupplierResponse>> GetAllAsync()
     {
         var suppliers = await _supplierRepo.GetAllAsync();
-        return suppliers.Select(MapToResponse);
+        var list = await suppliers.ToListAsync();
+        return list.Select(MapToResponse);
     }
 
     public async Task<SupplierResponse?> GetByIdAsync(int id)

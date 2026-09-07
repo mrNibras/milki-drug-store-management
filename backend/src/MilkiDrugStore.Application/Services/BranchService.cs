@@ -23,7 +23,8 @@ public class BranchService : IBranchService
     public async Task<IEnumerable<BranchResponse>> GetAllAsync()
     {
         var branches = await _branchRepo.GetAllAsync();
-        return branches.OrderBy(b => b.BranchName).Select(MapToResponse);
+        var list = await branches.OrderBy(b => b.BranchName).ToListAsync();
+        return list.Select(MapToResponse);
     }
 
     public async Task<BranchResponse?> GetByIdAsync(int id)

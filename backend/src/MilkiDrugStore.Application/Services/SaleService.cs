@@ -207,7 +207,8 @@ public class SaleService : ISaleService
         var query = sales.AsQueryable();
         if (branchId.HasValue)
             query = query.Where(s => s.BranchId == branchId.Value);
-        return query.OrderByDescending(s => s.SaleDate).Select(MapToResponse);
+        var list = await query.OrderByDescending(s => s.SaleDate).ToListAsync();
+        return list.Select(MapToResponse);
     }
 
     public async Task<SaleResponse?> GetByIdAsync(int id, int? branchId = null)
