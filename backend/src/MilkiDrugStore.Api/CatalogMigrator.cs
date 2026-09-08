@@ -12,43 +12,26 @@ public static class CatalogMigrator
     {
         logger.LogInformation("Starting catalog data migration...");
 
-        var categories = await db.Categories.ToListAsync();
-        foreach (var cat in categories)
-        {
-            if (MedicineCatalog.FindCategoryId(cat.Name) is int builtInId && builtInId != cat.CategoryId)
-            {
-                var medicines = await db.Medicines.Where(m => m.CategoryId == cat.CategoryId).ToListAsync();
-                foreach (var m in medicines)
-                    m.CategoryId = builtInId;
+        // NOTE: This migrator is intentionally NON-DESTRUCTIVE.
+        //
+        // It does NOT delete, rename, or re-map any categories or unit types
+        // stored in the database. User-created (custom) categories and unit
+        // types are always preserved.
+        //
+        // Historically this method deleted DB rows whose name matched a
+        // built-in catalog entry and reassigned medicines to the built-in
+        // (negative) id. That behavior could destroy user data and was
+        // unnecessary, because CatalogService.GetCategoryOptionsAsync /
+        // GetUnitTypeOptionsAsync already deduplicate built-in vs custom
+        // entries at read time. It has been removed to guarantee data safety.
 
-                var cosmetics = await db.Cosmetics.Where(c => c.CategoryId == cat.CategoryId).ToListAsync();
-                foreach (var c in cosmetics)
-                    c.CategoryId = builtInId;
+        // Verify we can read the tables (ensures connectivity during startup).
+        var categoryCount = await db.Categories.CountAsync();
+        var unitTypeCount = await db.UnitTypes.CountAsync();
+        var medicineCount = await db.Medicines.CountAsync();
 
-                db.Categories.Remove(cat);
-                logger.LogInformation("Migrated category '{Name}' (id {OldId}) -> built-in id {NewId}", cat.Name, cat.CategoryId, builtInId);
-            }
-        }
-
-        var unitTypes = await db.UnitTypes.ToListAsync();
-        foreach (var ut in unitTypes)
-        {
-            if (MedicineCatalog.FindUnitTypeId(ut.Name) is int builtInId && builtInId != ut.UnitTypeId)
-            {
-                var medicines = await db.Medicines.Where(m => m.UnitTypeId == ut.UnitTypeId).ToListAsync();
-                foreach (var m in medicines)
-                    m.UnitTypeId = builtInId;
-
-                var cosmetics = await db.Cosmetics.Where(c => c.UnitTypeId == ut.UnitTypeId).ToListAsync();
-                foreach (var c in cosmetics)
-                    c.UnitTypeId = builtInId;
-
-                db.UnitTypes.Remove(ut);
-                logger.LogInformation("Migrated unit type '{Name}' (id {OldId}) -> built-in id {NewId}", ut.Name, ut.UnitTypeId, builtInId);
-            }
-        }
-
-        await db.SaveChangesAsync();
-        logger.LogInformation("Catalog data migration completed.");
+        logger.LogInformation(
+            "Catalog migration check complete: {CategoryCount} categories, {UnitTypeCount} unit types, {MedicineCount} medicines. Nothing was modified.",
+            categoryCount, unitTypeCount, medicineCount);
     }
 }
