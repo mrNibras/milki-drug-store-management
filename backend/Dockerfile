@@ -20,6 +20,11 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 WORKDIR /app
 EXPOSE 8080
 
+# Install PostgreSQL client tools (pg_dump, pg_restore) for database backup/restore
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends postgresql-client && \
+    rm -rf /var/lib/apt/lists/*
+
 # Create data directories on the persistent disk mount point.
 # Render mounts the Persistent Disk at /var/data, so keys stored under
 # /var/data/keys survive container restarts and redeployments.

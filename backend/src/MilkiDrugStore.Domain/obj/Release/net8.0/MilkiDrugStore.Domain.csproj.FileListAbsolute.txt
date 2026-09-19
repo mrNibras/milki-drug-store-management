@@ -1,0 +1,12 @@
+/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Domain/bin/Release/net8.0/MilkiDrugStore.Domain.deps.json
+/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Domain/bin/Release/net8.0/MilkiDrugStore.Domain.dll
+/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Domain/bin/Release/net8.0/MilkiDrugStore.Domain.pdb
+/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Domain/obj/Release/net8.0/MilkiDrugStore.Domain.GeneratedMSBuildEditorConfig.editorconfig
+/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Domain/obj/Release/net8.0/MilkiDrugStore.Domain.AssemblyInfoInputs.cache
+/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Domain/obj/Release/net8.0/MilkiDrugStore.Domain.AssemblyInfo.cs
+/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Domain/obj/Release/net8.0/MilkiDrugStore.Domain.csproj.CoreCompileInputs.cache
+/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Domain/obj/Release/net8.0/MilkiDrugStore.Domain.sourcelink.json
+/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Domain/obj/Release/net8.0/MilkiDrugStore.Domain.dll
+/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Domain/obj/Release/net8.0/refint/MilkiDrugStore.Domain.dll
+/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Domain/obj/Release/net8.0/MilkiDrugStore.Domain.pdb
+/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Domain/obj/Release/net8.0/ref/MilkiDrugStore.Domain.dll

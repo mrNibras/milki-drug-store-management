@@ -104,29 +104,24 @@ builder.Services.AddOptions<EmailSettings>()
     .Bind(builder.Configuration.GetSection("Email"))
     .ValidateOnStart();
 
-builder.Services.AddOptions<CorsSettings>()
-    .Bind(builder.Configuration.GetSection("Cors"))
-    .ValidateOnStart();
+    builder.Services.AddOptions<CorsSettings>()
+        .Bind(builder.Configuration.GetSection("Cors"))
+        .ValidateOnStart();
 
-// Database provider auto-detection.
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-builder.Services.AddDbContext<AppDbContext>(options =>
-{
-    if (!string.IsNullOrEmpty(connectionString) && connectionString.Contains("Server=", StringComparison.OrdinalIgnoreCase))
+    builder.Services.AddOptions<DatabaseMonitoringOptions>()
+        .Bind(builder.Configuration.GetSection("DatabaseMonitoring"))
+        .ValidateOnStart();
+
+    builder.Services.AddOptions<RetentionOptions>()
+        .Bind(builder.Configuration.GetSection("Retention"))
+        .ValidateOnStart();
+
+    // Database provider auto-detection.
+    var connectionString = DbProviderResolver.ResolveConnectionString(builder.Configuration);
+    builder.Services.AddDbContext<AppDbContext>(options =>
     {
-        options.UseSqlServer(connectionString, sql =>
-        {
-            sql.MigrationsAssembly("MilkiDrugStore.Persistence");
-        });
-    }
-    else
-    {
-        options.UseSqlite(connectionString, sql =>
-        {
-            sql.MigrationsAssembly("MilkiDrugStore.Persistence");
-        });
-    }
-});
+        DbProviderResolver.ConfigureAppDbContext(options, DbProviderResolver.DetectProvider(builder.Configuration), connectionString);
+    });
 
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddAutoMapper(typeof(MappingProfile));
@@ -226,6 +221,7 @@ builder.Services.AddSwaggerGen(options =>
 
 builder.Services.AddHostedService<MilkiDrugStore.Infrastructure.BackgroundJobs.ExpiryCheckBackgroundService>();
 builder.Services.AddHostedService<MilkiDrugStore.Infrastructure.BackgroundJobs.NotificationCheckBackgroundService>();
+builder.Services.AddHostedService<MilkiDrugStore.Infrastructure.BackgroundJobs.RetentionCleanupBackgroundService>();
 
 // Global exception filter.
 builder.Services.AddControllers(options =>

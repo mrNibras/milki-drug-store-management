@@ -31,6 +31,22 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ICosmeticService, CosmeticService>();
         services.AddScoped<ICatalogService, CatalogService>();
 
+        services.AddScoped<IFileStorageService>(sp =>
+        {
+            var config = sp.GetRequiredService<IConfiguration>();
+            var provider = config.GetValue<string>("FileStorage:Provider") ?? "local";
+            return provider.ToLowerInvariant() switch
+            {
+                "s3" => (IFileStorageService)new S3FileStorageService(
+                    config, sp.GetRequiredService<ILogger<S3FileStorageService>>()),
+                _ => new LocalFileStorageService(
+                    config, sp.GetRequiredService<ILogger<LocalFileStorageService>>())
+            };
+        });
+
+        services.AddScoped<IDatabaseMonitoringService, DatabaseMonitoringService>();
+        services.AddScoped<IRetentionService, RetentionService>();
+
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(BackupService).Assembly));
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();

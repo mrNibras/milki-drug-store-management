@@ -1,7 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
-using MilkiDrugStore.Api.Models;
+using Microsoft.Extensions.Configuration;
+using MilkiDrugStore.Application.Interfaces;
 using MilkiDrugStore.Persistence.Context;
 
 namespace MilkiDrugStore.Api.Controllers;
@@ -13,11 +14,13 @@ public class HealthController : ControllerBase
 {
     private readonly AppDbContext _dbContext;
     private readonly IConfiguration _configuration;
+    private readonly IDatabaseMonitoringService _dbMonitoringService;
 
-    public HealthController(AppDbContext dbContext, IConfiguration configuration)
+    public HealthController(AppDbContext dbContext, IConfiguration configuration, IDatabaseMonitoringService dbMonitoringService)
     {
         _dbContext = dbContext;
         _configuration = configuration;
+        _dbMonitoringService = dbMonitoringService;
     }
 
     [HttpGet]
@@ -37,12 +40,8 @@ public class HealthController : ControllerBase
         var connectionString = _configuration.GetConnectionString("DefaultConnection") ?? string.Empty;
         var provider = _dbContext.Database.ProviderName ?? "Unknown";
         var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Unknown";
-        var dataDirectory = _configuration.GetValue<string>("DataDirectory") ?? "/var/data";
 
-        var databasePath = ExtractSqlitePath(connectionString) ?? "Unknown";
-        var dbFile = databasePath != "Unknown" ? new FileInfo(databasePath) : null;
-
-        var (writable, writeError) = CheckWritable(databasePath);
+        var sizeInfo = await _dbMonitoringService.GetDatabaseSizeInfoAsync();
 
         bool connectionSuccessful = false;
         string? connectionError = null;
@@ -69,6 +68,14 @@ public class HealthController : ControllerBase
             connectionError = ex.Message;
         }
 
+        var isSqlite = provider.Contains("Sqlite", StringComparison.OrdinalIgnoreCase);
+        var dataDirectory = isSqlite
+            ? (_configuration.GetValue<string>("DataDirectory") ?? "/var/data")
+            : null;
+        var databasePath = isSqlite ? ExtractSqlitePath(connectionString) : null;
+        var dbFile = isSqlite && databasePath != null ? new FileInfo(databasePath) : null;
+        var (writable, writeError) = isSqlite ? CheckWritable(databasePath ?? "Unknown") : (false, (string?)null);
+
         return Ok(new
         {
             environment,
@@ -79,7 +86,11 @@ public class HealthController : ControllerBase
             databaseExists = dbFile?.Exists ?? false,
             databaseWritable = writable,
             writeError,
-            databaseSizeBytes = dbFile?.Exists == true ? dbFile.Length : 0,
+            databaseSizeBytes = sizeInfo.SizeBytes,
+            databaseSizeReadable = sizeInfo.SizeReadable,
+            databaseSizeStatus = sizeInfo.Status,
+            databaseSizeWarningThresholdBytes = sizeInfo.WarningThresholdBytes,
+            databaseSizeCriticalThresholdBytes = sizeInfo.CriticalThresholdBytes,
             databaseLastModifiedUtc = dbFile?.Exists == true ? dbFile.LastWriteTimeUtc.ToString("o") : null,
             connectionSuccessful,
             connectionError,

@@ -1,15 +1,16 @@
 services:
-  sqlserver:
-    image: mcr.microsoft.com/mssql/server:2022-latest
+  postgres:
+    image: postgres:16-alpine
     environment:
-      SA_PASSWORD: "YourStrong@Pass123"
-      ACCEPT_EULA: "Y"
+      POSTGRES_DB: milki_drug_store
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: YourStrong@Pass123
     ports:
-      - "1433:1433"
+      - "5432:5432"
     volumes:
-      - sqlserver-data:/var/opt/mssql
+      - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "/opt/mssql-tools/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-P", "YourStrong@Pass123", "-Q", "SELECT 1"]
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -21,10 +22,18 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=MilkiDrugStoreDB;User Id=sa;Password=YourStrong@Pass123;TrustServerCertificate=true
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=localhost;Port=5432;Database=milki_drug_store;Username=postgres;Password=YourStrong@Pass123;SslMode=Disable
+      - DatabaseProvider=postgresql
+      - FileStorage__Provider=local
+      - FileStorage__Local__BasePath=/var/data/uploads
+      - DataDirectory=/var/data
     depends_on:
-      sqlserver:
+      postgres:
         condition: service_healthy
+    volumes:
+      - milki-data:/var/data
 
 volumes:
-  sqlserver-data:
+  postgres-data:
+  milki-data:

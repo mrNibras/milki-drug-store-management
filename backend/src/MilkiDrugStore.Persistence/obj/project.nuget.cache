@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "bXuORFtFjbus3K1qjZg6MvDttSWcjBPNgLsiQT62VFTG+Pt9RBZdHilPcfW9DHT0l8hj7fyyHv0YRq4owmO/SA==",
+  "dgSpecHash": "j5gpiwDCBryJF2Uwiuru5olfmscnaHfUgyOqDfaXdYlajMjQQrzuUZ9kj/9UrUeyQ7dB0mCmT4SZK2fo9hnXog==",
   "success": true,
   "projectFilePath": "/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Persistence/MilkiDrugStore.Persistence.csproj",
   "expectedPackageFiles": [
@@ -56,6 +56,8 @@
     "/home/mrnibra/.nuget/packages/microsoft.sqlserver.server/1.0.0/microsoft.sqlserver.server.1.0.0.nupkg.sha512",
     "/home/mrnibra/.nuget/packages/microsoft.win32.systemevents/6.0.0/microsoft.win32.systemevents.6.0.0.nupkg.sha512",
     "/home/mrnibra/.nuget/packages/mono.texttemplating/2.2.1/mono.texttemplating.2.2.1.nupkg.sha512",
+    "/home/mrnibra/.nuget/packages/npgsql/8.0.5/npgsql.8.0.5.nupkg.sha512",
+    "/home/mrnibra/.nuget/packages/npgsql.entityframeworkcore.postgresql/8.0.10/npgsql.entityframeworkcore.postgresql.8.0.10.nupkg.sha512",
     "/home/mrnibra/.nuget/packages/sqlitepclraw.bundle_e_sqlite3/2.1.6/sqlitepclraw.bundle_e_sqlite3.2.1.6.nupkg.sha512",
     "/home/mrnibra/.nuget/packages/sqlitepclraw.core/2.1.6/sqlitepclraw.core.2.1.6.nupkg.sha512",
     "/home/mrnibra/.nuget/packages/sqlitepclraw.lib.e_sqlite3/2.1.6/sqlitepclraw.lib.e_sqlite3.2.1.6.nupkg.sha512",

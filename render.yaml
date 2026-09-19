@@ -24,9 +24,32 @@ services:
       - key: DataDirectory
         value: /var/data
       - key: ConnectionStrings__DefaultConnection
-        value: Data Source=/var/data/MilkiDrugStoreDB.db
+        fromDatabase:
+          name: milki-drug-store-db
+          property: connectionUrl
+      - key: DatabaseProvider
+        value: postgresql
+      - key: FileStorage__Provider
+        value: s3
+      - key: FileStorage__S3__BucketName
+        value: milki-drug-store-uploads
+      - key: FileStorage__S3__Region
+        value: us-east-1
+      - key: DatabaseMonitoring__WarningThresholdGB
+        value: "5"
+      - key: DatabaseMonitoring__CriticalThresholdGB
+        value: "10"
+      - key: Retention__AuditLogRetentionDays
+        value: "1095"
+      - key: Retention__NotificationRetentionDays
+        value: "180"
     healthCheckPath: /health
     disk:
       name: milki-data
       mountPath: /var/data
       sizeGB: 1
+
+databases:
+  - name: milki-drug-store-db
+    region: oregon
+    plan: free

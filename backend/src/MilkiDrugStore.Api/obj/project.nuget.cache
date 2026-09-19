@@ -1,11 +1,13 @@
 {
   "version": 2,
-  "dgSpecHash": "/4/g8ZPBQMaV1G2B2pgHfCGLAjiKO4VR4J4E8Vftvv6cjYmvs5kdX9fTD6uhQRlNVBQyCahD6M7nbUJ5E84oog==",
+  "dgSpecHash": "+aIhKZRpbj5jKL4p2QUQN//Cf9Cxaby5UxiO4S8cweDGNnBDajY1ZesMbjWZ69DXSFBQ9DvtZgVdSsB9SQzz8g==",
   "success": true,
   "projectFilePath": "/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Api/MilkiDrugStore.Api.csproj",
   "expectedPackageFiles": [
     "/home/mrnibra/.nuget/packages/automapper/12.0.1/automapper.12.0.1.nupkg.sha512",
     "/home/mrnibra/.nuget/packages/automapper.extensions.microsoft.dependencyinjection/12.0.1/automapper.extensions.microsoft.dependencyinjection.12.0.1.nupkg.sha512",
+    "/home/mrnibra/.nuget/packages/awssdk.core/3.7.400.58/awssdk.core.3.7.400.58.nupkg.sha512",
+    "/home/mrnibra/.nuget/packages/awssdk.s3/3.7.409/awssdk.s3.3.7.409.nupkg.sha512",
     "/home/mrnibra/.nuget/packages/azure.core/1.38.0/azure.core.1.38.0.nupkg.sha512",
     "/home/mrnibra/.nuget/packages/azure.identity/1.11.4/azure.identity.1.11.4.nupkg.sha512",
     "/home/mrnibra/.nuget/packages/bcrypt.net-next/4.0.3/bcrypt.net-next.4.0.3.nupkg.sha512",
@@ -67,6 +69,8 @@
     "/home/mrnibra/.nuget/packages/microsoft.sqlserver.server/1.0.0/microsoft.sqlserver.server.1.0.0.nupkg.sha512",
     "/home/mrnibra/.nuget/packages/mono.texttemplating/2.2.1/mono.texttemplating.2.2.1.nupkg.sha512",
     "/home/mrnibra/.nuget/packages/newtonsoft.json/11.0.1/newtonsoft.json.11.0.1.nupkg.sha512",
+    "/home/mrnibra/.nuget/packages/npgsql/8.0.5/npgsql.8.0.5.nupkg.sha512",
+    "/home/mrnibra/.nuget/packages/npgsql.entityframeworkcore.postgresql/8.0.10/npgsql.entityframeworkcore.postgresql.8.0.10.nupkg.sha512",
     "/home/mrnibra/.nuget/packages/serilog/3.1.1/serilog.3.1.1.nupkg.sha512",
     "/home/mrnibra/.nuget/packages/serilog.aspnetcore/8.0.2/serilog.aspnetcore.8.0.2.nupkg.sha512",
     "/home/mrnibra/.nuget/packages/serilog.extensions.hosting/8.0.0/serilog.extensions.hosting.8.0.0.nupkg.sha512",
