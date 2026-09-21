@@ -1,5 +1,8 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using MilkiDrugStore.Api.Models;
 
 namespace MilkiDrugStore.Api.Middleware;
@@ -17,17 +20,44 @@ public class GlobalExceptionFilter : IExceptionFilter
 
     public void OnException(ExceptionContext context)
     {
-        _logger.LogError(context.Exception, "Unhandled exception occurred");
+        var correlationId = context.HttpContext?.TraceIdentifier ?? "unknown";
 
-        var statusCode = context.Exception is ArgumentException || context.Exception is InvalidOperationException
+        var isClientError = context.Exception is ArgumentException ||
+                            context.Exception is InvalidOperationException;
+
+        var statusCode = isClientError
             ? StatusCodes.Status400BadRequest
             : StatusCodes.Status500InternalServerError;
 
-        var message = _env.IsDevelopment()
-            ? context.Exception.ToString()
-            : "An unexpected error occurred. Please try again later.";
+        // Always log the full exception server-side for diagnostics.
+        _logger.LogError(context.Exception,
+            "Unhandled exception (CorrelationId: {CorrelationId}, Status: {StatusCode})",
+            correlationId, statusCode);
 
-        context.Result = new JsonResult(ApiResponse.Fail(message, statusCode))
+        // Determine the safe user-facing message.
+        string message;
+        if (_env.IsDevelopment())
+        {
+            message = context.Exception.ToString();
+        }
+        else if (isClientError)
+        {
+            // InvalidOperationException and ArgumentException messages from the
+            // service/application layer are intentionally user-facing.
+            message = context.Exception.Message;
+        }
+        else
+        {
+            // Server errors (including DbUpdateException from FK violations,
+            // connection issues, etc.) are masked to avoid leaking infrastructure
+            // details such as table names, constraint names, or SQL.
+            message = "An unexpected error occurred. Please try again later.";
+        }
+
+        var response = ApiResponse.Fail(message, statusCode);
+        response.CorrelationId = correlationId;
+
+        context.Result = new JsonResult(response)
         {
             StatusCode = statusCode
         };

@@ -42,6 +42,13 @@ public class PurchaseServiceTests
         _unitOfWork.Setup(u => u.CommitTransactionAsync()).Returns(Task.CompletedTask);
         _unitOfWork.Setup(u => u.RollbackTransactionAsync()).Returns(Task.CompletedTask);
 
+        var branchRepo = new Mock<IRepository<Branch>>();
+        branchRepo.Setup(r => r.GetAllAsync()).ReturnsAsync(new List<Branch>
+        {
+            new Branch { BranchId = 1, BranchName = "Test Branch" }
+        }.AsQueryable());
+        _unitOfWork.Setup(u => u.Branches).Returns(branchRepo.Object);
+
         _supplierRepo.Setup(r => r.GetAllAsync()).ReturnsAsync(new List<Supplier>().AsQueryable());
 
         _purchaseRepo.Setup(r => r.GetAllAsync()).ReturnsAsync(new List<Purchase>().AsQueryable());

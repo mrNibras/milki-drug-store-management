@@ -179,7 +179,7 @@ export const PurchasesPage: React.FC = () => {
     }
 
     const purchaseRequest: CreatePurchaseRequest = {
-      supplierId: selectedSupplier,
+        supplierId: Number(selectedSupplier),
       purchaseDate: new Date(purchaseDate).toISOString(),
       paymentStatus: finalStatus,
       paymentMethod: paymentMethod,
@@ -208,13 +208,21 @@ export const PurchasesPage: React.FC = () => {
       resetForm();
       setTimeout(() => setShowSuccess(false), 5000);
     } catch (error) {
-      console.error("Failed to save purchase:", error);
-      const apiError = error as { response?: { data?: { message?: string; title?: string; errors?: Record<string, string[]> } } };
-      const validationErrors = apiError.response?.data?.errors;
-      const message = validationErrors
+      const apiError = error as { response?: { status?: number; data?: { message?: string; title?: string; errors?: string[] | Record<string, string[]>; correlationId?: string } } };
+      const status = apiError.response?.status;
+      const data = apiError.response?.data;
+      const validationErrors = data?.errors;
+      const detail = validationErrors
         ? Object.values(validationErrors).flat().join('\n')
-        : apiError.response?.data?.message || apiError.response?.data?.title || 'An unexpected error occurred.';
-      alert(`Unable to save purchase: ${message}`);
+        : data?.message ?? data?.title ?? error.message ?? 'Unknown error';
+      const correlationId = data?.correlationId ?? apiError.response?.headers?.['x-correlation-id'];
+      console.error('Failed to save purchase', { status, detail, correlationId, error });
+
+      let alertMsg = `Unable to save purchase:\n\n${detail}`;
+      if (correlationId) {
+        alertMsg += `\n\nPlease reference correlation ID: ${correlationId} when contacting support.`;
+      }
+      alert(alertMsg);
     } finally {
       setIsProcessing(false);
     }

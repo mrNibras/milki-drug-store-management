@@ -6,6 +6,7 @@ public class ApiResponse
     public string Message { get; set; } = string.Empty;
     public object? Data { get; set; }
     public List<string>? Errors { get; set; }
+    public string? CorrelationId { get; set; }
 
     public static ApiResponse Ok(object? data = null, string? message = null)
     {

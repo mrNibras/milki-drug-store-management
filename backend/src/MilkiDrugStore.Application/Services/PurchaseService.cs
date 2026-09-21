@@ -59,10 +59,11 @@ public class PurchaseService : IPurchaseService
         var effectiveBranchId = branchId ?? 0;
         if (effectiveBranchId <= 0)
         {
-            var defaultBranch = (await _supplierRepo.GetAllAsync()).FirstOrDefault();
+            var branches = await _unitOfWork.Branches.GetAllAsync();
+            var defaultBranch = branches.FirstOrDefault();
             if (defaultBranch != null)
             {
-                effectiveBranchId = 1;
+                effectiveBranchId = defaultBranch.BranchId;
             }
         }
 

@@ -14,8 +14,8 @@ public class CreatePurchaseCommandHandler : IRequestHandler<CreatePurchaseComman
         _purchaseService = purchaseService;
     }
 
-    public async Task<PurchaseResponse> Handle(CreatePurchaseCommand request, CancellationToken cancellationToken)
-    {
-        return await _purchaseService.CreateAsync(request.Request, request.UserId);
-    }
+        public async Task<PurchaseResponse> Handle(CreatePurchaseCommand request, CancellationToken cancellationToken)
+        {
+            return await _purchaseService.CreateAsync(request.Request, request.UserId, request.BranchId);
+        }
 }
