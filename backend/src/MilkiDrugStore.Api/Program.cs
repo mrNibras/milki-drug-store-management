@@ -15,7 +15,7 @@ using Microsoft.Extensions.Logging;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Ensure data directory exists for SQLite and Data Protection keys.
+// Ensure data directory exists for Data Protection keys and file uploads.
 // Render mounts the Persistent Disk at /var/data, so everything stored
 // under this path survives container restarts and redeployments.
 var dataDir = builder.Configuration.GetValue<string>("DataDirectory") ?? "/var/data";
@@ -120,7 +120,7 @@ builder.Services.AddOptions<EmailSettings>()
     var connectionString = DbProviderResolver.ResolveConnectionString(builder.Configuration);
     builder.Services.AddDbContext<AppDbContext>(options =>
     {
-        DbProviderResolver.ConfigureAppDbContext(options, DbProviderResolver.DetectProvider(builder.Configuration), connectionString);
+        DbProviderResolver.ConfigureAppDbContext(options, builder.Configuration);
     });
 
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
@@ -241,6 +241,7 @@ using (var scope = app.Services.CreateScope())
     {
         var contextType = db.GetType().FullName;
         var provider = db.Database.ProviderName ?? "Unknown";
+        var isRelational = db.Database.IsRelational();
 
         logger.LogInformation("=== Database Initialization Starting ===");
         logger.LogInformation("Context Type: {ContextType}", contextType);
@@ -249,32 +250,44 @@ using (var scope = app.Services.CreateScope())
         logger.LogInformation("Connection String: {ConnectionString}",
             MaskConnectionString(connectionString));
 
-        var pendingMigrations = db.Database.GetPendingMigrations();
-        var pendingCount = pendingMigrations.Count();
-
-        logger.LogInformation("Pending Migrations Count: {PendingCount}", pendingCount);
-
-        if (pendingCount > 0)
+        if (isRelational)
         {
-            logger.LogInformation("Applying {Count} pending migration(s)...", pendingCount);
-            foreach (var migrationId in pendingMigrations)
+            var pendingMigrations = db.Database.GetPendingMigrations();
+            var pendingCount = pendingMigrations.Count();
+
+            logger.LogInformation("Pending Migrations Count: {PendingCount}", pendingCount);
+
+            if (pendingCount > 0)
             {
-                logger.LogInformation("  Applying Migration: {MigrationId}", migrationId);
+                logger.LogInformation("Applying {Count} pending migration(s)...", pendingCount);
+                foreach (var migrationId in pendingMigrations)
+                {
+                    logger.LogInformation("  Applying Migration: {MigrationId}", migrationId);
+                }
             }
+
+            logger.LogInformation("Starting database migration...");
+            db.Database.Migrate();
+            logger.LogInformation("Database migration completed successfully.");
+
+            var appliedMigrations = db.Database.GetAppliedMigrations();
+            logger.LogInformation("Total Applied Migrations: {Count}", appliedMigrations.Count());
         }
-
-        logger.LogInformation("Starting database migration...");
-        db.Database.Migrate();
-        logger.LogInformation("Database migration completed successfully.");
-
-        var appliedMigrations = db.Database.GetAppliedMigrations();
-        logger.LogInformation("Total Applied Migrations: {Count}", appliedMigrations.Count());
+        else
+        {
+            logger.LogInformation("Non-relational database provider detected. Skipping migrations.");
+        }
 
         logger.LogInformation("Starting database seeding...");
         await DbSeeder.SeedAsync(db, logger);
         logger.LogInformation("Database seeded successfully.");
         await CatalogMigrator.MigrateAsync(db, logger);
-        await BackfillMedicineFieldsAsync(db, logger);
+        Task backfillMedicineTask = Task.CompletedTask;
+        if (isRelational)
+        {
+            backfillMedicineTask = BackfillMedicineFieldsAsync(db, logger);
+        }
+        await backfillMedicineTask;
         logger.LogInformation("=== Database Initialization Complete ===");
     }
     catch (Exception ex)

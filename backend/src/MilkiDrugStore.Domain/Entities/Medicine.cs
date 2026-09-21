@@ -28,7 +28,7 @@ public class Medicine
     public decimal SellingPrice { get; set; }
     public int ReorderLevel { get; set; } = 10;
     public bool IsActive { get; set; } = true;
-    public DateTime CreatedDate { get; set; } = DateTime.Now;
+    public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedDate { get; set; }
 
     public List<MedicineBatch> Batches { get; set; } = new();

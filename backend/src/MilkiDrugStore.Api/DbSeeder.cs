@@ -32,7 +32,7 @@ public static class DbSeeder
                 var mainBranch = context.Branches.FirstOrDefault(b => b.BranchName == "Main Branch");
                 if (mainBranch == null)
                 {
-                    mainBranch = new Branch { BranchName = "Main Branch", Location = "Main Store", IsActive = true, CreatedAt = DateTime.Now };
+                    mainBranch = new Branch { BranchName = "Main Branch", Location = "Main Store", IsActive = true, CreatedAt = DateTime.UtcNow };
                     context.Branches.Add(mainBranch);
                     await context.SaveChangesAsync();
                     logger.LogInformation("Main Branch created.");
@@ -47,7 +47,7 @@ public static class DbSeeder
                     BranchId = mainBranch.BranchId,
                     IsApproved = true,
                     IsActive = true,
-                    CreatedAt = DateTime.Now
+                    CreatedAt = DateTime.UtcNow
                 });
                 await context.SaveChangesAsync();
                 logger.LogInformation("Default admin user seeded successfully.");
@@ -58,7 +58,7 @@ public static class DbSeeder
                 var mainBranch = context.Branches.FirstOrDefault(b => b.BranchName == "Main Branch");
                 if (mainBranch == null)
                 {
-                    mainBranch = new Branch { BranchName = "Main Branch", Location = "Main Store", IsActive = true, CreatedAt = DateTime.Now };
+                    mainBranch = new Branch { BranchName = "Main Branch", Location = "Main Store", IsActive = true, CreatedAt = DateTime.UtcNow };
                     context.Branches.Add(mainBranch);
                     await context.SaveChangesAsync();
                     logger.LogInformation("Main Branch created.");
@@ -98,7 +98,7 @@ public static class DbSeeder
                 var mainBranch = await context.Branches.FirstOrDefaultAsync(b => b.BranchName == "Main Branch");
                 if (mainBranch == null)
                 {
-                    mainBranch = new Branch { BranchName = "Main Branch", Location = "Main Store", IsActive = true, CreatedAt = DateTime.Now };
+                    mainBranch = new Branch { BranchName = "Main Branch", Location = "Main Store", IsActive = true, CreatedAt = DateTime.UtcNow };
                     context.Branches.Add(mainBranch);
                     await context.SaveChangesAsync();
                 }

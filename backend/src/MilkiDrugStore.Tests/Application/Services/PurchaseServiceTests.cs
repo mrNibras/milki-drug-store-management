@@ -59,12 +59,12 @@ public class PurchaseServiceTests
         var request = new MilkiDrugStore.Application.DTOs.Purchase.CreatePurchaseRequest
         {
             SupplierId = 1,
-            PurchaseDate = DateTime.Now,
+            PurchaseDate = DateTime.UtcNow,
             PaymentMethod = "cash",
             AmountPaid = 1000,
             Items = new List<MilkiDrugStore.Application.DTOs.Purchase.PurchaseItemRequest>
             {
-                new MilkiDrugStore.Application.DTOs.Purchase.PurchaseItemRequest { ProductId = 1, BatchNumber = "B1", Quantity = 10, PurchasePrice = 100, SellingPrice = 150, ExpiryDate = DateTime.Now.AddYears(1) }
+                new MilkiDrugStore.Application.DTOs.Purchase.PurchaseItemRequest { ProductId = 1, BatchNumber = "B1", Quantity = 10, PurchasePrice = 100, SellingPrice = 150, ExpiryDate = DateTime.UtcNow.AddYears(1) }
             }
         };
 
@@ -103,12 +103,12 @@ public class PurchaseServiceTests
         var request = new MilkiDrugStore.Application.DTOs.Purchase.CreatePurchaseRequest
         {
             SupplierId = 1,
-            PurchaseDate = DateTime.Now,
+            PurchaseDate = DateTime.UtcNow,
             PaymentMethod = "cash",
             AmountPaid = 500,
             Items = new List<MilkiDrugStore.Application.DTOs.Purchase.PurchaseItemRequest>
             {
-                new MilkiDrugStore.Application.DTOs.Purchase.PurchaseItemRequest { ProductId = 1, BatchNumber = "B1", Quantity = 10, PurchasePrice = 100, SellingPrice = 150, ExpiryDate = DateTime.Now.AddYears(1) }
+                new MilkiDrugStore.Application.DTOs.Purchase.PurchaseItemRequest { ProductId = 1, BatchNumber = "B1", Quantity = 10, PurchasePrice = 100, SellingPrice = 150, ExpiryDate = DateTime.UtcNow.AddYears(1) }
             }
         };
 
@@ -146,12 +146,12 @@ public class PurchaseServiceTests
         var request = new MilkiDrugStore.Application.DTOs.Purchase.CreatePurchaseRequest
         {
             SupplierId = 1,
-            PurchaseDate = DateTime.Now,
+            PurchaseDate = DateTime.UtcNow,
             PaymentMethod = "credit",
             AmountPaid = 0,
             Items = new List<MilkiDrugStore.Application.DTOs.Purchase.PurchaseItemRequest>
             {
-                new MilkiDrugStore.Application.DTOs.Purchase.PurchaseItemRequest { ProductId = 1, BatchNumber = "B1", Quantity = 10, PurchasePrice = 100, SellingPrice = 150, ExpiryDate = DateTime.Now.AddYears(1) }
+                new MilkiDrugStore.Application.DTOs.Purchase.PurchaseItemRequest { ProductId = 1, BatchNumber = "B1", Quantity = 10, PurchasePrice = 100, SellingPrice = 150, ExpiryDate = DateTime.UtcNow.AddYears(1) }
             }
         };
 

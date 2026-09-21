@@ -27,5 +27,8 @@ public class MedicineConfiguration : IEntityTypeConfiguration<Medicine>
         builder.HasIndex(m => m.GenericName);
         builder.HasIndex(m => m.Strength);
         builder.HasIndex(m => m.DosageForm);
+        builder.HasIndex(m => m.CategoryId);
+        builder.HasIndex(m => m.UnitTypeId);
+        builder.HasIndex(m => m.IsActive);
     }
 }

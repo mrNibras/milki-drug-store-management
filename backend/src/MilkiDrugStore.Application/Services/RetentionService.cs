@@ -27,23 +27,29 @@ public class RetentionService : IRetentionService
     public async Task<int> CleanupOldAuditLogsAsync()
     {
         var cutoff = DateTime.UtcNow.AddDays(-_auditLogRetentionDays);
-        var count = await _dbContext.AuditLogs
+        var oldLogs = await _dbContext.AuditLogs
             .Where(al => al.CreatedAt < cutoff)
-            .ExecuteDeleteAsync();
+            .ToListAsync();
 
-        _logger.LogInformation("Deleted {Count} audit log entries older than {Cutoff}", count, cutoff);
-        return count;
+        _dbContext.AuditLogs.RemoveRange(oldLogs);
+        await _dbContext.SaveChangesAsync();
+
+        _logger.LogInformation("Deleted {Count} audit log entries older than {Cutoff}", oldLogs.Count, cutoff);
+        return oldLogs.Count;
     }
 
     public async Task<int> CleanupOldNotificationsAsync()
     {
         var cutoff = DateTime.UtcNow.AddDays(-_notificationRetentionDays);
-        var count = await _dbContext.Notifications
+        var oldNotifications = await _dbContext.Notifications
             .Where(n => n.IsRead && n.CreatedAt < cutoff)
-            .ExecuteDeleteAsync();
+            .ToListAsync();
 
-        _logger.LogInformation("Deleted {Count} notification entries older than {Cutoff}", count, cutoff);
-        return count;
+        _dbContext.Notifications.RemoveRange(oldNotifications);
+        await _dbContext.SaveChangesAsync();
+
+        _logger.LogInformation("Deleted {Count} notification entries older than {Cutoff}", oldNotifications.Count, cutoff);
+        return oldNotifications.Count;
     }
 
     public async Task<(int auditLogsDeleted, int notificationsDeleted)> RunFullCleanupAsync()

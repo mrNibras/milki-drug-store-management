@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Http.Json;
-using System.Text;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
@@ -23,16 +22,19 @@ public class ApiIntegrationTests : IAsyncLifetime
 {
     private readonly WebApplicationFactory<Program> _factory;
     private readonly HttpClient _client;
-    private readonly string _connectionString;
     private string _authToken = string.Empty;
 
     public ApiIntegrationTests()
     {
-        _connectionString = $"Data Source={Path.GetTempFileName()}";
-        var dataDir = Path.Combine(Path.GetTempPath(), "MilkiDrugStore_Test_Data");
-        Environment.SetEnvironmentVariable("DataDirectory", dataDir);
-        Environment.SetEnvironmentVariable("ConnectionStrings__DefaultConnection", _connectionString);
-        
+        var testDir = Path.Combine(Path.GetTempPath(), "MilkiDrugStore_Test_Data_" + Guid.NewGuid().ToString("N"));
+        var keysDir = Path.Combine(testDir, "keys");
+        Environment.SetEnvironmentVariable("DataDirectory", testDir);
+        Environment.SetEnvironmentVariable("BackupDirectory", Path.Combine(testDir, "backups"));
+        Environment.SetEnvironmentVariable("JwtSettings__Secret", "test_secret_key_at_least_32_chars_long");
+        Environment.SetEnvironmentVariable("JwtSettings__Issuer", "TestIssuer");
+        Environment.SetEnvironmentVariable("JwtSettings__Audience", "TestAudience");
+        Environment.SetEnvironmentVariable("JwtSettings__ExpiryMinutes", "60");
+
         _factory = new WebApplicationFactory<Program>()
             .WithWebHostBuilder(builder =>
             {
@@ -54,8 +56,37 @@ public class ApiIntegrationTests : IAsyncLifetime
                         new KeyValuePair<string, string?>("Email:DevMode", "true"),
                         new KeyValuePair<string, string?>("AdminEmail", "admin@test.com"),
                         new KeyValuePair<string, string?>("FrontendUrl", "http://localhost:5173"),
-                        new KeyValuePair<string, string?>("Cors:AllowedOrigins:0", "http://localhost:5173")
+                        new KeyValuePair<string, string?>("Cors:AllowedOrigins:0", "http://localhost:5173"),
+                        new KeyValuePair<string, string?>("ConnectionStrings:DefaultConnection", string.Empty),
+                        new KeyValuePair<string, string?>("DataDirectory", Path.Combine(Path.GetTempPath(), "MilkiDrugStore_Test_Data"))
                     });
+                });
+
+                builder.ConfigureServices(services =>
+                {
+                    var descriptor = services.SingleOrDefault(
+                        d => d.ServiceType == typeof(DbContextOptions<AppDbContext>));
+                    if (descriptor != null)
+                        services.Remove(descriptor);
+
+                    services.AddDbContext<AppDbContext>(options =>
+                        options.UseInMemoryDatabase("MilkiDrugStore_Api_Test"));
+
+                    services.AddScoped<IUnitOfWork, UnitOfWork>();
+                    services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+                    services.AddScoped<IMedicineRepository, MedicineRepository>();
+                    services.AddScoped<ISaleRepository, SaleRepository>();
+                    services.AddScoped<IPurchaseRepository, PurchaseRepository>();
+                    services.AddScoped<IInventoryTransactionRepository, InventoryTransactionRepository>();
+                    services.AddScoped<INotificationRepository, NotificationRepository>();
+                    services.AddScoped<IAuditLogRepository, AuditLogRepository>();
+                    services.AddScoped<IAuthService, MilkiDrugStore.Application.Services.AuthService>();
+                    services.AddScoped<IJwtTokenService, MilkiDrugStore.Infrastructure.Services.JwtTokenService>();
+                    services.AddScoped<IEmailService, MilkiDrugStore.Infrastructure.Services.EmailService>();
+                    services.AddScoped<IAuditLogService, MilkiDrugStore.Application.Services.AuditLogService>();
+                    services.AddScoped<IBranchService, MilkiDrugStore.Application.Services.BranchService>();
+                    services.AddScoped<ICosmeticService, MilkiDrugStore.Application.Services.CosmeticService>();
+                    services.AddScoped<IBackupService, MilkiDrugStore.Application.Services.BackupService>();
                 });
             });
 
@@ -66,8 +97,8 @@ public class ApiIntegrationTests : IAsyncLifetime
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        await db.Database.MigrateAsync();
-        
+        db.Database.EnsureCreated();
+
         if (!await db.Roles.AnyAsync())
         {
             db.Roles.AddRange(
@@ -79,12 +110,12 @@ public class ApiIntegrationTests : IAsyncLifetime
 
         if (!await db.Branches.AnyAsync())
         {
-            db.Branches.Add(new Branch 
-            { 
-                BranchName = "Test Branch", 
-                Location = "Test Location", 
-                IsActive = true, 
-                CreatedAt = DateTime.Now 
+            db.Branches.Add(new Branch
+            {
+                BranchName = "Test Branch",
+                Location = "Test Location",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
             });
             await db.SaveChangesAsync();
         }
@@ -102,8 +133,28 @@ public class ApiIntegrationTests : IAsyncLifetime
                 BranchId = branch.BranchId,
                 IsApproved = true,
                 IsActive = true,
-                CreatedAt = DateTime.Now
+                CreatedAt = DateTime.UtcNow
             });
+            await db.SaveChangesAsync();
+        }
+
+        if (!await db.UnitTypes.AnyAsync())
+        {
+            db.UnitTypes.AddRange(
+                new UnitType { Name = "Tablet", IsActive = true },
+                new UnitType { Name = "Capsule", IsActive = true },
+                new UnitType { Name = "Other", IsActive = true }
+            );
+            await db.SaveChangesAsync();
+        }
+
+        if (!await db.Categories.AnyAsync())
+        {
+            db.Categories.AddRange(
+                new Category { Name = "Antibiotics", IsActive = true, CreatedAt = DateTime.UtcNow },
+                new Category { Name = "Antivirals", IsActive = true, CreatedAt = DateTime.UtcNow },
+                new Category { Name = "Other", IsActive = true, CreatedAt = DateTime.UtcNow }
+            );
             await db.SaveChangesAsync();
         }
 
@@ -121,19 +172,11 @@ public class ApiIntegrationTests : IAsyncLifetime
         }
     }
 
-    public async Task DisposeAsync()
+    public Task DisposeAsync()
     {
         _client.Dispose();
         _factory.Dispose();
-        
-        try
-        {
-            if (File.Exists(_connectionString.Replace("Data Source=", "")))
-            {
-                File.Delete(_connectionString.Replace("Data Source=", ""));
-            }
-        }
-        catch { }
+        return Task.CompletedTask;
     }
 
     [Fact]
@@ -149,7 +192,7 @@ public class ApiIntegrationTests : IAsyncLifetime
 
         var response = await _client.PostAsJsonAsync("/api/auth/register", request);
         var content = await response.Content.ReadAsStringAsync();
-        
+
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
@@ -164,7 +207,7 @@ public class ApiIntegrationTests : IAsyncLifetime
         };
 
         var response = await _client.PostAsJsonAsync("/api/auth/login", loginRequest);
-        
+
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
@@ -173,7 +216,7 @@ public class ApiIntegrationTests : IAsyncLifetime
     {
         _client.DefaultRequestHeaders.Authorization = null;
         var response = await _client.GetAsync("/api/settings");
-        
+
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
@@ -182,7 +225,7 @@ public class ApiIntegrationTests : IAsyncLifetime
     {
         _client.DefaultRequestHeaders.Authorization = null;
         var response = await _client.GetAsync("/api/settings/backup");
-        
+
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
@@ -192,7 +235,7 @@ public class ApiIntegrationTests : IAsyncLifetime
         _client.DefaultRequestHeaders.Authorization = null;
         var request = new ForgotPasswordRequest { Email = "admin@milki.com" };
         var response = await _client.PostAsJsonAsync("/api/auth/forgot-password", request);
-        
+
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
@@ -201,7 +244,7 @@ public class ApiIntegrationTests : IAsyncLifetime
     {
         _client.DefaultRequestHeaders.Authorization = null;
         var response = await _client.GetAsync("/api/health");
-        
+
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
@@ -256,13 +299,7 @@ public class ApiIntegrationTests : IAsyncLifetime
         if (createResponse.StatusCode != HttpStatusCode.OK)
         {
             var dbg = await createResponse.Content.ReadAsStringAsync();
-            var parts = _authToken.Split('.');
-            var payload = parts[1];
-            payload += new string('=', (4 - payload.Length % 4) % 4);
-            var decoded = System.Text.Encoding.UTF8.GetString(System.Convert.FromBase64String(payload));
-            var getMedicines = await _client.GetAsync("/api/medicines");
-            var getSettings = await _client.GetAsync("/api/settings");
-            throw new Exception($"POST /api/medicines failed with {createResponse.StatusCode}: {dbg} | GET /api/medicines -> {getMedicines.StatusCode} | GET /api/settings -> {getSettings.StatusCode} | claims: {decoded}");
+            throw new Exception($"POST /api/medicines failed with {createResponse.StatusCode}: {dbg}");
         }
 
         var categoriesResponse = await _client.GetAsync("/api/catalog/categories");

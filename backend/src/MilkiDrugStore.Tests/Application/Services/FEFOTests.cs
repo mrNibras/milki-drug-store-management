@@ -69,8 +69,8 @@ public class FEFOTests
         
         var batches = new List<MedicineBatch>
         {
-            new MedicineBatch { ProductId = 1, BatchId = 1, BatchNumber = "B1", QuantityReceived = 10, QuantityIssued = 0, QuantityDamaged = 0, QuantityExpired = 0, ExpiryDate = DateTime.Now.AddMonths(12), BranchId = 1 },
-            new MedicineBatch { ProductId = 1, BatchId = 2, BatchNumber = "B2", QuantityReceived = 10, QuantityIssued = 0, QuantityDamaged = 0, QuantityExpired = 0, ExpiryDate = DateTime.Now.AddMonths(3), BranchId = 2 }
+            new MedicineBatch { ProductId = 1, BatchId = 1, BatchNumber = "B1", QuantityReceived = 10, QuantityIssued = 0, QuantityDamaged = 0, QuantityExpired = 0, ExpiryDate = DateTime.UtcNow.AddMonths(12), BranchId = 1 },
+            new MedicineBatch { ProductId = 1, BatchId = 2, BatchNumber = "B2", QuantityReceived = 10, QuantityIssued = 0, QuantityDamaged = 0, QuantityExpired = 0, ExpiryDate = DateTime.UtcNow.AddMonths(3), BranchId = 2 }
         };
         _batchRepo.Setup(r => r.FindAsync(It.IsAny<System.Linq.Expressions.Expression<Func<MedicineBatch, bool>>>()))
             .Returns(Task.FromResult((System.Linq.IQueryable<MedicineBatch>)batches.AsQueryable()));

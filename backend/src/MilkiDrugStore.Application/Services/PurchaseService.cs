@@ -74,7 +74,7 @@ public class PurchaseService : IPurchaseService
         try
         {
             var purchaseCount = (await _purchaseRepo.GetAllAsync()).Count();
-            var purchaseNumber = $"PUR-{DateTime.Now.Year}-{purchaseCount + 1:D5}";
+            var purchaseNumber = $"PUR-{DateTime.UtcNow.Year}-{purchaseCount + 1:D5}";
 
             _logger.LogInformation("Generated purchase number: {PurchaseNumber}", purchaseNumber);
 
@@ -170,7 +170,7 @@ public class PurchaseService : IPurchaseService
                          UnitTypeId = unitTypeId,
                          ReorderLevel = item.ReorderLevel > 0 ? item.ReorderLevel : 10,
                          IsActive = true,
-                         CreatedDate = DateTime.Now
+                         CreatedDate = DateTime.UtcNow
                      };
                     await _medicineRepo.AddAsync(medicine);
                     await _unitOfWork.SaveChangesAsync();
@@ -198,7 +198,7 @@ public class PurchaseService : IPurchaseService
                         ExpiryDate = item.ExpiryDate!.Value,
                         ManufacturingDate = item.ManufacturingDate,
                         SupplierId = item.SupplierId ?? request.SupplierId,
-                        DateReceived = DateTime.Now
+                        DateReceived = DateTime.UtcNow
                     };
                     await _batchRepo.AddAsync(batch);
                     await _unitOfWork.SaveChangesAsync();

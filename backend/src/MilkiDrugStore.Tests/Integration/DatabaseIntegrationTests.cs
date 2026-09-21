@@ -14,21 +14,21 @@ using Xunit;
 
 namespace MilkiDrugStore.Tests.Integration.Database;
 
-public class DatabaseIntegrationTests : IAsyncLifetime
+public class DatabaseIntegrationTests : IClassFixture<PostgreSqlFixture>, IAsyncLifetime
 {
+    private readonly PostgreSqlFixture _fixture;
     private readonly ServiceProvider _serviceProvider;
     private readonly AppDbContext _dbContext;
-    private readonly string _connectionString;
 
-    public DatabaseIntegrationTests()
+    public DatabaseIntegrationTests(PostgreSqlFixture fixture)
     {
-        _connectionString = $"Data Source={Guid.NewGuid()}.db;Cache=Shared";
+        _fixture = fixture;
 
         var services = new ServiceCollection();
         services.AddDbContext<AppDbContext>(options =>
-            options.UseSqlite(_connectionString, sql =>
+            options.UseNpgsql(_fixture.ConnectionString, npgsql =>
             {
-                sql.MigrationsAssembly("MilkiDrugStore.Persistence");
+                npgsql.MigrationsAssembly("MilkiDrugStore.Persistence");
             }));
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();
@@ -66,7 +66,7 @@ public class DatabaseIntegrationTests : IAsyncLifetime
                 BranchName = "Test Branch",
                 Location = "Test Location",
                 IsActive = true,
-                CreatedAt = DateTime.Now
+                CreatedAt = DateTime.UtcNow
             });
             await _dbContext.SaveChangesAsync();
         }
@@ -74,7 +74,7 @@ public class DatabaseIntegrationTests : IAsyncLifetime
         if (!await _dbContext.UnitTypes.AnyAsync())
         {
             _dbContext.UnitTypes.AddRange(
-                new UnitType { Name = "Bottle", Description = "Liquid container", IsActive = true } // A custom type for testing
+                new UnitType { Name = "Bottle", Description = "Liquid container", IsActive = true }
             );
             await _dbContext.SaveChangesAsync();
         }
@@ -85,7 +85,7 @@ public class DatabaseIntegrationTests : IAsyncLifetime
             {
                 Name = "Test Category",
                 IsActive = true,
-                CreatedAt = DateTime.Now
+                CreatedAt = DateTime.UtcNow
             });
             await _dbContext.SaveChangesAsync();
         }
@@ -98,7 +98,7 @@ public class DatabaseIntegrationTests : IAsyncLifetime
                 Phone = "0912345678",
                 Email = "supplier@test.com",
                 Address = "Test Address",
-                CreatedAt = DateTime.Now
+                CreatedAt = DateTime.UtcNow
             });
             await _dbContext.SaveChangesAsync();
         }
@@ -116,7 +116,7 @@ public class DatabaseIntegrationTests : IAsyncLifetime
                 BranchId = testBranch.BranchId,
                 IsApproved = true,
                 IsActive = true,
-                CreatedAt = DateTime.Now
+                CreatedAt = DateTime.UtcNow
             });
             await _dbContext.SaveChangesAsync();
         }
@@ -126,9 +126,10 @@ public class DatabaseIntegrationTests : IAsyncLifetime
     {
         if (_dbContext != null)
         {
-            await _dbContext.Database.EnsureDeletedAsync();
+            await _dbContext.Database.ExecuteSqlRawAsync("DROP SCHEMA public CASCADE; CREATE SCHEMA public;");
             await _dbContext.DisposeAsync();
         }
+
         if (_serviceProvider is IAsyncDisposable asyncDisposable)
         {
             await asyncDisposable.DisposeAsync();
@@ -137,16 +138,6 @@ public class DatabaseIntegrationTests : IAsyncLifetime
         {
             _serviceProvider.Dispose();
         }
-
-        try
-        {
-            var dbFile = new FileInfo(_connectionString.Replace("Data Source=", ""));
-            if (dbFile.Exists)
-            {
-                dbFile.Delete();
-            }
-        }
-        catch { }
     }
 
     [Fact]
@@ -175,6 +166,7 @@ public class DatabaseIntegrationTests : IAsyncLifetime
         Assert.True(await _dbContext.CosmeticBatches.CountAsync() >= 0);
     }
 
+    [Fact]
     public async Task Seed_Should_Create_Default_Roles()
     {
         var adminRole = await _dbContext.Roles.FirstOrDefaultAsync(r => r.Name == "Admin");
@@ -201,7 +193,7 @@ public class DatabaseIntegrationTests : IAsyncLifetime
             UnitTypeId = 1,
             ReorderLevel = 10,
             IsActive = true,
-            CreatedDate = DateTime.Now
+            CreatedDate = DateTime.UtcNow
         };
         _dbContext.Medicines.Add(medicine);
         await _dbContext.SaveChangesAsync();
@@ -230,7 +222,7 @@ public class DatabaseIntegrationTests : IAsyncLifetime
             CategoryId = 1,
             UnitTypeId = 1,
             IsActive = true,
-            CreatedDate = DateTime.Now
+            CreatedDate = DateTime.UtcNow
         };
         _dbContext.Medicines.Add(medicine);
         await _dbContext.SaveChangesAsync();
@@ -246,8 +238,8 @@ public class DatabaseIntegrationTests : IAsyncLifetime
             QuantityIssued = 30,
             QuantityDamaged = 5,
             QuantityExpired = 0,
-            ExpiryDate = DateTime.Now.AddYears(1),
-            DateReceived = DateTime.Now
+            ExpiryDate = DateTime.UtcNow.AddYears(1),
+            DateReceived = DateTime.UtcNow
         };
         _dbContext.MedicineBatches.Add(batch);
         await _dbContext.SaveChangesAsync();
@@ -266,7 +258,7 @@ public class DatabaseIntegrationTests : IAsyncLifetime
             CategoryId = 1,
             UnitTypeId = 1,
             IsActive = true,
-            CreatedDate = DateTime.Now
+            CreatedDate = DateTime.UtcNow
         };
         _dbContext.Medicines.Add(medicine);
         await _dbContext.SaveChangesAsync();
@@ -282,8 +274,8 @@ public class DatabaseIntegrationTests : IAsyncLifetime
             QuantityIssued = 0,
             QuantityDamaged = 0,
             QuantityExpired = 0,
-            ExpiryDate = DateTime.Now.AddMonths(12),
-            DateReceived = DateTime.Now
+            ExpiryDate = DateTime.UtcNow.AddMonths(12),
+            DateReceived = DateTime.UtcNow
         };
 
         var batch2 = new MedicineBatch
@@ -297,8 +289,8 @@ public class DatabaseIntegrationTests : IAsyncLifetime
             QuantityIssued = 0,
             QuantityDamaged = 0,
             QuantityExpired = 0,
-            ExpiryDate = DateTime.Now.AddMonths(3),
-            DateReceived = DateTime.Now
+            ExpiryDate = DateTime.UtcNow.AddMonths(3),
+            DateReceived = DateTime.UtcNow
         };
 
         _dbContext.MedicineBatches.AddRange(batch1, batch2);
@@ -323,7 +315,7 @@ public class DatabaseIntegrationTests : IAsyncLifetime
             CategoryId = 1,
             UnitTypeId = 1,
             IsActive = true,
-            CreatedDate = DateTime.Now
+            CreatedDate = DateTime.UtcNow
         };
         _dbContext.Medicines.Add(medicine);
         await _dbContext.SaveChangesAsync();
@@ -333,7 +325,7 @@ public class DatabaseIntegrationTests : IAsyncLifetime
             PurchaseNumber = "PUR-2026-00001",
             SupplierId = 1,
             BranchId = 1,
-            PurchaseDate = DateTime.Now,
+            PurchaseDate = DateTime.UtcNow,
             TotalAmount = 5000,
             CreatedBy = 1
         };
@@ -347,7 +339,7 @@ public class DatabaseIntegrationTests : IAsyncLifetime
             BatchNumber = "PUR-BATCH-001",
             Quantity = 100,
             PurchasePrice = 50,
-            ExpiryDate = DateTime.Now.AddYears(1)
+            ExpiryDate = DateTime.UtcNow.AddYears(1)
         };
         _dbContext.PurchaseItems.Add(purchaseItem);
         await _dbContext.SaveChangesAsync();
@@ -363,8 +355,8 @@ public class DatabaseIntegrationTests : IAsyncLifetime
             QuantityIssued = 0,
             QuantityDamaged = 0,
             QuantityExpired = 0,
-            ExpiryDate = DateTime.Now.AddYears(1),
-            DateReceived = DateTime.Now
+            ExpiryDate = DateTime.UtcNow.AddYears(1),
+            DateReceived = DateTime.UtcNow
         };
         _dbContext.MedicineBatches.Add(batch);
         await _dbContext.SaveChangesAsync();
@@ -386,7 +378,7 @@ public class DatabaseIntegrationTests : IAsyncLifetime
             CategoryId = 1,
             UnitTypeId = 1,
             IsActive = true,
-            CreatedDate = DateTime.Now
+            CreatedDate = DateTime.UtcNow
         };
         _dbContext.Medicines.Add(medicine);
         await _dbContext.SaveChangesAsync();
@@ -402,8 +394,8 @@ public class DatabaseIntegrationTests : IAsyncLifetime
             QuantityIssued = 0,
             QuantityDamaged = 0,
             QuantityExpired = 0,
-            ExpiryDate = DateTime.Now.AddYears(1),
-            DateReceived = DateTime.Now
+            ExpiryDate = DateTime.UtcNow.AddYears(1),
+            DateReceived = DateTime.UtcNow
         };
         _dbContext.MedicineBatches.Add(batch);
         await _dbContext.SaveChangesAsync();
@@ -411,7 +403,7 @@ public class DatabaseIntegrationTests : IAsyncLifetime
         var sale = new Sale
         {
             SaleNumber = "SAL-2026-00001",
-            SaleDate = DateTime.Now,
+            SaleDate = DateTime.UtcNow,
             TotalAmount = 160,
             TotalProfit = 60,
             UserId = 1,
@@ -463,7 +455,7 @@ public class DatabaseIntegrationTests : IAsyncLifetime
             BranchId = 1,
             IsApproved = true,
             IsActive = true,
-            CreatedAt = DateTime.Now
+            CreatedAt = DateTime.UtcNow
         };
         _dbContext.Users.Add(user);
         await _dbContext.SaveChangesAsync();
@@ -475,7 +467,7 @@ public class DatabaseIntegrationTests : IAsyncLifetime
             Action = "Created Sale",
             TableName = "Sales",
             RecordId = 1,
-            CreatedAt = DateTime.Now
+            CreatedAt = DateTime.UtcNow
         };
         _dbContext.AuditLogs.Add(auditLog);
         await _dbContext.SaveChangesAsync();
@@ -496,7 +488,7 @@ public class DatabaseIntegrationTests : IAsyncLifetime
             UnitTypeId = 1,
             ReorderLevel = 10,
             IsActive = true,
-            CreatedDate = DateTime.Now
+            CreatedDate = DateTime.UtcNow
         };
         _dbContext.Medicines.Add(medicine);
         await _dbContext.SaveChangesAsync();
@@ -512,8 +504,8 @@ public class DatabaseIntegrationTests : IAsyncLifetime
             QuantityIssued = 0,
             QuantityDamaged = 0,
             QuantityExpired = 0,
-            ExpiryDate = DateTime.Now.AddYears(1),
-            DateReceived = DateTime.Now
+            ExpiryDate = DateTime.UtcNow.AddYears(1),
+            DateReceived = DateTime.UtcNow
         };
         _dbContext.MedicineBatches.Add(batch);
         await _dbContext.SaveChangesAsync();
@@ -525,7 +517,7 @@ public class DatabaseIntegrationTests : IAsyncLifetime
             Message = $"{medicine.BrandName} stock is below threshold",
             NotificationType = "LOW_STOCK",
             IsRead = false,
-            CreatedAt = DateTime.Now
+            CreatedAt = DateTime.UtcNow
         };
         _dbContext.Notifications.Add(notification);
         await _dbContext.SaveChangesAsync();
@@ -545,7 +537,7 @@ public class DatabaseIntegrationTests : IAsyncLifetime
             CategoryId = 1,
             UnitTypeId = 1,
             IsActive = true,
-            CreatedDate = DateTime.Now
+            CreatedDate = DateTime.UtcNow
         };
         _dbContext.Medicines.Add(medicine);
         await _dbContext.SaveChangesAsync();
@@ -561,8 +553,8 @@ public class DatabaseIntegrationTests : IAsyncLifetime
             QuantityIssued = 0,
             QuantityDamaged = 0,
             QuantityExpired = 0,
-            ExpiryDate = DateTime.Now.AddYears(1),
-            DateReceived = DateTime.Now
+            ExpiryDate = DateTime.UtcNow.AddYears(1),
+            DateReceived = DateTime.UtcNow
         };
         _dbContext.MedicineBatches.Add(batch);
         await _dbContext.SaveChangesAsync();
@@ -574,7 +566,7 @@ public class DatabaseIntegrationTests : IAsyncLifetime
             Quantity = 5,
             Reason = "Broken Package",
             RecordedBy = 1,
-            RecordedDate = DateTime.Now
+            RecordedDate = DateTime.UtcNow
         };
         _dbContext.DamageRecords.Add(damage);
         batch.QuantityDamaged += 5;
@@ -597,7 +589,7 @@ public class DatabaseIntegrationTests : IAsyncLifetime
             BranchName = "Integration Test Branch",
             Location = "Test Location",
             IsActive = true,
-            CreatedAt = DateTime.Now
+            CreatedAt = DateTime.UtcNow
         };
         _dbContext.Branches.Add(branch);
         await _dbContext.SaveChangesAsync();
@@ -613,7 +605,7 @@ public class DatabaseIntegrationTests : IAsyncLifetime
             BranchId = branch.BranchId,
             IsApproved = true,
             IsActive = true,
-            CreatedAt = DateTime.Now
+            CreatedAt = DateTime.UtcNow
         };
         _dbContext.Users.Add(user);
         await _dbContext.SaveChangesAsync();
@@ -635,10 +627,17 @@ public class DatabaseIntegrationTests : IAsyncLifetime
             CategoryId = 1,
             UnitTypeId = 1,
             IsActive = true,
-            CreatedDate = DateTime.Now
+            CreatedDate = DateTime.UtcNow
         };
         _dbContext.Medicines.Add(medicine);
         await _dbContext.SaveChangesAsync();
+
+        var catalogMock = new Mock<ICatalogService>();
+        catalogMock.Setup(m => m.ResolveCategoryIdAsync(It.IsAny<string?>(), It.IsAny<int>())).ReturnsAsync(1);
+        catalogMock.Setup(m => m.ResolveUnitTypeIdAsync(It.IsAny<string?>(), It.IsAny<int>())).ReturnsAsync(1);
+        catalogMock.Setup(m => m.IsValidCategoryIdAsync(It.IsAny<int>())).ReturnsAsync(true);
+        catalogMock.Setup(m => m.IsValidUnitTypeIdAsync(It.IsAny<int>())).ReturnsAsync(true);
+        catalogMock.Setup(m => m.GetCategoryNameAsync(It.IsAny<int>())).ReturnsAsync("Test Category");
 
         var purchaseService = new PurchaseService(
             new Repository<Purchase>(_dbContext),
@@ -646,7 +645,7 @@ public class DatabaseIntegrationTests : IAsyncLifetime
             new Repository<Medicine>(_dbContext),
             new Repository<MedicineBatch>(_dbContext),
             new Repository<Supplier>(_dbContext),
-            new Mock<ICatalogService>().Object,
+            catalogMock.Object,
             new Repository<InventoryTransaction>(_dbContext),
             new UnitOfWork(_dbContext),
             Mock.Of<IAuditLogService>(),
@@ -655,7 +654,7 @@ public class DatabaseIntegrationTests : IAsyncLifetime
         var request = new CreatePurchaseRequest
         {
             SupplierId = supplier.SupplierId,
-            PurchaseDate = DateTime.Now,
+            PurchaseDate = DateTime.UtcNow,
             PaymentMethod = "cash",
             AmountPaid = 500,
             Items = new List<PurchaseItemRequest>
@@ -667,7 +666,7 @@ public class DatabaseIntegrationTests : IAsyncLifetime
                     Quantity = 100,
                     PurchasePrice = 50,
                     SellingPrice = 80,
-                    ExpiryDate = DateTime.Now.AddYears(1)
+                    ExpiryDate = DateTime.UtcNow.AddYears(1)
                 }
             }
         };

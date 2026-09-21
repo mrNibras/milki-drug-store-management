@@ -44,7 +44,7 @@ public class BranchService : IBranchService
             Email = request.Email,
             Address = request.Address,
             IsActive = true,
-            CreatedAt = DateTime.Now
+            CreatedAt = DateTime.UtcNow
         };
 
         await _branchRepo.AddAsync(branch);

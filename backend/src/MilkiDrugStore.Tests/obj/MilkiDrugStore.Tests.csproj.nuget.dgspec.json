@@ -136,10 +136,6 @@
               "target": "Package",
               "version": "[12.4.0, )"
             },
-            "Microsoft.Data.SqlClient": {
-              "target": "Package",
-              "version": "[5.2.2, )"
-            },
             "Microsoft.EntityFrameworkCore": {
               "target": "Package",
               "version": "[8.0.10, )"
@@ -266,14 +262,6 @@
               "target": "Package",
               "version": "[3.7.409, )"
             },
-            "Hangfire.Core": {
-              "target": "Package",
-              "version": "[1.8.14, )"
-            },
-            "Hangfire.SqlServer": {
-              "target": "Package",
-              "version": "[1.8.14, )"
-            },
             "Microsoft.AspNetCore.Authentication.JwtBearer": {
               "target": "Package",
               "version": "[8.0.10, )"
@@ -350,14 +338,6 @@
           "targetAlias": "net8.0",
           "dependencies": {
             "Microsoft.EntityFrameworkCore": {
-              "target": "Package",
-              "version": "[8.0.10, )"
-            },
-            "Microsoft.EntityFrameworkCore.SqlServer": {
-              "target": "Package",
-              "version": "[8.0.10, )"
-            },
-            "Microsoft.EntityFrameworkCore.Sqlite": {
               "target": "Package",
               "version": "[8.0.10, )"
             },
@@ -470,10 +450,6 @@
               "target": "Package",
               "version": "[8.0.10, )"
             },
-            "Microsoft.EntityFrameworkCore.Sqlite": {
-              "target": "Package",
-              "version": "[8.0.10, )"
-            },
             "Microsoft.NET.Test.Sdk": {
               "target": "Package",
               "version": "[17.8.0, )"
@@ -481,6 +457,14 @@
             "Moq": {
               "target": "Package",
               "version": "[4.20.69, )"
+            },
+            "Testcontainers": {
+              "target": "Package",
+              "version": "[4.0.0, )"
+            },
+            "Testcontainers.PostgreSql": {
+              "target": "Package",
+              "version": "[4.0.0, )"
             },
             "coverlet.collector": {
               "target": "Package",

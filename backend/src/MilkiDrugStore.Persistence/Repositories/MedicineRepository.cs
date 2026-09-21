@@ -34,7 +34,7 @@ public class MedicineRepository : Repository<Medicine>, IMedicineRepository
 
     public async Task<IEnumerable<Medicine>> GetExpiringAsync(int months)
     {
-        var threshold = DateTime.Now.AddMonths(months);
+        var threshold = DateTime.UtcNow.AddMonths(months);
         return await _dbSet
             .Include(m => m.Batches)
             .Where(m => m.Batches.Any(b => b.ExpiryDate <= threshold && (b.QuantityReceived - b.QuantityIssued - b.QuantityDamaged - b.QuantityExpired) > 0))

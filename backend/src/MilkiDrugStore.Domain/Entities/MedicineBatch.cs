@@ -15,7 +15,7 @@ public class MedicineBatch
     public int RemainingQuantity => QuantityReceived - QuantityIssued - QuantityDamaged - QuantityExpired;
     public DateTime ExpiryDate { get; set; }
     public DateTime? ManufacturingDate { get; set; }
-    public DateTime DateReceived { get; set; } = DateTime.Now;
+    public DateTime DateReceived { get; set; } = DateTime.UtcNow;
     public int? SupplierId { get; set; }
     public string? Remarks { get; set; }
 

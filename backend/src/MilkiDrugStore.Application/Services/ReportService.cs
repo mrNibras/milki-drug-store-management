@@ -38,7 +38,7 @@ public class ReportService : IReportService
         if (branchId.HasValue)
             sales = sales.Where(s => s.BranchId == branchId.Value).ToList();
 
-        var today = DateTime.Today;
+        var today = DateTime.UtcNow.Date;
 
         var todaySales = sales.Where(s => s.SaleDate.Date == today).Sum(s => s.TotalAmount);
         var currentMonth = new DateTime(today.Year, today.Month, 1);
@@ -47,7 +47,7 @@ public class ReportService : IReportService
 
         var inventoryValue = medicines.Sum(m => m.Batches.Sum(b => b.RemainingQuantity * b.PurchasePrice));
         var lowStockCount = medicines.Count(m => m.Batches.Sum(b => b.RemainingQuantity) <= m.ReorderLevel && m.Batches.Sum(b => b.RemainingQuantity) > 0);
-        var expiringCount = medicines.Count(m => m.Batches.Any(b => b.ExpiryDate <= DateTime.Now.AddMonths(6) && b.RemainingQuantity > 0));
+        var expiringCount = medicines.Count(m => m.Batches.Any(b => b.ExpiryDate <= DateTime.UtcNow.AddMonths(6) && b.RemainingQuantity > 0));
         var outOfStockCount = medicines.Count(m => m.Batches.All(b => b.RemainingQuantity <= 0));
 
         return new DashboardSummaryResponse
@@ -72,10 +72,10 @@ public class ReportService : IReportService
 
         from = period.ToLower() switch
         {
-            "daily" => DateTime.Today,
-            "weekly" => DateTime.Today.AddDays(-(int)DateTime.Today.DayOfWeek),
-            "monthly" => new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1),
-            "yearly" => new DateTime(DateTime.Today.Year, 1, 1),
+            "daily" => DateTime.UtcNow.Date,
+            "weekly" => DateTime.UtcNow.Date.AddDays(-(int)DateTime.UtcNow.DayOfWeek),
+            "monthly" => new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1),
+            "yearly" => new DateTime(DateTime.UtcNow.Year, 1, 1),
             _ => DateTime.MinValue
         };
 

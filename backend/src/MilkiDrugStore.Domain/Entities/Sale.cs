@@ -5,7 +5,7 @@ public class Sale
     public int SaleId { get; set; }
     public string SaleNumber { get; set; } = string.Empty;
     public int BranchId { get; set; }
-    public DateTime SaleDate { get; set; } = DateTime.Now;
+    public DateTime SaleDate { get; set; } = DateTime.UtcNow;
     public decimal TotalAmount { get; set; }
     public decimal TotalProfit { get; set; }
     public decimal TotalDiscount { get; set; }

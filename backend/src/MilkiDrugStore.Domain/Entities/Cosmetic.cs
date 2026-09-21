@@ -20,7 +20,7 @@ public class Cosmetic
 
     public decimal Price { get; set; }
     public bool IsActive { get; set; } = true;
-    public DateTime CreatedAt { get; set; } = DateTime.Now;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public List<CosmeticBatch> Batches { get; set; } = new();
 }

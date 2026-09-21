@@ -8,7 +8,7 @@ public class Supplier
     public string Email { get; set; } = string.Empty;
     public string Address { get; set; } = string.Empty;
     public string? PaymentStatus { get; set; }
-    public DateTime CreatedAt { get; set; } = DateTime.Now;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public List<Purchase> Purchases { get; set; } = new();
     public List<MedicineBatch> MedicineBatches { get; set; } = new();

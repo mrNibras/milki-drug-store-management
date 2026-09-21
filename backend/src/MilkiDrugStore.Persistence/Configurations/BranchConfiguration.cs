@@ -15,6 +15,7 @@ public class BranchConfiguration : IEntityTypeConfiguration<Branch>
         builder.Property(b => b.Email).HasMaxLength(150);
         builder.Property(b => b.Address).HasMaxLength(300);
         builder.Property(b => b.IsActive).HasDefaultValue(true);
-        builder.Property(b => b.CreatedAt).HasDefaultValueSql("GETDATE()");
+        builder.Property(b => b.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+        builder.HasIndex(b => b.IsActive);
     }
 }

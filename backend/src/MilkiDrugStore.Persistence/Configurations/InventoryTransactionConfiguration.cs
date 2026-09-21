@@ -13,8 +13,11 @@ public class InventoryTransactionConfiguration : IEntityTypeConfiguration<Invent
         builder.Property(it => it.ReferenceType).HasMaxLength(50);
         builder.Property(it => it.UnitPrice).HasColumnType("decimal(18,2)");
         builder.HasOne(it => it.Medicine).WithMany(m => m.InventoryTransactions).HasForeignKey(it => it.ProductId);
-
         builder.HasIndex(it => it.ProductId);
+        builder.HasIndex(it => it.BatchId);
         builder.HasIndex(it => it.TransactionType);
+        builder.HasIndex(it => it.CreatedAt);
+        builder.HasIndex(it => new { it.ProductId, it.CreatedAt });
+        builder.HasIndex(it => it.ReferenceId);
     }
 }

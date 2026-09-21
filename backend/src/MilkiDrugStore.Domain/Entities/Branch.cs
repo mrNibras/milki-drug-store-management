@@ -9,7 +9,7 @@ public class Branch
     public string? Email { get; set; }
     public string? Address { get; set; }
     public bool IsActive { get; set; } = true;
-    public DateTime CreatedAt { get; set; } = DateTime.Now;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public List<User> Users { get; set; } = new();
     public List<Sale> Sales { get; set; } = new();

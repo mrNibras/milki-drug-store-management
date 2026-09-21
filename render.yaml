@@ -27,8 +27,6 @@ services:
         fromDatabase:
           name: milki-drug-store-db
           property: connectionUrl
-      - key: DatabaseProvider
-        value: postgresql
       - key: FileStorage__Provider
         value: s3
       - key: FileStorage__S3__BucketName
@@ -48,8 +46,9 @@ services:
       name: milki-data
       mountPath: /var/data
       sizeGB: 1
+    region: virginia
 
 databases:
   - name: milki-drug-store-db
-    region: oregon
+    region: virginia
     plan: free

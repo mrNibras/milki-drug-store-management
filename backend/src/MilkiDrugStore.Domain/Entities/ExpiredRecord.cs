@@ -6,7 +6,7 @@ public class ExpiredRecord
     public int BranchId { get; set; }
     public int BatchId { get; set; }
     public int Quantity { get; set; }
-    public DateTime RecordedDate { get; set; } = DateTime.Now;
+    public DateTime RecordedDate { get; set; } = DateTime.UtcNow;
     public int RecordedBy { get; set; }
 
     public MedicineBatch? Batch { get; set; }

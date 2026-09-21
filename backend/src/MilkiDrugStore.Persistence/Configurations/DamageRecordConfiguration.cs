@@ -12,5 +12,9 @@ public class DamageRecordConfiguration : IEntityTypeConfiguration<DamageRecord>
         builder.Property(d => d.Reason).HasMaxLength(300);
         builder.HasOne(d => d.Batch).WithMany(b => b.DamageRecords).HasForeignKey(d => d.BatchId);
         builder.HasOne(d => d.Branch).WithMany(b => b.DamageRecords).HasForeignKey(d => d.BranchId);
+        builder.HasIndex(d => d.BatchId);
+        builder.HasIndex(d => d.BranchId);
+        builder.HasIndex(d => d.RecordedDate);
+        builder.HasIndex(d => d.RecordedBy);
     }
 }

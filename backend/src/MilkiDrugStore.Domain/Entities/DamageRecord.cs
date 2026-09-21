@@ -8,7 +8,7 @@ public class DamageRecord
     public int Quantity { get; set; }
     public string Reason { get; set; } = string.Empty;
     public int RecordedBy { get; set; }
-    public DateTime RecordedDate { get; set; } = DateTime.Now;
+    public DateTime RecordedDate { get; set; } = DateTime.UtcNow;
 
     public MedicineBatch? Batch { get; set; }
     public Branch? Branch { get; set; }

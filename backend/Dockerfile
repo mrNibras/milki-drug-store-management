@@ -26,8 +26,8 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # Create data directories on the persistent disk mount point.
-# Render mounts the Persistent Disk at /var/data, so keys stored under
-# /var/data/keys survive container restarts and redeployments.
+# Render mounts the Persistent Disk at /var/data, so Data Protection keys
+# stored under /var/data/keys survive container restarts and redeployments.
 RUN mkdir -p /var/data/keys && \
     chmod 755 /var/data && \
     chmod 755 /var/data/keys

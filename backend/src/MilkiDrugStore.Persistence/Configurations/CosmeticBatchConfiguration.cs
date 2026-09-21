@@ -16,7 +16,7 @@ public class CosmeticBatchConfiguration : IEntityTypeConfiguration<CosmeticBatch
         builder.Property(b => b.QuantityDamaged).IsRequired();
         builder.Property(b => b.QuantityExpired).IsRequired();
         builder.Property(b => b.ExpiryDate).IsRequired();
-        builder.Property(b => b.DateReceived).HasDefaultValueSql("GETDATE()");
+        builder.Property(b => b.DateReceived).HasDefaultValueSql("CURRENT_TIMESTAMP");
         builder.Property(b => b.Remarks).HasMaxLength(300);
 
         builder.HasOne(b => b.Cosmetic)

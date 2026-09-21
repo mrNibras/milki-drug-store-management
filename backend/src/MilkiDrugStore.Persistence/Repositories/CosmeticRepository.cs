@@ -27,7 +27,7 @@ public class CosmeticRepository : Repository<Cosmetic>, ICosmeticRepository
 
     public async Task<IEnumerable<Cosmetic>> GetExpiringAsync(int months)
     {
-        var threshold = DateTime.Now.AddMonths(months);
+        var threshold = DateTime.UtcNow.AddMonths(months);
         return await _dbSet
             .Include(c => c.Batches)
             .Where(c => c.Batches.Any(b => b.ExpiryDate <= threshold && b.Balance > 0))

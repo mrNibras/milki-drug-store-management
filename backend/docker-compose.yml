@@ -24,7 +24,6 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__DefaultConnection=Host=localhost;Port=5432;Database=milki_drug_store;Username=postgres;Password=YourStrong@Pass123;SslMode=Disable
-      - DatabaseProvider=postgresql
       - FileStorage__Provider=local
       - FileStorage__Local__BasePath=/var/data/uploads
       - DataDirectory=/var/data

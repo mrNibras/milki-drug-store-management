@@ -10,7 +10,7 @@ public class User
     public int BranchId { get; set; }
     public bool IsApproved { get; set; } = false;
     public bool IsActive { get; set; } = true;
-    public DateTime CreatedAt { get; set; } = DateTime.Now;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public Role? Role { get; set; }
     public Branch? Branch { get; set; }

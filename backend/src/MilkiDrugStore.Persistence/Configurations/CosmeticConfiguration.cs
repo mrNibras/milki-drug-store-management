@@ -16,6 +16,6 @@ public class CosmeticConfiguration : IEntityTypeConfiguration<Cosmetic>
         builder.Property(c => c.UnitTypeId);
         builder.Property(c => c.Price).HasColumnType("decimal(18,2)");
         builder.Property(c => c.IsActive).HasDefaultValue(true);
-        builder.Property(c => c.CreatedAt).HasDefaultValueSql("GETDATE()");
+        builder.Property(c => c.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
     }
 }

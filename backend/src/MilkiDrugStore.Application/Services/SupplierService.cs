@@ -46,7 +46,7 @@ public class SupplierService : ISupplierService
             Email = request.Email,
             Address = request.Address,
             PaymentStatus = request.PaymentStatus ?? "Outstanding",
-            CreatedAt = DateTime.Now
+            CreatedAt = DateTime.UtcNow
         };
 
         await _supplierRepo.AddAsync(supplier);

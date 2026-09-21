@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using Xunit;
 using FluentAssertions;
 using Moq;
@@ -246,7 +247,7 @@ public class SaleServiceTests
         {
             SaleId = 1,
             SaleNumber = "SAL-2026-00001",
-            SaleDate = DateTime.Now,
+            SaleDate = DateTime.UtcNow,
             TotalAmount = 200,
             TotalProfit = 100,
             TotalDiscount = 0,
@@ -276,7 +277,7 @@ public class SaleServiceTests
             }
         };
 
-        _saleRepo.Setup(r => r.GetAllAsync()).ReturnsAsync(new List<Sale> { sale }.AsQueryable());
+        _saleRepo.Setup(r => r.GetAllAsync()).ReturnsAsync(new TestAsyncEnumerable<Sale>(new List<Sale> { sale }));
 
         var result = await _sut.GetAllAsync();
 

@@ -10,20 +10,21 @@ using Xunit;
 
 namespace MilkiDrugStore.Tests.Integration;
 
-public class RetentionServiceTests : IAsyncLifetime
+public class RetentionServiceTests : IClassFixture<PostgreSqlFixture>, IAsyncLifetime
 {
+    private readonly PostgreSqlFixture _fixture;
     private readonly ServiceProvider _serviceProvider;
-    private readonly string _connectionString;
+    private readonly AppDbContext _dbContext;
 
-    public RetentionServiceTests()
+    public RetentionServiceTests(PostgreSqlFixture fixture)
     {
-        _connectionString = $"Data Source={Guid.NewGuid()}.db";
+        _fixture = fixture;
 
         var services = new ServiceCollection();
         services.AddDbContext<AppDbContext>(options =>
-            options.UseSqlite(_connectionString, sql =>
+            options.UseNpgsql(_fixture.ConnectionString, npgsql =>
             {
-                sql.MigrationsAssembly("MilkiDrugStore.Persistence");
+                npgsql.MigrationsAssembly("MilkiDrugStore.Persistence");
             }));
 
         services.AddSingleton<IConfiguration>(new ConfigurationBuilder()
@@ -38,51 +39,49 @@ public class RetentionServiceTests : IAsyncLifetime
         services.AddScoped<IRetentionService, RetentionService>();
 
         _serviceProvider = services.BuildServiceProvider();
+        _dbContext = _serviceProvider.GetRequiredService<AppDbContext>();
     }
 
     public async Task InitializeAsync()
     {
-        using var scope = _serviceProvider.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        await db.Database.MigrateAsync();
-        await SeedTestDataAsync(db);
+        await _dbContext.Database.MigrateAsync();
     }
 
     public async Task DisposeAsync()
     {
-        using var scope = _serviceProvider.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        await db.Database.EnsureDeletedAsync();
-        await db.DisposeAsync();
+        try
+        {
+            if (_dbContext != null)
+            {
+                await _dbContext.Database.ExecuteSqlRawAsync("DROP SCHEMA public CASCADE; CREATE SCHEMA public;");
+                await _dbContext.DisposeAsync();
+            }
+        }
+        catch { }
 
         if (_serviceProvider is IAsyncDisposable ad)
             await ad.DisposeAsync();
         else
             _serviceProvider.Dispose();
-
-        try
-        {
-            var dbFile = new FileInfo(_connectionString.Replace("Data Source=", ""));
-            if (dbFile.Exists) dbFile.Delete();
-        }
-        catch { }
     }
 
-    private async Task SeedTestDataAsync(AppDbContext db)
+    private async Task ResetAndSeedAsync()
     {
+        await _dbContext.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"AuditLogs\", \"Notifications\", \"Users\", \"Branches\", \"Roles\", \"Medicines\", \"MedicineBatches\", \"Suppliers\", \"Categories\", \"UnitTypes\", \"Sales\", \"SaleItems\", \"Purchases\", \"PurchaseItems\", \"InventoryTransactions\", \"DamageRecords\", \"ExpiredRecords\", \"Settings\", \"Cosmetics\", \"CosmeticBatches\", \"RefreshTokens\", \"PasswordResets\" RESTART IDENTITY CASCADE;");
+
         var role = new Role { Name = "Admin" };
-        db.Roles.Add(role);
-        await db.SaveChangesAsync();
+        _dbContext.Roles.Add(role);
+        await _dbContext.SaveChangesAsync();
 
         var branch = new Branch
         {
             BranchName = "Test Branch",
             Location = "Test Location",
             IsActive = true,
-            CreatedAt = DateTime.Now
+            CreatedAt = DateTime.UtcNow
         };
-        db.Branches.Add(branch);
-        await db.SaveChangesAsync();
+        _dbContext.Branches.Add(branch);
+        await _dbContext.SaveChangesAsync();
 
         var user = new User
         {
@@ -93,30 +92,32 @@ public class RetentionServiceTests : IAsyncLifetime
             BranchId = branch.BranchId,
             IsApproved = true,
             IsActive = true,
-            CreatedAt = DateTime.Now
+            CreatedAt = DateTime.UtcNow
         };
-        db.Users.Add(user);
-        await db.SaveChangesAsync();
+        _dbContext.Users.Add(user);
+        await _dbContext.SaveChangesAsync();
 
-        db.AuditLogs.AddRange(
+        _dbContext.AuditLogs.AddRange(
             new AuditLog { Action = "Old Action", TableName = "Test", CreatedAt = DateTime.UtcNow.AddDays(-100), UserId = user.UserId },
             new AuditLog { Action = "Recent Action", TableName = "Test", CreatedAt = DateTime.UtcNow.AddDays(-10), UserId = user.UserId },
             new AuditLog { Action = "Old Action 2", TableName = "Test", CreatedAt = DateTime.UtcNow.AddDays(-200), UserId = user.UserId }
         );
 
-        db.Notifications.AddRange(
+        _dbContext.Notifications.AddRange(
             new Notification { BranchId = branch.BranchId, Title = "Old Read", Message = "Test", NotificationType = "TEST", IsRead = true, CreatedAt = DateTime.UtcNow.AddDays(-40) },
             new Notification { BranchId = branch.BranchId, Title = "Recent Read", Message = "Test", NotificationType = "TEST", IsRead = true, CreatedAt = DateTime.UtcNow.AddDays(-5) },
             new Notification { BranchId = branch.BranchId, Title = "Old Unread", Message = "Test", NotificationType = "TEST", IsRead = false, CreatedAt = DateTime.UtcNow.AddDays(-40) },
             new Notification { BranchId = branch.BranchId, Title = "Recent Unread", Message = "Test", NotificationType = "TEST", IsRead = false, CreatedAt = DateTime.UtcNow.AddDays(-1) }
         );
 
-        await db.SaveChangesAsync();
+        await _dbContext.SaveChangesAsync();
     }
 
     [Fact]
     public async Task CleanupOldAuditLogs_Should_Delete_Only_Old_Entries()
     {
+        await ResetAndSeedAsync();
+
         using var scope = _serviceProvider.CreateScope();
         var retention = scope.ServiceProvider.GetRequiredService<IRetentionService>();
 
@@ -131,6 +132,8 @@ public class RetentionServiceTests : IAsyncLifetime
     [Fact]
     public async Task CleanupOldNotifications_Should_Delete_Only_Old_Read_Entries()
     {
+        await ResetAndSeedAsync();
+
         using var scope = _serviceProvider.CreateScope();
         var retention = scope.ServiceProvider.GetRequiredService<IRetentionService>();
 
@@ -145,6 +148,8 @@ public class RetentionServiceTests : IAsyncLifetime
     [Fact]
     public async Task RunFullCleanup_Should_Delete_Both_Old_AuditLogs_And_Notifications()
     {
+        await ResetAndSeedAsync();
+
         using var scope = _serviceProvider.CreateScope();
         var retention = scope.ServiceProvider.GetRequiredService<IRetentionService>();
 

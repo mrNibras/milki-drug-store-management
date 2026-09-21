@@ -115,7 +115,7 @@ public class CatalogService : ICatalogService
         if (existing is not null)
             return existing.CategoryId;
 
-        var category = new Category { Name = trimmed, IsActive = true, CreatedAt = DateTime.Now };
+        var category = new Category { Name = trimmed, IsActive = true, CreatedAt = DateTime.UtcNow };
         await _categoryRepo.AddAsync(category);
         await _unitOfWork.SaveChangesAsync();
 

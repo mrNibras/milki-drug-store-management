@@ -17,7 +17,7 @@ public class NotificationRepository : Repository<Notification>, INotificationRep
 
     public async Task<Notification?> GetRecentExpiryAlertAsync(string brandName, int days)
     {
-        var since = DateTime.Now.AddDays(-days);
+        var since = DateTime.UtcNow.AddDays(-days);
         return await _dbSet
             .Where(n => n.NotificationType == NotificationTypeStrings.ExpiryAlert
                      && n.Title.Contains(brandName)

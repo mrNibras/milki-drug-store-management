@@ -11,5 +11,6 @@ public class UnitTypeConfiguration : IEntityTypeConfiguration<UnitType>
         builder.HasKey(u => u.UnitTypeId);
         builder.Property(u => u.Name).HasMaxLength(50).IsRequired();
         builder.HasIndex(u => u.Name).IsUnique();
+        builder.HasIndex(u => u.IsActive);
     }
 }

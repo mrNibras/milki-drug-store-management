@@ -30,6 +30,8 @@ public class AppDbContext : DbContext
     public DbSet<PasswordReset> PasswordResets => Set<PasswordReset>();
     public DbSet<Cosmetic> Cosmetics => Set<Cosmetic>();
     public DbSet<CosmeticBatch> CosmeticBatches => Set<CosmeticBatch>();
+    public DbSet<AuditLogArchive> AuditLogArchives => Set<AuditLogArchive>();
+    public DbSet<NotificationArchive> NotificationArchives => Set<NotificationArchive>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

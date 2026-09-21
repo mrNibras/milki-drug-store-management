@@ -4,57 +4,10 @@ using Npgsql;
 
 namespace MilkiDrugStore.Persistence.Context;
 
-/// <summary>
-/// Resolves which database provider is in use for a given configuration and
-/// configures the <see cref="AppDbContext"/> accordingly.
-///
-/// Resolution order:
-///   1. Explicit override via the "DatabaseProvider" configuration key
-///      (values: postgres/postgresql/npgsql, sqlserver/mssql/sql, sqlite).
-///   2. The resolved connection string markers:
-///        - Host=, Port=5432, Username=, postgres:// or postgresql://  => PostgreSQL
-///        - Server=                                                    => SQL Server
-///        - everything else                                            => SQLite
-///   3. Empty connection string defaults to SQLite.
-///
-/// A Render-provided "DATABASE_URL" is honoured when no explicit
-/// ConnectionStrings:DefaultConnection is configured.
-/// </summary>
 public static class DbProviderResolver
 {
-    public const string Sqlite = "sqlite";
-    public const string SqlServer = "sqlserver";
     public const string PostgreSql = "postgresql";
-
-    public const string PostgresMigrationsAssembly = "MilkiDrugStore.Persistence.Postgres";
     public const string DefaultMigrationsAssembly = "MilkiDrugStore.Persistence";
-
-    public static string DetectProvider(IConfiguration configuration)
-    {
-        var overrideValue = configuration["DatabaseProvider"];
-        if (!string.IsNullOrWhiteSpace(overrideValue))
-        {
-            return overrideValue.Trim().ToLowerInvariant() switch
-            {
-                "postgres" or "postgresql" or "npgsql" => PostgreSql,
-                "sqlserver" or "mssql" or "sql" => SqlServer,
-                "sqlite" or "sqlite3" or "sqliteprovider" => Sqlite,
-                _ => PostgreSql
-            };
-        }
-
-        var connectionString = ResolveConnectionString(configuration);
-        if (string.IsNullOrWhiteSpace(connectionString))
-            return Sqlite;
-
-        if (LooksLikePostgres(connectionString))
-            return PostgreSql;
-
-        if (connectionString.Contains("Server=", StringComparison.OrdinalIgnoreCase))
-            return SqlServer;
-
-        return Sqlite;
-    }
 
     public static string ResolveConnectionString(IConfiguration configuration)
     {
@@ -67,19 +20,6 @@ public static class DbProviderResolver
             return PostgresUrlToConnectionString(databaseUrl);
 
         return string.Empty;
-    }
-
-    public static bool LooksLikePostgres(string connectionString)
-    {
-        if (string.IsNullOrWhiteSpace(connectionString))
-            return false;
-
-        return connectionString.StartsWith("postgres://", StringComparison.OrdinalIgnoreCase) ||
-               connectionString.StartsWith("postgresql://", StringComparison.OrdinalIgnoreCase) ||
-               connectionString.Contains("Host=", StringComparison.OrdinalIgnoreCase) ||
-               connectionString.Contains("Port=5432", StringComparison.OrdinalIgnoreCase) ||
-               connectionString.Contains("Username=", StringComparison.OrdinalIgnoreCase) ||
-               connectionString.Contains("SslMode=", StringComparison.OrdinalIgnoreCase);
     }
 
     /// <summary>
@@ -106,8 +46,6 @@ public static class DbProviderResolver
                 builder.Password = Uri.UnescapeDataString(parts[1]);
         }
 
-        // Render managed PostgreSQL enforces TLS; honor an "sslmode" query
-        // parameter on the URL if present.
         try
         {
             if (!string.IsNullOrEmpty(uri.Query))
@@ -131,34 +69,15 @@ public static class DbProviderResolver
         return builder.ConnectionString;
     }
 
-    public static void ConfigureAppDbContext(DbContextOptionsBuilder options, IConfiguration configuration)
-    {
-        var connectionString = ResolveConnectionString(configuration);
-        var provider = DetectProvider(configuration);
-        ConfigureAppDbContext(options, provider, connectionString);
-    }
-
     public static void ConfigureAppDbContext(
         DbContextOptionsBuilder options,
-        string provider,
-        string connectionString)
+        IConfiguration configuration)
     {
-        switch (provider)
+        var connectionString = ResolveConnectionString(configuration);
+        options.UseNpgsql(connectionString, npgsql =>
         {
-            case PostgreSql:
-                options.UseNpgsql(connectionString, npgsql =>
-                {
-                    npgsql.MigrationsAssembly(PostgresMigrationsAssembly);
-                    npgsql.EnableRetryOnFailure(3);
-                });
-                break;
-            case SqlServer:
-                options.UseSqlServer(connectionString, sql => sql.MigrationsAssembly(DefaultMigrationsAssembly));
-                break;
-            default:
-                options.UseSqlite(connectionString, sql => sql.MigrationsAssembly(DefaultMigrationsAssembly));
-                break;
-        }
+            npgsql.MigrationsAssembly(DefaultMigrationsAssembly);
+        });
     }
 
     public static string MaskConnectionString(string connectionString)

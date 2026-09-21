@@ -94,7 +94,7 @@ public class MedicineService : IMedicineService
             SellingPrice = request.SellingPrice,
             ReorderLevel = request.ReorderLevel,
             IsActive = true,
-            CreatedDate = DateTime.Now
+            CreatedDate = DateTime.UtcNow
         };
 
         await _medicineRepo.AddAsync(medicine);
@@ -129,7 +129,7 @@ public class MedicineService : IMedicineService
         medicine.ReorderLevel = request.ReorderLevel;
         if (request.IsActive.HasValue)
             medicine.IsActive = request.IsActive.Value;
-        medicine.UpdatedDate = DateTime.Now;
+        medicine.UpdatedDate = DateTime.UtcNow;
 
         await _medicineRepo.UpdateAsync(medicine);
         await _unitOfWork.SaveChangesAsync();
@@ -169,7 +169,7 @@ public class MedicineService : IMedicineService
             ExpiryDate = request.ExpiryDate,
             ManufacturingDate = request.ManufacturingDate,
             SupplierId = request.SupplierId,
-            DateReceived = DateTime.Now
+            DateReceived = DateTime.UtcNow
         };
 
         await _batchRepo.AddAsync(batch);

@@ -7,12 +7,12 @@ namespace MilkiDrugStore.Tests.Integration;
 public class ProviderDetectionTests
 {
     [Theory]
-    [InlineData("postgres://user:pass@host:5432/dbname", "postgresql")]
-    [InlineData("postgresql://user:pass@host:5432/dbname", "postgresql")]
-    [InlineData("Host=localhost;Port=5432;Database=mydb;Username=postgres;Password=secret", "postgresql")]
-    [InlineData("Host=pg-host;Port=5432;Database=testdb;Username=user;Password=pass;SslMode=Disable", "postgresql")]
-    [InlineData("Host=server;Port=5432;Database=db;Username=u;Password=p;SslMode=Require", "postgresql")]
-    public void DetectProvider_PostgreSQL_Formats(string connectionString, string expected)
+    [InlineData("postgres://user:pass@host:5432/dbname")]
+    [InlineData("postgresql://user:pass@host:5432/dbname")]
+    [InlineData("Host=localhost;Port=5432;Database=mydb;Username=postgres;Password=secret")]
+    [InlineData("Host=pg-host;Port=5432;Database=testdb;Username=user;Password=pass;SslMode=Disable")]
+    [InlineData("Host=server;Port=5432;Database=db;Username=u;Password=p;SslMode=Require")]
+    public void ResolveConnectionString_PostgreSQL_Formats(string connectionString)
     {
         var config = new ConfigurationBuilder()
             .AddInMemoryCollection(new[]
@@ -21,56 +21,20 @@ public class ProviderDetectionTests
             })
             .Build();
 
-        var provider = DbProviderResolver.DetectProvider(config);
-        Assert.Equal(expected, provider);
-    }
-
-    [Theory]
-    [InlineData("Data Source=/var/data/test.db", "sqlite")]
-    [InlineData("Data Source=test.db;Cache=Shared", "sqlite")]
-    [InlineData("", "sqlite")]
-    public void DetectProvider_SQLite_Formats(string connectionString, string expected)
-    {
-        var config = new ConfigurationBuilder()
-            .AddInMemoryCollection(new[]
-            {
-                new KeyValuePair<string, string?>("ConnectionStrings:DefaultConnection", connectionString)
-            })
-            .Build();
-
-        var provider = DbProviderResolver.DetectProvider(config);
-        Assert.Equal(expected, provider);
-    }
-
-    [Theory]
-    [InlineData("Server=localhost;Database=test;User Id=sa;Password=pass", "sqlserver")]
-    [InlineData("Server=tcp:server.database.windows.net;Database=MyDb;User Id=user;Password=pass;TrustServerCertificate=true", "sqlserver")]
-    public void DetectProvider_SQLServer_Formats(string connectionString, string expected)
-    {
-        var config = new ConfigurationBuilder()
-            .AddInMemoryCollection(new[]
-            {
-                new KeyValuePair<string, string?>("ConnectionStrings:DefaultConnection", connectionString)
-            })
-            .Build();
-
-        var provider = DbProviderResolver.DetectProvider(config);
-        Assert.Equal(expected, provider);
+        var conn = DbProviderResolver.ResolveConnectionString(config);
+        Assert.NotNull(conn);
+        Assert.NotEmpty(conn);
     }
 
     [Fact]
-    public void DetectProvider_ExplicitOverride()
+    public void ResolveConnectionString_Empty_Returns_EmptyString()
     {
         var config = new ConfigurationBuilder()
-            .AddInMemoryCollection(new[]
-            {
-                new KeyValuePair<string, string?>("DatabaseProvider", "sqlite"),
-                new KeyValuePair<string, string?>("ConnectionStrings:DefaultConnection", "Host=localhost;Port=5432;Database=db")
-            })
+            .AddInMemoryCollection(Array.Empty<KeyValuePair<string, string?>>())
             .Build();
 
-        var provider = DbProviderResolver.DetectProvider(config);
-        Assert.Equal("sqlite", provider);
+        var conn = DbProviderResolver.ResolveConnectionString(config);
+        Assert.Equal(string.Empty, conn);
     }
 
     [Fact]
@@ -98,13 +62,13 @@ public class ProviderDetectionTests
         var config = new ConfigurationBuilder()
             .AddInMemoryCollection(new[]
             {
-                new KeyValuePair<string, string?>("ConnectionStrings:DefaultConnection", "Data Source=/var/data/test.db"),
+                new KeyValuePair<string, string?>("ConnectionStrings:DefaultConnection", "Host=localhost;Port=5432;Database=db"),
                 new KeyValuePair<string, string?>("DATABASE_URL", "postgres://user:pass@host:5432/dbname")
             })
             .Build();
 
         var conn = DbProviderResolver.ResolveConnectionString(config);
-        Assert.Equal("Data Source=/var/data/test.db", conn);
+        Assert.Equal("Host=localhost;Port=5432;Database=db", conn);
     }
 
     [Theory]

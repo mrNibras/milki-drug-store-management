@@ -23,5 +23,9 @@ public class SaleConfiguration : IEntityTypeConfiguration<Sale>
         builder.HasOne(s => s.User).WithMany(u => u.Sales).HasForeignKey(s => s.UserId);
         builder.HasOne(s => s.Branch).WithMany(b => b.Sales).HasForeignKey(s => s.BranchId);
         builder.HasIndex(s => s.SaleDate);
+        builder.HasIndex(s => new { s.SaleDate, s.BranchId });
+        builder.HasIndex(s => new { s.UserId, s.SaleDate });
+        builder.HasIndex(s => s.PaymentStatus);
+        builder.HasIndex(s => s.BranchId);
     }
 }

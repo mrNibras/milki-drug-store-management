@@ -1,0 +1,5 @@
+{
+  "configMode": "inline",
+  "parallelizeTestCollections": false,
+  "parallelizeWorkspaces": false
+}

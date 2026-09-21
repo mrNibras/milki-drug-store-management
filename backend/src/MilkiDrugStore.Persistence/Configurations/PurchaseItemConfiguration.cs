@@ -14,5 +14,9 @@ public class PurchaseItemConfiguration : IEntityTypeConfiguration<PurchaseItem>
         builder.Property(pi => pi.SubTotal).HasColumnType("decimal(18,2)");
         builder.HasOne(pi => pi.Purchase).WithMany(p => p.Items).HasForeignKey(pi => pi.PurchaseId);
         builder.HasOne(pi => pi.Medicine).WithMany(m => m.PurchaseItems).HasForeignKey(pi => pi.ProductId);
+        builder.HasIndex(pi => pi.PurchaseId);
+        builder.HasIndex(pi => pi.ProductId);
+        builder.HasIndex(pi => pi.BatchId);
+        builder.HasIndex(pi => new { pi.PurchaseId, pi.ProductId });
     }
 }

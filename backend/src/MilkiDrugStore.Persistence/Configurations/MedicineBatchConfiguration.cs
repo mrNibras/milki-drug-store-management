@@ -17,5 +17,10 @@ public class MedicineBatchConfiguration : IEntityTypeConfiguration<MedicineBatch
         builder.HasOne(b => b.Branch).WithMany(br => br.MedicineBatches).HasForeignKey(b => b.BranchId);
         builder.HasOne(b => b.Supplier).WithMany(s => s.MedicineBatches).HasForeignKey(b => b.SupplierId);
         builder.HasIndex(b => b.ExpiryDate);
+        builder.HasIndex(b => new { b.ProductId, b.BatchNumber });
+        builder.HasIndex(b => new { b.ProductId, b.ExpiryDate });
+        builder.HasIndex(b => new { b.BranchId, b.ExpiryDate });
+        builder.HasIndex(b => b.SupplierId);
+        builder.HasIndex(b => b.BatchNumber);
     }
 }

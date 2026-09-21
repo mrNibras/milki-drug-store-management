@@ -11,7 +11,7 @@ public class InventoryTransaction
     public int? ReferenceId { get; set; }
     public string? ReferenceType { get; set; }
     public int CreatedBy { get; set; }
-    public DateTime CreatedAt { get; set; } = DateTime.Now;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public Medicine? Medicine { get; set; }
     public MedicineBatch? Batch { get; set; }

@@ -32,7 +32,7 @@ public class AuditLogService : IAuditLogService
                 Action = action,
                 TableName = tableName,
                 RecordId = recordId,
-                CreatedAt = DateTime.Now
+                CreatedAt = DateTime.UtcNow
             };
 
             await _auditLogRepo.AddAsync(log);

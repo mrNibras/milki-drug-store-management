@@ -30,8 +30,8 @@ public class NotificationServiceTests
     {
         var notifications = new List<Notification>
         {
-            new Notification { NotificationId = 1, Title = "Low Stock", Message = "Aspirin is low", IsRead = false, CreatedAt = DateTime.Now },
-            new Notification { NotificationId = 2, Title = "Out of Stock", Message = "Paracetamol is out", IsRead = true, CreatedAt = DateTime.Now }
+            new Notification { NotificationId = 1, Title = "Low Stock", Message = "Aspirin is low", IsRead = false, CreatedAt = DateTime.UtcNow },
+            new Notification { NotificationId = 2, Title = "Out of Stock", Message = "Paracetamol is out", IsRead = true, CreatedAt = DateTime.UtcNow }
         };
         _notificationRepo.Setup(r => r.GetAllAsync()).Returns(Task.FromResult((System.Linq.IQueryable<Notification>)notifications.AsQueryable()));
 
@@ -57,8 +57,8 @@ public class NotificationServiceTests
     {
         var notifications = new List<Notification>
         {
-            new Notification { NotificationId = 1, Title = "Low Stock", Message = "Aspirin is low", IsRead = false, CreatedAt = DateTime.Now },
-            new Notification { NotificationId = 2, Title = "Out of Stock", Message = "Paracetamol is out", IsRead = true, CreatedAt = DateTime.Now }
+            new Notification { NotificationId = 1, Title = "Low Stock", Message = "Aspirin is low", IsRead = false, CreatedAt = DateTime.UtcNow },
+            new Notification { NotificationId = 2, Title = "Out of Stock", Message = "Paracetamol is out", IsRead = true, CreatedAt = DateTime.UtcNow }
         };
         _notificationRepo.Setup(r => r.GetUnreadAsync()).Returns(Task.FromResult((System.Collections.Generic.IEnumerable<Notification>)notifications.Where(n => !n.IsRead).ToList()));
 

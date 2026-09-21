@@ -8,7 +8,7 @@ public class AuditLog
     public string Action { get; set; } = string.Empty;
     public string TableName { get; set; } = string.Empty;
     public int? RecordId { get; set; }
-    public DateTime CreatedAt { get; set; } = DateTime.Now;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public User? User { get; set; }
     public Branch? Branch { get; set; }

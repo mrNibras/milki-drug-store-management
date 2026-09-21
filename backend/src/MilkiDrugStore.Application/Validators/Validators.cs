@@ -44,7 +44,7 @@ public class AddBatchRequestValidator : AbstractValidator<MilkiDrugStore.Applica
         RuleFor(x => x.Quantity).GreaterThan(0);
         RuleFor(x => x.PurchasePrice).GreaterThan(0);
         RuleFor(x => x.SellingPrice).GreaterThan(0);
-        RuleFor(x => x.ExpiryDate).GreaterThan(DateTime.Now);
+        RuleFor(x => x.ExpiryDate).GreaterThan(DateTime.UtcNow);
     }
 }
 

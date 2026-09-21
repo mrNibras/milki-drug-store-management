@@ -18,5 +18,9 @@ public class PurchaseConfiguration : IEntityTypeConfiguration<Purchase>
         builder.Property(p => p.PaymentMethod).HasMaxLength(20);
         builder.HasOne(p => p.Supplier).WithMany(s => s.Purchases).HasForeignKey(p => p.SupplierId);
         builder.HasOne(p => p.Branch).WithMany(b => b.Purchases).HasForeignKey(p => p.BranchId);
+        builder.HasIndex(p => p.PurchaseDate);
+        builder.HasIndex(p => p.SupplierId);
+        builder.HasIndex(p => new { p.BranchId, p.PurchaseDate });
+        builder.HasIndex(p => p.PaymentStatus);
     }
 }

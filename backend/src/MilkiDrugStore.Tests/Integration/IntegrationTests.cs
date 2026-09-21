@@ -60,7 +60,7 @@ public class IntegrationTests : IAsyncLifetime
         {
             Name = "Test Category",
             IsActive = true,
-            CreatedAt = DateTime.Now
+            CreatedAt = DateTime.UtcNow
         };
 
         _dbContext.Categories.Add(category);
@@ -93,7 +93,7 @@ public class IntegrationTests : IAsyncLifetime
             CosmeticId = cosmetic.CosmeticId,
             BatchNumber = "BATCH-001",
             QuantityReceived = 100,
-            ExpiryDate = DateTime.Now.AddYears(1)
+            ExpiryDate = DateTime.UtcNow.AddYears(1)
         };
 
         _dbContext.CosmeticBatches.Add(batch);

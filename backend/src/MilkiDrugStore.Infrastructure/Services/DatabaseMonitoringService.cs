@@ -26,24 +26,10 @@ public class DatabaseMonitoringService : IDatabaseMonitoringService
 
     public async Task<DatabaseSizeInfo> GetDatabaseSizeInfoAsync()
     {
-        var provider = _dbContext.Database.ProviderName ?? "Unknown";
         var warningBytes = (long)_warningThresholdGB * 1024 * 1024 * 1024;
         var criticalBytes = (long)_criticalThresholdGB * 1024 * 1024 * 1024;
 
-        long sizeBytes = 0;
-
-        if (provider.Contains("Npgsql", StringComparison.OrdinalIgnoreCase))
-        {
-            sizeBytes = await GetPostgresSizeAsync();
-        }
-        else if (provider.Contains("SqlServer", StringComparison.OrdinalIgnoreCase))
-        {
-            sizeBytes = await GetSqlServerSizeAsync();
-        }
-        else if (provider.Contains("Sqlite", StringComparison.OrdinalIgnoreCase))
-        {
-            sizeBytes = GetSqliteSize();
-        }
+        var sizeBytes = await GetPostgresSizeAsync();
 
         var status = sizeBytes >= criticalBytes ? "critical"
                     : sizeBytes >= warningBytes ? "warning"
@@ -75,50 +61,6 @@ public class DatabaseMonitoringService : IDatabaseMonitoringService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to query PostgreSQL database size");
-            return 0;
-        }
-    }
-
-    private async Task<long> GetSqlServerSizeAsync()
-    {
-        try
-        {
-            var result = await _dbContext.Database.SqlQueryRaw<long>(
-                "SELECT SUM(size) * 8192 FROM sys.master_files WHERE database_id = DB_ID()").FirstOrDefaultAsync();
-            return result;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to query SQL Server database size");
-            return 0;
-        }
-    }
-
-    private long GetSqliteSize()
-    {
-        try
-        {
-            var connectionString = _dbContext.Database.GetConnectionString();
-            if (string.IsNullOrEmpty(connectionString))
-                return 0;
-
-            var idx = connectionString.IndexOf("Data Source=", StringComparison.OrdinalIgnoreCase);
-            if (idx < 0)
-                return 0;
-
-            var startIdx = idx + "Data Source=".Length;
-            var rest = connectionString.Substring(startIdx).Trim();
-            var end = rest.IndexOf(';');
-            var path = end < 0 ? rest : rest.Substring(0, end);
-
-            if (File.Exists(path))
-                return new FileInfo(path).Length;
-
-            return 0;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to determine SQLite database size");
             return 0;
         }
     }

@@ -57,7 +57,7 @@ public class SaleService : ISaleService
             var isAdmin = string.Equals(userRole, "Admin", StringComparison.OrdinalIgnoreCase);
 
             var saleCount = (await _saleRepo.GetAllAsync()).Count();
-            var saleNumber = $"SAL-{DateTime.Now.Year}-{saleCount + 1:D5}";
+            var saleNumber = $"SAL-{DateTime.UtcNow.Year}-{saleCount + 1:D5}";
 
             var totalAmount = 0m;
             var totalProfit = 0m;
@@ -135,7 +135,7 @@ public class SaleService : ISaleService
             {
                 SaleNumber = saleNumber,
                 BranchId = branchId ?? 0,
-                SaleDate = DateTime.Now,
+                SaleDate = DateTime.UtcNow,
                 TotalAmount = totalAmount,
                 TotalProfit = totalProfit,
                 TotalDiscount = totalDiscount,

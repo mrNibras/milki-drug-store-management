@@ -10,7 +10,7 @@ public class CosmeticBatch
     public int QuantityDamaged { get; set; }
     public int QuantityExpired { get; set; }
     public DateTime ExpiryDate { get; set; }
-    public DateTime DateReceived { get; set; } = DateTime.Now;
+    public DateTime DateReceived { get; set; } = DateTime.UtcNow;
     public string? Remarks { get; set; }
 
     public Cosmetic? Cosmetic { get; set; }

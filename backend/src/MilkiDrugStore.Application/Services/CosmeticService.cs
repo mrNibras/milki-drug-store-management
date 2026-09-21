@@ -135,7 +135,7 @@ public class CosmeticService : ICosmeticService
             QuantityDamaged = 0,
             QuantityExpired = 0,
             ExpiryDate = request.ExpiryDate,
-            DateReceived = DateTime.Now,
+            DateReceived = DateTime.UtcNow,
             Remarks = string.Empty
         };
 

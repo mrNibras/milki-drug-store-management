@@ -6,7 +6,7 @@ public class Purchase
     public string PurchaseNumber { get; set; } = string.Empty;
     public int BranchId { get; set; }
     public int SupplierId { get; set; }
-    public DateTime PurchaseDate { get; set; } = DateTime.Now;
+    public DateTime PurchaseDate { get; set; } = DateTime.UtcNow;
     public decimal TotalAmount { get; set; }
     public decimal AmountPaid { get; set; }
     public decimal AmountDue { get; set; }

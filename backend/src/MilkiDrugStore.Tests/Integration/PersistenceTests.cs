@@ -13,21 +13,23 @@ using Xunit;
 
 namespace MilkiDrugStore.Tests.Integration.Persistence;
 
-public class PersistenceTests : IAsyncLifetime
+public class PersistenceTests : IClassFixture<PostgreSqlFixture>, IAsyncLifetime
 {
-    private readonly string _connectionString;
-    private readonly string _databasePath;
-    private readonly ServiceProvider _serviceProvider;
+    private readonly PostgreSqlFixture _fixture;
+    private readonly IServiceProvider _serviceProvider;
     private readonly AppDbContext _dbContext;
 
-    public PersistenceTests()
+    public PersistenceTests(PostgreSqlFixture fixture)
     {
-        _databasePath = Path.Combine(Path.GetTempPath(), $"persistence-{Guid.NewGuid():N}.db");
-        _connectionString = $"Data Source={_databasePath}";
+        _fixture = fixture;
 
         var services = new ServiceCollection();
         services.AddDbContext<AppDbContext>(options =>
-            options.UseSqlite(_connectionString, sql => sql.MigrationsAssembly("MilkiDrugStore.Persistence")));
+            options.UseNpgsql(_fixture.ConnectionString, npgsql =>
+            {
+                npgsql.MigrationsAssembly("MilkiDrugStore.Persistence");
+            }));
+
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
         services.AddScoped<IMedicineRepository, MedicineRepository>();
@@ -46,21 +48,20 @@ public class PersistenceTests : IAsyncLifetime
     {
         await _dbContext.Database.MigrateAsync();
 
-        var branch = new Branch { BranchName = "Persistence Branch", Location = "Test", IsActive = true, CreatedAt = DateTime.Now };
-        _dbContext.Branches.Add(branch);
-        await _dbContext.SaveChangesAsync();
+        if (!await _dbContext.Roles.AnyAsync())
+        {
+            _dbContext.Branches.Add(new Branch { BranchName = "Persistence Branch", Location = "Test", IsActive = true, CreatedAt = DateTime.UtcNow });
+            await _dbContext.SaveChangesAsync();
 
-        var roles = new[] { new Role { Name = "Admin" }, new Role { Name = "Pharmacist" } };
-        _dbContext.Roles.AddRange(roles);
-        await _dbContext.SaveChangesAsync();
+            _dbContext.Roles.AddRange(new[] { new Role { Name = "Admin" }, new Role { Name = "Pharmacist" } });
+            await _dbContext.SaveChangesAsync();
 
-        var category = new Category { Name = "Persistence Category", IsActive = true, CreatedAt = DateTime.Now };
-        _dbContext.Categories.Add(category);
-        await _dbContext.SaveChangesAsync();
+            _dbContext.Categories.Add(new Category { Name = "Persistence Category", IsActive = true, CreatedAt = DateTime.UtcNow });
+            await _dbContext.SaveChangesAsync();
 
-        var unitType = new UnitType { Name = "Bottle", IsActive = true };
-        _dbContext.UnitTypes.Add(unitType);
-        await _dbContext.SaveChangesAsync();
+            _dbContext.UnitTypes.Add(new UnitType { Name = "Bottle", IsActive = true });
+            await _dbContext.SaveChangesAsync();
+        }
     }
 
     public async Task DisposeAsync()
@@ -68,24 +69,27 @@ public class PersistenceTests : IAsyncLifetime
         try
         {
             if (_dbContext != null)
-                await _dbContext.Database.EnsureDeletedAsync();
-        }
-        catch { /* may already be disposed by test */ }
-        finally
-        {
-            if (_dbContext != null)
+            {
+                await _dbContext.Database.ExecuteSqlRawAsync("DROP SCHEMA public CASCADE; CREATE SCHEMA public;");
                 await _dbContext.DisposeAsync();
+            }
         }
-        await _serviceProvider.DisposeAsync();
-        if (File.Exists(_databasePath)) File.Delete(_databasePath);
+        catch { }
+
+        if (_serviceProvider is IAsyncDisposable ad)
+            await ad.DisposeAsync();
+        else if (_serviceProvider is IDisposable d)
+            d.Dispose();
     }
 
-    private AppDbContext NewContext()
+    private AppDbContext FreshContext()
     {
-        var options = new DbContextOptionsBuilder<AppDbContext>()
-            .UseSqlite(_connectionString)
-            .Options;
-        return new AppDbContext(options);
+        return new AppDbContext(new DbContextOptionsBuilder<AppDbContext>()
+            .UseNpgsql(_fixture.ConnectionString, npgsql =>
+            {
+                npgsql.MigrationsAssembly("MilkiDrugStore.Persistence");
+            })
+            .Options);
     }
 
     [Fact]
@@ -94,7 +98,7 @@ public class PersistenceTests : IAsyncLifetime
         var category = await _dbContext.Categories.FirstAsync();
         var unitType = await _dbContext.UnitTypes.FirstAsync();
 
-        _dbContext.Medicines.Add(new Medicine
+        var medicine = new Medicine
         {
             BrandName = "Persistence Medicine 001",
             GenericName = "Persistence Generic",
@@ -102,13 +106,15 @@ public class PersistenceTests : IAsyncLifetime
             UnitTypeId = unitType.UnitTypeId,
             ReorderLevel = 10,
             IsActive = true,
-            CreatedDate = DateTime.Now
-        });
+            CreatedDate = DateTime.UtcNow
+        };
+        _dbContext.Medicines.Add(medicine);
         await _dbContext.SaveChangesAsync();
-        await _dbContext.DisposeAsync();
 
-        await using var fresh = NewContext();
-        var saved = await fresh.Medicines.FirstOrDefaultAsync(m => m.BrandName == "Persistence Medicine 001");
+        var medicineId = medicine.ProductId;
+
+        await using var fresh = FreshContext();
+        var saved = await fresh.Medicines.FirstOrDefaultAsync(m => m.ProductId == medicineId);
         Assert.NotNull(saved);
         Assert.Equal("Persistence Generic", saved!.GenericName);
     }
@@ -120,7 +126,7 @@ public class PersistenceTests : IAsyncLifetime
         var branch = await _dbContext.Branches.FirstAsync();
         var email = $"persistence-{Guid.NewGuid():N}@test.local";
 
-        _dbContext.Users.Add(new User
+        var user = new User
         {
             FullName = "Persistence Pharmacist",
             Email = email,
@@ -129,13 +135,15 @@ public class PersistenceTests : IAsyncLifetime
             BranchId = branch.BranchId,
             IsApproved = true,
             IsActive = true,
-            CreatedAt = DateTime.Now
-        });
+            CreatedAt = DateTime.UtcNow
+        };
+        _dbContext.Users.Add(user);
         await _dbContext.SaveChangesAsync();
-        await _dbContext.DisposeAsync();
 
-        await using var fresh = NewContext();
-        var saved = await fresh.Users.FirstOrDefaultAsync(u => u.Email == email);
+        var userId = user.UserId;
+
+        await using var fresh = FreshContext();
+        var saved = await fresh.Users.FirstOrDefaultAsync(u => u.UserId == userId);
         Assert.NotNull(saved);
         Assert.Equal("Persistence Pharmacist", saved!.FullName);
     }
@@ -149,13 +157,15 @@ public class PersistenceTests : IAsyncLifetime
             Phone = "0911111111",
             Email = $"supplier-{Guid.NewGuid():N}@test.local",
             Address = "Persistence Address",
-            CreatedAt = DateTime.Now
+            CreatedAt = DateTime.UtcNow
         });
         await _dbContext.SaveChangesAsync();
-        await _dbContext.DisposeAsync();
 
-        await using var fresh = NewContext();
-        var saved = await fresh.Suppliers.FirstOrDefaultAsync(s => s.SupplierName == "Persistence Supplier 001");
+        var supplier = await _dbContext.Suppliers.FirstOrDefaultAsync(s => s.SupplierName == "Persistence Supplier 001");
+        var supplierId = supplier!.SupplierId;
+
+        await using var fresh = FreshContext();
+        var saved = await fresh.Suppliers.FirstOrDefaultAsync(s => s.SupplierId == supplierId);
         Assert.NotNull(saved);
     }
 
@@ -176,7 +186,7 @@ public class PersistenceTests : IAsyncLifetime
             BranchId = branch.BranchId,
             IsApproved = true,
             IsActive = true,
-            CreatedAt = DateTime.Now
+            CreatedAt = DateTime.UtcNow
         };
         _dbContext.Users.Add(pharmacist);
         await _dbContext.SaveChangesAsync();
@@ -189,7 +199,7 @@ public class PersistenceTests : IAsyncLifetime
             UnitTypeId = unitType.UnitTypeId,
             ReorderLevel = 5,
             IsActive = true,
-            CreatedDate = DateTime.Now
+            CreatedDate = DateTime.UtcNow
         };
         _dbContext.Medicines.Add(medicine);
         await _dbContext.SaveChangesAsync();
@@ -205,8 +215,8 @@ public class PersistenceTests : IAsyncLifetime
             QuantityIssued = 0,
             QuantityDamaged = 0,
             QuantityExpired = 0,
-            ExpiryDate = DateTime.Now.AddYears(1),
-            DateReceived = DateTime.Now
+            ExpiryDate = DateTime.UtcNow.AddYears(1),
+            DateReceived = DateTime.UtcNow
         };
         _dbContext.MedicineBatches.Add(batch);
         await _dbContext.SaveChangesAsync();
@@ -214,7 +224,7 @@ public class PersistenceTests : IAsyncLifetime
         var sale = new Sale
         {
             SaleNumber = $"SAL-{Guid.NewGuid():N}",
-            SaleDate = DateTime.Now,
+            SaleDate = DateTime.UtcNow,
             TotalAmount = 120,
             TotalProfit = 60,
             UserId = pharmacist.UserId,
@@ -239,15 +249,16 @@ public class PersistenceTests : IAsyncLifetime
             SubTotal = 120
         });
         await _dbContext.SaveChangesAsync();
-        await _dbContext.DisposeAsync();
 
-        await using var fresh = NewContext();
-        var savedSale = await fresh.Sales.FirstOrDefaultAsync(s => s.SaleId == sale.SaleId);
+        var saleId = sale.SaleId;
+
+        await using var fresh = FreshContext();
+        var savedSale = await fresh.Sales.FirstOrDefaultAsync(s => s.SaleId == saleId);
         Assert.NotNull(savedSale);
         Assert.Equal(branch.BranchId, savedSale!.BranchId);
         Assert.Equal("paid", savedSale.PaymentStatus);
 
-        var savedItem = await fresh.SaleItems.FirstOrDefaultAsync(si => si.SaleId == sale.SaleId);
+        var savedItem = await fresh.SaleItems.FirstOrDefaultAsync(si => si.SaleId == saleId);
         Assert.NotNull(savedItem);
         Assert.Equal(2, savedItem!.Quantity);
         Assert.Equal(120, savedItem.SubTotal);
@@ -264,7 +275,7 @@ public class PersistenceTests : IAsyncLifetime
             Phone = "0922222222",
             Email = $"psupplier-{Guid.NewGuid():N}@test.local",
             Address = "Addr",
-            CreatedAt = DateTime.Now
+            CreatedAt = DateTime.UtcNow
         };
         _dbContext.Suppliers.Add(supplier);
         await _dbContext.SaveChangesAsync();
@@ -295,7 +306,7 @@ public class PersistenceTests : IAsyncLifetime
         var result = await service.CreateAsync(new CreatePurchaseRequest
         {
             SupplierId = supplier.SupplierId,
-            PurchaseDate = DateTime.Now,
+            PurchaseDate = DateTime.UtcNow,
             PaymentMethod = "cash",
             AmountPaid = 1000,
             Items = new List<PurchaseItemRequest>
@@ -309,19 +320,19 @@ public class PersistenceTests : IAsyncLifetime
                     Quantity = 50,
                     PurchasePrice = 20,
                     SellingPrice = 40,
-                    ExpiryDate = DateTime.Now.AddYears(1)
+                    ExpiryDate = DateTime.UtcNow.AddYears(1)
                 }
             }
         }, 1, branch.BranchId);
 
-        await _dbContext.DisposeAsync();
+        var purchaseId = result.PurchaseId;
 
-        await using var fresh = NewContext();
-        var purchase = await fresh.Purchases.FirstOrDefaultAsync(p => p.PurchaseId == result.PurchaseId);
+        await using var fresh = FreshContext();
+        var purchase = await fresh.Purchases.FirstOrDefaultAsync(p => p.PurchaseId == purchaseId);
         Assert.NotNull(purchase);
         Assert.Equal(branch.BranchId, purchase!.BranchId);
 
-        var purchaseItem = await fresh.PurchaseItems.FirstOrDefaultAsync(pi => pi.PurchaseId == result.PurchaseId);
+        var purchaseItem = await fresh.PurchaseItems.FirstOrDefaultAsync(pi => pi.PurchaseId == purchaseId);
         Assert.NotNull(purchaseItem);
 
         var batch = await fresh.MedicineBatches.FirstOrDefaultAsync(b => b.BatchNumber == batchNumber);

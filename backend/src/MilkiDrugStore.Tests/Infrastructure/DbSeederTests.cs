@@ -3,7 +3,6 @@ using FluentAssertions;
 using MilkiDrugStore.Api;
 using MilkiDrugStore.Persistence.Context;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Logging;
 using Moq;
 
@@ -14,11 +13,8 @@ public class DbSeederTests
     [Fact]
     public async Task SeedAsync_Should_Seed_Roles_When_Empty()
     {
-        using var connection = new SqliteConnection("Data Source=:memory:");
-        await connection.OpenAsync();
-
         var options = new DbContextOptionsBuilder<AppDbContext>()
-            .UseSqlite(connection)
+            .UseInMemoryDatabase($"DbSeeder_Test_{Guid.NewGuid()}")
             .Options;
 
         using (var context = new AppDbContext(options))
@@ -43,11 +39,8 @@ public class DbSeederTests
     [Fact]
     public async Task SeedAsync_Should_Not_Duplicate_Data_When_Run_Twice()
     {
-        using var connection = new SqliteConnection("Data Source=:memory:");
-        await connection.OpenAsync();
-
         var options = new DbContextOptionsBuilder<AppDbContext>()
-            .UseSqlite(connection)
+            .UseInMemoryDatabase($"DbSeeder_Test_{Guid.NewGuid()}")
             .Options;
 
         using (var context = new AppDbContext(options))

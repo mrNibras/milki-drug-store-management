@@ -10,7 +10,7 @@ public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<AppDbConte
     public AppDbContext CreateDbContext(string[] args)
     {
         var basePath = Path.Combine(Directory.GetCurrentDirectory(), "..", "MilkiDrugStore.Api");
-        
+
         var configuration = new ConfigurationBuilder()
             .SetBasePath(basePath)
             .AddJsonFile("appsettings.json", optional: false)
@@ -18,19 +18,13 @@ public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<AppDbConte
             .AddEnvironmentVariables()
             .Build();
 
-        var connectionString = configuration.GetConnectionString("DefaultConnection") 
-                               ?? "Data Source=DesignTime.db";
+        var connectionString = DbProviderResolver.ResolveConnectionString(configuration);
 
         var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
-        
-        if (connectionString.Contains("Server=", StringComparison.OrdinalIgnoreCase))
+        optionsBuilder.UseNpgsql(connectionString, npgsql =>
         {
-            optionsBuilder.UseSqlServer(connectionString);
-        }
-        else
-        {
-            optionsBuilder.UseSqlite(connectionString);
-        }
+            npgsql.MigrationsAssembly("MilkiDrugStore.Persistence");
+        });
 
         return new AppDbContext(optionsBuilder.Options);
     }
