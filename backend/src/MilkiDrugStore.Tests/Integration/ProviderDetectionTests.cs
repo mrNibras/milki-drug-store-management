@@ -152,6 +152,32 @@ public class ProviderDetectionTests
         Assert.Contains("Ssl Mode=Require", conn, StringComparison.OrdinalIgnoreCase);
     }
 
+    [Theory]
+    [InlineData("postgresql://user:password@localhost:5432/mydb")]
+    [InlineData("postgres://user:password@localhost:5432/mydb")]
+    public void NormalizePostgresConnectionString_WithExplicitPort_PreservesPort(string url)
+    {
+        var conn = DbProviderResolver.NormalizePostgresConnectionString(url);
+        var dict = ParseConnectionString(conn);
+
+        Assert.Equal("5432", dict["Port"]);
+    }
+
+    [Theory]
+    [InlineData("postgresql://user:password@localhost/mydb")]
+    [InlineData("postgres://user:password@localhost/mydb")]
+    public void NormalizePostgresConnectionString_WithoutPort_DefaultsTo5432(string url)
+    {
+        var conn = DbProviderResolver.NormalizePostgresConnectionString(url);
+        var dict = ParseConnectionString(conn);
+
+        Assert.Equal("5432", dict["Port"]);
+        Assert.Equal("localhost", dict["Host"]);
+        Assert.Equal("mydb", dict["Database"]);
+        Assert.Equal("user", dict["Username"]);
+        Assert.Equal("password", dict["Password"]);
+    }
+
     [Fact]
     public void NormalizePostgresConnectionString_EmptyOrNull_ReturnsEmpty()
     {

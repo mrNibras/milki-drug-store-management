@@ -55,7 +55,7 @@ public static class DbProviderResolver
 
         var uri = new Uri(databaseUrl);
         builder.Host = uri.Host;
-        builder.Port = uri.Port;
+        builder.Port = uri.Port > 0 ? uri.Port : 5432;
         builder.Database = uri.AbsolutePath.TrimStart('/');
         if (!string.IsNullOrEmpty(uri.UserInfo))
         {
