@@ -95,6 +95,90 @@ public class ProviderDetectionTests
         Assert.Equal("mypassword", dict["Password"]);
     }
 
+    [Theory]
+    [InlineData("postgres://user:password@localhost:5432/milki_drug_store")]
+    [InlineData("postgresql://user:password@localhost:5432/milki_drug_store")]
+    public void NormalizePostgresConnectionString_UrlFormat_ConvertsToKeyValue(string url)
+    {
+        var conn = DbProviderResolver.NormalizePostgresConnectionString(url);
+        var dict = ParseConnectionString(conn);
+
+        Assert.Equal("localhost", dict["Host"]);
+        Assert.Equal("5432", dict["Port"]);
+        Assert.Equal("milki_drug_store", dict["Database"]);
+        Assert.Equal("user", dict["Username"]);
+        Assert.Equal("password", dict["Password"]);
+    }
+
+    [Fact]
+    public void NormalizePostgresConnectionString_KeyValueFormat_PassThrough()
+    {
+        var kv = "Host=localhost;Port=5432;Database=milki_drug_store;Username=user;Password=password";
+        var conn = DbProviderResolver.NormalizePostgresConnectionString(kv);
+
+        Assert.Equal(kv, conn);
+    }
+
+    [Theory]
+    [InlineData("postgresql://us%40er:p%40ss@host:5432/mydb")]
+    [InlineData("postgres://us%40er:p%40ss@host:5432/mydb")]
+    public void NormalizePostgresConnectionString_UrlEncodedCredentials_Decodes(string url)
+    {
+        var conn = DbProviderResolver.NormalizePostgresConnectionString(url);
+        var dict = ParseConnectionString(conn);
+
+        Assert.Equal("us@er", dict["Username"]);
+        Assert.Equal("p@ss", dict["Password"]);
+        Assert.Equal("mydb", dict["Database"]);
+    }
+
+    [Theory]
+    [InlineData("postgres://user:p%40ss%3Aw0rd@host:5432/db")]
+    [InlineData("postgresql://user:p%40ss%3Aw0rd@host:5432/db")]
+    public void NormalizePostgresConnectionString_PasswordWithSpecialChars_Decodes(string url)
+    {
+        var conn = DbProviderResolver.NormalizePostgresConnectionString(url);
+        var dict = ParseConnectionString(conn);
+
+        Assert.Equal("p@ss:w0rd", dict["Password"]);
+    }
+
+    [Theory]
+    [InlineData("postgres://user:pass@host:5432/db?sslmode=Require")]
+    [InlineData("postgresql://user:pass@host:5432/db?sslmode=Require")]
+    public void NormalizePostgresConnectionString_WithSslMode_QueryParam_Parsed(string url)
+    {
+        var conn = DbProviderResolver.NormalizePostgresConnectionString(url);
+        Assert.Contains("Ssl Mode=Require", conn, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void NormalizePostgresConnectionString_EmptyOrNull_ReturnsEmpty()
+    {
+        Assert.Equal(string.Empty, DbProviderResolver.NormalizePostgresConnectionString(string.Empty));
+        Assert.Equal(string.Empty, DbProviderResolver.NormalizePostgresConnectionString(null!));
+    }
+
+    [Fact]
+    public void ResolveConnectionString_UrlFromDefaultConnection_ConvertsToKeyValue()
+    {
+        var config = new ConfigurationBuilder()
+            .AddInMemoryCollection(new[]
+            {
+                new KeyValuePair<string, string?>("ConnectionStrings:DefaultConnection", "postgresql://user:pass@host:5432/milki_drug_store")
+            })
+            .Build();
+
+        var conn = DbProviderResolver.ResolveConnectionString(config);
+        var dict = ParseConnectionString(conn);
+
+        Assert.Equal("host", dict["Host"]);
+        Assert.Equal("5432", dict["Port"]);
+        Assert.Equal("milki_drug_store", dict["Database"]);
+        Assert.Equal("user", dict["Username"]);
+        Assert.Equal("pass", dict["Password"]);
+    }
+
     private static Dictionary<string, string> ParseConnectionString(string cs)
     {
         return cs.Split(';', StringSplitOptions.RemoveEmptyEntries)

@@ -13,13 +13,32 @@ public static class DbProviderResolver
     {
         var connectionString = configuration.GetConnectionString("DefaultConnection");
         if (!string.IsNullOrWhiteSpace(connectionString))
-            return connectionString;
+            return NormalizePostgresConnectionString(connectionString);
 
         var databaseUrl = configuration["DATABASE_URL"];
         if (!string.IsNullOrWhiteSpace(databaseUrl))
-            return PostgresUrlToConnectionString(databaseUrl);
+            return NormalizePostgresConnectionString(databaseUrl);
 
         return string.Empty;
+    }
+
+    /// <summary>
+    /// Normalizes a PostgreSQL connection string, converting URL-style
+    /// (postgresql:// / postgres://) connection strings into Npgsql key/value format.
+    /// Key/value format strings are returned unchanged.
+    /// </summary>
+    public static string NormalizePostgresConnectionString(string connectionString)
+    {
+        if (string.IsNullOrWhiteSpace(connectionString))
+            return string.Empty;
+
+        if (connectionString.StartsWith("postgres://", StringComparison.OrdinalIgnoreCase) ||
+            connectionString.StartsWith("postgresql://", StringComparison.OrdinalIgnoreCase))
+        {
+            return PostgresUrlToConnectionString(connectionString);
+        }
+
+        return connectionString;
     }
 
     /// <summary>
