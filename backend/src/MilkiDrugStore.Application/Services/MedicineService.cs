@@ -166,8 +166,8 @@ public class MedicineService : IMedicineService
             QuantityReceived = request.Quantity,
             PurchasePrice = request.PurchasePrice,
             SellingPrice = request.SellingPrice,
-            ExpiryDate = request.ExpiryDate,
-            ManufacturingDate = request.ManufacturingDate,
+            ExpiryDate = ToUtc(request.ExpiryDate),
+            ManufacturingDate = ToUtc(request.ManufacturingDate),
             SupplierId = request.SupplierId,
             DateReceived = DateTime.UtcNow
         };
@@ -330,4 +330,15 @@ public class MedicineService : IMedicineService
             }).ToList()
         };
     }
+
+    private static DateTime ToUtc(DateTime dt)
+    {
+        return dt.Kind == DateTimeKind.Utc
+            ? dt
+            : dt.Kind == DateTimeKind.Local
+                ? dt.ToUniversalTime()
+                : DateTime.SpecifyKind(dt, DateTimeKind.Utc);
+    }
+
+    private static DateTime? ToUtc(DateTime? dt) => dt.HasValue ? ToUtc(dt.Value) : null;
 }

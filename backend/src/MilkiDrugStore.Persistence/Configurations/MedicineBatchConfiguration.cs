@@ -9,7 +9,7 @@ public class MedicineBatchConfiguration : IEntityTypeConfiguration<MedicineBatch
     public void Configure(EntityTypeBuilder<MedicineBatch> builder)
     {
         builder.HasKey(b => b.BatchId);
-        builder.Property(b => b.BatchNumber).HasMaxLength(100);
+        builder.Property(b => b.BatchNumber).IsRequired().HasMaxLength(100);
         builder.Property(b => b.PurchasePrice).HasColumnType("decimal(18,2)");
         builder.Property(b => b.SellingPrice).HasColumnType("decimal(18,2)");
         builder.Property(b => b.Remarks).HasMaxLength(300);

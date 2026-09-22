@@ -692,4 +692,69 @@ public class DatabaseIntegrationTests : IClassFixture<PostgreSqlFixture>, IAsync
         Assert.Equal(branch.BranchId, savedBatch.BranchId);
         Assert.Equal(100, savedBatch.QuantityReceived);
     }
+
+    [Fact]
+    public async Task PurchaseService_Should_Create_Purchase_With_New_Medicine_And_Real_CatalogService()
+    {
+        var branch = await _dbContext.Branches.FirstAsync();
+        var supplier = await _dbContext.Suppliers.FirstAsync();
+
+        var auditLog = Mock.Of<IAuditLogService>();
+        var logger = Mock.Of<ILogger<PurchaseService>>();
+        var unitOfWork = new UnitOfWork(_dbContext);
+        var catalogService = new CatalogService(
+            new Repository<Category>(_dbContext),
+            new Repository<UnitType>(_dbContext),
+            unitOfWork,
+            auditLog);
+
+        var purchaseService = new PurchaseService(
+            new Repository<Purchase>(_dbContext),
+            new Repository<PurchaseItem>(_dbContext),
+            new Repository<Medicine>(_dbContext),
+            new Repository<MedicineBatch>(_dbContext),
+            new Repository<Supplier>(_dbContext),
+            catalogService,
+            new Repository<InventoryTransaction>(_dbContext),
+            unitOfWork,
+            auditLog,
+            logger);
+
+        var request = new CreatePurchaseRequest
+        {
+            SupplierId = supplier.SupplierId,
+            PurchaseDate = DateTime.UtcNow,
+            PaymentMethod = "cash",
+            AmountPaid = 500,
+            Items = new List<PurchaseItemRequest>
+            {
+                new PurchaseItemRequest
+                {
+                    BrandName = "Auto Created Medicine",
+                    GenericName = "Automated Generic",
+                    CategoryId = -1,
+                    CategoryName = "Antibiotics",
+                    UnitType = "Tablet",
+                    BatchNumber = "AUTO-BATCH-001",
+                    Quantity = 100,
+                    PurchasePrice = 5,
+                    SellingPrice = 10,
+                    ExpiryDate = DateTime.SpecifyKind(DateTime.UtcNow.AddYears(1), DateTimeKind.Unspecified)
+                }
+            }
+        };
+
+        var result = await purchaseService.CreateAsync(request, 1, branch.BranchId);
+
+        Assert.NotNull(result);
+        Assert.Equal(supplier.SupplierId, result.SupplierId);
+        Assert.Single(result.Items);
+        Assert.Equal(500, result.TotalAmount);
+        Assert.Equal(500, result.AmountPaid);
+        Assert.Equal("paid", result.PaymentStatus);
+
+        var savedBatch = await _dbContext.MedicineBatches.FirstAsync();
+        Assert.Equal(100, savedBatch.QuantityReceived);
+        Assert.Equal("AUTO-BATCH-001", savedBatch.BatchNumber);
+    }
 }

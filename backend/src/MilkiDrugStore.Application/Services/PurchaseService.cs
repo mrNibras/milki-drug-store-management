@@ -95,7 +95,7 @@ public class PurchaseService : IPurchaseService
                 PurchaseNumber = purchaseNumber,
                 BranchId = effectiveBranchId,
                 SupplierId = request.SupplierId,
-                PurchaseDate = request.PurchaseDate,
+                PurchaseDate = ToUtc(request.PurchaseDate),
                 TotalAmount = totalAmount,
                 AmountPaid = request.AmountPaid,
                 AmountDue = totalAmount - request.AmountPaid,
@@ -196,8 +196,8 @@ public class PurchaseService : IPurchaseService
                         QuantityReceived = item.Quantity,
                         PurchasePrice = item.PurchasePrice,
                         SellingPrice = item.SellingPrice,
-                        ExpiryDate = item.ExpiryDate!.Value,
-                        ManufacturingDate = item.ManufacturingDate,
+                        ExpiryDate = ToUtc(item.ExpiryDate!.Value),
+                        ManufacturingDate = ToUtc(item.ManufacturingDate),
                         SupplierId = item.SupplierId ?? request.SupplierId,
                         DateReceived = DateTime.UtcNow
                     };
@@ -214,8 +214,8 @@ public class PurchaseService : IPurchaseService
                     batch.QuantityReceived += item.Quantity;
                     batch.PurchasePrice = item.PurchasePrice;
                     batch.SellingPrice = item.SellingPrice;
-                    batch.ExpiryDate = item.ExpiryDate!.Value;
-                    batch.ManufacturingDate = item.ManufacturingDate;
+                    batch.ExpiryDate = ToUtc(item.ExpiryDate!.Value);
+                    batch.ManufacturingDate = ToUtc(item.ManufacturingDate);
                     batch.SupplierId = item.SupplierId ?? request.SupplierId;
                     await _batchRepo.UpdateAsync(batch);
 
@@ -232,7 +232,7 @@ public class PurchaseService : IPurchaseService
                     Quantity = item.Quantity,
                     PurchasePrice = item.PurchasePrice,
                     SubTotal = item.Quantity * item.PurchasePrice,
-                    ExpiryDate = item.ExpiryDate
+                    ExpiryDate = ToUtc(item.ExpiryDate)
                 };
 
                 await _purchaseItemRepo.AddAsync(purchaseItem);
@@ -353,4 +353,15 @@ public class PurchaseService : IPurchaseService
         var count = (await _medicineRepo.GetAllAsync()).Count();
         return $"MED-{(count + 1):D5}";
     }
+
+    private static DateTime ToUtc(DateTime dt)
+    {
+        return dt.Kind == DateTimeKind.Utc
+            ? dt
+            : dt.Kind == DateTimeKind.Local
+                ? dt.ToUniversalTime()
+                : DateTime.SpecifyKind(dt, DateTimeKind.Utc);
+    }
+
+    private static DateTime? ToUtc(DateTime? dt) => dt.HasValue ? ToUtc(dt.Value) : null;
 }

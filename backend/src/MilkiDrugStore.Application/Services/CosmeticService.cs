@@ -134,7 +134,7 @@ public class CosmeticService : ICosmeticService
             QuantityIssued = 0,
             QuantityDamaged = 0,
             QuantityExpired = 0,
-            ExpiryDate = request.ExpiryDate,
+            ExpiryDate = ToUtc(request.ExpiryDate),
             DateReceived = DateTime.UtcNow,
             Remarks = string.Empty
         };
@@ -222,4 +222,15 @@ public class CosmeticService : ICosmeticService
             }).ToList()
         };
     }
+
+    private static DateTime ToUtc(DateTime dt)
+    {
+        return dt.Kind == DateTimeKind.Utc
+            ? dt
+            : dt.Kind == DateTimeKind.Local
+                ? dt.ToUniversalTime()
+                : DateTime.SpecifyKind(dt, DateTimeKind.Utc);
+    }
+
+    private static DateTime? ToUtc(DateTime? dt) => dt.HasValue ? ToUtc(dt.Value) : null;
 }

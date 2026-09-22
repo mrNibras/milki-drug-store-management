@@ -12,7 +12,7 @@ public class MedicineConfiguration : IEntityTypeConfiguration<Medicine>
         builder.Property(m => m.ProductCode).HasMaxLength(50).IsRequired();
         builder.HasIndex(m => m.ProductCode).IsUnique();
         builder.Property(m => m.BrandName).HasMaxLength(150).IsRequired();
-        builder.Property(m => m.GenericName).HasMaxLength(150);
+        builder.Property(m => m.GenericName).HasMaxLength(150).IsRequired();
         builder.Property(m => m.Strength).HasMaxLength(50);
         builder.Property(m => m.DosageForm).HasMaxLength(100);
         builder.Property(m => m.Barcode).HasMaxLength(100);

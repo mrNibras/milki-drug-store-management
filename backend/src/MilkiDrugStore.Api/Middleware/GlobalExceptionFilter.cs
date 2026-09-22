@@ -22,8 +22,12 @@ public class GlobalExceptionFilter : IExceptionFilter
     {
         var correlationId = context.HttpContext?.TraceIdentifier ?? "unknown";
 
+        var innerException = context.Exception.InnerException ?? context.Exception;
+
         var isClientError = context.Exception is ArgumentException ||
-                            context.Exception is InvalidOperationException;
+                            context.Exception is InvalidOperationException ||
+                            context.Exception is Microsoft.EntityFrameworkCore.DbUpdateException &&
+                            (innerException is ArgumentException || innerException is InvalidOperationException);
 
         var statusCode = isClientError
             ? StatusCodes.Status400BadRequest
@@ -42,9 +46,10 @@ public class GlobalExceptionFilter : IExceptionFilter
         }
         else if (isClientError)
         {
-            // InvalidOperationException and ArgumentException messages from the
-            // service/application layer are intentionally user-facing.
-            message = context.Exception.Message;
+            var clientException = innerException is ArgumentException or InvalidOperationException
+                ? innerException
+                : context.Exception;
+            message = clientException.Message;
         }
         else
         {

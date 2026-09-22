@@ -185,7 +185,7 @@ export const PurchasesPage: React.FC = () => {
       paymentMethod: paymentMethod,
       amountPaid: finalAmountPaid,
       items: items.map(item => ({
-        productId: item.existingMedicineId,
+        productId: item.existingMedicineId ? Number(item.existingMedicineId) : undefined,
         brandName: item.isNewMedicine ? item.brandName : undefined,
         genericName: item.isNewMedicine ? item.genericName : undefined,
         categoryId: item.isNewMedicine ? (item.categoryId ? Number(item.categoryId) : undefined) : undefined,
@@ -196,7 +196,7 @@ export const PurchasesPage: React.FC = () => {
         quantity: Number(item.quantity),
         purchasePrice: Number(item.purchasePrice),
         sellingPrice: Number(item.sellingPrice),
-        expiryDate: item.expiryDate,
+        expiryDate: item.expiryDate ? new Date(item.expiryDate).toISOString() : undefined,
       })),
     };
 
