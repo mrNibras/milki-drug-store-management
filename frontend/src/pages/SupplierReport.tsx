@@ -4,14 +4,14 @@ import { useThemeStore } from '../store/themeStore';
 import { formatCurrency } from '../utils/helpers';
 
 const SupplierReport: React.FC = () => {
-  const { suppliers, purchases, fetchSuppliers, fetchPurchases, loading } = useAppStore();
+  const { suppliers, purchases, fetchSuppliers, fetchPurchases, error, loading } = useAppStore();
   const { theme } = useThemeStore();
   const isDark = theme === 'dark';
 
   useEffect(() => {
-    if (!suppliers.length) fetchSuppliers();
-    if (!purchases.length) fetchPurchases();
-  }, [fetchSuppliers, fetchPurchases, suppliers.length, purchases.length]);
+    if (!suppliers || !suppliers.length) fetchSuppliers();
+    if (!purchases || !purchases.length) fetchPurchases();
+  }, [fetchSuppliers, fetchPurchases, suppliers, purchases]);
 
   const supplierData = useMemo(() => {
     return (suppliers || []).map(s => {
@@ -33,6 +33,10 @@ const SupplierReport: React.FC = () => {
 
   if (loading.suppliers || loading.purchases) {
     return <div className="text-center py-10">Loading supplier data...</div>;
+  }
+
+  if (error) {
+    return <div className="text-center py-10 text-red-500">{error}</div>;
   }
 
   return (

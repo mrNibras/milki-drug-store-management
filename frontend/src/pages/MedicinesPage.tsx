@@ -391,7 +391,7 @@ export const MedicinesPage: React.FC = () => {
       </div>
 
       {/* Table */}
-      {loading ? (
+      {loading.medicines ? (
         <div className="text-center py-12">
           <div className="h-8 w-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
           <p className={isDark ? 'text-gray-400' : 'text-gray-500'}>Loading medicines...</p>

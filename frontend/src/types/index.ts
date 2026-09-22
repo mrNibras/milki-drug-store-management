@@ -67,6 +67,15 @@ export interface Supplier {
   createdAt: string;
 }
 
+export interface SupplierFinancialSummary {
+  supplierId: string;
+  totalPurchases: number;
+  totalPaid: number;
+  totalDebt: number;
+  purchaseCount: number;
+  status: 'cleared' | 'outstanding';
+}
+
 export interface Purchase {
   id: string;
   purchaseNumber: string;

@@ -4,23 +4,24 @@ import { useThemeStore } from '../store/themeStore';
 import { formatCurrency } from '../utils/helpers';
 
 const InventoryReport: React.FC = () => {
-  const { medicines, fetchMedicines, loading } = useAppStore();
+  const { medicines, fetchMedicines, error, loading } = useAppStore();
   const { theme } = useThemeStore();
   const isDark = theme === 'dark';
 
   useEffect(() => {
-    if (!medicines.length) fetchMedicines();
-  }, [fetchMedicines, medicines.length]);
+    if (!medicines || !medicines.length) fetchMedicines();
+  }, [fetchMedicines, medicines]);
 
   const inventoryData = useMemo(() => {
     return (medicines || []).map(m => {
-      const totalValue = m.batches.reduce((s, b) => s + (b.remainingQuantity * b.purchasePrice), 0);
+      const totalQuantity = m.batches.reduce((s, b) => s + b.quantity, 0);
+      const totalValue = m.batches.reduce((s, b) => s + (b.quantity * b.purchasePrice), 0);
       return {
-        name: m.brandName,
+        name: m.name,
         category: m.categoryName,
-        quantity: m.totalStock,
+        quantity: totalQuantity,
         value: totalValue,
-        status: m.totalStock === 0 ? 'Out of Stock' : m.totalStock <= m.reorderLevel ? 'Low Stock' : 'In Stock',
+        status: totalQuantity === 0 ? 'Out of Stock' : totalQuantity <= m.lowStockThreshold ? 'Low Stock' : 'In Stock',
       };
     }).sort((a, b) => a.quantity - b.quantity);
   }, [medicines]);
@@ -31,6 +32,10 @@ const InventoryReport: React.FC = () => {
 
   if (loading.medicines) {
     return <div className="text-center py-10">Loading inventory data...</div>;
+  }
+
+  if (error) {
+    return <div className="text-center py-10 text-red-500">{error}</div>;
   }
 
   return (

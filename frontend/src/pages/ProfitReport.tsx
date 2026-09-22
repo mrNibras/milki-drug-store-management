@@ -5,13 +5,13 @@ import { useThemeStore } from '../store/themeStore';
 import { formatCurrency } from '../utils/helpers';
 
 const ProfitReport: React.FC = () => {
-  const { sales, fetchSales, loading } = useAppStore();
+  const { sales, fetchSales, loading, error } = useAppStore();
   const { theme } = useThemeStore();
   const isDark = theme === 'dark';
 
   useEffect(() => {
-    if (!sales.length) fetchSales();
-  }, [fetchSales, sales.length]);
+    if (!sales || !sales.length) fetchSales();
+  }, [fetchSales, sales]);
 
   const salesByDate = useMemo(() => {
     const grouped: Record<string, { sales: number; profit: number; count: number }> = {};
@@ -32,6 +32,10 @@ const ProfitReport: React.FC = () => {
 
   if (loading.sales) {
     return <div className="text-center py-10">Loading profit data...</div>;
+  }
+
+  if (error) {
+    return <div className="text-center py-10 text-red-500">{error}</div>;
   }
 
   return (

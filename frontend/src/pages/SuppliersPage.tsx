@@ -5,10 +5,10 @@ import { useThemeStore } from '../store/themeStore';
 import { Modal } from '../components/ui/Modal';
 import { Badge } from '../components/ui/Badge';
 import { formatDate, generateId, formatCurrency } from '../utils/helpers';
-import { Supplier } from '../types';
+import { Supplier, SupplierFinancialSummary } from '../types';
 
 export const SuppliersPage: React.FC = () => {
-  const { suppliers, purchases, fetchSuppliers, fetchPurchases, addSupplier, updateSupplier, deleteSupplier, currentUser, loading } = useAppStore();
+  const { suppliers, purchases, fetchSuppliers, fetchPurchases, addSupplier, updateSupplier, deleteSupplier, currentUser, error, loading } = useAppStore();
   const { theme } = useThemeStore();
   const isDark = theme === 'dark';
 
@@ -28,6 +28,10 @@ export const SuppliersPage: React.FC = () => {
     address: '', 
     contactPerson: '',
   });
+
+  if (error) {
+    return <div className="text-center py-10 text-red-500">{error}</div>;
+  }
 
   // Calculate financial summary for each supplier from purchases
   const supplierFinancials = useMemo(() => {

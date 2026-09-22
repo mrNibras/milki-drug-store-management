@@ -91,7 +91,7 @@ export const BranchesPage: React.FC = () => {
         </button>
       </div>
 
-      {loading ? (
+      {loading.branches ? (
         <div className="text-center py-12">
           <div className="h-8 w-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
           <p className={isDark ? 'text-gray-400' : 'text-gray-500'}>Loading branches...</p>
@@ -150,7 +150,7 @@ export const BranchesPage: React.FC = () => {
         </div>
       )}
 
-      {(branches || []).length === 0 && !loading && (
+      {(branches || []).length === 0 && !loading.branches && (
         <div className={`text-center py-12 rounded-xl border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
           <Building2 className={`h-12 w-12 mx-auto mb-3 ${isDark ? 'text-gray-600' : 'text-gray-300'}`} />
           <p className={isDark ? 'text-gray-400' : 'text-gray-500'}>No branches found</p>

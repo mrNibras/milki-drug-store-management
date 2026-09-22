@@ -5,13 +5,13 @@ import { useThemeStore } from '../store/themeStore';
 import { formatCurrency } from '../utils/helpers';
 
 const MostSellingReport: React.FC = () => {
-  const { sales, fetchSales, loading } = useAppStore();
+  const { sales, fetchSales, loading, error } = useAppStore();
   const { theme } = useThemeStore();
   const isDark = theme === 'dark';
 
   useEffect(() => {
-    if (!sales.length) fetchSales();
-  }, [fetchSales, sales.length]);
+    if (!sales || !sales.length) fetchSales();
+  }, [fetchSales, sales]);
 
   const mostSellingByMonth = useMemo(() => {
     const months: Record<string, Record<string, { name: string; quantity: number; revenue: number }>> = {};
@@ -54,6 +54,10 @@ const MostSellingReport: React.FC = () => {
 
   if (loading.sales) {
     return <div className="text-center py-10">Loading sales data...</div>;
+  }
+
+  if (error) {
+    return <div className="text-center py-10 text-red-500">{error}</div>;
   }
 
   return (

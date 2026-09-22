@@ -6,14 +6,14 @@ import { formatCurrency, formatDate } from '../utils/helpers';
 import { BarChart3 } from 'lucide-react';
 
 const SalesReport: React.FC = () => {
-  const { sales, fetchSales, loading } = useAppStore();
+  const { sales, fetchSales, error, loading } = useAppStore();
   const { theme } = useThemeStore();
   const isDark = theme === 'dark';
   const [dateRange, setDateRange] = useState('weekly');
 
   useEffect(() => {
-    if (!sales.length) fetchSales();
-  }, [fetchSales, sales.length]);
+    if (!sales || !sales.length) fetchSales();
+  }, [fetchSales, sales]);
 
   const salesByDate = useMemo(() => {
     const grouped: Record<string, { sales: number; profit: number; count: number }> = {};
@@ -66,6 +66,10 @@ const SalesReport: React.FC = () => {
 
   if (loading.sales) {
     return <div className="text-center py-10">Loading sales data...</div>;
+  }
+
+  if (error) {
+    return <div className="text-center py-10 text-red-500">{error}</div>;
   }
 
   return (

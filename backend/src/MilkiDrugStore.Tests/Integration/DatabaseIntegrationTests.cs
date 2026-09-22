@@ -817,4 +817,263 @@ public class DatabaseIntegrationTests : IClassFixture<PostgreSqlFixture>, IAsync
         Assert.NotEmpty(result);
         Assert.Single(result);
     }
+
+    [Fact]
+    public async Task SupplierReport_Should_Show_Purchase_Count_And_Financial_Totals()
+    {
+        var branch = await _dbContext.Branches.FirstAsync();
+
+        var supplier = new Supplier
+        {
+            SupplierName = "FinTest Supplier",
+            Phone = "0911111111",
+            Email = "s1@test.com",
+            Address = "Test Address",
+            PaymentStatus = "Outstanding",
+            CreatedAt = DateTime.UtcNow
+        };
+        _dbContext.Suppliers.Add(supplier);
+        await _dbContext.SaveChangesAsync();
+
+        var auditLog = Mock.Of<IAuditLogService>();
+        var logger = Mock.Of<ILogger<PurchaseService>>();
+        var unitOfWork = new UnitOfWork(_dbContext);
+        var catalogService = new CatalogService(
+            new Repository<Category>(_dbContext),
+            new Repository<UnitType>(_dbContext),
+            unitOfWork,
+            auditLog);
+
+        var purchaseService = new PurchaseService(
+            new Repository<Purchase>(_dbContext),
+            new Repository<PurchaseItem>(_dbContext),
+            new Repository<Medicine>(_dbContext),
+            new Repository<MedicineBatch>(_dbContext),
+            new Repository<Supplier>(_dbContext),
+            catalogService,
+            new Repository<InventoryTransaction>(_dbContext),
+            unitOfWork,
+            auditLog,
+            logger);
+
+        var request = new CreatePurchaseRequest
+        {
+            SupplierId = supplier.SupplierId,
+            PurchaseDate = DateTime.UtcNow,
+            PaymentMethod = "cash",
+            AmountPaid = 500,
+            Items = new List<PurchaseItemRequest>
+            {
+                new PurchaseItemRequest
+                {
+                    BrandName = "FinTest Medicine",
+                    GenericName = "FinTest Generic",
+                    CategoryId = -1,
+                    CategoryName = "Antibiotics",
+                    UnitType = "Tablet",
+                    BatchNumber = "FIN-BATCH-001",
+                    Quantity = 100,
+                    PurchasePrice = 5,
+                    SellingPrice = 10,
+                    ExpiryDate = DateTime.UtcNow.AddYears(1)
+                }
+            }
+        };
+
+        await purchaseService.CreateAsync(request, 1, branch.BranchId);
+
+        var reportService = new ReportService(
+            new Repository<Sale>(_dbContext),
+            new Repository<Purchase>(_dbContext),
+            new Repository<Medicine>(_dbContext),
+            new Repository<Supplier>(_dbContext),
+            new Repository<User>(_dbContext),
+            catalogService);
+
+        var supplierReport = (await reportService.GetSupplierReportAsync(branch.BranchId)).ToList();
+
+        var entry = supplierReport.First(r => r.SupplierId == supplier.SupplierId);
+        Assert.Equal(1, entry.Purchases);
+        Assert.Equal(500m, entry.TotalAmount);
+        Assert.Equal(500m, entry.TotalPaid);
+        Assert.Equal(0m, entry.TotalDebt);
+        Assert.Equal("Cleared", entry.PaymentStatus);
+    }
+
+    [Fact]
+    public async Task SupplierReport_Should_Return_Empty_When_No_Purchases()
+    {
+        var branch = await _dbContext.Branches.FirstAsync();
+
+        var auditLog = Mock.Of<IAuditLogService>();
+        var logger = Mock.Of<ILogger<PurchaseService>>();
+        var unitOfWork = new UnitOfWork(_dbContext);
+        var catalogService = new CatalogService(
+            new Repository<Category>(_dbContext),
+            new Repository<UnitType>(_dbContext),
+            unitOfWork,
+            auditLog);
+
+        var reportService = new ReportService(
+            new Repository<Sale>(_dbContext),
+            new Repository<Purchase>(_dbContext),
+            new Repository<Medicine>(_dbContext),
+            new Repository<Supplier>(_dbContext),
+            new Repository<User>(_dbContext),
+            catalogService);
+
+        var supplierReport = await reportService.GetSupplierReportAsync(branch.BranchId);
+
+        Assert.NotNull(supplierReport);
+        Assert.All(supplierReport, r => { Assert.Equal(0, r.Purchases); Assert.Equal(0m, r.TotalAmount); });
+    }
+
+    [Fact]
+    public async Task InventoryReport_Should_Return_Valid_Numeric_Values()
+    {
+        var branch = await _dbContext.Branches.FirstAsync();
+        var supplier = await _dbContext.Suppliers.FirstAsync();
+
+        var auditLog = Mock.Of<IAuditLogService>();
+        var logger = Mock.Of<ILogger<PurchaseService>>();
+        var unitOfWork = new UnitOfWork(_dbContext);
+        var catalogService = new CatalogService(
+            new Repository<Category>(_dbContext),
+            new Repository<UnitType>(_dbContext),
+            unitOfWork,
+            auditLog);
+
+        var purchaseService = new PurchaseService(
+            new Repository<Purchase>(_dbContext),
+            new Repository<PurchaseItem>(_dbContext),
+            new Repository<Medicine>(_dbContext),
+            new Repository<MedicineBatch>(_dbContext),
+            new Repository<Supplier>(_dbContext),
+            catalogService,
+            new Repository<InventoryTransaction>(_dbContext),
+            unitOfWork,
+            auditLog,
+            logger);
+
+        var request = new CreatePurchaseRequest
+        {
+            SupplierId = supplier.SupplierId,
+            PurchaseDate = DateTime.UtcNow,
+            PaymentMethod = "cash",
+            AmountPaid = 500,
+            Items = new List<PurchaseItemRequest>
+            {
+                new PurchaseItemRequest
+                {
+                    BrandName = "InvTest Medicine",
+                    GenericName = "InvTest Generic",
+                    CategoryId = -1,
+                    CategoryName = "Antibiotics",
+                    UnitType = "Tablet",
+                    BatchNumber = "INV-BATCH-001",
+                    Quantity = 50,
+                    PurchasePrice = 10,
+                    SellingPrice = 20,
+                    ExpiryDate = DateTime.UtcNow.AddYears(1)
+                }
+            }
+        };
+
+        await purchaseService.CreateAsync(request, 1, branch.BranchId);
+
+        var reportService = new ReportService(
+            new Repository<Sale>(_dbContext),
+            new Repository<Purchase>(_dbContext),
+            new Repository<Medicine>(_dbContext),
+            new Repository<Supplier>(_dbContext),
+            new Repository<User>(_dbContext),
+            catalogService);
+
+        var inventoryReport = (await reportService.GetInventoryReportAsync(branch.BranchId)).ToList();
+
+        Assert.NotEmpty(inventoryReport);
+        var entry = inventoryReport.First();
+        Assert.NotEqual(0, entry.Quantity);
+        Assert.True(entry.Value > 0);
+    }
+
+    [Fact]
+    public async Task SalesReport_Should_Return_Empty_List_When_No_Sales()
+    {
+        var branch = await _dbContext.Branches.FirstAsync();
+
+        var auditLog = Mock.Of<IAuditLogService>();
+        var unitOfWork = new UnitOfWork(_dbContext);
+        var catalogService = new CatalogService(
+            new Repository<Category>(_dbContext),
+            new Repository<UnitType>(_dbContext),
+            unitOfWork,
+            auditLog);
+
+        var reportService = new ReportService(
+            new Repository<Sale>(_dbContext),
+            new Repository<Purchase>(_dbContext),
+            new Repository<Medicine>(_dbContext),
+            new Repository<Supplier>(_dbContext),
+            new Repository<User>(_dbContext),
+            catalogService);
+
+        var salesReport = await reportService.GetSalesReportAsync("weekly", branch.BranchId);
+
+        Assert.NotNull(salesReport);
+        Assert.Empty(salesReport);
+    }
+
+    [Fact]
+    public async Task DamageAndExpiry_Should_Return_Empty_Lists_When_No_Records()
+    {
+        var branch = await _dbContext.Branches.FirstAsync();
+
+        var inventoryService = new InventoryService(
+            new Repository<InventoryTransaction>(_dbContext),
+            new Repository<MedicineBatch>(_dbContext),
+            new Repository<Medicine>(_dbContext),
+            new UnitOfWork(_dbContext),
+            Mock.Of<IAuditLogService>());
+
+        var damages = await inventoryService.GetDamagesAsync(branch.BranchId);
+        var expired = await inventoryService.GetExpiredAsync(branch.BranchId);
+
+        Assert.NotNull(damages);
+        Assert.Empty(damages);
+        Assert.NotNull(expired);
+        Assert.Empty(expired);
+    }
+
+    [Fact]
+    public async Task PurchaseService_GetAllAsync_Should_Return_Empty_When_No_Purchases()
+    {
+        var branch = await _dbContext.Branches.FirstAsync();
+
+        var auditLog = Mock.Of<IAuditLogService>();
+        var logger = Mock.Of<ILogger<PurchaseService>>();
+        var unitOfWork = new UnitOfWork(_dbContext);
+        var catalogService = new CatalogService(
+            new Repository<Category>(_dbContext),
+            new Repository<UnitType>(_dbContext),
+            unitOfWork,
+            auditLog);
+
+        var purchaseService = new PurchaseService(
+            new Repository<Purchase>(_dbContext),
+            new Repository<PurchaseItem>(_dbContext),
+            new Repository<Medicine>(_dbContext),
+            new Repository<MedicineBatch>(_dbContext),
+            new Repository<Supplier>(_dbContext),
+            catalogService,
+            new Repository<InventoryTransaction>(_dbContext),
+            unitOfWork,
+            auditLog,
+            logger);
+
+        var result = await purchaseService.GetAllAsync(branch.BranchId);
+
+        Assert.NotNull(result);
+        Assert.Empty(result);
+    }
 }

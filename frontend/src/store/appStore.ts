@@ -85,7 +85,8 @@ interface AppState {
   updateSettings: (settings: Partial<PharmacySettings>) => void;
   changePassword: (currentPassword: string, newPassword: string) => Promise<{ ok: boolean; message?: string }>;
 
-  loading: boolean;
+  loading: Record<string, boolean>;
+  setLoading: (key: string, value: boolean) => void;
   error: string | null;
 
   sidebarOpen: boolean;
@@ -201,13 +202,23 @@ export const useAppStore = create<AppState>((set, get) => ({
   currentUser: null,
   currentBranch: null,
   branches: [],
+  users: [],
+  medicines: [],
+  suppliers: [],
+  purchases: [],
+  sales: [],
+  categories: [],
+  unitTypes: [],
   isAuthenticated: false,
   token: null,
-  loading: false,
+  loading: {},
   error: null,
+  setLoading: (key: string, value: boolean) => {
+    set(state => ({ loading: { ...state.loading, [key]: value } }));
+  },
 
   login: async (email: string, password: string) => {
-    set({ loading: true, error: null });
+    get().setLoading('auth', true); set({ error: null });
     try {
       const normalizedEmail = email.trim().toLowerCase();
       console.log('[login] attempting login for', normalizedEmail, 'to', api.defaults.baseURL);
@@ -233,20 +244,22 @@ export const useAppStore = create<AppState>((set, get) => ({
       if (res.data.refreshToken) localStorage.setItem('refresh_token', res.data.refreshToken);
       localStorage.setItem('current_user', JSON.stringify(user));
       localStorage.setItem('current_branch', JSON.stringify(branch));
-      set({ token, currentUser: user, currentBranch: branch, isAuthenticated: true, loading: false });
+      set({ token, currentUser: user, currentBranch: branch, isAuthenticated: true });
+      get().setLoading('auth', false);
       return true;
     } catch (e: any) {
       const status = e?.response?.status;
       const message = e?.response?.data?.message;
       console.warn('[login] login failed', { status, message, url: e?.config?.url, baseURL: api.defaults.baseURL });
+      get().setLoading('auth', false);
       if (status === 401) {
-        set({ error: message || 'Invalid email or password.', loading: false });
+        set({ error: message || 'Invalid email or password.' });
       } else if (status === 403) {
-        set({ error: 'Your account does not have a valid role. Contact the administrator.', loading: false });
+        set({ error: 'Your account does not have a valid role. Contact the administrator.' });
       } else if (status >= 500) {
-        set({ error: 'Unable to log in due to a server error. Please try again later.', loading: false });
+        set({ error: 'Unable to log in due to a server error. Please try again later.' });
       } else {
-        set({ error: message || 'Login failed. Please try again.', loading: false });
+        set({ error: message || 'Login failed. Please try again.' });
       }
       return false;
     }
@@ -268,8 +281,8 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
   },
 
-  fetchBranches: async () => {
-    set({ loading: true, error: null });
+   fetchBranches: async () => {
+    get().setLoading('branches', true); set({ error: null });
     try {
       const res = await api.get<BranchResponse[]>('/branches');
       set({ branches: (Array.isArray(res.data) ? res.data : []).map(b => ({
@@ -280,19 +293,22 @@ export const useAppStore = create<AppState>((set, get) => ({
         email: b.email,
         address: b.address,
         isActive: b.isActive,
-      })), loading: false });
+      })) });
+      get().setLoading('branches', false);
     } catch (e: any) {
-      set({ error: e.response?.data?.message || 'Failed to fetch branches', loading: false });
+      set({ error: e.response?.data?.message || 'Failed to fetch branches' });
+      get().setLoading('branches', false);
     }
   },
 
   addBranch: async (branch) => {
-    set({ loading: true, error: null });
+    get().setLoading('branches', true); set({ error: null });
     try {
       await api.post('/branches', branch);
       await get().fetchBranches();
     } catch (e: any) {
-      set({ error: e.response?.data?.message || 'Failed to add branch', loading: false });
+      set({ error: e.response?.data?.message || 'Failed to add branch' });
+      get().setLoading('branches', false);
       throw e;
     }
   },
@@ -352,30 +368,33 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   register: async (fullName: string, email: string, password: string) => {
-    set({ loading: true, error: null });
+    get().setLoading('auth', true); set({ error: null });
     try {
       await api.post('/auth/register', { fullName: fullName.trim(), email: email.trim().toLowerCase(), password });
-      set({ loading: false });
+      get().setLoading('auth', false);
       return { ok: true };
     } catch (e: any) {
       const msg = e.response?.data?.message || 'Registration failed';
-      set({ error: msg, loading: false });
+      set({ error: msg });
+      get().setLoading('auth', false);
       return { ok: false, message: msg };
     }
   },
 
   fetchUsers: async () => {
-    set({ loading: true, error: null });
+    get().setLoading('users', true); set({ error: null });
     try {
       const res = await api.get<UserResponse[]>('/users');
-      set({ users: (Array.isArray(res.data) ? res.data : []).map(toUser), loading: false });
+      set({ users: (Array.isArray(res.data) ? res.data : []).map(toUser) });
+      get().setLoading('users', false);
     } catch (e: any) {
-      set({ error: e.response?.data?.message || 'Failed to fetch users', loading: false });
+      set({ error: e.response?.data?.message || 'Failed to fetch users' });
+      get().setLoading('users', false);
     }
   },
 
   addUser: async (user) => {
-    set({ loading: true, error: null });
+    get().setLoading('users', true); set({ error: null });
     try {
       await api.post('/users', {
         fullName: user.fullName.trim(),
@@ -385,7 +404,8 @@ export const useAppStore = create<AppState>((set, get) => ({
       });
       await get().fetchUsers();
     } catch (e: any) {
-      set({ error: e.response?.data?.message || 'Failed to add user', loading: false });
+      set({ error: e.response?.data?.message || 'Failed to add user' });
+      get().setLoading('users', false);
       throw e;
     }
   },
@@ -449,7 +469,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   fetchUnitTypes: async () => {
-    set({ loading: true, error: null });
+    get().setLoading('unitTypes', true); set({ error: null });
     try {
       const res = await api.get<CatalogOptionDto[]>('/lookups/unit-types');
       set({ unitTypes: (Array.isArray(res.data) ? res.data : []).map(c => ({
@@ -457,14 +477,15 @@ export const useAppStore = create<AppState>((set, get) => ({
         name: c.name,
         isSystem: c.isSystem,
       })) });
-      set({ loading: false });
+      get().setLoading('unitTypes', false);
     } catch (e: any) {
-      set({ error: e.response?.data?.message || 'Failed to fetch unit types', loading: false });
+      set({ error: e.response?.data?.message || 'Failed to fetch unit types' });
+      get().setLoading('unitTypes', false);
     }
   },
 
   addMedicine: async (medicine) => {
-    set({ loading: true, error: null });
+    get().setLoading('medicines', true); set({ error: null });
     try {
       await api.post('/medicines', {
         brandName: medicine.name,
@@ -479,7 +500,8 @@ export const useAppStore = create<AppState>((set, get) => ({
       await get().fetchCategories();
       await get().fetchUnitTypes();
     } catch (e: any) {
-      set({ error: e.response?.data?.message || 'Failed to add medicine', loading: false });
+      set({ error: e.response?.data?.message || 'Failed to add medicine' });
+      get().setLoading('medicines', false);
       throw e;
     }
   },
@@ -516,27 +538,31 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   fetchMedicines: async () => {
-    set({ loading: true, error: null });
+    get().setLoading('medicines', true); set({ error: null });
     try {
       const res = await api.get<MedicineResponse[]>('/medicines');
-      set({ medicines: (Array.isArray(res.data) ? res.data : []).map(toMedicine), loading: false });
+      set({ medicines: (Array.isArray(res.data) ? res.data : []).map(toMedicine) });
+      get().setLoading('medicines', false);
     } catch (e: any) {
-      set({ error: e.response?.data?.message || 'Failed to fetch medicines', loading: false });
+      set({ error: e.response?.data?.message || 'Failed to fetch medicines' });
+      get().setLoading('medicines', false);
     }
   },
 
   fetchSuppliers: async () => {
-    set({ loading: true, error: null });
+    get().setLoading('suppliers', true); set({ error: null });
     try {
       const res = await api.get<SupplierResponse[]>('/suppliers');
-      set({ suppliers: (Array.isArray(res.data) ? res.data : []).map(toSupplier), loading: false });
+      set({ suppliers: (Array.isArray(res.data) ? res.data : []).map(toSupplier) });
+      get().setLoading('suppliers', false);
     } catch (e: any) {
-      set({ error: e.response?.data?.message || 'Failed to fetch suppliers', loading: false });
+      set({ error: e.response?.data?.message || 'Failed to fetch suppliers' });
+      get().setLoading('suppliers', false);
     }
   },
 
   addSupplier: async (supplier) => {
-    set({ loading: true, error: null });
+    get().setLoading('suppliers', true); set({ error: null });
     try {
       await api.post('/suppliers', {
         supplierName: supplier.name,
@@ -547,7 +573,8 @@ export const useAppStore = create<AppState>((set, get) => ({
       });
       await get().fetchSuppliers();
     } catch (e: any) {
-      set({ error: e.response?.data?.message || 'Failed to add supplier', loading: false });
+      set({ error: e.response?.data?.message || 'Failed to add supplier' });
+      get().setLoading('suppliers', false);
       throw e;
     }
   },
@@ -573,43 +600,46 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   fetchPurchases: async () => {
-    set({ loading: true, error: null });
+    get().setLoading('purchases', true); set({ error: null });
     try {
       const res = await api.get<PurchaseResponse[]>('/purchases');
-      set({ purchases: (Array.isArray(res.data) ? res.data : []).map(toPurchase), loading: false });
+      set({ purchases: (Array.isArray(res.data) ? res.data : []).map(toPurchase) });
+      get().setLoading('purchases', false);
     } catch (e: any) {
-      set({ error: e.response?.data?.message || 'Failed to fetch purchases', loading: false });
+      set({ error: e.response?.data?.message || 'Failed to fetch purchases' });
+      get().setLoading('purchases', false);
     }
   },
 
   addPurchase: async (purchase) => {
-    set({ loading: true, error: null });
+    get().setLoading('purchases', true); set({ error: null });
     try {
-      // The API expects productId for existing medicines. Preserve the DTO rather
-      // than remapping it to the unrelated medicineId property.
       const res = await api.post<PurchaseResponse>('/purchases', purchase);
       const createdPurchase = toPurchase(res.data);
       await get().fetchPurchases();
       await get().fetchMedicines();
       return createdPurchase;
     } catch (e: any) {
-      set({ error: e.response?.data?.message || 'Failed to add purchase', loading: false });
+      set({ error: e.response?.data?.message || 'Failed to add purchase' });
+      get().setLoading('purchases', false);
       throw e;
     }
   },
 
   fetchSales: async () => {
-    set({ loading: true, error: null });
+    get().setLoading('sales', true); set({ error: null });
     try {
       const res = await api.get<SaleResponse[]>('/sales');
-      set({ sales: (Array.isArray(res.data) ? res.data : []).map(toSale), loading: false });
+      set({ sales: (Array.isArray(res.data) ? res.data : []).map(toSale) });
+      get().setLoading('sales', false);
     } catch (e: any) {
-      set({ error: e.response?.data?.message || 'Failed to fetch sales', loading: false });
+      set({ error: e.response?.data?.message || 'Failed to fetch sales' });
+      get().setLoading('sales', false);
     }
   },
 
   addSale: async (sale) => {
-    set({ loading: true, error: null });
+    get().setLoading('sales', true); set({ error: null });
     try {
       const items = sale.items.map(i => ({
         medicineId: Number(i.medicineId),
@@ -626,7 +656,8 @@ export const useAppStore = create<AppState>((set, get) => ({
       const res = await api.post<SaleResponse>('/sales', payload);
       await get().fetchSales();
     } catch (e: any) {
-      set({ error: e.response?.data?.message || 'Failed to add sale', loading: false });
+      set({ error: e.response?.data?.message || 'Failed to add sale' });
+      get().setLoading('sales', false);
       throw e;
     }
   },

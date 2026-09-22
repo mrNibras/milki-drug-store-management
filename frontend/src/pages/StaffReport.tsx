@@ -4,14 +4,14 @@ import { useThemeStore } from '../store/themeStore';
 import { formatCurrency } from '../utils/helpers';
 
 const StaffReport: React.FC = () => {
-  const { users, sales, fetchUsers, fetchSales, loading } = useAppStore();
+  const { users, sales, fetchUsers, fetchSales, loading, error } = useAppStore();
   const { theme } = useThemeStore();
   const isDark = theme === 'dark';
 
   useEffect(() => {
-    if (!users.length) fetchUsers();
-    if (!sales.length) fetchSales();
-  }, [fetchUsers, fetchSales, users.length, sales.length]);
+    if (!users || !users.length) fetchUsers();
+    if (!sales || !sales.length) fetchSales();
+  }, [fetchUsers, fetchSales, users, sales]);
 
   const staffData = useMemo(() => {
     return (users || []).filter(u => u.isActive).map(u => {
@@ -31,6 +31,10 @@ const StaffReport: React.FC = () => {
 
   if (loading.users || loading.sales) {
     return <div className="text-center py-10">Loading staff data...</div>;
+  }
+
+  if (error) {
+    return <div className="text-center py-10 text-red-500">{error}</div>;
   }
 
   return (

@@ -8,7 +8,7 @@ import { formatDate, getDaysUntilExpiry, generateId } from '../utils/helpers';
 import { DamageResponse, ExpiredResponse } from '../types';
 
 export const DamageExpiryPage: React.FC = () => {
-  const { medicines, fetchMedicines, damages, fetchDamages, recordDamage, expiredRecords, fetchExpired, recordExpired, currentUser, loading } = useAppStore();
+  const { medicines, fetchMedicines, damages, fetchDamages, recordDamage, expiredRecords, fetchExpired, recordExpired, currentUser, error, loading } = useAppStore();
   const { theme } = useThemeStore();
   const isDark = theme === 'dark';
 
@@ -25,7 +25,7 @@ export const DamageExpiryPage: React.FC = () => {
 
   // Auto-detect expiring soon items (within 6 months / 180 days)
   const expiringMedicines = useMemo(() => {
-    return medicines.flatMap(medicine =>
+    return (medicines || []).flatMap(medicine =>
       medicine.batches
         .filter(b => {
           const days = getDaysUntilExpiry(b.expiryDate);
@@ -44,7 +44,7 @@ export const DamageExpiryPage: React.FC = () => {
 
   // Auto-detect expired items
   const expiredMedicines = useMemo(() => {
-    return medicines.flatMap(medicine =>
+    return (medicines || []).flatMap(medicine =>
       medicine.batches
         .filter(b => getDaysUntilExpiry(b.expiryDate) <= 0 && b.quantity > 0)
         .map(batch => ({
@@ -100,6 +100,10 @@ export const DamageExpiryPage: React.FC = () => {
   }`;
   const labelClass = `flex items-center gap-2 text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`;
   const thClass = `text-left px-6 py-3 text-xs font-semibold uppercase ${isDark ? 'text-gray-400' : 'text-gray-500'}`;
+
+  if (error) {
+    return <div className="text-center py-10 text-red-500">{error}</div>;
+  }
 
   return (
     <div className="space-y-6">
