@@ -271,7 +271,7 @@ public class PurchaseService : IPurchaseService
 
     public async Task<IEnumerable<PurchaseResponse>> GetAllAsync(int? branchId = null)
     {
-        var purchases = await _purchaseRepo.GetAllAsync();
+        var purchases = (await _purchaseRepo.GetAllAsync()).ToList();
         var query = purchases.AsQueryable();
         if (branchId.HasValue)
             query = query.Where(p => p.BranchId == branchId.Value);

@@ -753,8 +753,68 @@ public class DatabaseIntegrationTests : IClassFixture<PostgreSqlFixture>, IAsync
         Assert.Equal(500, result.AmountPaid);
         Assert.Equal("paid", result.PaymentStatus);
 
-        var savedBatch = await _dbContext.MedicineBatches.FirstAsync();
+         var savedBatch = await _dbContext.MedicineBatches.FirstAsync();
         Assert.Equal(100, savedBatch.QuantityReceived);
         Assert.Equal("AUTO-BATCH-001", savedBatch.BatchNumber);
+    }
+
+    [Fact]
+    public async Task PurchaseService_GetAllAsync_Should_Return_Purchases_With_PostgreSql()
+    {
+        var branch = await _dbContext.Branches.FirstAsync();
+        var supplier = await _dbContext.Suppliers.FirstAsync();
+
+        var auditLog = Mock.Of<IAuditLogService>();
+        var logger = Mock.Of<ILogger<PurchaseService>>();
+        var unitOfWork = new UnitOfWork(_dbContext);
+        var catalogService = new CatalogService(
+            new Repository<Category>(_dbContext),
+            new Repository<UnitType>(_dbContext),
+            unitOfWork,
+            auditLog);
+
+        var purchaseService = new PurchaseService(
+            new Repository<Purchase>(_dbContext),
+            new Repository<PurchaseItem>(_dbContext),
+            new Repository<Medicine>(_dbContext),
+            new Repository<MedicineBatch>(_dbContext),
+            new Repository<Supplier>(_dbContext),
+            catalogService,
+            new Repository<InventoryTransaction>(_dbContext),
+            unitOfWork,
+            auditLog,
+            logger);
+
+         var request = new CreatePurchaseRequest
+        {
+            SupplierId = supplier.SupplierId,
+            PurchaseDate = DateTime.UtcNow,
+            PaymentMethod = "cash",
+            AmountPaid = 500,
+            Items = new List<PurchaseItemRequest>
+            {
+                new PurchaseItemRequest
+                {
+                    BrandName = "Repro Medicine",
+                    GenericName = "Repro Generic",
+                    CategoryId = -1,
+                    CategoryName = "Repro Category",
+                    UnitType = "Tablet",
+                    BatchNumber = "REPRO-BATCH-001",
+                    Quantity = 10,
+                    PurchasePrice = 50,
+                    SellingPrice = 80,
+                    ExpiryDate = DateTime.UtcNow.AddYears(1)
+                }
+            }
+        };
+
+        await purchaseService.CreateAsync(request, 1, branch.BranchId);
+
+        var result = await purchaseService.GetAllAsync(branch.BranchId);
+
+        Assert.NotNull(result);
+        Assert.NotEmpty(result);
+        Assert.Single(result);
     }
 }
