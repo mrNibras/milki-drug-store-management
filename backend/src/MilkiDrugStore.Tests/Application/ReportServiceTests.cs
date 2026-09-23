@@ -16,6 +16,7 @@ public class ReportServiceTests
     private readonly Mock<IRepository<Supplier>> _supplierRepo = new();
     private readonly Mock<IRepository<User>> _userRepo = new();
     private readonly Mock<ICatalogService> _catalog = new();
+    private readonly Mock<ICosmeticRepository> _cosmeticRepo = new();
 
     private ReportService CreateService(IEnumerable<Medicine> medicines)
     {
@@ -23,13 +24,16 @@ public class ReportServiceTests
             .ReturnsAsync(medicines.ToList().AsQueryable());
         _catalog.Setup(c => c.GetCategoryNamesAsync(It.IsAny<IEnumerable<int>>()))
             .ReturnsAsync(new Dictionary<int, string>());
+        _cosmeticRepo.Setup(r => r.GetAllAsync())
+            .ReturnsAsync(new List<Cosmetic>().AsQueryable());
         return new ReportService(
             _saleRepo.Object,
             _purchaseRepo.Object,
             _medicineRepo.Object,
             _supplierRepo.Object,
             _userRepo.Object,
-            _catalog.Object);
+            _catalog.Object,
+            _cosmeticRepo.Object);
     }
 
     private static MedicineBatch Batch(int batchId, int productId, int quantityReceived, decimal purchasePrice,

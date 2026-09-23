@@ -7,6 +7,7 @@ using MilkiDrugStore.Domain.Interfaces.Repositories;
 using MilkiDrugStore.Application.Services;
 using MilkiDrugStore.Application.Interfaces;
 using MilkiDrugStore.Application.DTOs.Purchase;
+using MilkiDrugStore.Application.DTOs.Sale;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -39,6 +40,7 @@ public class DatabaseIntegrationTests : IClassFixture<PostgreSqlFixture>, IAsync
         services.AddScoped<IInventoryTransactionRepository, InventoryTransactionRepository>();
         services.AddScoped<INotificationRepository, NotificationRepository>();
         services.AddScoped<IAuditLogRepository, AuditLogRepository>();
+        services.AddScoped<ICosmeticRepository, CosmeticRepository>();
 
         services.AddLogging();
 
@@ -894,7 +896,8 @@ public class DatabaseIntegrationTests : IClassFixture<PostgreSqlFixture>, IAsync
             new Repository<Medicine>(_dbContext),
             new Repository<Supplier>(_dbContext),
             new Repository<User>(_dbContext),
-            catalogService);
+            catalogService,
+            new CosmeticRepository(_dbContext));
 
         var supplierReport = (await reportService.GetSupplierReportAsync(branch.BranchId)).ToList();
 
@@ -926,7 +929,8 @@ public class DatabaseIntegrationTests : IClassFixture<PostgreSqlFixture>, IAsync
             new Repository<Medicine>(_dbContext),
             new Repository<Supplier>(_dbContext),
             new Repository<User>(_dbContext),
-            catalogService);
+            catalogService,
+            new CosmeticRepository(_dbContext));
 
         var supplierReport = await reportService.GetSupplierReportAsync(branch.BranchId);
 
@@ -995,7 +999,8 @@ public class DatabaseIntegrationTests : IClassFixture<PostgreSqlFixture>, IAsync
             new Repository<Medicine>(_dbContext),
             new Repository<Supplier>(_dbContext),
             new Repository<User>(_dbContext),
-            catalogService);
+            catalogService,
+            new CosmeticRepository(_dbContext));
 
         var inventoryReport = (await reportService.GetInventoryReportAsync(branch.BranchId)).ToList();
 
@@ -1024,7 +1029,8 @@ public class DatabaseIntegrationTests : IClassFixture<PostgreSqlFixture>, IAsync
             new Repository<Medicine>(_dbContext),
             new Repository<Supplier>(_dbContext),
             new Repository<User>(_dbContext),
-            catalogService);
+            catalogService,
+            new CosmeticRepository(_dbContext));
 
         var salesReport = await reportService.GetSalesReportAsync("weekly", branch.BranchId);
 
@@ -1085,5 +1091,748 @@ public class DatabaseIntegrationTests : IClassFixture<PostgreSqlFixture>, IAsync
 
         Assert.NotNull(result);
         Assert.Empty(result);
+    }
+
+    private (PurchaseService service, CatalogService catalog) CreatePurchaseService()
+    {
+        var auditLog = Mock.Of<IAuditLogService>();
+        var logger = Mock.Of<ILogger<PurchaseService>>();
+        var unitOfWork = new UnitOfWork(_dbContext);
+        var catalogService = new CatalogService(
+            new Repository<Category>(_dbContext),
+            new Repository<UnitType>(_dbContext),
+            unitOfWork,
+            auditLog);
+
+        var purchaseService = new PurchaseService(
+            new Repository<Purchase>(_dbContext),
+            new Repository<PurchaseItem>(_dbContext),
+            new Repository<Medicine>(_dbContext),
+            new Repository<MedicineBatch>(_dbContext),
+            new Repository<Supplier>(_dbContext),
+            catalogService,
+            new Repository<InventoryTransaction>(_dbContext),
+            unitOfWork,
+            auditLog,
+            logger,
+            new CosmeticRepository(_dbContext),
+            new Repository<CosmeticBatch>(_dbContext));
+
+        return (purchaseService, catalogService);
+    }
+
+    private (SaleService service, CatalogService catalog) CreateSaleService()
+    {
+        var auditLog = Mock.Of<IAuditLogService>();
+        var logger = Mock.Of<ILogger<SaleService>>();
+        var unitOfWork = new UnitOfWork(_dbContext);
+        var catalogService = new CatalogService(
+            new Repository<Category>(_dbContext),
+            new Repository<UnitType>(_dbContext),
+            unitOfWork,
+            auditLog);
+
+        var settingsRepo = new Repository<Settings>(_dbContext);
+
+        var saleService = new SaleService(
+            new Repository<Sale>(_dbContext),
+            new Repository<SaleItem>(_dbContext),
+            new Repository<Medicine>(_dbContext),
+            new Repository<MedicineBatch>(_dbContext),
+            new CosmeticRepository(_dbContext),
+            new Repository<CosmeticBatch>(_dbContext),
+            new Repository<InventoryTransaction>(_dbContext),
+            new Repository<Notification>(_dbContext),
+            settingsRepo,
+            unitOfWork,
+            auditLog);
+
+        return (saleService, catalogService);
+    }
+
+    [Fact]
+    public async Task CosmeticPurchase_Should_Persist_Cosmetic_And_Batch_With_Correct_Fields()
+    {
+        var branch = await _dbContext.Branches.FirstAsync();
+        var supplier = await _dbContext.Suppliers.FirstAsync();
+        var (service, _) = CreatePurchaseService();
+
+        var purchase = await service.CreateAsync(new CreatePurchaseRequest
+        {
+            SupplierId = supplier.SupplierId,
+            PurchaseDate = DateTime.UtcNow,
+            PaymentMethod = "cash",
+            AmountPaid = 200,
+            Items = new List<PurchaseItemRequest>
+            {
+                new PurchaseItemRequest
+                {
+                    ProductType = "cosmetic",
+                    BrandName = "Lip Balm",
+                    CategoryId = -101,
+                    BatchNumber = "BLA-001",
+                    Quantity = 100,
+                    PurchasePrice = 2,
+                    SellingPrice = 5,
+                    ExpiryDate = DateTime.UtcNow.AddMonths(12),
+                    ReorderLevel = 10,
+                }
+            }
+        }, 1, branch.BranchId);
+
+        Assert.NotNull(purchase);
+        Assert.Single(purchase.Items);
+        var item = purchase.Items.First();
+        Assert.Equal("cosmetic", item.ProductType);
+        Assert.Equal(200, item.SubTotal);
+
+        var cosmeticBatch = await _dbContext.CosmeticBatches
+            .FirstAsync(b => b.BatchNumber == "BLA-001");
+        Assert.Equal(100, cosmeticBatch.QuantityReceived);
+        Assert.Equal(2, cosmeticBatch.BuyingPrice);
+        Assert.Equal(5, cosmeticBatch.SellingPrice);
+        Assert.Equal(10, cosmeticBatch.LowStockThreshold);
+        Assert.NotNull(cosmeticBatch.ExpiryDate);
+    }
+
+    [Fact]
+    public async Task CosmeticPurchase_Should_Preserve_Historical_Batch_Prices()
+    {
+        var branch = await _dbContext.Branches.FirstAsync();
+        var supplier = await _dbContext.Suppliers.FirstAsync();
+        var (service, _) = CreatePurchaseService();
+
+        await service.CreateAsync(new CreatePurchaseRequest
+        {
+            SupplierId = supplier.SupplierId,
+            PurchaseDate = DateTime.UtcNow,
+            PaymentMethod = "cash",
+            AmountPaid = 100,
+            Items = new List<PurchaseItemRequest>
+            {
+                new PurchaseItemRequest
+                {
+                    ProductType = "cosmetic",
+                    BrandName = "Hand Cream",
+                    CategoryId = -100,
+                    BatchNumber = "HC-001",
+                    Quantity = 50,
+                    PurchasePrice = 3,
+                    SellingPrice = 7,
+                    ExpiryDate = DateTime.UtcNow.AddMonths(12),
+                    ReorderLevel = 5,
+                }
+            }
+        }, 1, branch.BranchId);
+
+        await service.CreateAsync(new CreatePurchaseRequest
+        {
+            SupplierId = supplier.SupplierId,
+            PurchaseDate = DateTime.UtcNow,
+            PaymentMethod = "cash",
+            AmountPaid = 160,
+            Items = new List<PurchaseItemRequest>
+            {
+                new PurchaseItemRequest
+                {
+                    ProductType = "cosmetic",
+                    BrandName = "Hand Cream",
+                    CategoryId = -100,
+                    BatchNumber = "HC-001",
+                    Quantity = 50,
+                    PurchasePrice = 4,
+                    SellingPrice = 8,
+                    ExpiryDate = DateTime.UtcNow.AddMonths(12),
+                    ReorderLevel = 5,
+                }
+            }
+        }, 1, branch.BranchId);
+
+        var batchA = await _dbContext.CosmeticBatches.FirstAsync(b => b.BatchNumber == "HC-001" && b.BuyingPrice == 3);
+        var batchB = await _dbContext.CosmeticBatches.FirstAsync(b => b.BatchNumber == "HC-001" && b.BuyingPrice == 4);
+        Assert.Equal(50, batchA.QuantityReceived);
+        Assert.Equal(100, batchA.QuantityReceived);
+        Assert.Equal(3, batchA.BuyingPrice);
+        Assert.Equal(7, batchA.SellingPrice);
+        Assert.Equal(4, batchB.BuyingPrice);
+        Assert.Equal(8, batchB.SellingPrice);
+    }
+
+    [Fact]
+    public async Task CosmeticPurchase_Should_Not_Require_Expiry_Date()
+    {
+        var branch = await _dbContext.Branches.FirstAsync();
+        var supplier = await _dbContext.Suppliers.FirstAsync();
+        var (service, _) = CreatePurchaseService();
+
+        var purchase = await service.CreateAsync(new CreatePurchaseRequest
+        {
+            SupplierId = supplier.SupplierId,
+            PurchaseDate = DateTime.UtcNow,
+            PaymentMethod = "cash",
+            AmountPaid = 100,
+            Items = new List<PurchaseItemRequest>
+            {
+                new PurchaseItemRequest
+                {
+                    ProductType = "cosmetic",
+                    BrandName = "Face Wash",
+                    CategoryId = -101,
+                    BatchNumber = "",
+                    Quantity = 50,
+                    PurchasePrice = 2,
+                    SellingPrice = 5,
+                }
+            }
+        }, 1, branch.BranchId);
+
+        Assert.NotNull(purchase);
+        Assert.Single(purchase.Items);
+        var cosmeticItem = purchase.Items.First();
+        Assert.Equal("cosmetic", cosmeticItem.ProductType);
+
+        var cosmetic = await _dbContext.Cosmetics.FirstAsync(c => c.ProductName == "Face Wash");
+        Assert.NotNull(cosmetic);
+    }
+
+    [Fact]
+    public async Task MixedMedicineAndCosmeticPurchase_Should_Persist_Both()
+    {
+        var branch = await _dbContext.Branches.FirstAsync();
+        var supplier = await _dbContext.Suppliers.FirstAsync();
+        var (service, _) = CreatePurchaseService();
+
+        var purchase = await service.CreateAsync(new CreatePurchaseRequest
+        {
+            SupplierId = supplier.SupplierId,
+            PurchaseDate = DateTime.UtcNow,
+            PaymentMethod = "cash",
+            AmountPaid = 300,
+            Items = new List<PurchaseItemRequest>
+            {
+                new PurchaseItemRequest
+                {
+                    BrandName = "Aspirin",
+                    CategoryName = "Pain Relief",
+                    BatchNumber = "ASP-001",
+                    Quantity = 100,
+                    PurchasePrice = 1,
+                    SellingPrice = 2,
+                    ExpiryDate = DateTime.UtcNow.AddMonths(24),
+                },
+                new PurchaseItemRequest
+                {
+                    ProductType = "cosmetic",
+                    BrandName = "Shampoo",
+                    CategoryId = -101,
+                    BatchNumber = "",
+                    Quantity = 50,
+                    PurchasePrice = 3,
+                    SellingPrice = 6,
+                    ExpiryDate = DateTime.UtcNow.AddMonths(18),
+                }
+            }
+        }, 1, branch.BranchId);
+
+        Assert.NotNull(purchase);
+        Assert.Equal(2, purchase.Items.Count);
+        var medicineItem = purchase.Items.First(i => i.ProductType == "medicine");
+        var cosmeticItem = purchase.Items.First(i => i.ProductType == "cosmetic");
+        Assert.NotNull(medicineItem);
+        Assert.NotNull(cosmeticItem);
+        Assert.Equal(300, purchase.TotalAmount);
+    }
+
+    [Fact]
+    public async Task MultipleCosmeticBatches_Should_Have_Different_Prices()
+    {
+        var branch = await _dbContext.Branches.FirstAsync();
+        var supplier = await _dbContext.Suppliers.FirstAsync();
+        var (service, _) = CreatePurchaseService();
+
+        await service.CreateAsync(new CreatePurchaseRequest
+        {
+            SupplierId = supplier.SupplierId,
+            PurchaseDate = DateTime.UtcNow,
+            PaymentMethod = "cash",
+            AmountPaid = 100,
+            Items = new List<PurchaseItemRequest>
+            {
+                new PurchaseItemRequest
+                {
+                    ProductType = "cosmetic",
+                    BrandName = "Lipstick",
+                    CategoryId = -105,
+                    BatchNumber = "LS-RED",
+                    Quantity = 50,
+                    PurchasePrice = 100,
+                    SellingPrice = 150,
+                    ExpiryDate = DateTime.UtcNow.AddMonths(12),
+                }
+            }
+        }, 1, branch.BranchId);
+
+        await service.CreateAsync(new CreatePurchaseRequest
+        {
+            SupplierId = supplier.SupplierId,
+            PurchaseDate = DateTime.UtcNow,
+            PaymentMethod = "cash",
+            AmountPaid = 120,
+            Items = new List<PurchaseItemRequest>
+            {
+                new PurchaseItemRequest
+                {
+                    ProductType = "cosmetic",
+                    BrandName = "Lipstick",
+                    CategoryId = -105,
+                    BatchNumber = "LS-RED",
+                    Quantity = 50,
+                    PurchasePrice = 120,
+                    SellingPrice = 180,
+                    ExpiryDate = DateTime.UtcNow.AddMonths(12),
+                }
+            }
+        }, 1, branch.BranchId);
+
+        var batches = await _dbContext.CosmeticBatches
+            .Where(b => b.Cosmetic.BranchId == branch.BranchId && b.Cosmetic.ProductName == "Lipstick")
+            .ToListAsync();
+
+        var batchA = batches.First(b => b.BuyingPrice == 100);
+        var batchB = batches.First(b => b.BuyingPrice == 120);
+        Assert.Equal(150, batchA.SellingPrice);
+        Assert.Equal(180, batchB.SellingPrice);
+    }
+
+    [Fact]
+    public async Task CosmeticPurchase_Should_Associate_BranchId_And_SupplierId()
+    {
+        var branch = await _dbContext.Branches.FirstAsync();
+        var supplier = await _dbContext.Suppliers.FirstAsync();
+        var (service, _) = CreatePurchaseService();
+
+        await service.CreateAsync(new CreatePurchaseRequest
+        {
+            SupplierId = supplier.SupplierId,
+            PurchaseDate = DateTime.UtcNow,
+            PaymentMethod = "cash",
+            AmountPaid = 100,
+            Items = new List<PurchaseItemRequest>
+            {
+                new PurchaseItemRequest
+                {
+                    ProductType = "cosmetic",
+                    BrandName = "Makeup Remover",
+                    CategoryId = -102,
+                    BatchNumber = "",
+                    Quantity = 30,
+                    PurchasePrice = 3,
+                    SellingPrice = 7,
+                    SupplierId = supplier.SupplierId,
+                }
+            }
+        }, 1, branch.BranchId);
+
+        var cosmetic = await _dbContext.Cosmetics.FirstAsync(c => c.ProductName == "Makeup Remover");
+        Assert.Equal(branch.BranchId, cosmetic.BranchId);
+        Assert.Equal(supplier.SupplierId, cosmetic.SupplierId);
+    }
+
+    [Fact]
+    public async Task CosmeticSale_Should_Decrease_Batch_Quantity_And_Calculate_Profit()
+    {
+        var branch = await _dbContext.Branches.FirstAsync();
+        var supplier = await _dbContext.Suppliers.FirstAsync();
+        var (purchaseService, _) = CreatePurchaseService();
+
+        await purchaseService.CreateAsync(new CreatePurchaseRequest
+        {
+            SupplierId = supplier.SupplierId,
+            PurchaseDate = DateTime.UtcNow,
+            PaymentMethod = "cash",
+            AmountPaid = 100,
+            Items = new List<PurchaseItemRequest>
+            {
+                new PurchaseItemRequest
+                {
+                    ProductType = "cosmetic",
+                    BrandName = "Body Wash",
+                    CategoryId = -102,
+                    BatchNumber = "BW-001",
+                    Quantity = 100,
+                    PurchasePrice = 200,
+                    SellingPrice = 350,
+                    ExpiryDate = DateTime.UtcNow.AddMonths(12),
+                }
+            }
+        }, 1, branch.BranchId);
+
+        var cosmetic = await _dbContext.Cosmetics.FirstAsync(c => c.ProductName == "Body Wash");
+        var batch = await _dbContext.CosmeticBatches.FirstAsync(b => b.CosmeticId == cosmetic.CosmeticId);
+
+        var (saleService, _) = CreateSaleService();
+        var sale = await saleService.CreateAsync(new CreateSaleRequest
+        {
+            Items = new List<SaleItemRequest>
+            {
+                new SaleItemRequest
+                {
+                    ProductId = cosmetic.CosmeticId,
+                    ProductType = "cosmetic",
+                    CosmeticId = cosmetic.CosmeticId,
+                    CosmeticBatchId = batch.BatchId,
+                    Quantity = 5,
+                    DiscountAmount = 0
+                }
+            },
+            PaymentMethod = "cash",
+            AmountPaid = 1750
+        }, 1, "Admin", branch.BranchId);
+
+        var updatedBatch = await _dbContext.CosmeticBatches
+            .FirstAsync(b => b.BatchId == batch.BatchId);
+        Assert.Equal(95, updatedBatch.Balance);
+
+        var saleItem = sale.Items.First();
+        Assert.Equal(350, saleItem.UnitPrice);
+        Assert.Equal(200, saleItem.SubTotal / saleItem.Quantity);
+        Assert.Equal(150, saleItem.SubTotal);
+        Assert.Equal(5, saleItem.Quantity);
+    }
+
+    [Fact]
+    public async Task CosmeticSaleProfit_Should_Use_Batch_BuyingPrice_Not_Current_Price()
+    {
+        var branch = await _dbContext.Branches.FirstAsync();
+        var supplier = await _dbContext.Suppliers.FirstAsync();
+        var (purchaseService, _) = CreatePurchaseService();
+
+        await purchaseService.CreateAsync(new CreatePurchaseRequest
+        {
+            SupplierId = supplier.SupplierId,
+            PurchaseDate = DateTime.UtcNow,
+            PaymentMethod = "cash",
+            AmountPaid = 100,
+            Items = new List<PurchaseItemRequest>
+            {
+                new PurchaseItemRequest
+                {
+                    ProductType = "cosmetic",
+                    BrandName = "Nail Polish",
+                    CategoryId = -105,
+                    BatchNumber = "NP-RED",
+                    Quantity = 100,
+                    PurchasePrice = 100,
+                    SellingPrice = 150,
+                    ExpiryDate = DateTime.UtcNow.AddMonths(12),
+                }
+            }
+        }, 1, branch.BranchId);
+
+        var cosmetic = await _dbContext.Cosmetics.FirstAsync(c => c.ProductName == "Nail Polish");
+        var batch = await _dbContext.CosmeticBatches.FirstAsync(b => b.CosmeticId == cosmetic.CosmeticId && b.BuyingPrice == 100);
+
+        var (saleService, _) = CreateSaleService();
+        var sale = await saleService.CreateAsync(new CreateSaleRequest
+        {
+            Items = new List<SaleItemRequest>
+            {
+                new SaleItemRequest
+                {
+                    ProductId = cosmetic.CosmeticId,
+                    ProductType = "cosmetic",
+                    CosmeticId = cosmetic.CosmeticId,
+                    CosmeticBatchId = batch.BatchId,
+                    Quantity = 2,
+                    DiscountAmount = 0
+                }
+            },
+            PaymentMethod = "cash",
+            AmountPaid = 300
+        }, 1, "Admin", branch.BranchId);
+
+        var saleItem = sale.Items.First();
+        Assert.Equal(150, saleItem.UnitPrice);
+        Assert.Equal(50, saleItem.SubTotal / saleItem.Quantity);
+        Assert.Equal(100, sale.TotalProfit);
+    }
+
+    [Fact]
+    public async Task CosmeticPurchase_Should_Include_In_Supplier_Report()
+    {
+        var branch = await _dbContext.Branches.FirstAsync();
+        var supplier = await _dbContext.Suppliers.FirstAsync();
+        var (purchaseService, catalog) = CreatePurchaseService();
+
+        await purchaseService.CreateAsync(new CreatePurchaseRequest
+        {
+            SupplierId = supplier.SupplierId,
+            PurchaseDate = DateTime.UtcNow,
+            PaymentMethod = "cash",
+            AmountPaid = 50,
+            Items = new List<PurchaseItemRequest>
+            {
+                new PurchaseItemRequest
+                {
+                    ProductType = "cosmetic",
+                    BrandName = "Perfume",
+                    CategoryId = -106,
+                    BatchNumber = "",
+                    Quantity = 10,
+                    PurchasePrice = 5,
+                    SellingPrice = 12,
+                    ExpiryDate = DateTime.UtcNow.AddMonths(24),
+                }
+            }
+        }, 1, branch.BranchId);
+
+        var reportService = new ReportService(
+            new Repository<Sale>(_dbContext),
+            new Repository<Purchase>(_dbContext),
+            new Repository<Medicine>(_dbContext),
+            new Repository<Supplier>(_dbContext),
+            new Repository<User>(_dbContext),
+            catalog,
+            new CosmeticRepository(_dbContext));
+
+        var report = (await reportService.GetSupplierReportAsync(branch.BranchId)).ToList();
+        var supplierEntry = report.First(r => r.SupplierId == supplier.SupplierId);
+        Assert.Equal(1, supplierEntry.Purchases);
+        Assert.Equal(50, supplierEntry.TotalAmount);
+    }
+
+    [Fact]
+    public async Task InvalidCosmeticPurchase_Should_Fail_When_Category_Invalid()
+    {
+        var branch = await _dbContext.Branches.FirstAsync();
+        var supplier = await _dbContext.Suppliers.FirstAsync();
+        var (service, _) = CreatePurchaseService();
+
+        await Assert.ThrowsAsync<Exception>(async () =>
+        {
+            await service.CreateAsync(new CreatePurchaseRequest
+            {
+                SupplierId = supplier.SupplierId,
+                PurchaseDate = DateTime.UtcNow,
+                PaymentMethod = "cash",
+                AmountPaid = 100,
+                Items = new List<PurchaseItemRequest>
+                {
+                    new PurchaseItemRequest
+                    {
+                        ProductType = "cosmetic",
+                        BrandName = "Unknown Product",
+                        CategoryId = 99999,
+                        BatchNumber = "",
+                        Quantity = 10,
+                        PurchasePrice = 5,
+                        SellingPrice = 10,
+                    }
+                }
+            }, 1, branch.BranchId);
+        });
+    }
+
+    [Fact]
+    public async Task NotificationService_Should_Detect_Cosmetic_Low_Stock()
+    {
+        var branch = await _dbContext.Branches.FirstAsync();
+        var supplier = await _dbContext.Suppliers.FirstAsync();
+        var (purchaseService, catalog) = CreatePurchaseService();
+
+        await purchaseService.CreateAsync(new CreatePurchaseRequest
+        {
+            SupplierId = supplier.SupplierId,
+            PurchaseDate = DateTime.UtcNow,
+            PaymentMethod = "cash",
+            AmountPaid = 10,
+            Items = new List<PurchaseItemRequest>
+            {
+                new PurchaseItemRequest
+                {
+                    ProductType = "cosmetic",
+                    BrandName = "Lip Gloss",
+                    CategoryId = -105,
+                    BatchNumber = "",
+                    Quantity = 3,
+                    PurchasePrice = 3,
+                    SellingPrice = 6,
+                    ReorderLevel = 5,
+                }
+            }
+        }, 1, branch.BranchId);
+
+        var notificationRepo = new NotificationRepository(_dbContext);
+        var cosmeticRepo = new CosmeticRepository(_dbContext);
+        var notificationService = new NotificationService(
+            notificationRepo,
+            new Repository<Medicine>(_dbContext),
+            cosmeticRepo,
+            new UnitOfWork(_dbContext));
+
+        await notificationService.CheckAndCreateNotificationsAsync(branch.BranchId);
+
+        var notifications = await _dbContext.Notifications.ToListAsync();
+        Assert.Contains(notifications, n => n.Title == "Cosmetic Low Stock");
+    }
+
+    [Fact]
+    public async Task InventoryReport_Should_Include_Cosmetic_Products()
+    {
+        var branch = await _dbContext.Branches.FirstAsync();
+        var supplier = await _dbContext.Suppliers.FirstAsync();
+        var (purchaseService, catalog) = CreatePurchaseService();
+
+        await purchaseService.CreateAsync(new CreatePurchaseRequest
+        {
+            SupplierId = supplier.SupplierId,
+            PurchaseDate = DateTime.UtcNow,
+            PaymentMethod = "cash",
+            AmountPaid = 50,
+            Items = new List<PurchaseItemRequest>
+            {
+                new PurchaseItemRequest
+                {
+                    ProductType = "cosmetic",
+                    BrandName = "Face Cream",
+                    CategoryId = -101,
+                    BatchNumber = "",
+                    Quantity = 20,
+                    PurchasePrice = 2.5m,
+                    SellingPrice = 6,
+                }
+            }
+        }, 1, branch.BranchId);
+
+        var reportService = new ReportService(
+            new Repository<Sale>(_dbContext),
+            new Repository<Purchase>(_dbContext),
+            new Repository<Medicine>(_dbContext),
+            new Repository<Supplier>(_dbContext),
+            new Repository<User>(_dbContext),
+            catalog,
+            new CosmeticRepository(_dbContext));
+
+        var report = (await reportService.GetInventoryReportAsync(branch.BranchId)).ToList();
+        Assert.Contains(report, r => r.BrandName == "Face Cream" && r.ProductType == "cosmetic");
+    }
+
+    [Fact]
+    public async Task DashboardSummary_Should_Include_Cosmetics_In_InventoryValue()
+    {
+        var branch = await _dbContext.Branches.FirstAsync();
+        var supplier = await _dbContext.Suppliers.FirstAsync();
+        var (purchaseService, catalog) = CreatePurchaseService();
+
+        await purchaseService.CreateAsync(new CreatePurchaseRequest
+        {
+            SupplierId = supplier.SupplierId,
+            PurchaseDate = DateTime.UtcNow,
+            PaymentMethod = "cash",
+            AmountPaid = 100,
+            Items = new List<PurchaseItemRequest>
+            {
+                new PurchaseItemRequest
+                {
+                    ProductType = "cosmetic",
+                    BrandName = "Hair Gel",
+                    CategoryId = -100,
+                    BatchNumber = "",
+                    Quantity = 100,
+                    PurchasePrice = 100,
+                    SellingPrice = 200,
+                }
+            }
+        }, 1, branch.BranchId);
+
+        var reportService = new ReportService(
+            new Repository<Sale>(_dbContext),
+            new Repository<Purchase>(_dbContext),
+            new Repository<Medicine>(_dbContext),
+            new Repository<Supplier>(_dbContext),
+            new Repository<User>(_dbContext),
+            catalog,
+            new CosmeticRepository(_dbContext));
+
+        var summary = await reportService.GetDashboardSummaryAsync(branch.BranchId);
+        Assert.True(summary.InventoryValue >= 10000);
+    }
+
+    [Fact]
+    public async Task BranchIsolation_Should_Prevent_CrossBranch_CosmeticAccess()
+    {
+        var branch1 = await _dbContext.Branches.FirstAsync();
+        _dbContext.Branches.Add(new Branch
+        {
+            BranchName = "Branch B",
+            Location = "B Location",
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow
+        });
+        await _dbContext.SaveChangesAsync();
+        var branch2 = await _dbContext.Branches.LastAsync();
+        var supplier = await _dbContext.Suppliers.FirstAsync();
+
+        var (service, _) = CreatePurchaseService();
+
+        await service.CreateAsync(new CreatePurchaseRequest
+        {
+            SupplierId = supplier.SupplierId,
+            PurchaseDate = DateTime.UtcNow,
+            PaymentMethod = "cash",
+            AmountPaid = 100,
+            Items = new List<PurchaseItemRequest>
+            {
+                new PurchaseItemRequest
+                {
+                    ProductType = "cosmetic",
+                    BrandName = "Cross-Branch Product",
+                    CategoryId = -100,
+                    BatchNumber = "",
+                    Quantity = 10,
+                    PurchasePrice = 10,
+                    SellingPrice = 20,
+                }
+            }
+        }, 1, branch1.BranchId);
+
+        var cosmeticRepo = new CosmeticRepository(_dbContext);
+        var cosmeticsBranchB = (await cosmeticRepo.GetAllAsync())
+            .Where(c => c.BranchId == branch2.BranchId).ToList();
+
+        Assert.Empty(cosmeticsBranchB);
+    }
+
+    [Fact]
+    public async Task CosmeticPurchase_Should_Handle_Null_Expiry_Date_Without_Error()
+    {
+        var branch = await _dbContext.Branches.FirstAsync();
+        var supplier = await _dbContext.Suppliers.FirstAsync();
+        var (service, _) = CreatePurchaseService();
+
+        var purchase = await service.CreateAsync(new CreatePurchaseRequest
+        {
+            SupplierId = supplier.SupplierId,
+            PurchaseDate = DateTime.UtcNow,
+            PaymentMethod = "cash",
+            AmountPaid = 50,
+            Items = new List<PurchaseItemRequest>
+            {
+                new PurchaseItemRequest
+                {
+                    ProductType = "cosmetic",
+                    BrandName = "Shaving Cream",
+                    CategoryId = -107,
+                    BatchNumber = "",
+                    Quantity = 50,
+                    PurchasePrice = 1,
+                    SellingPrice = 3,
+                }
+            }
+        }, 1, branch.BranchId);
+
+        Assert.NotNull(purchase);
+        var batch = await _dbContext.CosmeticBatches.FirstAsync(b => b.Cosmetic.ProductName == "Shaving Cream");
+        Assert.Null(batch.ExpiryDate);
     }
 }

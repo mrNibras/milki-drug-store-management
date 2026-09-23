@@ -1,10 +1,10 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Plus, Search, Eye, ClipboardList, Truck, Package, X, AlertCircle, Check, ShoppingCart, FileSpreadsheet, Calendar } from 'lucide-react';
+import { Plus, Search, Eye, ClipboardList, Truck, Package, X, AlertCircle, Check, ShoppingCart, FileSpreadsheet, Calendar, Sparkles } from 'lucide-react';
 import { useAppStore } from '../store/appStore';
 import { useThemeStore } from '../store/themeStore';
 import { Modal } from '../components/ui/Modal';
 import { formatDate, formatCurrency } from '../utils/helpers';
-import { BulkPurchaseItem } from '../types';
+import { BulkPurchaseItem, CosmeticPurchaseItem, COSMETIC_CATEGORIES } from '../types';
 import { CreatePurchaseRequest } from '../services/api';
 
 export const PurchasesPage: React.FC = () => {
@@ -13,11 +13,13 @@ export const PurchasesPage: React.FC = () => {
   const isDark = theme === 'dark';
   const [search, setSearch] = useState('');
   const [showBulkModal, setShowBulkModal] = useState(false);
+  const [showCosmeticModal, setShowCosmeticModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedPurchase, setSelectedPurchase] = useState<typeof purchases[0] | null>(null);
   const [selectedSupplier, setSelectedSupplier] = useState('');
   const [purchaseDate, setPurchaseDate] = useState(new Date().toISOString().split('T')[0]);
   const [items, setItems] = useState<BulkPurchaseItem[]>([]);
+  const [cosmeticItems, setCosmeticItems] = useState<CosmeticPurchaseItem[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [lastPurchaseNumber, setLastPurchaseNumber] = useState('');
@@ -47,9 +49,13 @@ export const PurchasesPage: React.FC = () => {
     const qty = Number(item.quantity) || 0;
     const price = Number(item.purchasePrice) || 0;
     return sum + (qty * price);
+  }, 0) + (cosmeticItems || []).reduce((sum, item) => {
+    const qty = Number(item.quantity) || 0;
+    const price = Number(item.buyingPrice) || 0;
+    return sum + (qty * price);
   }, 0);
 
-  const totalItems = (items || []).filter(i => i.brandName && i.quantity).length;
+  const totalItems = (items || []).filter(i => i.brandName && i.quantity).length + (cosmeticItems || []).filter(i => i.brandName && i.quantity).length;
 
   const resetForm = () => {
     setSelectedSupplier('');
@@ -73,6 +79,18 @@ export const PurchasesPage: React.FC = () => {
     expiryDate: '',
     unitType: 'Tablet',
     isNewMedicine: false,
+    errors: [],
+  });
+
+  const createEmptyCosmeticItem = (): CosmeticPurchaseItem => ({
+    productType: 'cosmetic',
+    categoryId: '',
+    brandName: '',
+    quantity: '',
+    buyingPrice: '',
+    sellingPrice: '',
+    lowStock: '',
+    expiryDate: '',
     errors: [],
   });
 
@@ -123,6 +141,45 @@ export const PurchasesPage: React.FC = () => {
     }));
   };
 
+  const handleCosmeticItemChange = (index: number, field: keyof CosmeticPurchaseItem, value: string) => {
+    setCosmeticItems((items || []).map((item, i) => {
+      if (i !== index) return item;
+      return { ...item, [field]: value, errors: [] };
+    }));
+  };
+
+  const handleAddCosmeticRow = () => {
+    setCosmeticItems([...cosmeticItems, createEmptyCosmeticItem()]);
+  };
+
+  const handleRemoveCosmeticRow = (index: number) => {
+    setCosmeticItems(cosmeticItems.filter((_, i) => i !== index));
+  };
+
+  const validateCosmeticItems = (): boolean => {
+    let isValid = true;
+    const validatedItems = cosmeticItems.map(item => {
+      const errors: string[] = [];
+      if (!item.categoryId) errors.push('Category required');
+      if (!item.brandName.trim()) errors.push('Brand name required');
+      if (!item.quantity || Number(item.quantity) <= 0) errors.push('Invalid quantity');
+      if (!item.buyingPrice || Number(item.buyingPrice) < 0) errors.push('Invalid buying price');
+      if (!item.sellingPrice || Number(item.sellingPrice) < 0) errors.push('Invalid selling price');
+      if (Number(item.buyingPrice) > Number(item.sellingPrice)) errors.push('Selling price must not exceed buying price');
+      if (!item.lowStock || Number(item.lowStock) < 0) errors.push('Invalid low stock threshold');
+      const duplicate = cosmeticItems.find((i, idx) => 
+        idx !== cosmeticItems.indexOf(item) &&
+        i.brandName.toLowerCase() === item.brandName.toLowerCase() &&
+        i.batchNumber === item.batchNumber
+      );
+      if (duplicate) errors.push('Duplicate batch');
+      if (errors.length > 0) isValid = false;
+      return { ...item, errors };
+    });
+    setCosmeticItems(validatedItems);
+    return isValid;
+  };
+
   const validateItems = (): boolean => {
     let isValid = true;
     const validatedItems = (items || []).map(item => {
@@ -154,8 +211,9 @@ export const PurchasesPage: React.FC = () => {
 
   const handleSave = async () => {
     if (!selectedSupplier) { alert('Please select a supplier'); return; }
-    if ((items || []).length === 0) { alert('Please add at least one item'); return; }
-    if (!validateItems()) { return; }
+    if ((items || []).length === 0 && (cosmeticItems || []).length === 0) { alert('Please add at least one item'); return; }
+    if ((items || []).length > 0 && !validateItems()) { return; }
+    if ((cosmeticItems || []).length > 0 && !validateCosmeticItems()) { return; }
 
     setIsProcessing(true);
 
@@ -184,20 +242,37 @@ export const PurchasesPage: React.FC = () => {
       paymentStatus: finalStatus,
       paymentMethod: paymentMethod,
       amountPaid: finalAmountPaid,
-      items: items.map(item => ({
-        productId: item.existingMedicineId ? Number(item.existingMedicineId) : undefined,
-        brandName: item.isNewMedicine ? item.brandName : undefined,
-        genericName: item.isNewMedicine ? item.genericName : undefined,
-        categoryId: item.isNewMedicine ? (item.categoryId ? Number(item.categoryId) : undefined) : undefined,
-        categoryName: item.isNewMedicine ? item.categoryName : undefined,
-        unitType: item.isNewMedicine ? item.unitType : undefined,
-        reorderLevel: item.isNewMedicine ? (item.lowStockThreshold || 10) : undefined,
-        batchNumber: item.batchNumber,
-        quantity: Number(item.quantity),
-        purchasePrice: Number(item.purchasePrice),
-        sellingPrice: Number(item.sellingPrice),
-        expiryDate: item.expiryDate ? new Date(item.expiryDate).toISOString() : undefined,
-      })),
+      items: [
+        ...items.map(item => ({
+          productId: item.existingMedicineId ? Number(item.existingMedicineId) : undefined,
+          productType: 'medicine',
+          brandName: item.isNewMedicine ? item.brandName : undefined,
+          genericName: item.isNewMedicine ? item.genericName : undefined,
+          categoryId: item.isNewMedicine ? (item.categoryId ? Number(item.categoryId) : undefined) : undefined,
+          categoryName: item.isNewMedicine ? item.categoryName : undefined,
+          unitType: item.isNewMedicine ? item.unitType : undefined,
+          reorderLevel: item.isNewMedicine ? (item.lowStockThreshold || 10) : undefined,
+          batchNumber: item.batchNumber,
+          quantity: Number(item.quantity),
+          purchasePrice: Number(item.purchasePrice),
+          sellingPrice: Number(item.sellingPrice),
+          expiryDate: item.expiryDate ? new Date(item.expiryDate).toISOString() : undefined,
+        })),
+        ...cosmeticItems.map(item => ({
+          productId: undefined,
+          productType: 'cosmetic' as const,
+          brandName: item.brandName,
+          genericName: item.brandName,
+          categoryId: item.categoryId ? Number(item.categoryId) : undefined,
+          categoryName: undefined,
+          reorderLevel: item.lowStock ? Number(item.lowStock) : 10,
+          batchNumber: '',
+          quantity: Number(item.quantity),
+          purchasePrice: Number(item.buyingPrice),
+          sellingPrice: Number(item.sellingPrice),
+          expiryDate: item.expiryDate ? new Date(item.expiryDate).toISOString() : undefined,
+        })),
+      ],
     };
 
     try {
@@ -261,6 +336,12 @@ export const PurchasesPage: React.FC = () => {
             className="px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl text-sm font-medium transition-all shadow-lg shadow-emerald-200 dark:shadow-emerald-900/30 flex items-center gap-2"
           >
             <ShoppingCart className="h-4 w-4" /> Bulk Purchase Entry
+          </button>
+          <button
+            onClick={() => { setShowCosmeticModal(true); }}
+            className="px-4 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl text-sm font-medium transition-all shadow-lg shadow-purple-200 dark:shadow-purple-900/30 flex items-center gap-2"
+          >
+            <Sparkles className="h-4 w-4" /> Add Cosmetics
           </button>
         </div>
       </div>
@@ -904,6 +985,243 @@ export const PurchasesPage: React.FC = () => {
             </table>
           </div>
         )}
+      </Modal>
+
+      {/* ========== COSMETIC MODAL ========== */}
+      <Modal isOpen={showCosmeticModal} onClose={() => setShowCosmeticModal(false)} title="Add Cosmetics" size="2xl">
+        <div className="space-y-5">
+          <div className="flex items-center gap-4 pb-2">
+            <div className={`flex h-14 w-14 items-center justify-center rounded-xl ${isDark ? 'bg-purple-900/30 text-purple-400' : 'bg-purple-100 text-purple-600'}`}>
+              <Sparkles className="h-7 w-7" />
+            </div>
+            <div>
+              <p className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>New Cosmetic Purchase</p>
+              <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Add cosmetic products to this purchase</p>
+            </div>
+          </div>
+
+          {/* Cosmetic Items Table */}
+          <div className={`rounded-xl border overflow-hidden ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
+            <div className={`px-4 py-3 flex items-center justify-between ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
+              <h4 className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                Cosmetic Items ({cosmeticItems.length})
+              </h4>
+              <button
+                onClick={handleAddCosmeticRow}
+                className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-medium transition-colors flex items-center gap-1"
+              >
+                <Plus className="h-3 w-3" /> Add Item
+              </button>
+            </div>
+
+            {cosmeticItems.length > 0 ? (
+              <div className="p-3 space-y-3 max-h-[440px] overflow-y-auto">
+                <div className="hidden xl:grid xl:grid-cols-[minmax(8rem,1fr)_minmax(8rem,1fr)_minmax(7rem,1fr)_minmax(8rem,1fr)_minmax(8rem,1fr)_minmax(7rem,1fr)_2rem] gap-2 px-2 pb-1 text-xs font-semibold uppercase tracking-wide">
+                  <div className={isDark ? 'text-gray-400' : 'text-gray-500'}>Category</div>
+                  <div className={isDark ? 'text-gray-400' : 'text-gray-500'}>Brand Name</div>
+                  <div className={isDark ? 'text-gray-400' : 'text-gray-500'}>Qty</div>
+                  <div className={isDark ? 'text-gray-400' : 'text-gray-500'}>Buying Price</div>
+                  <div className={isDark ? 'text-gray-400' : 'text-gray-500'}>Selling Price</div>
+                  <div className={isDark ? 'text-gray-400' : 'text-gray-500'}>Expire Date</div>
+                  <div />
+                </div>
+
+                {cosmeticItems.map((item, index) => (
+                  <div
+                    key={index}
+                    className={`rounded-lg border p-3 transition-colors ${
+                      isDark ? 'bg-gray-800/50 border-gray-700 hover:border-gray-600' : 'bg-white border-gray-200 hover:border-gray-300'
+                    } ${item.errors.length > 0 ? isDark ? 'border-red-500/50 bg-red-900/10' : 'border-red-400 bg-red-50/50' : ''}`}
+                  >
+                    <div className="flex items-center justify-between mb-3 xl:hidden">
+                      <span className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                        Item #{index + 1}
+                      </span>
+                      <button
+                        onClick={() => handleRemoveCosmeticRow(index)}
+                        className={`text-xs font-medium px-2 py-1 rounded-lg transition-colors ${
+                          isDark ? 'text-red-400 hover:bg-red-900/30' : 'text-red-500 hover:bg-red-100'
+                        }`}
+                      >
+                        Remove
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-[minmax(8rem,1fr)_minmax(8rem,1fr)_minmax(7rem,1fr)_minmax(8rem,1fr)_minmax(8rem,1fr)_minmax(7rem,1fr)_2rem] gap-3 xl:gap-2 items-end">
+                      <div>
+                        <label className={`text-xs font-medium mb-1 xl:hidden block ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                          Category <span className={item.errors.some(e => e.includes('Category')) ? 'text-red-500' : ''}>*</span>
+                        </label>
+                        <select
+                          value={item.categoryId}
+                          onChange={(e) => handleCosmeticItemChange(index, 'categoryId', e.target.value)}
+                          className={`${itemInputClass} ${item.errors.some(e => e.includes('Category')) ? 'border-red-400' : ''}`}
+                        >
+                          <option value="">Select Category</option>
+                          {COSMETIC_CATEGORIES.map((cat, catIdx) => (
+                            <option key={cat} value={catIdx}>{cat}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className={`text-xs font-medium mb-1 xl:hidden block ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                          Brand Name <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={item.brandName}
+                          onChange={(e) => handleCosmeticItemChange(index, 'brandName', e.target.value)}
+                          placeholder="Brand name"
+                          className={`${itemInputClass} ${item.errors.some(e => e.includes('Brand')) ? 'border-red-400' : ''}`}
+                        />
+                      </div>
+
+                      <div>
+                        <label className={`text-xs font-medium mb-1 xl:hidden block ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                          Qty <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="number"
+                          value={item.quantity}
+                          onChange={(e) => handleCosmeticItemChange(index, 'quantity', e.target.value)}
+                          placeholder="0"
+                          min="0"
+                          className={`${itemInputClass} ${item.errors.some(e => e.includes('quantity')) ? 'border-red-400' : ''}`}
+                        />
+                      </div>
+
+                      <div>
+                        <label className={`text-xs font-medium mb-1 xl:hidden block ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                          Buying Price <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="number"
+                          value={item.buyingPrice}
+                          onChange={(e) => handleCosmeticItemChange(index, 'buyingPrice', e.target.value)}
+                          placeholder="0.00"
+                          min="0"
+                          step="0.01"
+                          className={`${itemInputClass} ${item.errors.some(e => e.includes('buying price')) ? 'border-red-400' : ''}`}
+                        />
+                      </div>
+
+                      <div>
+                        <label className={`text-xs font-medium mb-1 xl:hidden block ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                          Selling Price <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="number"
+                          value={item.sellingPrice}
+                          onChange={(e) => handleCosmeticItemChange(index, 'sellingPrice', e.target.value)}
+                          placeholder="0.00"
+                          min="0"
+                          step="0.01"
+                          className={`${itemInputClass} ${item.errors.some(e => e.includes('selling price')) ? 'border-red-400' : ''}`}
+                        />
+                      </div>
+
+                      <div>
+                        <label className={`text-xs font-medium mb-1 xl:hidden block ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                          Low Stock
+                        </label>
+                        <input
+                          type="number"
+                          value={item.lowStock}
+                          onChange={(e) => handleCosmeticItemChange(index, 'lowStock', e.target.value)}
+                          placeholder="10"
+                          min="0"
+                          className={itemInputClass}
+                        />
+                      </div>
+
+                      <div className="hidden xl:flex justify-center">
+                        <button
+                          onClick={() => handleRemoveCosmeticRow(index)}
+                          className={`p-2 rounded-lg transition-colors ${isDark ? 'hover:bg-red-900/30 text-red-400' : 'hover:bg-red-100 text-red-500'}`}
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Expiry Date (optional) */}
+                    <div className="mt-3">
+                      <label className={`text-xs font-medium mb-1 block ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                        Expire Date <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>(optional)</span>
+                      </label>
+                      <input
+                        type="date"
+                        value={item.expiryDate}
+                        onChange={(e) => handleCosmeticItemChange(index, 'expiryDate', e.target.value)}
+                        className={itemInputClass}
+                      />
+                    </div>
+
+                    {/* Validation errors */}
+                    {item.errors.length > 0 && (
+                      <div className={`mt-2 p-2 rounded text-xs ${isDark ? 'bg-red-900/20 text-red-400' : 'bg-red-50 text-red-600'}`}>
+                        {item.errors.map((err, i) => <div key={i}>• {err}</div>)}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className={`text-center py-12 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                <Sparkles className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                <p className="text-sm">No cosmetic items added yet</p>
+                <p className="text-xs mt-1">Click "Add Item" to start adding cosmetics</p>
+              </div>
+            )}
+          </div>
+
+          {/* Cosmetic Validation Errors Summary */}
+          {cosmeticItems.some(i => i.errors.length > 0) && (
+            <div className={`p-4 rounded-xl border ${isDark ? 'bg-red-900/20 border-red-800' : 'bg-red-50 border-red-200'}`}>
+              <div className="flex items-center gap-2 mb-2">
+                <AlertCircle className="h-4 w-4 text-red-500" />
+                <p className="text-sm font-medium text-red-500">Validation Errors</p>
+              </div>
+              <ul className="space-y-1">
+                {cosmeticItems.filter(i => i.errors.length > 0).map((item, itemIdx) => (
+                  <li key={itemIdx} className="text-xs text-red-400">
+                    Item #{cosmeticItems.indexOf(item) + 1}: {item.errors.join(', ')}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className={`flex justify-end gap-3 pt-4 border-t ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
+            <button
+              onClick={() => { setShowCosmeticModal(false); setCosmeticItems([]); }}
+              className={`px-5 py-2.5 rounded-xl text-sm font-medium transition-colors ${
+                isDark ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={isProcessing || ((items || []).length === 0 && cosmeticItems.length === 0) || !selectedSupplier}
+              className="px-5 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl text-sm font-medium transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              {isProcessing ? (
+                <>
+                  <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                <>
+                  <ShoppingCart className="h-4 w-4" />
+                  Save Purchase ({totalItems} items)
+                </>
+              )}
+            </button>
+          </div>
+        </div>
       </Modal>
 
       {/* Success Toast */}

@@ -230,11 +230,15 @@ export interface PurchaseResponse {
 export interface PurchaseItemResponse {
   purchaseItemId: number;
   productId: number;
+  productName?: string;
+  productType?: string;
   brandName: string;
   batchNumber: string;
   quantity: number;
   purchasePrice: number;
   subTotal: number;
+  cosmeticId?: number;
+  cosmeticBatchId?: number;
 }
 
 export interface CreatePurchaseRequest {
@@ -245,6 +249,7 @@ export interface CreatePurchaseRequest {
   amountPaid: number;
   items: {
     productId?: number;
+    productType?: string;
     brandName?: string;
     genericName?: string;
     categoryId?: number;
@@ -280,8 +285,11 @@ export interface SaleResponse {
 export interface SaleItemResponse {
   saleItemId: number;
   medicineId: number;
+  productType?: string;
   brandName: string;
   batchId?: number;
+  cosmeticId?: number;
+  cosmeticBatchId?: number;
   batchNumber: string;
   quantity: number;
   unitPrice: number;
@@ -292,8 +300,12 @@ export interface SaleItemResponse {
 export interface CreateSaleRequest {
   items: {
     medicineId: number;
+    productType?: string;
     quantity: number;
     discountAmount: number;
+    cosmeticId?: number;
+    cosmeticBatchId?: number;
+    batchId?: number;
   }[];
   paymentMethod: string;
   amountPaid: number;
@@ -418,6 +430,43 @@ export interface ExpiredResponse {
   brandName?: string;
 }
 
+export interface CosmeticBatchResponse {
+  batchId: number;
+  cosmeticId: number;
+  batchNumber: string;
+  quantityReceived: number;
+  quantityIssued: number;
+  quantityDamaged: number;
+  quantityExpired: number;
+  balance: number;
+  expiryDate?: string;
+  dateReceived: string;
+  buyingPrice: number;
+  sellingPrice: number;
+  lowStockThreshold: number;
+  branchId: number;
+  supplierId?: number;
+  remarks?: string;
+}
+
+export interface CosmeticResponse {
+  cosmeticId: number;
+  productName: string;
+  description: string;
+  categoryId: number;
+  categoryName: string;
+  unitTypeId: number;
+  unitTypeName: string;
+  price: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt?: string;
+  branchId: number;
+  supplierId?: number;
+  supplierName?: string;
+  batches: CosmeticBatchResponse[];
+}
+
 // --- Settings / Backup / Restore -----------------------------------------
 export const backupDatabase = async (): Promise<Blob> => {
   const response = await api.get('/settings/backup', { responseType: 'blob' });
@@ -430,4 +479,43 @@ export const restoreDatabase = async (file: File): Promise<void> => {
   await api.post('/settings/restore', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
+};
+
+// --- Cosmetics API ----------------------------------------------------------
+export interface CreateCosmeticRequest {
+  productName: string;
+  description?: string;
+  categoryId: number;
+  unitTypeId: number;
+  price: number;
+  branchId?: number;
+  supplierId?: number;
+}
+
+export interface AddCosmeticBatchRequest {
+  cosmeticId: number;
+  batchNumber: string;
+  quantity: number;
+  purchasePrice: number;
+  sellingPrice: number;
+  expiryDate?: string;
+  lowStockThreshold?: number;
+  branchId?: number;
+  supplierId?: number;
+  remarks?: string;
+}
+
+export const fetchCosmetics = async (): Promise<CosmeticResponse[]> => {
+  const res = await api.get<CosmeticResponse[]>('/cosmetics');
+  return res.data;
+};
+
+export const createCosmetic = async (req: CreateCosmeticRequest): Promise<CosmeticResponse> => {
+  const res = await api.post<CosmeticResponse>('/cosmetics', req);
+  return res.data;
+};
+
+export const addCosmeticBatch = async (req: AddCosmeticBatchRequest): Promise<CosmeticResponse> => {
+  const res = await api.post<CosmeticResponse>('/cosmetics/batches', req);
+  return res.data;
 };

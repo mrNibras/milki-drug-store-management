@@ -2,6 +2,8 @@ using MilkiDrugStore.Application.DTOs.Report;
 using MilkiDrugStore.Application.Interfaces;
 using MilkiDrugStore.Domain.Interfaces.Repositories;
 using MilkiDrugStore.Domain.Entities;
+using MilkiDrugStore.Domain.Catalog;
+using Microsoft.EntityFrameworkCore;
 
 namespace MilkiDrugStore.Application.Services;
 
@@ -13,6 +15,7 @@ public class ReportService : IReportService
     private readonly IRepository<Supplier> _supplierRepo;
     private readonly IRepository<User> _userRepo;
     private readonly ICatalogService _catalog;
+    private readonly ICosmeticRepository _cosmeticRepo;
 
     public ReportService(
         IRepository<Sale> saleRepo,
@@ -20,7 +23,8 @@ public class ReportService : IReportService
         IRepository<Medicine> medicineRepo,
         IRepository<Supplier> supplierRepo,
         IRepository<User> userRepo,
-        ICatalogService catalog)
+        ICatalogService catalog,
+        ICosmeticRepository cosmeticRepo)
     {
         _saleRepo = saleRepo;
         _purchaseRepo = purchaseRepo;
@@ -28,15 +32,20 @@ public class ReportService : IReportService
         _supplierRepo = supplierRepo;
         _userRepo = userRepo;
         _catalog = catalog;
+        _cosmeticRepo = cosmeticRepo;
     }
 
     public async Task<DashboardSummaryResponse> GetDashboardSummaryAsync(int? branchId = null)
     {
         var medicines = (await _medicineRepo.GetAllAsync()).ToList();
         var sales = (await _saleRepo.GetAllAsync()).ToList();
+        var cosmetics = (await _cosmeticRepo.GetAllAsync()).ToList();
 
         if (branchId.HasValue)
+        {
             sales = sales.Where(s => s.BranchId == branchId.Value).ToList();
+            cosmetics = cosmetics.Where(c => c.BranchId == branchId.Value).ToList();
+        }
 
         var today = DateTime.UtcNow.Date;
 
@@ -46,18 +55,20 @@ public class ReportService : IReportService
         var monthlyProfit = sales.Where(s => s.SaleDate >= currentMonth).Sum(s => s.TotalProfit);
 
         var inventoryValue = medicines.Sum(m => m.Batches.Sum(b => b.RemainingQuantity * b.PurchasePrice));
+        var cosmeticInventoryValue = cosmetics.Sum(c => c.Batches.Where(b => !branchId.HasValue || b.BranchId == branchId).Sum(b => b.Balance * b.BuyingPrice));
         var lowStockCount = medicines.Count(m => m.Batches.Sum(b => b.RemainingQuantity) <= m.ReorderLevel && m.Batches.Sum(b => b.RemainingQuantity) > 0);
+        var cosmeticLowStockCount = cosmetics.Count(c => c.Batches.Where(b => !branchId.HasValue || b.BranchId == branchId.Value).Sum(b => b.Balance) <= c.Batches.Where(b => !branchId.HasValue || b.BranchId == branchId.Value).Min(b => b.LowStockThreshold) && c.Batches.Where(b => !branchId.HasValue || b.BranchId == branchId.Value).Sum(b => b.Balance) > 0);
         var expiringCount = medicines.Count(m => m.Batches.Any(b => b.ExpiryDate <= DateTime.UtcNow.AddMonths(6) && b.RemainingQuantity > 0));
         var outOfStockCount = medicines.Count(m => m.Batches.All(b => b.RemainingQuantity <= 0));
 
         return new DashboardSummaryResponse
         {
             TotalMedicines = medicines.Count(m => m.IsActive),
-            InventoryValue = inventoryValue,
+            InventoryValue = inventoryValue + cosmeticInventoryValue,
             TodaySales = todaySales,
             MonthlySales = monthlySales,
             MonthlyProfit = monthlyProfit,
-            LowStockCount = lowStockCount,
+            LowStockCount = lowStockCount + cosmeticLowStockCount,
             ExpiringCount = expiringCount,
             OutOfStockCount = outOfStockCount
         };
@@ -97,9 +108,12 @@ public class ReportService : IReportService
     public async Task<IEnumerable<InventoryReportResponse>> GetInventoryReportAsync(int? branchId = null)
     {
         var medicines = (await _medicineRepo.GetAllAsync()).ToList();
+        var cosmetics = (await _cosmeticRepo.GetAllAsync())
+            .Include(c => c.Batches)
+            .ToList();
         var categoryNames = await _catalog.GetCategoryNamesAsync(medicines.Select(m => m.CategoryId));
 
-        return medicines.Select(m =>
+        var medicineResults = medicines.Select(m =>
         {
             var batches = m.Batches.AsQueryable();
             if (branchId.HasValue)
@@ -118,7 +132,32 @@ public class ReportService : IReportService
                 Value = totalValue,
                 Status = status
             };
-        }).OrderBy(r => r.Quantity).ToList();
+        });
+
+        var cosmeticResults = cosmetics.Select(c =>
+        {
+            var batches = c.Batches.AsQueryable();
+            if (branchId.HasValue)
+                batches = batches.Where(b => b.BranchId == branchId.Value);
+            var totalQty = batches.Sum(b => b.Balance);
+            var totalValue = batches.Sum(b => b.Balance * b.BuyingPrice);
+            var threshold = batches.Any() ? batches.Min(b => b.LowStockThreshold) : 0;
+            var status = totalQty == 0 ? "Out of Stock" : totalQty <= threshold ? "Low Stock" : "In Stock";
+
+            return new InventoryReportResponse
+            {
+                ProductId = c.CosmeticId,
+                ProductCode = c.CosmeticId.ToString(),
+                BrandName = c.ProductName,
+                ProductType = "cosmetic",
+                CategoryName = CosmeticCatalog.GetCategoryName(c.CategoryId) ?? "",
+                Quantity = totalQty,
+                Value = totalValue,
+                Status = status
+            };
+        });
+
+        return medicineResults.Concat(cosmeticResults).OrderBy(r => r.Quantity).ToList();
     }
 
     public async Task<IEnumerable<SupplierReportResponse>> GetSupplierReportAsync(int? branchId = null)

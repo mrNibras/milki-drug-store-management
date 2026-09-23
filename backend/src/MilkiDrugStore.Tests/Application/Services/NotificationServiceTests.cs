@@ -13,6 +13,7 @@ public class NotificationServiceTests
 {
     private readonly Mock<INotificationRepository> _notificationRepo = new();
     private readonly Mock<IRepository<Medicine>> _medicineRepo = new();
+    private readonly Mock<ICosmeticRepository> _cosmeticRepo = new();
     private readonly Mock<IUnitOfWork> _unitOfWork = new();
     private readonly NotificationService _sut;
 
@@ -21,6 +22,7 @@ public class NotificationServiceTests
         _sut = new NotificationService(
             _notificationRepo.Object,
             _medicineRepo.Object,
+            _cosmeticRepo.Object,
             _unitOfWork.Object
         );
     }

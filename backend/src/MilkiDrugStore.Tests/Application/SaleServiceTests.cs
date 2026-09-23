@@ -37,6 +37,8 @@ public class SaleServiceTests
             _saleItemRepo.Object,
             _medicineRepo.Object,
             _batchRepo.Object,
+            new Mock<ICosmeticRepository>().Object,
+            new Mock<IRepository<CosmeticBatch>>().Object,
             _transactionRepo.Object,
             _notificationRepo.Object,
             _settingsRepo.Object,

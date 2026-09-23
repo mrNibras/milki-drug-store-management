@@ -58,10 +58,20 @@ public class PurchaseService : IPurchaseService
     {
         if (request.Items.Count == 0)
             throw new InvalidOperationException("At least one purchase item is required.");
-        if (request.Items.Any(i => i.Quantity <= 0 || i.PurchasePrice <= 0 || i.SellingPrice <= 0 ||
-                                   string.IsNullOrWhiteSpace(i.BatchNumber) || !i.ExpiryDate.HasValue ||
-                                   (i.ProductType != "cosmetic" && i.ExpiryDate.Value.Date <= DateTime.UtcNow.Date)))
-            throw new InvalidOperationException("Each item requires a batch number, positive quantity and prices, and a future expiry date.");
+        foreach (var item in request.Items)
+        {
+            var isCosmetic = item.ProductType?.Equals("cosmetic", StringComparison.OrdinalIgnoreCase) == true;
+            if (item.Quantity <= 0)
+                throw new InvalidOperationException("Quantity must be positive for all items.");
+            if (item.PurchasePrice <= 0)
+                throw new InvalidOperationException("Purchase price must be positive for all items.");
+            if (!isCosmetic && string.IsNullOrWhiteSpace(item.BatchNumber))
+                throw new InvalidOperationException("Batch number is required for medicine items.");
+            if (!isCosmetic && !item.ExpiryDate.HasValue)
+                throw new InvalidOperationException("Expiry date is required for medicine items.");
+            if (!isCosmetic && item.ExpiryDate.HasValue && item.ExpiryDate.Value.Date <= DateTime.UtcNow.Date)
+                throw new InvalidOperationException("Medicine expiry date must be in the future.");
+        }
 
         var effectiveBranchId = branchId ?? 0;
         if (effectiveBranchId <= 0)
@@ -447,7 +457,9 @@ public class PurchaseService : IPurchaseService
             await _auditLog.LogAsync(createdBy, $"Auto-created cosmetic: {cosmetic.ProductName}", "Cosmetics", cosmetic.CosmeticId);
         }
 
-        var normalizedBatchNumber = item.BatchNumber.Trim();
+        var normalizedBatchNumber = string.IsNullOrWhiteSpace(item.BatchNumber)
+            ? $"COS-BATCH-{DateTime.UtcNow:yyyyMMddHHmmss}-{Guid.NewGuid().ToString("N")[..6]}"
+            : item.BatchNumber.Trim();
         var batch = (await _cosmeticBatchRepo.FindAsync(b => b.CosmeticId == cosmetic.CosmeticId &&
             b.BranchId == branchId && b.BatchNumber == normalizedBatchNumber)).FirstOrDefault();
 
@@ -489,10 +501,9 @@ public class PurchaseService : IPurchaseService
         return new PurchaseItem
         {
             PurchaseId = purchaseId,
-            ProductId = cosmetic.CosmeticId,
             CosmeticId = cosmetic.CosmeticId,
             CosmeticBatchId = batch.BatchId,
-            BatchNumber = item.BatchNumber,
+            BatchNumber = normalizedBatchNumber,
             Quantity = item.Quantity,
             PurchasePrice = item.PurchasePrice,
             SubTotal = item.Quantity * item.PurchasePrice,

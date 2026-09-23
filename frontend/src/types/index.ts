@@ -244,3 +244,75 @@ export interface Branch {
   address?: string;
   isActive: boolean;
 }
+
+export interface Cosmetic {
+  cosmeticId: number;
+  productName: string;
+  description: string;
+  categoryId: number;
+  categoryName: string;
+  unitTypeId: number;
+  unitTypeName: string;
+  price: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt?: string;
+  branchId: number;
+  supplierId?: number;
+  supplierName?: string;
+  batches: CosmeticBatch[];
+}
+
+export interface CosmeticBatch {
+  batchId: number;
+  cosmeticId: number;
+  batchNumber: string;
+  quantityReceived: number;
+  quantityIssued: number;
+  quantityDamaged: number;
+  quantityExpired: number;
+  balance: number;
+  expiryDate?: string;
+  dateReceived: string;
+  buyingPrice: number;
+  sellingPrice: number;
+  lowStockThreshold: number;
+  branchId: number;
+  supplierId?: number;
+  remarks?: string;
+}
+
+export type CosmeticCategoryValue =
+  | 'Hair Care'
+  | 'Skin Care'
+  | 'Bath & Body'
+  | 'Oral Care'
+  | 'Baby Care'
+  | 'Makeup'
+  | 'Fragrance'
+  | 'Feminine Care'
+  | 'Other';
+
+export const COSMETIC_CATEGORIES: CosmeticCategoryValue[] = [
+  'Hair Care',
+  'Skin Care',
+  'Bath & Body',
+  'Oral Care',
+  'Baby Care',
+  'Makeup',
+  'Fragrance',
+  'Feminine Care',
+  'Other',
+];
+
+export interface CosmeticPurchaseItem {
+  productType: 'cosmetic';
+  categoryId: string;
+  brandName: string;
+  quantity: string;
+  buyingPrice: string;
+  sellingPrice: string;
+  lowStock: string;
+  expiryDate?: string;
+  errors: string[];
+}

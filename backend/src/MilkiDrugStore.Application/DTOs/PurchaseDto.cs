@@ -56,7 +56,7 @@ public class PurchaseResponse
 public class PurchaseItemResponse
 {
     public int PurchaseItemId { get; set; }
-    public int ProductId { get; set; }
+    public int? ProductId { get; set; }
     public string? ProductName { get; set; }
     public string ProductType { get; set; } = "medicine";
     public string BrandName { get; set; } = string.Empty;

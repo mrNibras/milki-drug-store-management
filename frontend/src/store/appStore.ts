@@ -1,6 +1,6 @@
 import { create } from 'zustand';
-import { User, Medicine, Supplier, Purchase, Sale, Notification, CartItem, PharmacySettings, AuditLog, Category, UnitType, Branch, CatalogOption } from '../types';
-import { api, LoginRequest, LoginResponse, CreateSaleRequest, CreatePurchaseRequest, RecordDamageRequest, RecordExpiredRequest, ChangePasswordRequest, DamageResponse, ExpiredResponse, AuditLogResponse, BranchResponse, CreateBranchRequest, UpdateBranchRequest, CatalogOptionDto } from '../services/api';
+import { User, Medicine, Supplier, Purchase, Sale, Notification, CartItem, PharmacySettings, AuditLog, Category, UnitType, Branch, CatalogOption, Cosmetic } from '../types';
+import { api, LoginRequest, LoginResponse, CreateSaleRequest, CreatePurchaseRequest, RecordDamageRequest, RecordExpiredRequest, ChangePasswordRequest, DamageResponse, ExpiredResponse, AuditLogResponse, BranchResponse, CreateBranchRequest, UpdateBranchRequest, CatalogOptionDto, CosmeticResponse } from '../services/api';
 import { getSettings, updateSettings } from '../services/settingsApi';
 import { getDaysUntilExpiry, generateId } from '../utils/helpers';
 
@@ -32,6 +32,9 @@ interface AppState {
   addMedicine: (medicine: Medicine) => Promise<void>;
   updateMedicine: (id: string, updates: Partial<Medicine>) => Promise<void>;
   deleteMedicine: (id: string) => Promise<void>;
+
+  cosmetics: Cosmetic[];
+  fetchCosmetics: () => Promise<void>;
 
   suppliers: Supplier[];
   fetchSuppliers: () => Promise<void>;
@@ -124,6 +127,41 @@ const toMedicine = (r: MedicineResponse): Medicine => ({
   })),
 });
 
+const toCosmetic = (r: CosmeticResponse): Cosmetic => ({
+  cosmeticId: r.cosmeticId,
+  productName: r.productName,
+  description: r.description,
+  categoryId: r.categoryId,
+  categoryName: r.categoryName,
+  unitTypeId: r.unitTypeId,
+  unitTypeName: r.unitTypeName,
+  price: r.price,
+  isActive: r.isActive,
+  createdAt: r.createdAt,
+  updatedAt: r.updatedAt,
+  branchId: r.branchId,
+  supplierId: r.supplierId,
+  supplierName: r.supplierName,
+  batches: r.batches.map(b => ({
+    batchId: b.batchId,
+    cosmeticId: b.cosmeticId,
+    batchNumber: b.batchNumber,
+    quantityReceived: b.quantityReceived,
+    quantityIssued: b.quantityIssued,
+    quantityDamaged: b.quantityDamaged,
+    quantityExpired: b.quantityExpired,
+    balance: b.balance,
+    expiryDate: b.expiryDate,
+    dateReceived: b.dateReceived,
+    buyingPrice: b.buyingPrice,
+    sellingPrice: b.sellingPrice,
+    lowStockThreshold: b.lowStockThreshold,
+    branchId: b.branchId,
+    supplierId: b.supplierId,
+    remarks: b.remarks,
+  })),
+});
+
 const toSupplier = (r: SupplierResponse): Supplier => ({
   id: String(r.supplierId),
   name: r.supplierName,
@@ -204,6 +242,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   branches: [],
   users: [],
   medicines: [],
+  cosmetics: [],
   suppliers: [],
   purchases: [],
   sales: [],
@@ -618,11 +657,26 @@ export const useAppStore = create<AppState>((set, get) => ({
       const createdPurchase = toPurchase(res.data);
       await get().fetchPurchases();
       await get().fetchMedicines();
+      await get().fetchCosmetics();
       return createdPurchase;
     } catch (e: any) {
       set({ error: e.response?.data?.message || 'Failed to add purchase' });
       get().setLoading('purchases', false);
       throw e;
+    }
+  },
+
+  cosmetics: [],
+  fetchCosmetics: async () => {
+    get().setLoading('cosmetics', true); set({ error: null });
+    try {
+      const res = await api.get<CosmeticResponse[]>('/cosmetics');
+      const data = Array.isArray(res.data) ? res.data : [];
+      set({ cosmetics: data.map(toCosmetic) });
+      get().setLoading('cosmetics', false);
+    } catch (e: any) {
+      set({ error: e.response?.data?.message || 'Failed to fetch cosmetics' });
+      get().setLoading('cosmetics', false);
     }
   },
 

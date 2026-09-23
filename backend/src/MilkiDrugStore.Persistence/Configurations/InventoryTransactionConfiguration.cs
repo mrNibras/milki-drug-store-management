@@ -12,7 +12,7 @@ public class InventoryTransactionConfiguration : IEntityTypeConfiguration<Invent
         builder.Property(it => it.TransactionType).HasMaxLength(20).IsRequired();
         builder.Property(it => it.ReferenceType).HasMaxLength(50);
         builder.Property(it => it.UnitPrice).HasColumnType("decimal(18,2)");
-        builder.HasOne(it => it.Medicine).WithMany(m => m.InventoryTransactions).HasForeignKey(it => it.ProductId);
+        builder.HasOne(it => it.Medicine).WithMany(m => m.InventoryTransactions).HasForeignKey(it => it.ProductId).IsRequired(false);
         builder.HasOne(it => it.Cosmetic).WithMany(c => c.InventoryTransactions).HasForeignKey(it => it.CosmeticId);
 
         builder.HasIndex(it => it.ProductId);
