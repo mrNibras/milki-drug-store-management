@@ -300,7 +300,7 @@ public class PersistenceTests : IClassFixture<PostgreSqlFixture>, IAsyncLifetime
             new Repository<InventoryTransaction>(_dbContext),
             new UnitOfWork(_dbContext),
             Mock.Of<IAuditLogService>(),
-            Mock.Of<Microsoft.Extensions.Logging.ILogger<PurchaseService>>());
+            Mock.Of<Microsoft.Extensions.Logging.ILogger<PurchaseService>>(), new CosmeticRepository(_dbContext), new Repository<CosmeticBatch>(_dbContext));
 
         var batchNumber = $"BATCH-{Guid.NewGuid():N}";
         var result = await service.CreateAsync(new CreatePurchaseRequest

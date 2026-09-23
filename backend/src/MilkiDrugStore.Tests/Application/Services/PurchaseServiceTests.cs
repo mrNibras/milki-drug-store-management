@@ -21,6 +21,8 @@ public class PurchaseServiceTests
     private readonly Mock<IAuditLogService> _auditLog = new();
     private readonly Mock<IUnitOfWork> _unitOfWork = new();
     private readonly Mock<ILogger<PurchaseService>> _logger = new();
+    private readonly Mock<ICosmeticRepository> _cosmeticRepo = new();
+    private readonly Mock<IRepository<CosmeticBatch>> _cosmeticBatchRepo = new();
     private readonly PurchaseService _sut;
 
     public PurchaseServiceTests()
@@ -35,7 +37,9 @@ public class PurchaseServiceTests
             _transactionRepo.Object,
             _unitOfWork.Object,
             _auditLog.Object,
-            Mock.Of<ILogger<PurchaseService>>());
+            Mock.Of<ILogger<PurchaseService>>(),
+            _cosmeticRepo.Object,
+            _cosmeticBatchRepo.Object);
 
         _unitOfWork.Setup(u => u.BeginTransactionAsync()).Returns(Task.CompletedTask);
         _unitOfWork.Setup(u => u.SaveChangesAsync(It.IsAny<System.Threading.CancellationToken>())).ReturnsAsync(1);

@@ -649,7 +649,7 @@ public class DatabaseIntegrationTests : IClassFixture<PostgreSqlFixture>, IAsync
             new Repository<InventoryTransaction>(_dbContext),
             new UnitOfWork(_dbContext),
             Mock.Of<IAuditLogService>(),
-            Mock.Of<ILogger<PurchaseService>>());
+            Mock.Of<ILogger<PurchaseService>>(), new CosmeticRepository(_dbContext), new Repository<CosmeticBatch>(_dbContext));
 
         var request = new CreatePurchaseRequest
         {
@@ -718,7 +718,9 @@ public class DatabaseIntegrationTests : IClassFixture<PostgreSqlFixture>, IAsync
             new Repository<InventoryTransaction>(_dbContext),
             unitOfWork,
             auditLog,
-            logger);
+            logger,
+            new CosmeticRepository(_dbContext),
+            new Repository<CosmeticBatch>(_dbContext));
 
         var request = new CreatePurchaseRequest
         {
@@ -783,7 +785,9 @@ public class DatabaseIntegrationTests : IClassFixture<PostgreSqlFixture>, IAsync
             new Repository<InventoryTransaction>(_dbContext),
             unitOfWork,
             auditLog,
-            logger);
+            logger,
+            new CosmeticRepository(_dbContext),
+            new Repository<CosmeticBatch>(_dbContext));
 
          var request = new CreatePurchaseRequest
         {
@@ -854,7 +858,9 @@ public class DatabaseIntegrationTests : IClassFixture<PostgreSqlFixture>, IAsync
             new Repository<InventoryTransaction>(_dbContext),
             unitOfWork,
             auditLog,
-            logger);
+            logger,
+            new CosmeticRepository(_dbContext),
+            new Repository<CosmeticBatch>(_dbContext));
 
         var request = new CreatePurchaseRequest
         {
@@ -953,7 +959,9 @@ public class DatabaseIntegrationTests : IClassFixture<PostgreSqlFixture>, IAsync
             new Repository<InventoryTransaction>(_dbContext),
             unitOfWork,
             auditLog,
-            logger);
+            logger,
+            new CosmeticRepository(_dbContext),
+            new Repository<CosmeticBatch>(_dbContext));
 
         var request = new CreatePurchaseRequest
         {
@@ -1069,7 +1077,9 @@ public class DatabaseIntegrationTests : IClassFixture<PostgreSqlFixture>, IAsync
             new Repository<InventoryTransaction>(_dbContext),
             unitOfWork,
             auditLog,
-            logger);
+            logger,
+            new CosmeticRepository(_dbContext),
+            new Repository<CosmeticBatch>(_dbContext));
 
         var result = await purchaseService.GetAllAsync(branch.BranchId);
 

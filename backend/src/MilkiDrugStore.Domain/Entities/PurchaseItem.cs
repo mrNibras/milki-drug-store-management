@@ -12,7 +12,12 @@ public class PurchaseItem
     public decimal SubTotal { get; set; }
     public DateTime? ExpiryDate { get; set; }
 
+    public int? CosmeticId { get; set; }
+    public int? CosmeticBatchId { get; set; }
+
     public Purchase? Purchase { get; set; }
     public Medicine? Medicine { get; set; }
     public MedicineBatch? Batch { get; set; }
+    public Cosmetic? Cosmetic { get; set; }
+    public CosmeticBatch? CosmeticBatch { get; set; }
 }

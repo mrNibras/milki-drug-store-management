@@ -13,6 +13,11 @@ public class InventoryTransaction
     public int CreatedBy { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+    public int? CosmeticId { get; set; }
+    public int? CosmeticBatchId { get; set; }
+
     public Medicine? Medicine { get; set; }
     public MedicineBatch? Batch { get; set; }
+    public Cosmetic? Cosmetic { get; set; }
+    public CosmeticBatch? CosmeticBatch { get; set; }
 }

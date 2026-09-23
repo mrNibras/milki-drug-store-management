@@ -21,9 +21,12 @@ public class CosmeticsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll([FromQuery] string? search, [FromQuery] int? categoryId)
+    public async Task<IActionResult> GetAll([FromQuery] string? search, [FromQuery] int? categoryId, [FromQuery] int? branchId)
     {
-        var result = await _mediator.Send(new Application.Queries.Cosmetics.GetCosmeticsQuery(search, categoryId));
+        var branchIdClaim = User.FindFirst("branchId")?.Value;
+        int? userBranchId = int.TryParse(branchIdClaim, out var b) && b > 0 ? b : null;
+        var effectiveBranchId = branchId.HasValue ? branchId : userBranchId;
+        var result = await _mediator.Send(new Application.Queries.Cosmetics.GetCosmeticsQuery(search, categoryId, effectiveBranchId));
         return Ok(result);
     }
 
@@ -42,6 +45,12 @@ public class CosmeticsController : ControllerBase
         try
         {
             var userId = GetUserId();
+            var branchIdClaim = User.FindFirst("branchId")?.Value;
+            if (request.BranchId == null || request.BranchId == 0)
+            {
+                if (int.TryParse(branchIdClaim, out var claimBranchId) && claimBranchId > 0)
+                    request.BranchId = claimBranchId;
+            }
             var result = await _mediator.Send(new Application.Commands.Cosmetics.CreateCosmeticCommand(request, userId));
             return Ok(result);
         }

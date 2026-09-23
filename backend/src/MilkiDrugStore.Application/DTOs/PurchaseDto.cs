@@ -13,7 +13,9 @@ public class CreatePurchaseRequest
 public class PurchaseItemRequest
 {
     public int? ProductId { get; set; }
-    /// <summary>Provided when the medicine does not exist yet (auto-creation).</summary>
+    /// <summary>"medicine" (default) or "cosmetic".</summary>
+    public string ProductType { get; set; } = "medicine";
+    /// <summary>Provided when the product does not exist yet (auto-creation).</summary>
     public string? BrandName { get; set; }
     public string? GenericName { get; set; }
     public int? CategoryId { get; set; }
@@ -55,9 +57,13 @@ public class PurchaseItemResponse
 {
     public int PurchaseItemId { get; set; }
     public int ProductId { get; set; }
+    public string? ProductName { get; set; }
+    public string ProductType { get; set; } = "medicine";
     public string BrandName { get; set; } = string.Empty;
     public string BatchNumber { get; set; } = string.Empty;
     public int Quantity { get; set; }
     public decimal PurchasePrice { get; set; }
     public decimal SubTotal { get; set; }
+    public int? CosmeticId { get; set; }
+    public int? CosmeticBatchId { get; set; }
 }

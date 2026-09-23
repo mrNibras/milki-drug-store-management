@@ -31,13 +31,13 @@ public class CosmeticCQRSTests
     {
         var service = new Mock<ICosmeticService>();
         var handler = new GetCosmeticsQueryHandler(service.Object);
-        service.Setup(s => s.GetAllAsync(It.IsAny<string?>(), It.IsAny<int?>()))
+        service.Setup(s => s.GetAllAsync(It.IsAny<string?>(), It.IsAny<int?>(), It.IsAny<int?>()))
             .ReturnsAsync(new List<CosmeticResponse>());
 
         var result = await handler.Handle(new GetCosmeticsQuery("search", 1), default);
 
         Assert.Empty(result);
-        service.Verify(s => s.GetAllAsync("search", 1), Times.Once);
+        service.Verify(s => s.GetAllAsync("search", 1, null), Times.Once);
     }
 
     [Fact]

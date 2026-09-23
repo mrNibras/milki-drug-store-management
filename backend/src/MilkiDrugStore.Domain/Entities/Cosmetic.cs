@@ -7,7 +7,7 @@ public class Cosmetic
     public string Description { get; set; } = string.Empty;
 
     /// <summary>
-    /// Built-in categories use negative ids (see <see cref="Catalog.MedicineCatalog"/>);
+    /// Built-in cosmetic categories use negative ids (see <see cref="Catalog.CosmeticCatalog"/>);
     /// custom categories use the positive id of a persisted <see cref="Category"/>.
     /// </summary>
     public int CategoryId { get; set; }
@@ -21,6 +21,15 @@ public class Cosmetic
     public decimal Price { get; set; }
     public bool IsActive { get; set; } = true;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime? UpdatedAt { get; set; }
 
+    public int BranchId { get; set; }
+    public int? SupplierId { get; set; }
+
+    public Branch? Branch { get; set; }
+    public Supplier? Supplier { get; set; }
     public List<CosmeticBatch> Batches { get; set; } = new();
+    public List<PurchaseItem> PurchaseItems { get; set; } = new();
+    public List<SaleItem> SaleItems { get; set; } = new();
+    public List<InventoryTransaction> InventoryTransactions { get; set; } = new();
 }

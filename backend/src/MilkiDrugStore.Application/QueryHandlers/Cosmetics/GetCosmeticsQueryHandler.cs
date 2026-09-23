@@ -16,6 +16,6 @@ public class GetCosmeticsQueryHandler : IRequestHandler<GetCosmeticsQuery, IEnum
 
     public async Task<IEnumerable<CosmeticResponse>> Handle(GetCosmeticsQuery request, CancellationToken cancellationToken)
     {
-        return await _cosmeticService.GetAllAsync(request.Search, request.CategoryId);
+        return await _cosmeticService.GetAllAsync(request.Search, request.CategoryId, request.BranchId);
     }
 }

@@ -12,6 +12,10 @@ public class CosmeticResponse
     public decimal Price { get; set; }
     public bool IsActive { get; set; }
     public DateTime CreatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
+    public int BranchId { get; set; }
+    public int? SupplierId { get; set; }
+    public string SupplierName { get; set; } = string.Empty;
     public List<BatchResponse> Batches { get; set; } = new();
 }
 
@@ -25,8 +29,14 @@ public class BatchResponse
     public int QuantityDamaged { get; set; }
     public int QuantityExpired { get; set; }
     public int Balance { get; set; }
-    public DateTime ExpiryDate { get; set; }
+    public DateTime? ExpiryDate { get; set; }
     public DateTime DateReceived { get; set; }
+    public decimal BuyingPrice { get; set; }
+    public decimal SellingPrice { get; set; }
+    public int LowStockThreshold { get; set; }
+    public int BranchId { get; set; }
+    public int? SupplierId { get; set; }
+    public string? Remarks { get; set; }
 }
 
 public class CreateCosmeticRequest
@@ -36,21 +46,12 @@ public class CreateCosmeticRequest
     public int CategoryId { get; set; }
     public int UnitTypeId { get; set; }
 
-    /// <summary>
-    /// Optional category name entered via the "Other" option. When provided,
-    /// it is resolved against built-ins/customs and takes precedence over
-    /// <see cref="CategoryId"/>.
-    /// </summary>
     public string? NewCategoryName { get; set; }
-
-    /// <summary>
-    /// Optional unit type name entered via the "Other" option. When provided,
-    /// it is resolved against built-ins/customs and takes precedence over
-    /// <see cref="UnitTypeId"/>.
-    /// </summary>
     public string? NewUnitTypeName { get; set; }
 
     public decimal Price { get; set; }
+    public int? BranchId { get; set; }
+    public int? SupplierId { get; set; }
 }
 
 public class UpdateCosmeticRequest
@@ -60,18 +61,7 @@ public class UpdateCosmeticRequest
     public int CategoryId { get; set; }
     public int UnitTypeId { get; set; }
 
-    /// <summary>
-    /// Optional category name entered via the "Other" option. When provided,
-    /// it is resolved against built-ins/customs and takes precedence over
-    /// <see cref="CategoryId"/>.
-    /// </summary>
     public string? NewCategoryName { get; set; }
-
-    /// <summary>
-    /// Optional unit type name entered via the "Other" option. When provided,
-    /// it is resolved against built-ins/customs and takes precedence over
-    /// <see cref="UnitTypeId"/>.
-    /// </summary>
     public string? NewUnitTypeName { get; set; }
 
     public decimal Price { get; set; }
@@ -85,5 +75,9 @@ public class AddBatchRequest
     public int Quantity { get; set; }
     public decimal PurchasePrice { get; set; }
     public decimal SellingPrice { get; set; }
-    public DateTime ExpiryDate { get; set; }
+    public DateTime? ExpiryDate { get; set; }
+    public string? Remarks { get; set; }
+    public int BranchId { get; set; }
+    public int? SupplierId { get; set; }
+    public int LowStockThreshold { get; set; } = 10;
 }

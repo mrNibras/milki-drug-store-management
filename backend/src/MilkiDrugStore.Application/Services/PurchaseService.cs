@@ -1,11 +1,12 @@
 using Microsoft.Extensions.Logging;
 using MilkiDrugStore.Application.DTOs.Purchase;
+using MilkiDrugStore.Application.DTOs.Cosmetic;
 using MilkiDrugStore.Application.Interfaces;
 using MilkiDrugStore.Domain.Catalog;
 using MilkiDrugStore.Domain.Entities;
 using MilkiDrugStore.Domain.Enums;
-using MilkiDrugStore.Domain.Interfaces.Repositories;
 using MilkiDrugStore.Domain.Interfaces;
+using MilkiDrugStore.Domain.Interfaces.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 namespace MilkiDrugStore.Application.Services;
@@ -22,6 +23,8 @@ public class PurchaseService : IPurchaseService
         private readonly IUnitOfWork _unitOfWork;
         private readonly IAuditLogService _auditLog;
         private readonly ILogger<PurchaseService> _logger;
+        private readonly ICosmeticRepository _cosmeticRepo;
+        private readonly IRepository<CosmeticBatch> _cosmeticBatchRepo;
 
         public PurchaseService(
             IRepository<Purchase> purchaseRepo,
@@ -33,18 +36,22 @@ public class PurchaseService : IPurchaseService
             IRepository<InventoryTransaction> transactionRepo,
             IUnitOfWork unitOfWork,
             IAuditLogService auditLog,
-            ILogger<PurchaseService> logger)
+            ILogger<PurchaseService> logger,
+            ICosmeticRepository cosmeticRepo,
+            IRepository<CosmeticBatch> cosmeticBatchRepo)
     {
         _purchaseRepo = purchaseRepo;
         _purchaseItemRepo = purchaseItemRepo;
         _medicineRepo = medicineRepo;
-            _batchRepo = batchRepo;
-            _supplierRepo = supplierRepo;
-            _catalog = catalog;
-            _transactionRepo = transactionRepo;
-            _unitOfWork = unitOfWork;
-            _auditLog = auditLog;
-            _logger = logger;
+        _batchRepo = batchRepo;
+        _supplierRepo = supplierRepo;
+        _catalog = catalog;
+        _transactionRepo = transactionRepo;
+        _unitOfWork = unitOfWork;
+        _auditLog = auditLog;
+        _logger = logger;
+        _cosmeticRepo = cosmeticRepo;
+        _cosmeticBatchRepo = cosmeticBatchRepo;
     }
 
     public async Task<PurchaseResponse> CreateAsync(CreatePurchaseRequest request, int createdBy, int? branchId = null)
@@ -53,7 +60,7 @@ public class PurchaseService : IPurchaseService
             throw new InvalidOperationException("At least one purchase item is required.");
         if (request.Items.Any(i => i.Quantity <= 0 || i.PurchasePrice <= 0 || i.SellingPrice <= 0 ||
                                    string.IsNullOrWhiteSpace(i.BatchNumber) || !i.ExpiryDate.HasValue ||
-                                   i.ExpiryDate.Value.Date <= DateTime.UtcNow.Date))
+                                   (i.ProductType != "cosmetic" && i.ExpiryDate.Value.Date <= DateTime.UtcNow.Date)))
             throw new InvalidOperationException("Each item requires a batch number, positive quantity and prices, and a future expiry date.");
 
         var effectiveBranchId = branchId ?? 0;
@@ -116,138 +123,42 @@ public class PurchaseService : IPurchaseService
 
             foreach (var item in request.Items)
             {
-                _logger.LogInformation("Processing item. ProductId: {ProductId}, BatchNumber: {BatchNumber}, Qty: {Quantity}",
-                    item.ProductId, item.BatchNumber, item.Quantity);
+                var isCosmetic = item.ProductType?.Equals("cosmetic", StringComparison.OrdinalIgnoreCase) == true;
+                _logger.LogInformation("Processing item. ProductType: {ProductType}, ProductId: {ProductId}, BatchNumber: {BatchNumber}, Qty: {Quantity}",
+                    item.ProductType, item.ProductId, item.BatchNumber, item.Quantity);
 
-                var medicine = (await _medicineRepo.FindAsync(m => m.ProductId == (item.ProductId ?? 0))).FirstOrDefault()
-                    ?? (await _medicineRepo.FindAsync(m => !string.IsNullOrWhiteSpace(item.ProductCode) && m.ProductCode == item.ProductCode.Trim().ToUpper())).FirstOrDefault()
-                    ?? (await _medicineRepo.FindAsync(m => !string.IsNullOrWhiteSpace(item.Barcode) && m.Barcode == item.Barcode.Trim())).FirstOrDefault();
-
-                // Auto-create the medicine if it does not exist yet.
-                if (medicine == null)
+                if (isCosmetic)
                 {
-                    if (string.IsNullOrWhiteSpace(item.BrandName))
-                        throw new Exception($"Product ID {item.ProductId} not found and no name was provided to create it");
-
-                    int categoryId;
-                    if (item.CategoryId.HasValue && await _catalog.IsValidCategoryIdAsync(item.CategoryId.Value))
+                    var purchaseItem = await ProcessCosmeticItemAsync(item, purchase.PurchaseId, effectiveBranchId, request.SupplierId, createdBy);
+                    await _purchaseItemRepo.AddAsync(purchaseItem);
+                    await _transactionRepo.AddAsync(new InventoryTransaction
                     {
-                        categoryId = item.CategoryId.Value;
-                    }
-                    else if (!string.IsNullOrWhiteSpace(item.CategoryName))
-                    {
-                        var resolvedCategory = await _catalog.ResolveCategoryIdAsync(item.CategoryName, createdBy);
-                        if (!resolvedCategory.HasValue)
-                            throw new Exception("No category exists to assign the new medicine");
-                        categoryId = resolvedCategory.Value;
-                    }
-                    else
-                    {
-                        categoryId = MedicineCatalog.Categories[0].Id;
-                    }
-
-                    int unitTypeId;
-                    if (!string.IsNullOrWhiteSpace(item.UnitType))
-                    {
-                        var resolvedUnitType = await _catalog.ResolveUnitTypeIdAsync(item.UnitType, createdBy);
-                        if (!resolvedUnitType.HasValue)
-                            throw new Exception("No unit type exists to assign the new medicine");
-                        unitTypeId = resolvedUnitType.Value;
-                    }
-                    else
-                    {
-                        unitTypeId = MedicineCatalog.UnitTypes[0].Id;
-                    }
-
-                     medicine = new Medicine
-                     {
-                         ProductCode = await ResolveProductCodeAsync(item.ProductCode),
-                         BrandName = item.BrandName,
-                         GenericName = item.GenericName ?? item.BrandName,
-                         Strength = item.Strength,
-                         DosageForm = item.DosageForm,
-                         Barcode = item.Barcode,
-                         CategoryId = categoryId,
-                         UnitTypeId = unitTypeId,
-                         ReorderLevel = item.ReorderLevel > 0 ? item.ReorderLevel : 10,
-                         IsActive = true,
-                         CreatedDate = DateTime.UtcNow
-                     };
-                    await _medicineRepo.AddAsync(medicine);
-                    await _unitOfWork.SaveChangesAsync();
-
-                    _logger.LogInformation("Auto-created medicine. ProductId: {ProductId}, BrandName: {BrandName}",
-                        medicine.ProductId, medicine.BrandName);
-
-                    await _auditLog.LogAsync(createdBy, $"Auto-created medicine: {medicine.BrandName}", "Medicines", medicine.ProductId);
-                }
-
-                var normalizedBatchNumber = item.BatchNumber.Trim();
-                var batch = (await _batchRepo.FindAsync(b => b.ProductId == medicine.ProductId &&
-                    b.BranchId == effectiveBranchId && b.BatchNumber == normalizedBatchNumber)).FirstOrDefault();
-
-                if (batch == null)
-                {
-                    batch = new MedicineBatch
-                    {
-                        ProductId = medicine.ProductId,
-                        BranchId = effectiveBranchId,
-                        BatchNumber = normalizedBatchNumber,
-                        QuantityReceived = item.Quantity,
-                        PurchasePrice = item.PurchasePrice,
-                        SellingPrice = item.SellingPrice,
-                        ExpiryDate = ToUtc(item.ExpiryDate!.Value),
-                        ManufacturingDate = ToUtc(item.ManufacturingDate),
-                        SupplierId = item.SupplierId ?? request.SupplierId,
-                        DateReceived = DateTime.UtcNow
-                    };
-                    await _batchRepo.AddAsync(batch);
-                    await _unitOfWork.SaveChangesAsync();
-
-                    _logger.LogInformation("Created new batch. BatchId: {BatchId}, BatchNumber: {BatchNumber}, ProductId: {ProductId}",
-                        batch.BatchId, batch.BatchNumber, medicine.ProductId);
+                        CosmeticId = purchaseItem.CosmeticId,
+                        CosmeticBatchId = purchaseItem.CosmeticBatchId,
+                        TransactionType = TransactionType.Purchase.ToString(),
+                        Quantity = item.Quantity,
+                        UnitPrice = item.PurchasePrice,
+                        ReferenceId = purchase.PurchaseId,
+                        ReferenceType = "PURCHASE",
+                        CreatedBy = createdBy
+                    });
                 }
                 else
                 {
-                    // Additional stock for the same batch increases that batch only;
-                    // a different batch remains a distinct record for FEFO tracking.
-                    batch.QuantityReceived += item.Quantity;
-                    batch.PurchasePrice = item.PurchasePrice;
-                    batch.SellingPrice = item.SellingPrice;
-                    batch.ExpiryDate = ToUtc(item.ExpiryDate!.Value);
-                    batch.ManufacturingDate = ToUtc(item.ManufacturingDate);
-                    batch.SupplierId = item.SupplierId ?? request.SupplierId;
-                    await _batchRepo.UpdateAsync(batch);
-
-                    _logger.LogInformation("Updated existing batch. BatchId: {BatchId}, NewQtyReceived: {Qty}",
-                        batch.BatchId, batch.QuantityReceived);
+                    var purchaseItem = await ProcessMedicineItemAsync(item, purchase.PurchaseId, effectiveBranchId, request.SupplierId, createdBy);
+                    await _purchaseItemRepo.AddAsync(purchaseItem);
+                    await _transactionRepo.AddAsync(new InventoryTransaction
+                    {
+                        ProductId = purchaseItem.ProductId,
+                        BatchId = purchaseItem.BatchId,
+                        TransactionType = TransactionType.Purchase.ToString(),
+                        Quantity = item.Quantity,
+                        UnitPrice = item.PurchasePrice,
+                        ReferenceId = purchase.PurchaseId,
+                        ReferenceType = "PURCHASE",
+                        CreatedBy = createdBy
+                    });
                 }
-
-                var purchaseItem = new PurchaseItem
-                {
-                    PurchaseId = purchase.PurchaseId,
-                    ProductId = medicine.ProductId,
-                    BatchId = batch.BatchId,
-                    BatchNumber = item.BatchNumber,
-                    Quantity = item.Quantity,
-                    PurchasePrice = item.PurchasePrice,
-                    SubTotal = item.Quantity * item.PurchasePrice,
-                    ExpiryDate = ToUtc(item.ExpiryDate)
-                };
-
-                await _purchaseItemRepo.AddAsync(purchaseItem);
-
-                await _transactionRepo.AddAsync(new InventoryTransaction
-                {
-                    ProductId = medicine.ProductId,
-                    BatchId = batch.BatchId,
-                    TransactionType = TransactionType.Purchase.ToString(),
-                    Quantity = item.Quantity,
-                    UnitPrice = item.PurchasePrice,
-                    ReferenceId = purchase.PurchaseId,
-                    ReferenceType = "PURCHASE",
-                    CreatedBy = createdBy
-                });
             }
 
             await _unitOfWork.SaveChangesAsync();
@@ -280,7 +191,9 @@ public class PurchaseService : IPurchaseService
         foreach (var p in query.OrderByDescending(p => p.PurchaseDate))
         {
             var items = (await _purchaseItemRepo.FindAsync(pi => pi.PurchaseId == p.PurchaseId))
-                .Include(pi => pi.Medicine).ToList();
+                .Include(pi => pi.Medicine)
+                .Include(pi => pi.Cosmetic)
+                .ToList();
 
             result.Add(new PurchaseResponse
             {
@@ -295,16 +208,20 @@ public class PurchaseService : IPurchaseService
                 AmountDue = p.AmountDue,
                 PaymentStatus = p.PaymentStatus,
                 PaymentMethod = p.PaymentMethod,
-                Items = items.Select(pi => new PurchaseItemResponse
-                {
-                    PurchaseItemId = pi.PurchaseItemId,
-                    ProductId = pi.ProductId,
-                    BrandName = pi.Medicine?.BrandName ?? "",
-                    BatchNumber = pi.BatchNumber,
-                    Quantity = pi.Quantity,
-                    PurchasePrice = pi.PurchasePrice,
-                    SubTotal = pi.SubTotal
-                }).ToList()
+                 Items = items.Select(pi => new PurchaseItemResponse
+                 {
+                     PurchaseItemId = pi.PurchaseItemId,
+                     ProductId = pi.ProductId,
+                     ProductName = pi.Medicine?.BrandName ?? pi.Cosmetic?.ProductName ?? "",
+                     ProductType = pi.CosmeticId.HasValue ? "cosmetic" : "medicine",
+                     BrandName = pi.Medicine?.BrandName ?? pi.Cosmetic?.ProductName ?? "",
+                     BatchNumber = pi.BatchNumber,
+                     Quantity = pi.Quantity,
+                     PurchasePrice = pi.PurchasePrice,
+                     SubTotal = pi.SubTotal,
+                     CosmeticId = pi.CosmeticId,
+                     CosmeticBatchId = pi.CosmeticBatchId
+                 }).ToList()
             });
         }
 
@@ -317,7 +234,13 @@ public class PurchaseService : IPurchaseService
         var query = purchases.AsQueryable();
         if (branchId.HasValue)
             query = query.Where(p => p.BranchId == branchId.Value);
-        var purchase = query.Include(p => p.Supplier).Include(p => p.Items).ThenInclude(i => i.Medicine).FirstOrDefault();
+        var purchase = query
+            .Include(p => p.Supplier)
+            .Include(p => p.Items)
+                .ThenInclude(i => i.Medicine)
+            .Include(p => p.Items)
+                .ThenInclude(i => i.Cosmetic)
+            .FirstOrDefault();
         if (purchase == null) return null;
 
         return new PurchaseResponse
@@ -332,16 +255,248 @@ public class PurchaseService : IPurchaseService
             AmountDue = purchase.AmountDue,
             PaymentStatus = purchase.PaymentStatus,
             PaymentMethod = purchase.PaymentMethod,
-            Items = purchase.Items.Select(pi => new PurchaseItemResponse
+             Items = purchase.Items.Select(pi => new PurchaseItemResponse
+             {
+                 PurchaseItemId = pi.PurchaseItemId,
+                 ProductId = pi.ProductId,
+                 ProductName = pi.Medicine?.BrandName ?? pi.Cosmetic?.ProductName ?? "",
+                 ProductType = pi.CosmeticId.HasValue ? "cosmetic" : "medicine",
+                 BrandName = pi.Medicine?.BrandName ?? pi.Cosmetic?.ProductName ?? "",
+                 BatchNumber = pi.BatchNumber,
+                 Quantity = pi.Quantity,
+                 PurchasePrice = pi.PurchasePrice,
+                 SubTotal = pi.SubTotal,
+                 CosmeticId = pi.CosmeticId,
+                 CosmeticBatchId = pi.CosmeticBatchId
+             }).ToList()
+        };
+    }
+
+    private async Task<PurchaseItem> ProcessMedicineItemAsync(PurchaseItemRequest item, int purchaseId, int branchId, int supplierId, int createdBy)
+    {
+        var medicine = (await _medicineRepo.FindAsync(m => m.ProductId == (item.ProductId ?? 0)))
+            .FirstOrDefault()
+            ?? (await _medicineRepo.FindAsync(m => !string.IsNullOrWhiteSpace(item.ProductCode) && m.ProductCode == item.ProductCode.Trim().ToUpper()))
+            .FirstOrDefault()
+            ?? (await _medicineRepo.FindAsync(m => !string.IsNullOrWhiteSpace(item.Barcode) && m.Barcode == item.Barcode.Trim()))
+            .FirstOrDefault();
+
+        if (medicine == null)
+        {
+            if (string.IsNullOrWhiteSpace(item.BrandName))
+                throw new Exception($"Product ID {item.ProductId} not found and no name was provided to create it");
+
+            int categoryId;
+            if (item.CategoryId.HasValue && await _catalog.IsValidCategoryIdAsync(item.CategoryId.Value))
             {
-                PurchaseItemId = pi.PurchaseItemId,
-                ProductId = pi.ProductId,
-                BrandName = pi.Medicine?.BrandName ?? "",
-                BatchNumber = pi.BatchNumber,
-                Quantity = pi.Quantity,
-                PurchasePrice = pi.PurchasePrice,
-                SubTotal = pi.SubTotal
-            }).ToList()
+                categoryId = item.CategoryId.Value;
+            }
+            else if (!string.IsNullOrWhiteSpace(item.CategoryName))
+            {
+                var resolvedCategory = await _catalog.ResolveCategoryIdAsync(item.CategoryName, createdBy);
+                if (!resolvedCategory.HasValue)
+                    throw new Exception("No category exists to assign the new medicine");
+                categoryId = resolvedCategory.Value;
+            }
+            else
+            {
+                categoryId = MedicineCatalog.Categories[0].Id;
+            }
+
+            int unitTypeId;
+            if (!string.IsNullOrWhiteSpace(item.UnitType))
+            {
+                var resolvedUnitType = await _catalog.ResolveUnitTypeIdAsync(item.UnitType, createdBy);
+                if (!resolvedUnitType.HasValue)
+                    throw new Exception("No unit type exists to assign the new medicine");
+                unitTypeId = resolvedUnitType.Value;
+            }
+            else
+            {
+                unitTypeId = MedicineCatalog.UnitTypes[0].Id;
+            }
+
+            medicine = new Medicine
+            {
+                ProductCode = await ResolveProductCodeAsync(item.ProductCode),
+                BrandName = item.BrandName,
+                GenericName = item.GenericName ?? item.BrandName,
+                Strength = item.Strength,
+                DosageForm = item.DosageForm,
+                Barcode = item.Barcode,
+                CategoryId = categoryId,
+                UnitTypeId = unitTypeId,
+                ReorderLevel = item.ReorderLevel > 0 ? item.ReorderLevel : 10,
+                IsActive = true,
+                CreatedDate = DateTime.UtcNow
+            };
+            await _medicineRepo.AddAsync(medicine);
+            await _unitOfWork.SaveChangesAsync();
+
+            _logger.LogInformation("Auto-created medicine. ProductId: {ProductId}, BrandName: {BrandName}",
+                medicine.ProductId, medicine.BrandName);
+
+            await _auditLog.LogAsync(createdBy, $"Auto-created medicine: {medicine.BrandName}", "Medicines", medicine.ProductId);
+        }
+
+        var normalizedBatchNumber = item.BatchNumber.Trim();
+        var batch = (await _batchRepo.FindAsync(b => b.ProductId == medicine.ProductId &&
+            b.BranchId == branchId && b.BatchNumber == normalizedBatchNumber)).FirstOrDefault();
+
+        if (batch == null)
+        {
+            batch = new MedicineBatch
+            {
+                ProductId = medicine.ProductId,
+                BranchId = branchId,
+                BatchNumber = normalizedBatchNumber,
+                QuantityReceived = item.Quantity,
+                PurchasePrice = item.PurchasePrice,
+                SellingPrice = item.SellingPrice,
+                ExpiryDate = ToUtc(item.ExpiryDate!.Value),
+                ManufacturingDate = ToUtc(item.ManufacturingDate),
+                SupplierId = item.SupplierId ?? supplierId,
+                DateReceived = DateTime.UtcNow
+            };
+            await _batchRepo.AddAsync(batch);
+            await _unitOfWork.SaveChangesAsync();
+
+            _logger.LogInformation("Created new batch. BatchId: {BatchId}, BatchNumber: {BatchNumber}, ProductId: {ProductId}",
+                batch.BatchId, batch.BatchNumber, medicine.ProductId);
+        }
+        else
+        {
+            batch.QuantityReceived += item.Quantity;
+            batch.PurchasePrice = item.PurchasePrice;
+            batch.SellingPrice = item.SellingPrice;
+            batch.ExpiryDate = ToUtc(item.ExpiryDate!.Value);
+            batch.ManufacturingDate = ToUtc(item.ManufacturingDate);
+            batch.SupplierId = item.SupplierId ?? supplierId;
+            await _batchRepo.UpdateAsync(batch);
+
+            _logger.LogInformation("Updated existing batch. BatchId: {BatchId}, NewQtyReceived: {Qty}",
+                batch.BatchId, batch.QuantityReceived);
+        }
+
+        return new PurchaseItem
+        {
+            PurchaseId = purchaseId,
+            ProductId = medicine.ProductId,
+            BatchId = batch.BatchId,
+            BatchNumber = item.BatchNumber,
+            Quantity = item.Quantity,
+            PurchasePrice = item.PurchasePrice,
+            SubTotal = item.Quantity * item.PurchasePrice,
+            ExpiryDate = ToUtc(item.ExpiryDate)
+        };
+    }
+
+    private async Task<PurchaseItem> ProcessCosmeticItemAsync(PurchaseItemRequest item, int purchaseId, int branchId, int supplierId, int createdBy)
+    {
+        int categoryId;
+        if (item.CategoryId.HasValue && (CosmeticCatalog.IsBuiltInCategoryId(item.CategoryId.Value) || await _catalog.IsValidCategoryIdAsync(item.CategoryId.Value)))
+        {
+            categoryId = item.CategoryId.Value;
+        }
+        else if (!string.IsNullOrWhiteSpace(item.CategoryName))
+        {
+            var resolvedCategory = CosmeticCatalog.FindCategoryId(item.CategoryName);
+            if (resolvedCategory.HasValue)
+            {
+                categoryId = resolvedCategory.Value;
+            }
+            else
+            {
+                var resolved = await _catalog.ResolveCategoryIdAsync(item.CategoryName, createdBy);
+                if (!resolved.HasValue)
+                    throw new Exception("No category exists to assign the new cosmetic");
+                categoryId = resolved.Value;
+            }
+        }
+        else
+        {
+            categoryId = CosmeticCatalog.Categories[0].Id;
+        }
+
+        var cosmetic = item.ProductId.HasValue
+            ? (await _cosmeticRepo.FindAsync(c => c.CosmeticId == item.ProductId)).FirstOrDefault()
+            : null;
+
+        if (cosmetic == null)
+        {
+            if (string.IsNullOrWhiteSpace(item.BrandName))
+                throw new Exception($"Cosmetic ID {item.ProductId} not found and no name was provided to create it");
+
+            cosmetic = new Cosmetic
+            {
+                ProductName = item.BrandName,
+                Description = item.GenericName ?? item.BrandName,
+                CategoryId = categoryId,
+                BranchId = branchId,
+                SupplierId = item.SupplierId ?? supplierId,
+                Price = item.SellingPrice,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            };
+            await _cosmeticRepo.AddAsync(cosmetic);
+            await _unitOfWork.SaveChangesAsync();
+
+            _logger.LogInformation("Auto-created cosmetic. CosmeticId: {CosmeticId}, ProductName: {ProductName}",
+                cosmetic.CosmeticId, cosmetic.ProductName);
+
+            await _auditLog.LogAsync(createdBy, $"Auto-created cosmetic: {cosmetic.ProductName}", "Cosmetics", cosmetic.CosmeticId);
+        }
+
+        var normalizedBatchNumber = item.BatchNumber.Trim();
+        var batch = (await _cosmeticBatchRepo.FindAsync(b => b.CosmeticId == cosmetic.CosmeticId &&
+            b.BranchId == branchId && b.BatchNumber == normalizedBatchNumber)).FirstOrDefault();
+
+        if (batch == null)
+        {
+            batch = new CosmeticBatch
+            {
+                CosmeticId = cosmetic.CosmeticId,
+                BranchId = branchId,
+                BatchNumber = normalizedBatchNumber,
+                QuantityReceived = item.Quantity,
+                BuyingPrice = item.PurchasePrice,
+                SellingPrice = item.SellingPrice,
+                ExpiryDate = ToUtc(item.ExpiryDate),
+                LowStockThreshold = item.ReorderLevel > 0 ? item.ReorderLevel : 10,
+                SupplierId = item.SupplierId ?? supplierId,
+                DateReceived = DateTime.UtcNow
+            };
+            await _cosmeticBatchRepo.AddAsync(batch);
+            await _unitOfWork.SaveChangesAsync();
+
+            _logger.LogInformation("Created new cosmetic batch. BatchId: {BatchId}, BatchNumber: {BatchNumber}, CosmeticId: {CosmeticId}",
+                batch.BatchId, batch.BatchNumber, cosmetic.CosmeticId);
+        }
+        else
+        {
+            batch.QuantityReceived += item.Quantity;
+            batch.BuyingPrice = item.PurchasePrice;
+            batch.SellingPrice = item.SellingPrice;
+            batch.ExpiryDate = ToUtc(item.ExpiryDate);
+            batch.LowStockThreshold = item.ReorderLevel > 0 ? item.ReorderLevel : 10;
+            batch.SupplierId = item.SupplierId ?? supplierId;
+            await _cosmeticBatchRepo.UpdateAsync(batch);
+
+            _logger.LogInformation("Updated existing cosmetic batch. BatchId: {BatchId}, NewQtyReceived: {Qty}",
+                batch.BatchId, batch.QuantityReceived);
+        }
+
+        return new PurchaseItem
+        {
+            PurchaseId = purchaseId,
+            ProductId = cosmetic.CosmeticId,
+            CosmeticId = cosmetic.CosmeticId,
+            CosmeticBatchId = batch.BatchId,
+            BatchNumber = item.BatchNumber,
+            Quantity = item.Quantity,
+            PurchasePrice = item.PurchasePrice,
+            SubTotal = item.Quantity * item.PurchasePrice,
+            ExpiryDate = ToUtc(item.ExpiryDate)
         };
     }
 

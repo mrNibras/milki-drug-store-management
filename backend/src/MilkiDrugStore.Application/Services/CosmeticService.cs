@@ -33,7 +33,7 @@ public class CosmeticService : ICosmeticService
         _logger = logger;
     }
 
-    public async Task<IEnumerable<CosmeticResponse>> GetAllAsync(string? search = null, int? categoryId = null)
+    public async Task<IEnumerable<CosmeticResponse>> GetAllAsync(string? search = null, int? categoryId = null, int? branchId = null)
     {
         var query = (await _cosmeticRepo.GetAllAsync()).AsQueryable();
 
@@ -43,6 +43,9 @@ public class CosmeticService : ICosmeticService
         if (categoryId.HasValue)
             query = query.Where(c => c.CategoryId == categoryId.Value);
 
+        if (branchId.HasValue && branchId.Value > 0)
+            query = query.Where(c => c.BranchId == branchId.Value);
+
         var cosmetics = query
             .Include(c => c.Batches)
             .OrderBy(c => c.ProductName)
@@ -51,16 +54,26 @@ public class CosmeticService : ICosmeticService
         return await MapToResponsesAsync(cosmetics);
     }
 
-    public async Task<CosmeticResponse?> GetByIdAsync(int id)
+    public async Task<CosmeticResponse?> GetByIdAsync(int id, int? branchId = null)
     {
         var cosmetics = await _cosmeticRepo.FindAsync(c => c.CosmeticId == id);
-        var cosmetic = cosmetics.Include(c => c.Batches).FirstOrDefault();
+        var query = cosmetics.AsQueryable();
+        if (branchId.HasValue && branchId.Value > 0)
+            query = query.Where(c => c.BranchId == branchId.Value);
+        var cosmetic = query.Include(c => c.Batches).FirstOrDefault();
         if (cosmetic == null) return null;
         return await MapToResponseAsync(cosmetic);
     }
 
     public async Task<CosmeticResponse> CreateAsync(CreateCosmeticRequest request, int userId)
     {
+        request.BranchId ??= 0;
+        return await CreateAsync(request, userId, request.BranchId);
+    }
+
+    public async Task<CosmeticResponse> CreateAsync(CreateCosmeticRequest request, int userId, int? branchId = null)
+    {
+        var effectiveBranchId = branchId ?? request.BranchId ?? 0;
         var categoryId = await ResolveCategoryIdAsync(request.CategoryId, request.NewCategoryName, userId);
         var unitTypeId = await ResolveUnitTypeIdAsync(request.UnitTypeId, request.NewUnitTypeName, userId);
 
@@ -70,8 +83,11 @@ public class CosmeticService : ICosmeticService
             Description = request.Description,
             CategoryId = categoryId,
             UnitTypeId = unitTypeId,
+            BranchId = effectiveBranchId > 0 ? effectiveBranchId : request.BranchId ?? 0,
+            SupplierId = request.SupplierId,
             Price = request.Price,
-            IsActive = true
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow
         };
 
         await _cosmeticRepo.AddAsync(cosmetic);
@@ -135,6 +151,11 @@ public class CosmeticService : ICosmeticService
             QuantityDamaged = 0,
             QuantityExpired = 0,
             ExpiryDate = ToUtc(request.ExpiryDate),
+            BuyingPrice = request.PurchasePrice,
+            SellingPrice = request.SellingPrice,
+            LowStockThreshold = request.LowStockThreshold,
+            BranchId = request.BranchId,
+            SupplierId = request.SupplierId,
             DateReceived = DateTime.UtcNow,
             Remarks = string.Empty
         };
@@ -218,6 +239,11 @@ public class CosmeticService : ICosmeticService
                 QuantityExpired = b.QuantityExpired,
                 Balance = b.Balance,
                 ExpiryDate = b.ExpiryDate,
+                BuyingPrice = b.BuyingPrice,
+                SellingPrice = b.SellingPrice,
+                LowStockThreshold = b.LowStockThreshold,
+                BranchId = b.BranchId,
+                SupplierId = b.SupplierId,
                 DateReceived = b.DateReceived
             }).ToList()
         };
