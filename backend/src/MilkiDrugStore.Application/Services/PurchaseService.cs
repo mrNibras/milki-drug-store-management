@@ -408,6 +408,10 @@ public class PurchaseService : IPurchaseService
         {
             categoryId = item.CategoryId.Value;
         }
+        else if (item.CategoryId.HasValue && !string.IsNullOrWhiteSpace(item.BrandName))
+        {
+            throw new Exception($"Invalid cosmetic category ID: {item.CategoryId.Value}");
+        }
         else if (!string.IsNullOrWhiteSpace(item.CategoryName))
         {
             var resolvedCategory = CosmeticCatalog.FindCategoryId(item.CategoryName);
@@ -430,7 +434,9 @@ public class PurchaseService : IPurchaseService
 
         var cosmetic = item.ProductId.HasValue
             ? (await _cosmeticRepo.FindAsync(c => c.CosmeticId == item.ProductId)).FirstOrDefault()
-            : null;
+            : string.IsNullOrWhiteSpace(item.BrandName)
+                ? null
+                : (await _cosmeticRepo.FindAsync(c => c.ProductName == item.BrandName && c.BranchId == branchId)).FirstOrDefault();
 
         if (cosmetic == null)
         {
@@ -463,7 +469,7 @@ public class PurchaseService : IPurchaseService
         var batch = (await _cosmeticBatchRepo.FindAsync(b => b.CosmeticId == cosmetic.CosmeticId &&
             b.BranchId == branchId && b.BatchNumber == normalizedBatchNumber)).FirstOrDefault();
 
-        if (batch == null)
+        if (batch == null || batch.BuyingPrice != item.PurchasePrice || batch.SellingPrice != item.SellingPrice)
         {
             batch = new CosmeticBatch
             {

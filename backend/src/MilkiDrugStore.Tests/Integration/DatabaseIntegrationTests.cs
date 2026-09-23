@@ -1251,7 +1251,7 @@ public class DatabaseIntegrationTests : IClassFixture<PostgreSqlFixture>, IAsync
         var batchA = await _dbContext.CosmeticBatches.FirstAsync(b => b.BatchNumber == "HC-001" && b.BuyingPrice == 3);
         var batchB = await _dbContext.CosmeticBatches.FirstAsync(b => b.BatchNumber == "HC-001" && b.BuyingPrice == 4);
         Assert.Equal(50, batchA.QuantityReceived);
-        Assert.Equal(100, batchA.QuantityReceived);
+        Assert.Equal(50, batchB.QuantityReceived);
         Assert.Equal(3, batchA.BuyingPrice);
         Assert.Equal(7, batchA.SellingPrice);
         Assert.Equal(4, batchB.BuyingPrice);
@@ -1307,7 +1307,7 @@ public class DatabaseIntegrationTests : IClassFixture<PostgreSqlFixture>, IAsync
             SupplierId = supplier.SupplierId,
             PurchaseDate = DateTime.UtcNow,
             PaymentMethod = "cash",
-            AmountPaid = 300,
+            AmountPaid = 250,
             Items = new List<PurchaseItemRequest>
             {
                 new PurchaseItemRequest
@@ -1340,7 +1340,7 @@ public class DatabaseIntegrationTests : IClassFixture<PostgreSqlFixture>, IAsync
         var cosmeticItem = purchase.Items.First(i => i.ProductType == "cosmetic");
         Assert.NotNull(medicineItem);
         Assert.NotNull(cosmeticItem);
-        Assert.Equal(300, purchase.TotalAmount);
+        Assert.Equal(250, purchase.TotalAmount);
     }
 
     [Fact]
@@ -1416,7 +1416,7 @@ public class DatabaseIntegrationTests : IClassFixture<PostgreSqlFixture>, IAsync
             SupplierId = supplier.SupplierId,
             PurchaseDate = DateTime.UtcNow,
             PaymentMethod = "cash",
-            AmountPaid = 100,
+            AmountPaid = 90,
             Items = new List<PurchaseItemRequest>
             {
                 new PurchaseItemRequest
@@ -1495,8 +1495,8 @@ public class DatabaseIntegrationTests : IClassFixture<PostgreSqlFixture>, IAsync
 
         var saleItem = sale.Items.First();
         Assert.Equal(350, saleItem.UnitPrice);
-        Assert.Equal(200, saleItem.SubTotal / saleItem.Quantity);
-        Assert.Equal(150, saleItem.SubTotal);
+        Assert.Equal(350, saleItem.SubTotal / saleItem.Quantity);
+        Assert.Equal(1750, saleItem.SubTotal);
         Assert.Equal(5, saleItem.Quantity);
     }
 
@@ -1553,7 +1553,7 @@ public class DatabaseIntegrationTests : IClassFixture<PostgreSqlFixture>, IAsync
 
         var saleItem = sale.Items.First();
         Assert.Equal(150, saleItem.UnitPrice);
-        Assert.Equal(50, saleItem.SubTotal / saleItem.Quantity);
+        Assert.Equal(150, saleItem.SubTotal / saleItem.Quantity);
         Assert.Equal(100, sale.TotalProfit);
     }
 
@@ -1615,7 +1615,7 @@ public class DatabaseIntegrationTests : IClassFixture<PostgreSqlFixture>, IAsync
                 SupplierId = supplier.SupplierId,
                 PurchaseDate = DateTime.UtcNow,
                 PaymentMethod = "cash",
-                AmountPaid = 100,
+                AmountPaid = 50,
                 Items = new List<PurchaseItemRequest>
                 {
                     new PurchaseItemRequest
@@ -1645,7 +1645,7 @@ public class DatabaseIntegrationTests : IClassFixture<PostgreSqlFixture>, IAsync
             SupplierId = supplier.SupplierId,
             PurchaseDate = DateTime.UtcNow,
             PaymentMethod = "cash",
-            AmountPaid = 10,
+            AmountPaid = 9,
             Items = new List<PurchaseItemRequest>
             {
                 new PurchaseItemRequest
@@ -1770,7 +1770,7 @@ public class DatabaseIntegrationTests : IClassFixture<PostgreSqlFixture>, IAsync
             CreatedAt = DateTime.UtcNow
         });
         await _dbContext.SaveChangesAsync();
-        var branch2 = await _dbContext.Branches.LastAsync();
+        var branch2 = await _dbContext.Branches.OrderBy(b => b.BranchId).LastAsync();
         var supplier = await _dbContext.Suppliers.FirstAsync();
 
         var (service, _) = CreatePurchaseService();
