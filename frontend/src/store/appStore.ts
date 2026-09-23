@@ -696,9 +696,13 @@ export const useAppStore = create<AppState>((set, get) => ({
     get().setLoading('sales', true); set({ error: null });
     try {
       const items = sale.items.map(i => ({
-        medicineId: Number(i.medicineId),
+        medicineId: i.medicineId ? Number(i.medicineId) : undefined,
+        cosmeticId: i.cosmeticId ? Number(i.cosmeticId) : undefined,
+        productType: i.productType || 'medicine',
         quantity: i.quantity,
         discountAmount: i.discountAmount || 0,
+        batchId: i.batchId ? Number(i.batchId) : undefined,
+        cosmeticBatchId: i.cosmeticBatchId ? Number(i.cosmeticBatchId) : undefined,
       }));
       const payload = {
         items,
@@ -718,11 +722,17 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   cart: [],
   addToCart: (item) => set((state) => {
-    const existing = state.cart.find(c => c.medicineId === item.medicineId && c.batchId === item.batchId);
+    const existing = state.cart.find(c => 
+      (c.productType === item.productType) &&
+      ((item.productType === 'medicine' && c.medicineId === item.medicineId && c.batchId === item.batchId) ||
+       (item.productType === 'cosmetic' && c.cosmeticId === item.cosmeticId && c.cosmeticBatchId === item.cosmeticBatchId))
+    );
     if (existing) {
       return {
         cart: state.cart.map(c =>
-          c.medicineId === item.medicineId && c.batchId === item.batchId
+          (c.productType === item.productType) &&
+          ((item.productType === 'medicine' && c.medicineId === item.medicineId && c.batchId === item.batchId) ||
+           (item.productType === 'cosmetic' && c.cosmeticId === item.cosmeticId && c.cosmeticBatchId === item.cosmeticBatchId))
             ? { ...c, quantity: c.quantity + item.quantity }
             : c
         ),
@@ -730,22 +740,26 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
     return { cart: [...state.cart, item] };
   }),
-  updateCartItemQuantity: (medicineId, batchId, quantity) => set((state) => ({
+  updateCartItemQuantity: (itemId, batchId, quantity, productType = 'medicine') => set((state) => ({
     cart: state.cart.map(c =>
-      c.medicineId === medicineId && c.batchId === batchId
+      c.productType === productType &&
+      ((productType === 'medicine' && c.medicineId === itemId && c.batchId === batchId) ||
+       (productType === 'cosmetic' && c.cosmeticId === itemId && c.cosmeticBatchId === batchId))
         ? { ...c, quantity: Math.max(1, Math.min(quantity, c.availableQuantity)) }
         : c
     ),
   })),
-  updateCartItemDiscount: (medicineId, batchId, discountAmount) => set((state) => ({
+  updateCartItemDiscount: (itemId, batchId, discountAmount, productType = 'medicine') => set((state) => ({
     cart: state.cart.map(c =>
-      c.medicineId === medicineId && c.batchId === batchId
+      c.productType === productType &&
+      ((productType === 'medicine' && c.medicineId === itemId && c.batchId === batchId) ||
+       (productType === 'cosmetic' && c.cosmeticId === itemId && c.cosmeticBatchId === batchId))
         ? { ...c, discountAmount: Math.max(0, Math.min(discountAmount, c.standardPrice)), sellingPrice: c.standardPrice - Math.max(0, Math.min(discountAmount, c.standardPrice)) }
         : c
     ),
   })),
-  removeFromCart: (medicineId, batchId) => set((state) => ({
-    cart: state.cart.filter(c => !(c.medicineId === medicineId && c.batchId === batchId)),
+  removeFromCart: (itemId, batchId, productType = 'medicine') => set((state) => ({
+    cart: state.cart.filter(c => !(c.productType === productType && ((productType === 'medicine' && c.medicineId === itemId && c.batchId === batchId) || (productType === 'cosmetic' && c.cosmeticId === itemId && c.cosmeticBatchId === batchId)))),
   })),
   clearCart: () => set({ cart: [], cartDiscountReason: '' }),
   cartDiscountReason: '',

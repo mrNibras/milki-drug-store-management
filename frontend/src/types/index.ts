@@ -172,9 +172,12 @@ export interface AuditLog {
 }
 
 export interface CartItem {
-  medicineId: string;
+  productType: 'medicine' | 'cosmetic';
+  medicineId?: string;
+  cosmeticId?: string;
   brandName: string;
-  batchId: string;
+  batchId?: string;
+  cosmeticBatchId?: string;
   batchNumber: string;
   quantity: number;
   unitPrice: number;

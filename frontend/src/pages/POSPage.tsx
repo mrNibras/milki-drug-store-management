@@ -1,9 +1,9 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Search, ShoppingCart, Trash2, Plus, Minus, CreditCard, X, Check, Package, Tag, AlertCircle, Wallet, Building2, Smartphone } from 'lucide-react';
+import { Search, ShoppingCart, Trash2, Plus, Minus, CreditCard, X, Check, Package, Tag, AlertCircle, Wallet, Building2, Smartphone, Sparkles } from 'lucide-react';
 import { useAppStore } from '../store/appStore';
 import { useThemeStore } from '../store/themeStore';
 import { formatCurrency, getFefoBatches, generateId, generateSaleNumber } from '../utils/helpers';
-import { Medicine, Sale } from '../types';
+import { Medicine, Sale, Cosmetic } from '../types';
 import { ReceiptDialog } from '../components/ReceiptDialog';
 
 const PAYMENT_METHODS = [
@@ -18,16 +18,17 @@ const MAX_PHARMACIST_DISCOUNT_PERCENT = 5;
 
 export const POSPage: React.FC = () => {
   const {
-    medicines, cart, addToCart, removeFromCart, updateCartItemQuantity,
+    medicines, cosmetics, cart, addToCart, removeFromCart, updateCartItemQuantity,
     updateCartItemDiscount, clearCart, addSale, sales, currentUser,
-    cartDiscountReason, setCartDiscountReason, fetchMedicines, loading
+    cartDiscountReason, setCartDiscountReason, fetchMedicines, fetchCosmetics, loading
   } = useAppStore();
   const { theme } = useThemeStore();
   const isDark = theme === 'dark';
 
   useEffect(() => {
     fetchMedicines();
-  }, [fetchMedicines]);
+    fetchCosmetics();
+  }, [fetchMedicines, fetchCosmetics]);
 
   const [search, setSearch] = useState('');
   const [showCheckout, setShowCheckout] = useState(false);
@@ -48,7 +49,7 @@ export const POSPage: React.FC = () => {
 
   const searchResults = useMemo(() => {
     if (!search.trim()) return [];
-    return (medicines || []).filter(m => {
+    const medicineResults = (medicines || []).filter(m => {
       const totalQty = (m.batches || []).reduce((sum, b) => sum + (b.quantity || 0), 0);
       const matchesBatch = (m.batches || []).some(b => b.batchNumber?.toLowerCase().includes(search.toLowerCase()));
       return totalQty > 0 && (
@@ -57,48 +58,101 @@ export const POSPage: React.FC = () => {
         m.categoryName?.toLowerCase().includes(search.toLowerCase()) ||
         matchesBatch
       );
-    }).slice(0, 8);
-  }, [medicines, search]);
+    }).map(m => ({ ...m, productType: 'medicine' as const }));
+    
+    const cosmeticResults = (cosmetics || []).filter(c => {
+      const totalQty = (c.batches || []).reduce((sum, b) => sum + (b.balance || 0), 0);
+      const matchesBatch = (c.batches || []).some(b => b.batchNumber?.toLowerCase().includes(search.toLowerCase()));
+      return totalQty > 0 && (
+        c.productName?.toLowerCase().includes(search.toLowerCase()) ||
+        c.categoryName?.toLowerCase().includes(search.toLowerCase()) ||
+        matchesBatch
+      );
+    }).map(c => ({ ...c, productType: 'cosmetic' as const }));
+    
+    return [...medicineResults, ...cosmeticResults].slice(0, 8);
+  }, [medicines, cosmetics, search]);
 
   const cartSubtotal = (cart || []).reduce((sum, item) => sum + (item.standardPrice * item.quantity), 0);
   const cartTotalDiscount = (cart || []).reduce((sum, item) => sum + (item.discountAmount * item.quantity), 0);
   const cartTotal = (cart || []).reduce((sum, item) => sum + (item.sellingPrice * item.quantity), 0);
   const cartProfit = (cart || []).reduce((sum, item) => {
-    const medicine = (medicines || []).find(m => m.id === item.medicineId);
-    const batch = medicine?.batches?.find(b => b.id === item.batchId);
-    return sum + ((item.sellingPrice - (batch?.purchasePrice || 0)) * item.quantity);
+    if (item.productType === 'medicine') {
+      const medicine = (medicines || []).find(m => m.id === item.medicineId);
+      const batch = medicine?.batches?.find(b => b.id === item.batchId);
+      return sum + ((item.sellingPrice - (batch?.purchasePrice || 0)) * item.quantity);
+    } else {
+      const cosmetic = (cosmetics || []).find(c => String(c.cosmeticId) === item.cosmeticId);
+      const batch = cosmetic?.batches?.find(b => String(b.batchId) === item.cosmeticBatchId);
+      return sum + ((item.sellingPrice - (batch?.buyingPrice || 0)) * item.quantity);
+    }
   }, 0);
 
-  const handleAddToCart = (medicine: Medicine) => {
-    const availableBatches = getFefoBatches(medicine);
-    if (availableBatches.length === 0) return;
+  const handleAddToCart = (product: Medicine | Cosmetic) => {
+    const productType = (product as any).productType || 'medicine';
+    
+    if (productType === 'medicine') {
+      const medicine = product as Medicine;
+      const availableBatches = getFefoBatches(medicine);
+      if (availableBatches.length === 0) return;
 
-    const earliestBatch = availableBatches[0];
-    addToCart({
-      medicineId: medicine.id,
-      brandName: medicine.name,
-      batchId: earliestBatch.id,
-      batchNumber: earliestBatch.batchNumber,
-      quantity: 1,
-      unitPrice: earliestBatch.sellingPrice,
-      sellingPrice: earliestBatch.sellingPrice,
-      standardPrice: earliestBatch.sellingPrice,
-      discountAmount: 0,
-      expiryDate: earliestBatch.expiryDate,
-      availableQuantity: earliestBatch.quantity,
-    });
+      const earliestBatch = availableBatches[0];
+      addToCart({
+        productType: 'medicine',
+        medicineId: medicine.id,
+        brandName: medicine.name,
+        batchId: earliestBatch.id,
+        batchNumber: earliestBatch.batchNumber,
+        quantity: 1,
+        unitPrice: earliestBatch.sellingPrice,
+        sellingPrice: earliestBatch.sellingPrice,
+        standardPrice: earliestBatch.sellingPrice,
+        discountAmount: 0,
+        expiryDate: earliestBatch.expiryDate,
+        availableQuantity: earliestBatch.quantity,
+      });
+    } else {
+      const cosmetic = product as Cosmetic;
+      const availableBatches = (cosmetic.batches || []).filter(b => (b.balance || 0) > 0)
+        .sort((a, b) => {
+          const dateA = a.expiryDate ? new Date(a.expiryDate).getTime() : Infinity;
+          const dateB = b.expiryDate ? new Date(b.expiryDate).getTime() : Infinity;
+          return dateA - dateB;
+        });
+      if (availableBatches.length === 0) return;
+
+      const earliestBatch = availableBatches[0];
+      addToCart({
+        productType: 'cosmetic',
+        cosmeticId: String(cosmetic.cosmeticId),
+        brandName: cosmetic.productName,
+        cosmeticBatchId: String(earliestBatch.batchId),
+        batchNumber: earliestBatch.batchNumber,
+        quantity: 1,
+        unitPrice: earliestBatch.sellingPrice,
+        sellingPrice: earliestBatch.sellingPrice,
+        standardPrice: earliestBatch.sellingPrice,
+        discountAmount: 0,
+        expiryDate: earliestBatch.expiryDate || '',
+        availableQuantity: earliestBatch.balance,
+      });
+    }
     setSearch('');
   };
 
-   const handleApplyDiscount = (medicineId: string, batchId: string) => {
+   const handleApplyDiscount = (itemId: string, batchId: string, productType = 'medicine') => {
     const discount = Number(tempDiscount) || 0;
-    const item = (cart || []).find(c => c.medicineId === medicineId && c.batchId === batchId);
+    const item = (cart || []).find(c => 
+      c.productType === productType &&
+      ((productType === 'medicine' && c.medicineId === itemId && c.batchId === batchId) ||
+       (productType === 'cosmetic' && c.cosmeticId === itemId && c.cosmeticBatchId === batchId))
+    );
     if (!item) return;
 
     const maxDiscount = (item.standardPrice * maxDiscountPercent) / 100;
     const clampedDiscount = Math.min(discount, maxDiscount);
 
-    updateCartItemDiscount(medicineId, batchId, clampedDiscount);
+    updateCartItemDiscount(itemId, batchId, clampedDiscount, productType);
     setShowDiscountInput(null);
     setTempDiscount('');
 
@@ -142,9 +196,12 @@ export const POSPage: React.FC = () => {
       items: cart.map(item => ({
         id: generateId(),
         saleId: '',
-        medicineId: item.medicineId,
+        medicineId: item.productType === 'medicine' ? item.medicineId : undefined,
+        cosmeticId: item.productType === 'cosmetic' ? item.cosmeticId : undefined,
+        productType: item.productType,
         brandName: item.brandName,
-        batchId: item.batchId,
+        batchId: item.productType === 'medicine' ? item.batchId : undefined,
+        cosmeticBatchId: item.productType === 'cosmetic' ? item.cosmeticBatchId : undefined,
         quantity: item.quantity,
         unitPrice: item.sellingPrice,
         standardUnitPrice: item.standardPrice,
@@ -245,7 +302,7 @@ export const POSPage: React.FC = () => {
         <div className={`lg:hidden ${cardClass}`}>
           <div className="p-4">
             <h1 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Point of Sale</h1>
-            <p className={`${isDark ? 'text-gray-400' : 'text-gray-500'} text-sm mt-1`}>Search and add medicines to cart</p>
+            <p className={`${isDark ? 'text-gray-400' : 'text-gray-500'} text-sm mt-1`}>Search and add products to cart</p>
           </div>
           <div className="px-4 pb-4">
             <div className="relative">
@@ -265,7 +322,7 @@ export const POSPage: React.FC = () => {
         {/* Desktop: Header + Search (unchanged) */}
         <div className="hidden lg:block mb-4">
           <h1 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Point of Sale</h1>
-          <p className={`${isDark ? 'text-gray-400' : 'text-gray-500'} text-sm`}>Search and add medicines to cart</p>
+          <p className={`${isDark ? 'text-gray-400' : 'text-gray-500'} text-sm`}>Search and add products to cart</p>
         </div>
         <div className="hidden lg:block relative mb-4">
           <Search className={`absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} />
@@ -289,30 +346,65 @@ export const POSPage: React.FC = () => {
           {/* Search Results */}
           {searchResults.length > 0 && (
             <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-xl border shadow-lg mb-4 max-h-64 overflow-y-auto`}>
-              {searchResults.map(medicine => {
-                const totalQty = medicine.batches.reduce((sum, b) => sum + b.quantity, 0);
-                const fefoBatch = getFefoBatches(medicine)[0];
-                return (
-                  <button
-                    key={medicine.id}
-                    onClick={() => handleAddToCart(medicine)}
-                    className={`w-full flex items-center justify-between px-4 py-3 transition-colors border-b last:border-0 min-h-[44px] ${isDark ? 'hover:bg-emerald-900/20 border-gray-700' : 'hover:bg-emerald-50 border-gray-100'}`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${isDark ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-100 text-blue-600'}`}>
-                        <Package className="h-5 w-5" />
+              {searchResults.map(product => {
+                const productType = (product as any).productType || 'medicine';
+                if (productType === 'medicine') {
+                  const medicine = product as Medicine;
+                  const totalQty = medicine.batches.reduce((sum, b) => sum + b.quantity, 0);
+                  const fefoBatch = getFefoBatches(medicine)[0];
+                  return (
+                    <button
+                      key={`med-${medicine.id}`}
+                      onClick={() => handleAddToCart(medicine)}
+                      className={`w-full flex items-center justify-between px-4 py-3 transition-colors border-b last:border-0 min-h-[44px] ${isDark ? 'hover:bg-emerald-900/20 border-gray-700' : 'hover:bg-emerald-50 border-gray-100'}`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${isDark ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-100 text-blue-600'}`}>
+                          <Package className="h-5 w-5" />
+                        </div>
+                        <div className="text-left">
+                          <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{medicine.name}</p>
+                          <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{medicine.genericName} • {medicine.categoryName}</p>
+                        </div>
                       </div>
-                      <div className="text-left">
-                        <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{medicine.name}</p>
-                        <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{medicine.genericName} • {medicine.categoryName}</p>
+                      <div className="text-right">
+                        <p className="font-semibold text-emerald-500">{fefoBatch?.sellingPrice.toLocaleString()} ETB</p>
+                        <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{totalQty} in stock</p>
                       </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-semibold text-emerald-500">{fefoBatch?.sellingPrice.toLocaleString()} ETB</p>
-                      <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{totalQty} in stock</p>
-                    </div>
-                  </button>
-                );
+                    </button>
+                  );
+                } else {
+                  const cosmetic = product as Cosmetic;
+                  const totalQty = cosmetic.batches.reduce((sum, b) => sum + (b.balance || 0), 0);
+                  const fefoBatch = cosmetic.batches
+                    .filter(b => (b.balance || 0) > 0)
+                    .sort((a, b) => {
+                      const dateA = a.expiryDate ? new Date(a.expiryDate).getTime() : Infinity;
+                      const dateB = b.expiryDate ? new Date(b.expiryDate).getTime() : Infinity;
+                      return dateA - dateB;
+                    })[0];
+                  return (
+                    <button
+                      key={`cos-${cosmetic.cosmeticId}`}
+                      onClick={() => handleAddToCart(cosmetic)}
+                      className={`w-full flex items-center justify-between px-4 py-3 transition-colors border-b last:border-0 min-h-[44px] ${isDark ? 'hover:bg-purple-900/20 border-gray-700' : 'hover:bg-purple-50 border-gray-100'}`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${isDark ? 'bg-purple-900/30 text-purple-400' : 'bg-purple-100 text-purple-600'}`}>
+                          <Sparkles className="h-5 w-5" />
+                        </div>
+                        <div className="text-left">
+                          <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{cosmetic.productName}</p>
+                          <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{cosmetic.categoryName}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-semibold text-purple-500">{fefoBatch?.sellingPrice.toLocaleString()} ETB</p>
+                        <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{totalQty} in stock</p>
+                      </div>
+                    </button>
+                  );
+                }
               })}
             </div>
           )}
@@ -320,14 +412,14 @@ export const POSPage: React.FC = () => {
           {/* Quick Access Grid */}
           {!search && (
             <div className="flex-1 overflow-y-auto p-3 sm:p-4">
-              <h3 className={`text-sm font-semibold mb-3 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Quick Access - Available Medicines</h3>
+              <h3 className={`text-sm font-semibold mb-3 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Quick Access - Available Products</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                 {(medicines || []).filter(m => (m.batches || []).some(b => b.quantity > 0)).slice(0, 12).map(medicine => {
+                {(medicines || []).filter(m => (m.batches || []).some(b => b.quantity > 0)).slice(0, 6).map(medicine => {
                   const totalQty = medicine.batches.reduce((sum, b) => sum + b.quantity, 0);
                   const fefoBatch = getFefoBatches(medicine)[0];
                   return (
                     <button
-                      key={medicine.id}
+                      key={`med-${medicine.id}`}
                       onClick={() => handleAddToCart(medicine)}
                       className={`rounded-xl border p-4 hover:border-emerald-300 hover:shadow-md transition-all text-left min-h-[44px] ${isDark ? 'bg-gray-800 border-gray-700 hover:bg-gray-700' : 'bg-white border-gray-200'}`}
                     >
@@ -341,6 +433,35 @@ export const POSPage: React.FC = () => {
                       <p className={`text-xs mb-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{medicine.genericName}</p>
                       <div className="flex items-center justify-between">
                         <span className="text-sm font-bold text-emerald-500">{fefoBatch?.sellingPrice.toLocaleString()} ETB</span>
+                        <span className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{totalQty} left</span>
+                      </div>
+                    </button>
+                  );
+                })}
+                {(cosmetics || []).filter(c => (c.batches || []).some(b => (b.balance || 0) > 0)).slice(0, 6).map(cosmetic => {
+                  const totalQty = cosmetic.batches.reduce((sum, b) => sum + (b.balance || 0), 0);
+                  const fefoBatch = cosmetic.batches
+                    .filter(b => (b.balance || 0) > 0)
+                    .sort((a, b) => {
+                      const dateA = a.expiryDate ? new Date(a.expiryDate).getTime() : Infinity;
+                      const dateB = b.expiryDate ? new Date(b.expiryDate).getTime() : Infinity;
+                      return dateA - dateB;
+                    })[0];
+                  return (
+                    <button
+                      key={`cos-${cosmetic.cosmeticId}`}
+                      onClick={() => handleAddToCart(cosmetic)}
+                      className={`rounded-xl border p-4 hover:border-purple-300 hover:shadow-md transition-all text-left min-h-[44px] ${isDark ? 'bg-gray-800 border-gray-700 hover:bg-gray-700' : 'bg-white border-gray-200'}`}
+                    >
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${isDark ? 'bg-purple-900/30 text-purple-400' : 'bg-purple-100 text-purple-600'}`}>
+                          <Sparkles className="h-4 w-4" />
+                        </div>
+                        <span className={`text-xs font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{cosmetic.categoryName}</span>
+                      </div>
+                      <p className={`font-medium text-sm truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>{cosmetic.productName}</p>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-bold text-purple-500">{fefoBatch?.sellingPrice.toLocaleString()} ETB</span>
                         <span className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{totalQty} left</span>
                       </div>
                     </button>
@@ -375,61 +496,75 @@ export const POSPage: React.FC = () => {
               <div className="text-center py-12">
                 <ShoppingCart className={`h-12 w-12 mx-auto mb-3 ${isDark ? 'text-gray-600' : 'text-gray-300'}`} />
                 <p className={isDark ? 'text-gray-400' : 'text-gray-500'}>Cart is empty</p>
-                <p className={`text-xs mt-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Search and add medicines</p>
+                <p className={`text-xs mt-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Search and add products</p>
               </div>
             ) : (
-              cart.map((item) => (
-                <div key={`${item.medicineId}-${item.batchId}`} className={`rounded-lg p-3 sm:p-4 ${isDark ? 'bg-gray-700' : 'bg-gray-50'}`}>
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <p className={`font-medium text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>{item.brandName}</p>
-                      <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Batch: {item.batchNumber}</p>
-                    </div>
-                    <button
-                      onClick={() => removeFromCart(item.medicineId, item.batchId)}
-                      className={`p-2 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center ${isDark ? 'hover:bg-red-900/30 text-gray-400 hover:text-red-400' : 'hover:bg-red-100 text-gray-400 hover:text-red-500'}`}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-
-                  {/* Price Display */}
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
+              cart.map((item) => {
+                const itemKey = item.productType === 'medicine' 
+                  ? `${item.medicineId}-${item.batchId}` 
+                  : `${item.cosmeticId}-${item.cosmeticBatchId}`;
+                const isMedicine = item.productType === 'medicine';
+                return (
+                  <div key={itemKey} className={`rounded-lg p-3 sm:p-4 ${isDark ? 'bg-gray-700' : 'bg-gray-50'}`}>
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <p className={`font-medium text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>{item.brandName}</p>
+                        <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Batch: {item.batchNumber}</p>
+                      </div>
                       <button
-                        onClick={() => updateCartItemQuantity(item.medicineId, item.batchId, item.quantity - 1)}
-                        className={`h-10 w-10 flex items-center justify-center rounded-lg transition-colors min-h-[44px] min-w-[44px] ${isDark ? 'bg-gray-600 hover:bg-gray-500 text-white' : 'bg-white border border-gray-300 hover:bg-gray-100'}`}
+                        onClick={() => isMedicine 
+                          ? removeFromCart(item.medicineId!, item.batchId!, 'medicine')
+                          : removeFromCart(item.cosmeticId!, item.cosmeticBatchId!, 'cosmetic')
+                        }
+                        className={`p-2 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center ${isDark ? 'hover:bg-red-900/30 text-gray-400 hover:text-red-400' : 'hover:bg-red-100 text-gray-400 hover:text-red-500'}`}
                       >
-                        <Minus className="h-4 w-4" />
-                      </button>
-                      <span className={`w-8 text-center text-sm font-medium ${isDark ? 'text-white' : ''}`}>{item.quantity}</span>
-                      <button
-                        onClick={() => updateCartItemQuantity(item.medicineId, item.batchId, item.quantity + 1)}
-                        className={`h-10 w-10 flex items-center justify-center rounded-lg transition-colors min-h-[44px] min-w-[44px] ${isDark ? 'bg-gray-600 hover:bg-gray-500 text-white' : 'bg-white border border-gray-300 hover:bg-gray-100'}`}
-                      >
-                        <Plus className="h-4 w-4" />
+                        <Trash2 className="h-4 w-4" />
                       </button>
                     </div>
-                    <div className="text-right">
-                      {item.discountAmount > 0 ? (
-                        <>
-                          <p className={`text-xs line-through ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{item.standardPrice.toLocaleString()} ETB</p>
-                          <p className={`font-semibold text-emerald-500`}>{item.sellingPrice.toLocaleString()} ETB</p>
-                        </>
-                      ) : (
-                        <span className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{item.sellingPrice.toLocaleString()} ETB</span>
-                      )}
+
+                    {/* Price Display */}
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => isMedicine
+                            ? updateCartItemQuantity(item.medicineId!, item.batchId!, item.quantity - 1, 'medicine')
+                            : updateCartItemQuantity(item.cosmeticId!, item.cosmeticBatchId!, item.quantity - 1, 'cosmetic')
+                          }
+                          className={`h-10 w-10 flex items-center justify-center rounded-lg transition-colors min-h-[44px] min-w-[44px] ${isDark ? 'bg-gray-600 hover:bg-gray-500 text-white' : 'bg-white border border-gray-300 hover:bg-gray-100'}`}
+                        >
+                          <Minus className="h-4 w-4" />
+                        </button>
+                        <span className={`w-8 text-center text-sm font-medium ${isDark ? 'text-white' : ''}`}>{item.quantity}</span>
+                        <button
+                          onClick={() => isMedicine
+                            ? updateCartItemQuantity(item.medicineId!, item.batchId!, item.quantity + 1, 'medicine')
+                            : updateCartItemQuantity(item.cosmeticId!, item.cosmeticBatchId!, item.quantity + 1, 'cosmetic')
+                          }
+                          className={`h-10 w-10 flex items-center justify-center rounded-lg transition-colors min-h-[44px] min-w-[44px] ${isDark ? 'bg-gray-600 hover:bg-gray-500 text-white' : 'bg-white border border-gray-300 hover:bg-gray-100'}`}
+                        >
+                          <Plus className="h-4 w-4" />
+                        </button>
+                      </div>
+                      <div className="text-right">
+                        {item.discountAmount > 0 ? (
+                          <>
+                            <p className={`text-xs line-through ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{item.standardPrice.toLocaleString()} ETB</p>
+                            <p className={`font-semibold text-emerald-500`}>{item.sellingPrice.toLocaleString()} ETB</p>
+                          </>
+                        ) : (
+                          <span className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{item.sellingPrice.toLocaleString()} ETB</span>
+                        )}
+                      </div>
                     </div>
-                  </div>
 
-                  {/* Total Price Row */}
-                  <div className={`flex items-center justify-between pt-2 border-t text-sm ${isDark ? 'border-gray-600' : 'border-gray-200'}`}>
-                    <span className={isDark ? 'text-gray-400' : 'text-gray-500'}>Total</span>
-                    <span className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{(item.sellingPrice * item.quantity).toLocaleString()} ETB</span>
-                  </div>
+                    {/* Total Price Row */}
+                    <div className={`flex items-center justify-between pt-2 border-t text-sm ${isDark ? 'border-gray-600' : 'border-gray-200'}`}>
+                      <span className={isDark ? 'text-gray-400' : 'text-gray-500'}>Total</span>
+                      <span className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{(item.sellingPrice * item.quantity).toLocaleString()} ETB</span>
+                    </div>
 
-                  {/* Discount Section */}
-                  {showDiscountInput === `${item.medicineId}-${item.batchId}` ? (
+{/* Discount Section */}
+                  {showDiscountInput === itemKey ? (
                     <div className={`flex items-center gap-2 p-2 rounded-lg mt-2 ${isDark ? 'bg-gray-600' : 'bg-white'}`}>
                       <input
                         type="number"
@@ -440,7 +575,10 @@ export const POSPage: React.FC = () => {
                         autoFocus
                       />
                       <button
-                        onClick={() => handleApplyDiscount(item.medicineId, item.batchId)}
+                        onClick={() => isMedicine
+                          ? handleApplyDiscount(item.medicineId!, item.batchId!, 'medicine')
+                          : handleApplyDiscount(item.cosmeticId!, item.cosmeticBatchId!, 'cosmetic')
+                        }
                         className="px-3 py-2 bg-emerald-600 text-white rounded-lg text-sm min-h-[44px]"
                       >
                         Apply
@@ -455,22 +593,22 @@ export const POSPage: React.FC = () => {
                   ) : (
                     <button
                       onClick={() => {
-                        setShowDiscountInput(`${item.medicineId}-${item.batchId}`);
+                        setShowDiscountInput(itemKey);
                         setTempDiscount(String(item.discountAmount || ''));
                       }}
                       className={`w-full flex items-center justify-center gap-1 py-2.5 rounded-lg text-sm transition-colors mt-2 min-h-[44px] ${
-                        item.discountAmount > 0
-                          ? isDark ? 'bg-emerald-900/30 text-emerald-400' : 'bg-emerald-50 text-emerald-600'
-                          : isDark ? 'bg-gray-600 text-gray-300 hover:bg-gray-500' : 'bg-white text-gray-500 hover:bg-gray-100'
-                      }`}
+                      item.discountAmount > 0
+                        ? isDark ? 'bg-emerald-900/30 text-emerald-400' : 'bg-emerald-50 text-emerald-600'
+                        : isDark ? 'bg-gray-600 text-gray-300 hover:bg-gray-500' : 'bg-white text-gray-500 hover:bg-gray-100'
+                  }`}
                     >
                       <Tag className="h-3 w-3" />
                       {item.discountAmount > 0 ? `Discount: -${item.discountAmount.toLocaleString()} ETB` : 'Add Discount'}
-                    </button>
+</button>
                   )}
-                 </div>
-               ))
-             )}
+                </div>
+              )}
+            ))}
           </div>
 
           {/* Desktop Summary (hidden on mobile) */}

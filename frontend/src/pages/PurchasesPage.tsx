@@ -1,11 +1,24 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Plus, Search, Eye, ClipboardList, Truck, Package, X, AlertCircle, Check, ShoppingCart, FileSpreadsheet, Calendar, Sparkles } from 'lucide-react';
+import { Plus, Search, Eye, ClipboardList, Truck, Package, X, AlertCircle, Check, ShoppingCart, FileSpreadsheet, Calendar, Sparkles, Tag, Minus, Edit2, Trash2, Loader2, DollarSign, ChevronDown, RotateCcw, Save } from 'lucide-react';
 import { useAppStore } from '../store/appStore';
 import { useThemeStore } from '../store/themeStore';
 import { Modal } from '../components/ui/Modal';
 import { formatDate, formatCurrency } from '../utils/helpers';
-import { BulkPurchaseItem, CosmeticPurchaseItem, COSMETIC_CATEGORIES } from '../types';
+import { BulkPurchaseItem, CosmeticPurchaseItem, COSMETIC_CATEGORIES, CosmeticCategoryValue } from '../types';
 import { CreatePurchaseRequest } from '../services/api';
+
+// Cosmetic category mapping: frontend index -> backend catalog ID (CosmeticCatalog)
+const COSMETIC_CATEGORY_IDS: Record<number, number> = {
+  0: -100,  // Hair Care
+  1: -101,  // Skin Care
+  2: -102,  // Bath & Body
+  3: -103,  // Oral Care
+  4: -104,  // Baby Care
+  5: -105,  // Makeup
+  6: -106,  // Fragrance
+  7: -107,  // Feminine Care
+  8: -108,  // Other
+};
 
 export const PurchasesPage: React.FC = () => {
   const { purchases, suppliers, medicines, categories, fetchPurchases, fetchSuppliers, fetchMedicines, fetchCategories, addPurchase } = useAppStore();
@@ -61,6 +74,7 @@ export const PurchasesPage: React.FC = () => {
     setSelectedSupplier('');
     setPurchaseDate(new Date().toISOString().split('T')[0]);
     setItems([]);
+    setCosmeticItems([]);
     setPaymentStatus('paid');
     setPaymentMethod('cash');
     setAmountPaid('');
@@ -258,20 +272,24 @@ export const PurchasesPage: React.FC = () => {
           sellingPrice: Number(item.sellingPrice),
           expiryDate: item.expiryDate ? new Date(item.expiryDate).toISOString() : undefined,
         })),
-        ...cosmeticItems.map(item => ({
-          productId: undefined,
-          productType: 'cosmetic' as const,
-          brandName: item.brandName,
-          genericName: item.brandName,
-          categoryId: item.categoryId ? Number(item.categoryId) : undefined,
-          categoryName: undefined,
-          reorderLevel: item.lowStock ? Number(item.lowStock) : 10,
-          batchNumber: '',
-          quantity: Number(item.quantity),
-          purchasePrice: Number(item.buyingPrice),
-          sellingPrice: Number(item.sellingPrice),
-          expiryDate: item.expiryDate ? new Date(item.expiryDate).toISOString() : undefined,
-        })),
+        ...cosmeticItems.map(item => {
+          const frontendCategoryIndex = item.categoryId ? Number(item.categoryId) : undefined;
+          const backendCategoryId = frontendCategoryIndex !== undefined ? COSMETIC_CATEGORY_IDS[frontendCategoryIndex] : undefined;
+          return ({
+            productId: undefined,
+            productType: 'cosmetic' as const,
+            brandName: item.brandName,
+            genericName: item.brandName,
+            categoryId: backendCategoryId,
+            categoryName: undefined,
+            reorderLevel: item.lowStock ? Number(item.lowStock) : 10,
+            batchNumber: '',
+            quantity: Number(item.quantity),
+            purchasePrice: Number(item.buyingPrice),
+            sellingPrice: Number(item.sellingPrice),
+            expiryDate: item.expiryDate ? new Date(item.expiryDate).toISOString() : undefined,
+          });
+        }),
       ],
     };
 
@@ -872,7 +890,7 @@ export const PurchasesPage: React.FC = () => {
           {/* Actions */}
           <div className={`flex justify-end gap-3 pt-4 border-t ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
             <button
-              onClick={() => setShowBulkModal(false)}
+              onClick={() => { setShowBulkModal(false); setItems([]); }}
               className={`px-5 py-2.5 rounded-xl text-sm font-medium transition-colors ${
                 isDark ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
