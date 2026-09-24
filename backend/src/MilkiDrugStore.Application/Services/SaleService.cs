@@ -320,16 +320,22 @@ public class SaleService : ISaleService
             .ThenBy(b => b.BatchId)
             .ToList();
 
+        if (manualBatchId.HasValue)
+        {
+            var selected = batches.FirstOrDefault(b => b.BatchId == manualBatchId.Value);
+            if (selected != null && selected.RemainingQuantity > 0)
+            {
+                if (branchId.HasValue && selected.BranchId != branchId.Value)
+                    return new List<MedicineBatch>();
+                return new List<MedicineBatch> { selected };
+            }
+            return new List<MedicineBatch>();
+        }
+
         if (branchId.HasValue)
             batches = batches.Where(b => b.BranchId == branchId.Value).ToList();
 
         batches = batches.Where(b => b.RemainingQuantity > 0).ToList();
-
-        if (manualBatchId.HasValue)
-        {
-            var selected = batches.FirstOrDefault(b => b.BatchId == manualBatchId.Value);
-            return selected == null ? new List<MedicineBatch>() : new List<MedicineBatch> { selected };
-        }
 
         return batches;
     }
@@ -344,16 +350,22 @@ public class SaleService : ISaleService
             .ThenBy(b => b.BatchId)
             .ToList();
 
+        if (manualBatchId.HasValue)
+        {
+            var selected = batches.FirstOrDefault(b => b.BatchId == manualBatchId.Value);
+            if (selected != null && selected.Balance > 0)
+            {
+                if (branchId.HasValue && selected.BranchId != branchId.Value)
+                    return new List<CosmeticBatch>();
+                return new List<CosmeticBatch> { selected };
+            }
+            return new List<CosmeticBatch>();
+        }
+
         if (branchId.HasValue)
             batches = batches.Where(b => b.BranchId == branchId.Value).ToList();
 
         batches = batches.Where(b => b.Balance > 0).ToList();
-
-        if (manualBatchId.HasValue)
-        {
-            var selected = batches.FirstOrDefault(b => b.BatchId == manualBatchId.Value);
-            return selected == null ? new List<CosmeticBatch>() : new List<CosmeticBatch> { selected };
-        }
 
         return batches;
     }

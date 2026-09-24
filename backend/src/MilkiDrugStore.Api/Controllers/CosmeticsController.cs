@@ -8,7 +8,7 @@ namespace MilkiDrugStore.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = "Admin")]
+[Authorize]
 public class CosmeticsController : ControllerBase
 {
     private readonly ICosmeticService _cosmeticService;
