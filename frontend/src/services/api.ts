@@ -284,7 +284,7 @@ export interface SaleResponse {
 
 export interface SaleItemResponse {
   saleItemId: number;
-  medicineId: number;
+  productId?: number;
   productType?: string;
   brandName: string;
   batchId?: number;
@@ -299,7 +299,7 @@ export interface SaleItemResponse {
 
 export interface CreateSaleRequest {
   items: {
-    medicineId: number;
+    productId?: number;
     productType?: string;
     quantity: number;
     discountAmount: number;

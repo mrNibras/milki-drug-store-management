@@ -1077,7 +1077,7 @@ export const PurchasesPage: React.FC = () => {
                         >
                           <option value="">Select Category</option>
                           {COSMETIC_CATEGORIES.map((cat, catIdx) => (
-                            <option key={cat} value={catIdx}>{cat}</option>
+                            <option key={cat} value={String(catIdx)}>{cat}</option>
                           ))}
                         </select>
                       </div>

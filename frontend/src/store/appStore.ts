@@ -696,7 +696,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     get().setLoading('sales', true); set({ error: null });
     try {
       const items = sale.items.map(i => ({
-        medicineId: i.medicineId ? Number(i.medicineId) : undefined,
+        productId: i.medicineId ? Number(i.medicineId) : undefined,
         cosmeticId: i.cosmeticId ? Number(i.cosmeticId) : undefined,
         productType: i.productType || 'medicine',
         quantity: i.quantity,
