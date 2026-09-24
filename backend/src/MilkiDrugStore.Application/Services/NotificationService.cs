@@ -13,14 +13,16 @@ public class NotificationService : INotificationService
     private readonly INotificationRepository _notificationRepo;
     private readonly IRepository<Medicine> _medicineRepo;
     private readonly ICosmeticRepository _cosmeticRepo;
+    private readonly IRepository<Branch> _branchRepo;
     private readonly IUnitOfWork _unitOfWork;
 
-    public NotificationService(INotificationRepository notificationRepo, IRepository<Medicine> medicineRepo, ICosmeticRepository cosmeticRepo, IUnitOfWork unitOfWork)
+    public NotificationService(INotificationRepository notificationRepo, IRepository<Medicine> medicineRepo, ICosmeticRepository cosmeticRepo, IUnitOfWork unitOfWork, IRepository<Branch> branchRepo)
     {
         _notificationRepo = notificationRepo;
         _medicineRepo = medicineRepo;
         _cosmeticRepo = cosmeticRepo;
         _unitOfWork = unitOfWork;
+        _branchRepo = branchRepo;
     }
 
     public async Task<IEnumerable<NotificationResponse>> GetAllAsync(int? branchId = null)
@@ -84,6 +86,24 @@ public class NotificationService : INotificationService
 
     public async Task CheckAndCreateNotificationsAsync(int? branchId = null)
     {
+        var branches = (await _branchRepo.GetAllAsync()).ToList();
+        if (!branches.Any())
+        {
+            return;
+        }
+
+        var targetBranches = branchId.HasValue
+            ? branches.Where(b => b.BranchId == branchId.Value).ToList()
+            : branches;
+
+        foreach (var branch in targetBranches)
+        {
+            await CheckAndCreateNotificationsForBranchAsync(branch.BranchId);
+        }
+    }
+
+    private async Task CheckAndCreateNotificationsForBranchAsync(int branchId)
+    {
         var medicines = (await _medicineRepo.GetAllAsync())
             .Include(m => m.Batches)
             .ToList();
@@ -91,17 +111,16 @@ public class NotificationService : INotificationService
         foreach (var medicine in medicines)
         {
             var batches = medicine.Batches.AsQueryable();
-            if (branchId.HasValue)
-                batches = batches.Where(b => b.BranchId == branchId.Value);
+            batches = batches.Where(b => b.BranchId == branchId);
             var totalStock = batches.Sum(b => b.QuantityReceived - b.QuantityIssued - b.QuantityDamaged - b.QuantityExpired);
 
             if (totalStock == 0 && medicine.IsActive)
             {
-                if (await _notificationRepo.GetActiveByTypeAndMedicineAsync(NotificationTypeStrings.OutOfStock, medicine.BrandName) == null)
+                if (await _notificationRepo.GetActiveByTypeAndMedicineAsync(NotificationTypeStrings.OutOfStock, medicine.BrandName, branchId) == null)
                 {
                     var notification = new Notification
                     {
-                        BranchId = branchId ?? 0,
+                        BranchId = branchId,
                         Title = "Out of Stock",
                         Message = $"{medicine.BrandName} is out of stock",
                         NotificationType = NotificationTypeStrings.OutOfStock
@@ -111,11 +130,11 @@ public class NotificationService : INotificationService
             }
             else if (totalStock <= medicine.ReorderLevel && totalStock > 0)
             {
-                if (await _notificationRepo.GetActiveByTypeAndMedicineAsync(NotificationTypeStrings.LowStock, medicine.BrandName) == null)
+                if (await _notificationRepo.GetActiveByTypeAndMedicineAsync(NotificationTypeStrings.LowStock, medicine.BrandName, branchId) == null)
                 {
                     var notification = new Notification
                     {
-                        BranchId = branchId ?? 0,
+                        BranchId = branchId,
                         Title = "Low Stock",
                         Message = $"{medicine.BrandName} stock is below threshold ({totalStock}/{medicine.ReorderLevel})",
                         NotificationType = NotificationTypeStrings.LowStock
@@ -125,48 +144,43 @@ public class NotificationService : INotificationService
             }
         }
 
-        await _unitOfWork.SaveChangesAsync();
-
         var cosmetics = (await _cosmeticRepo.GetAllAsync())
             .Include(c => c.Batches)
             .ToList();
 
         foreach (var cosmetic in cosmetics)
         {
-            if (branchId.HasValue)
-            {
-                var batches = cosmetic.Batches.AsQueryable();
-                batches = batches.Where(b => b.BranchId == branchId.Value);
-                var totalStock = batches.Sum(b => b.QuantityReceived - b.QuantityIssued - b.QuantityDamaged - b.QuantityExpired);
-                var lowStockThreshold = batches.Any() ? batches.Min(b => b.LowStockThreshold) : 0;
+            var batches = cosmetic.Batches.AsQueryable();
+            batches = batches.Where(b => b.BranchId == branchId);
+            var totalStock = batches.Sum(b => b.QuantityReceived - b.QuantityIssued - b.QuantityDamaged - b.QuantityExpired);
+            var lowStockThreshold = batches.Any() ? batches.Min(b => b.LowStockThreshold) : 0;
 
-                if (totalStock == 0 && cosmetic.IsActive)
+            if (totalStock == 0 && cosmetic.IsActive)
+            {
+                if (await _notificationRepo.GetActiveByTypeAndMedicineAsync(NotificationTypeStrings.OutOfStock, cosmetic.ProductName, branchId) == null)
                 {
-                    if (await _notificationRepo.GetActiveByTypeAndMedicineAsync(NotificationTypeStrings.OutOfStock, cosmetic.ProductName) == null)
+                    var notification = new Notification
                     {
-                        var notification = new Notification
-                        {
-                            BranchId = branchId ?? 0,
-                            Title = "Cosmetic Out of Stock",
-                            Message = $"{cosmetic.ProductName} is out of stock",
-                            NotificationType = NotificationTypeStrings.OutOfStock
-                        };
-                        await _notificationRepo.AddAsync(notification);
-                    }
+                        BranchId = branchId,
+                        Title = "Cosmetic Out of Stock",
+                        Message = $"{cosmetic.ProductName} is out of stock",
+                        NotificationType = NotificationTypeStrings.OutOfStock
+                    };
+                    await _notificationRepo.AddAsync(notification);
                 }
-                else if (totalStock <= lowStockThreshold && totalStock > 0)
+            }
+            else if (totalStock <= lowStockThreshold && totalStock > 0)
+            {
+                if (await _notificationRepo.GetActiveByTypeAndMedicineAsync(NotificationTypeStrings.LowStock, cosmetic.ProductName, branchId) == null)
                 {
-                    if (await _notificationRepo.GetActiveByTypeAndMedicineAsync(NotificationTypeStrings.LowStock, cosmetic.ProductName) == null)
+                    var notification = new Notification
                     {
-                        var notification = new Notification
-                        {
-                            BranchId = branchId ?? 0,
-                            Title = "Cosmetic Low Stock",
-                            Message = $"{cosmetic.ProductName} stock is below threshold ({totalStock}/{lowStockThreshold})",
-                            NotificationType = NotificationTypeStrings.LowStock
-                        };
-                        await _notificationRepo.AddAsync(notification);
-                    }
+                        BranchId = branchId,
+                        Title = "Cosmetic Low Stock",
+                        Message = $"{cosmetic.ProductName} stock is below threshold ({totalStock}/{lowStockThreshold})",
+                        NotificationType = NotificationTypeStrings.LowStock
+                    };
+                    await _notificationRepo.AddAsync(notification);
                 }
             }
         }

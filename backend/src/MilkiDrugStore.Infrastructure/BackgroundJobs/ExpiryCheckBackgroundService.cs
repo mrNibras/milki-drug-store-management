@@ -29,20 +29,47 @@ public class ExpiryCheckBackgroundService : BackgroundService
                 using var scope = _serviceProvider.CreateScope();
                 var medicineRepo = scope.ServiceProvider.GetRequiredService<IMedicineRepository>();
                 var notificationRepo = scope.ServiceProvider.GetRequiredService<INotificationRepository>();
+                var branchRepo = scope.ServiceProvider.GetRequiredService<IRepository<Branch>>();
                 var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
 
                 var expiringMedicines = await medicineRepo.GetExpiringAsync(6);
+                var branches = (await branchRepo.GetAllAsync()).ToList();
+                if (!branches.Any())
+                {
+                    _logger.LogWarning("No branches found; skipping expiry notifications");
+                    await Task.Delay(TimeSpan.FromDays(1), stoppingToken);
+                    continue;
+                }
+
                 foreach (var medicine in expiringMedicines)
                 {
-                    var recentAlert = await notificationRepo.GetRecentExpiryAlertAsync(medicine.BrandName, 15);
-                    if (recentAlert == null)
+                    // Determine the branch from the medicine's batches
+                    var medicineBranchIds = medicine.Batches
+                        .Where(b => b.ExpiryDate <= DateTime.UtcNow.AddMonths(6) && b.QuantityReceived - b.QuantityIssued - b.QuantityDamaged - b.QuantityExpired > 0)
+                        .Select(b => b.BranchId)
+                        .Distinct()
+                        .ToList();
+
+                    foreach (var branchId in medicineBranchIds)
                     {
-                        await notificationRepo.AddAsync(new Notification
+                        var branch = branches.FirstOrDefault(b => b.BranchId == branchId);
+                        if (branch == null)
                         {
-                            Title = "Expiry Alert",
-                            Message = $"{medicine.BrandName} is expiring within 6 months",
-                            NotificationType = NotificationTypeStrings.ExpiryAlert
-                        });
+                            _logger.LogWarning("Branch {BranchId} not found for medicine {MedicineId}; skipping notification", branchId, medicine.ProductId);
+                            continue;
+                        }
+
+                        var recentAlert = await notificationRepo.GetRecentExpiryAlertAsync(medicine.BrandName, 15);
+                        if (recentAlert == null)
+                        {
+                            await notificationRepo.AddAsync(new Notification
+                            {
+                                BranchId = branchId,
+                                Title = "Expiry Alert",
+                                Message = $"{medicine.BrandName} is expiring within 6 months",
+                                NotificationType = NotificationTypeStrings.ExpiryAlert
+                            });
+                        }
                     }
                 }
 

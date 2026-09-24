@@ -34,12 +34,15 @@ public class NotificationRepository : Repository<Notification>, INotificationRep
             .FirstOrDefaultAsync();
     }
 
-    public async Task<Notification?> GetActiveByTypeAndMedicineAsync(string notificationType, string brandName)
+    public async Task<Notification?> GetActiveByTypeAndMedicineAsync(string notificationType, string brandName, int? branchId = null)
     {
-        return await _dbSet
+        var query = _dbSet
             .Where(n => n.NotificationType == notificationType
                      && !n.IsRead
-                     && n.Title.Contains(brandName))
+                     && n.Title.Contains(brandName));
+        if (branchId.HasValue)
+            query = query.Where(n => n.BranchId == branchId.Value);
+        return await query
             .OrderByDescending(n => n.CreatedAt)
             .FirstOrDefaultAsync();
     }

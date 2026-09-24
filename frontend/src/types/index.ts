@@ -141,9 +141,12 @@ export interface Sale {
 export interface SaleItem {
   id: string;
   saleId: string;
-  medicineId: string;
+  medicineId?: string;
+  cosmeticId?: string;
+  productType?: 'medicine' | 'cosmetic';
   brandName: string;
-  batchId: string;
+  batchId?: string;
+  cosmeticBatchId?: string;
   quantity: number;
   unitPrice: number;
   standardUnitPrice: number;

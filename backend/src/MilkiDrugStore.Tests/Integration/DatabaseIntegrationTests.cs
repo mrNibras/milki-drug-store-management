@@ -1668,7 +1668,8 @@ public class DatabaseIntegrationTests : IClassFixture<PostgreSqlFixture>, IAsync
             notificationRepo,
             new Repository<Medicine>(_dbContext),
             cosmeticRepo,
-            new UnitOfWork(_dbContext));
+            new UnitOfWork(_dbContext),
+            new Repository<Branch>(_dbContext));
 
         await notificationService.CheckAndCreateNotificationsAsync(branch.BranchId);
 

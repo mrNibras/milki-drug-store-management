@@ -714,6 +714,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       const res = await api.post<SaleResponse>('/sales', payload);
       console.log('SALE RESPONSE:', res.data);
       await get().fetchSales();
+      return res.data;
     } catch (e: any) {
       console.error('SALE ERROR:', e.response?.data || e.message);
       set({ error: e.response?.data?.message || 'Failed to add sale' });

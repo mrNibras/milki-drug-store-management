@@ -176,6 +176,9 @@ export const POSPage: React.FC = () => {
     }
     setPaymentError('');
 
+    // Create a snapshot of the cart before clearing it
+    const cartSnapshot = [...cart];
+
     const saleNumber = generateSaleNumber((sales || []).length);
     const sale = {
       id: generateId(),
@@ -213,14 +216,46 @@ export const POSPage: React.FC = () => {
     sale.items.forEach(item => item.saleId = sale.id);
 
     try {
-      await addSale(sale);
-      const updatedSales = useAppStore.getState().sales;
-      const newSale = updatedSales.find(s => s.saleNumber === saleNumber);
-      if (newSale) {
-        setLastSale(newSale);
-        setShowReceipt(true);
-      }
-      setLastSaleNumber(saleNumber);
+      const saleResponse = await addSale(sale);
+      
+      // Build receipt from cart snapshot + authoritative backend response
+      const receiptSale: Sale = {
+        id: String(saleResponse.saleId),
+        saleNumber: saleResponse.saleNumber,
+        saleDate: saleResponse.saleDate,
+        totalAmount: saleResponse.totalAmount,
+        totalDiscount: saleResponse.totalDiscount,
+        discountReason: saleResponse.discountReason || '',
+        approvedBy: null,
+        profit: saleResponse.totalProfit,
+        userId: String(saleResponse.userId),
+        userName: saleResponse.userName,
+        paymentMethod: saleResponse.paymentMethod,
+        paymentStatus: saleResponse.paymentStatus,
+        amountPaid: saleResponse.amountPaid,
+        amountDue: saleResponse.amountDue,
+        referenceNumber: saleResponse.referenceNumber,
+        items: cartSnapshot.map(item => ({
+          id: generateId(),
+          saleId: String(saleResponse.saleId),
+          medicineId: item.productType === 'medicine' ? item.medicineId : undefined,
+          cosmeticId: item.productType === 'cosmetic' ? item.cosmeticId : undefined,
+          productType: item.productType,
+          brandName: item.brandName,
+          batchId: item.productType === 'medicine' ? item.batchId : undefined,
+          cosmeticBatchId: item.productType === 'cosmetic' ? item.cosmeticBatchId : undefined,
+          quantity: item.quantity,
+          unitPrice: item.sellingPrice,
+          standardUnitPrice: item.standardPrice,
+          actualUnitPrice: item.sellingPrice,
+          discountAmount: item.discountAmount,
+          totalPrice: item.sellingPrice * item.quantity,
+        })),
+      };
+
+      setLastSale(receiptSale);
+      setShowReceipt(true);
+      setLastSaleNumber(saleResponse.saleNumber);
       clearCart();
       setShowCheckout(false);
       setShowDiscountReason(false);
