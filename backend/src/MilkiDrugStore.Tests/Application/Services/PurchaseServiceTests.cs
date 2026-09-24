@@ -11,7 +11,7 @@ namespace MilkiDrugStore.Tests.Application.Services;
 
 public class PurchaseServiceTests
 {
-    private readonly Mock<IRepository<Purchase>> _purchaseRepo = new();
+    private readonly Mock<IPurchaseRepository> _purchaseRepo = new();
     private readonly Mock<IRepository<PurchaseItem>> _purchaseItemRepo = new();
     private readonly Mock<IRepository<Supplier>> _supplierRepo = new();
     private readonly Mock<IRepository<Medicine>> _medicineRepo = new();

@@ -291,7 +291,7 @@ public class PersistenceTests : IClassFixture<PostgreSqlFixture>, IAsyncLifetime
         catalogMock.Setup(m => m.GetCategoryNameAsync(It.IsAny<int>())).ReturnsAsync("Persistence Category");
 
         var service = new PurchaseService(
-            new Repository<Purchase>(_dbContext),
+            new PurchaseRepository(_dbContext),
             new Repository<PurchaseItem>(_dbContext),
             new Repository<Medicine>(_dbContext),
             new Repository<MedicineBatch>(_dbContext),

@@ -12,7 +12,7 @@ namespace MilkiDrugStore.Application.Services;
 
 public class SaleService : ISaleService
 {
-    private readonly IRepository<Sale> _saleRepo;
+    private readonly ISaleRepository _saleRepo;
     private readonly IRepository<SaleItem> _saleItemRepo;
     private readonly IRepository<Medicine> _medicineRepo;
     private readonly IRepository<MedicineBatch> _batchRepo;
@@ -29,7 +29,7 @@ public class SaleService : ISaleService
     private const decimal MaxPharmacistDiscountRate = 0.05m;
 
     public SaleService(
-        IRepository<Sale> saleRepo,
+        ISaleRepository saleRepo,
         IRepository<SaleItem> saleItemRepo,
         IRepository<Medicine> medicineRepo,
         IRepository<MedicineBatch> batchRepo,
@@ -62,8 +62,9 @@ public class SaleService : ISaleService
         {
             var isAdmin = string.Equals(userRole, "Admin", StringComparison.OrdinalIgnoreCase);
 
-            var saleCount = (await _saleRepo.GetAllAsync()).Count();
-            var saleNumber = $"SAL-{DateTime.UtcNow.Year}-{saleCount + 1:D5}";
+            var currentYear = DateTime.UtcNow.Year;
+            var nextSequence = await _saleRepo.GetNextSaleSequenceAsync(currentYear);
+            var saleNumber = $"SAL-{currentYear}-{nextSequence:D5}";
 
             var totalAmount = 0m;
             var totalProfit = 0m;

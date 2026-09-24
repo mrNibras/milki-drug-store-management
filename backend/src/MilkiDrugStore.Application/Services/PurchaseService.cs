@@ -13,7 +13,7 @@ namespace MilkiDrugStore.Application.Services;
 
 public class PurchaseService : IPurchaseService
 {
-        private readonly IRepository<Purchase> _purchaseRepo;
+        private readonly IPurchaseRepository _purchaseRepo;
         private readonly IRepository<PurchaseItem> _purchaseItemRepo;
         private readonly IRepository<Medicine> _medicineRepo;
         private readonly IRepository<MedicineBatch> _batchRepo;
@@ -27,7 +27,7 @@ public class PurchaseService : IPurchaseService
         private readonly IRepository<CosmeticBatch> _cosmeticBatchRepo;
 
         public PurchaseService(
-            IRepository<Purchase> purchaseRepo,
+            IPurchaseRepository purchaseRepo,
             IRepository<PurchaseItem> purchaseItemRepo,
             IRepository<Medicine> medicineRepo,
             IRepository<MedicineBatch> batchRepo,
@@ -91,8 +91,9 @@ public class PurchaseService : IPurchaseService
 
         try
         {
-            var purchaseCount = (await _purchaseRepo.GetAllAsync()).Count();
-            var purchaseNumber = $"PUR-{DateTime.UtcNow.Year}-{purchaseCount + 1:D5}";
+            var currentYear = DateTime.UtcNow.Year;
+            var nextSequence = await _purchaseRepo.GetNextPurchaseSequenceAsync(currentYear);
+            var purchaseNumber = $"PUR-{currentYear}-{nextSequence:D5}";
 
             _logger.LogInformation("Generated purchase number: {PurchaseNumber}", purchaseNumber);
 

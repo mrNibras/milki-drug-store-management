@@ -14,7 +14,7 @@ namespace MilkiDrugStore.Tests.Application;
 
 public class SaleServiceTests
 {
-    private readonly Mock<IRepository<Sale>> _saleRepo = new();
+    private readonly Mock<ISaleRepository> _saleRepo = new();
     private readonly Mock<IRepository<SaleItem>> _saleItemRepo = new();
     private readonly Mock<IRepository<Medicine>> _medicineRepo = new();
     private readonly Mock<IRepository<MedicineBatch>> _batchRepo = new();

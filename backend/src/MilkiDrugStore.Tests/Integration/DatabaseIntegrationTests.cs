@@ -642,7 +642,7 @@ public class DatabaseIntegrationTests : IClassFixture<PostgreSqlFixture>, IAsync
         catalogMock.Setup(m => m.GetCategoryNameAsync(It.IsAny<int>())).ReturnsAsync("Test Category");
 
         var purchaseService = new PurchaseService(
-            new Repository<Purchase>(_dbContext),
+            new PurchaseRepository(_dbContext),
             new Repository<PurchaseItem>(_dbContext),
             new Repository<Medicine>(_dbContext),
             new Repository<MedicineBatch>(_dbContext),
@@ -711,7 +711,7 @@ public class DatabaseIntegrationTests : IClassFixture<PostgreSqlFixture>, IAsync
             auditLog);
 
         var purchaseService = new PurchaseService(
-            new Repository<Purchase>(_dbContext),
+            new PurchaseRepository(_dbContext),
             new Repository<PurchaseItem>(_dbContext),
             new Repository<Medicine>(_dbContext),
             new Repository<MedicineBatch>(_dbContext),
@@ -778,7 +778,7 @@ public class DatabaseIntegrationTests : IClassFixture<PostgreSqlFixture>, IAsync
             auditLog);
 
         var purchaseService = new PurchaseService(
-            new Repository<Purchase>(_dbContext),
+            new PurchaseRepository(_dbContext),
             new Repository<PurchaseItem>(_dbContext),
             new Repository<Medicine>(_dbContext),
             new Repository<MedicineBatch>(_dbContext),
@@ -851,7 +851,7 @@ public class DatabaseIntegrationTests : IClassFixture<PostgreSqlFixture>, IAsync
             auditLog);
 
         var purchaseService = new PurchaseService(
-            new Repository<Purchase>(_dbContext),
+            new PurchaseRepository(_dbContext),
             new Repository<PurchaseItem>(_dbContext),
             new Repository<Medicine>(_dbContext),
             new Repository<MedicineBatch>(_dbContext),
@@ -891,8 +891,8 @@ public class DatabaseIntegrationTests : IClassFixture<PostgreSqlFixture>, IAsync
         await purchaseService.CreateAsync(request, 1, branch.BranchId);
 
         var reportService = new ReportService(
-            new Repository<Sale>(_dbContext),
-            new Repository<Purchase>(_dbContext),
+            new SaleRepository(_dbContext),
+            new PurchaseRepository(_dbContext),
             new Repository<Medicine>(_dbContext),
             new Repository<Supplier>(_dbContext),
             new Repository<User>(_dbContext),
@@ -924,8 +924,8 @@ public class DatabaseIntegrationTests : IClassFixture<PostgreSqlFixture>, IAsync
             auditLog);
 
         var reportService = new ReportService(
-            new Repository<Sale>(_dbContext),
-            new Repository<Purchase>(_dbContext),
+            new SaleRepository(_dbContext),
+            new PurchaseRepository(_dbContext),
             new Repository<Medicine>(_dbContext),
             new Repository<Supplier>(_dbContext),
             new Repository<User>(_dbContext),
@@ -954,7 +954,7 @@ public class DatabaseIntegrationTests : IClassFixture<PostgreSqlFixture>, IAsync
             auditLog);
 
         var purchaseService = new PurchaseService(
-            new Repository<Purchase>(_dbContext),
+            new PurchaseRepository(_dbContext),
             new Repository<PurchaseItem>(_dbContext),
             new Repository<Medicine>(_dbContext),
             new Repository<MedicineBatch>(_dbContext),
@@ -994,8 +994,8 @@ public class DatabaseIntegrationTests : IClassFixture<PostgreSqlFixture>, IAsync
         await purchaseService.CreateAsync(request, 1, branch.BranchId);
 
         var reportService = new ReportService(
-            new Repository<Sale>(_dbContext),
-            new Repository<Purchase>(_dbContext),
+            new SaleRepository(_dbContext),
+            new PurchaseRepository(_dbContext),
             new Repository<Medicine>(_dbContext),
             new Repository<Supplier>(_dbContext),
             new Repository<User>(_dbContext),
@@ -1024,8 +1024,8 @@ public class DatabaseIntegrationTests : IClassFixture<PostgreSqlFixture>, IAsync
             auditLog);
 
         var reportService = new ReportService(
-            new Repository<Sale>(_dbContext),
-            new Repository<Purchase>(_dbContext),
+            new SaleRepository(_dbContext),
+            new PurchaseRepository(_dbContext),
             new Repository<Medicine>(_dbContext),
             new Repository<Supplier>(_dbContext),
             new Repository<User>(_dbContext),
@@ -1074,7 +1074,7 @@ public class DatabaseIntegrationTests : IClassFixture<PostgreSqlFixture>, IAsync
             auditLog);
 
         var purchaseService = new PurchaseService(
-            new Repository<Purchase>(_dbContext),
+            new PurchaseRepository(_dbContext),
             new Repository<PurchaseItem>(_dbContext),
             new Repository<Medicine>(_dbContext),
             new Repository<MedicineBatch>(_dbContext),
@@ -1105,7 +1105,7 @@ public class DatabaseIntegrationTests : IClassFixture<PostgreSqlFixture>, IAsync
             auditLog);
 
         var purchaseService = new PurchaseService(
-            new Repository<Purchase>(_dbContext),
+            new PurchaseRepository(_dbContext),
             new Repository<PurchaseItem>(_dbContext),
             new Repository<Medicine>(_dbContext),
             new Repository<MedicineBatch>(_dbContext),
@@ -1135,7 +1135,7 @@ public class DatabaseIntegrationTests : IClassFixture<PostgreSqlFixture>, IAsync
         var settingsRepo = new Repository<Settings>(_dbContext);
 
         var saleService = new SaleService(
-            new Repository<Sale>(_dbContext),
+            new SaleRepository(_dbContext),
             new Repository<SaleItem>(_dbContext),
             new Repository<Medicine>(_dbContext),
             new Repository<MedicineBatch>(_dbContext),
@@ -1587,8 +1587,8 @@ public class DatabaseIntegrationTests : IClassFixture<PostgreSqlFixture>, IAsync
         }, 1, branch.BranchId);
 
         var reportService = new ReportService(
-            new Repository<Sale>(_dbContext),
-            new Repository<Purchase>(_dbContext),
+            new SaleRepository(_dbContext),
+            new PurchaseRepository(_dbContext),
             new Repository<Medicine>(_dbContext),
             new Repository<Supplier>(_dbContext),
             new Repository<User>(_dbContext),
@@ -1706,8 +1706,8 @@ public class DatabaseIntegrationTests : IClassFixture<PostgreSqlFixture>, IAsync
         }, 1, branch.BranchId);
 
         var reportService = new ReportService(
-            new Repository<Sale>(_dbContext),
-            new Repository<Purchase>(_dbContext),
+            new SaleRepository(_dbContext),
+            new PurchaseRepository(_dbContext),
             new Repository<Medicine>(_dbContext),
             new Repository<Supplier>(_dbContext),
             new Repository<User>(_dbContext),
@@ -1747,8 +1747,8 @@ public class DatabaseIntegrationTests : IClassFixture<PostgreSqlFixture>, IAsync
         }, 1, branch.BranchId);
 
         var reportService = new ReportService(
-            new Repository<Sale>(_dbContext),
-            new Repository<Purchase>(_dbContext),
+            new SaleRepository(_dbContext),
+            new PurchaseRepository(_dbContext),
             new Repository<Medicine>(_dbContext),
             new Repository<Supplier>(_dbContext),
             new Repository<User>(_dbContext),
