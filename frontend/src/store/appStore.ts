@@ -666,7 +666,6 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
   },
 
-  cosmetics: [],
   fetchCosmetics: async () => {
     get().setLoading('cosmetics', true); set({ error: null });
     try {
@@ -711,9 +710,12 @@ export const useAppStore = create<AppState>((set, get) => ({
         referenceNumber: sale.referenceNumber || null,
         discountReason: sale.discountReason || null,
       };
+      console.log('SALE REQUEST:', JSON.stringify(payload, null, 2));
       const res = await api.post<SaleResponse>('/sales', payload);
+      console.log('SALE RESPONSE:', res.data);
       await get().fetchSales();
     } catch (e: any) {
+      console.error('SALE ERROR:', e.response?.data || e.message);
       set({ error: e.response?.data?.message || 'Failed to add sale' });
       get().setLoading('sales', false);
       throw e;

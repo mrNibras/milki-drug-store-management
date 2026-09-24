@@ -220,20 +220,21 @@ export const POSPage: React.FC = () => {
         setLastSale(newSale);
         setShowReceipt(true);
       }
-    } catch (e) {
+      setLastSaleNumber(saleNumber);
+      clearCart();
+      setShowCheckout(false);
+      setShowDiscountReason(false);
+      setPaymentMethod('cash');
+      setAmountPaid('');
+      setReferenceNumber('');
+      setPaymentError('');
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 3000);
+    } catch (e: any) {
+      console.error('SALE ERROR:', e.response?.data || e.message);
+      setPaymentError(e.response?.data?.message || 'Failed to complete sale');
       return;
     }
-
-    setLastSaleNumber(saleNumber);
-    clearCart();
-    setShowCheckout(false);
-    setShowDiscountReason(false);
-    setPaymentMethod('cash');
-    setAmountPaid('');
-    setReferenceNumber('');
-    setPaymentError('');
-    setShowSuccess(true);
-    setTimeout(() => setShowSuccess(false), 3000);
   };
 
   const cardClass = `rounded-xl border shadow-sm ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`;
