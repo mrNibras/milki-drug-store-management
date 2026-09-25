@@ -235,9 +235,10 @@ export const PurchasesPage: React.FC = () => {
       );
       if (duplicate) errors.push('Duplicate batch');
       if (errors.length > 0) isValid = false;
+      console.log('[COSMETIC VALIDATION] Item', { id: item.id, categoryId: item.categoryId, brandName: item.brandName, quantity: item.quantity, buyingPrice: item.buyingPrice, sellingPrice: item.sellingPrice, lowStock: item.lowStock, expiryDate: item.expiryDate, errors });
       return { ...item, errors };
     });
-    console.log('[COSMETIC] validateCosmeticItems validatedItems', validatedItems);
+    console.log('[COSMETIC] validateCosmeticItems result', { isValid, validatedItems });
     setCosmeticItems(validatedItems);
     return isValid;
   };
@@ -272,11 +273,12 @@ export const PurchasesPage: React.FC = () => {
   };
 
   const handleSave = async () => {
-    console.log('[PURCHASES] handleSave called', { items: items.length, cosmeticItems: cosmeticItems.length, selectedSupplier });
+    console.log('[PURCHASES] handleSave called', { items: items?.length, cosmeticItems: cosmeticItems?.length, selectedSupplier, isProcessing });
     if (!selectedSupplier) { alert('Please select a supplier'); return; }
     if ((items || []).length === 0 && (cosmeticItems || []).length === 0) { alert('Please add at least one item'); return; }
     if ((items || []).length > 0 && !validateItems()) { return; }
     if ((cosmeticItems || []).length > 0 && !validateCosmeticItems()) { return; }
+    console.log('[PURCHASES] handleSave - validation passed, proceeding to save');
 
     setIsProcessing(true);
 
@@ -1281,7 +1283,16 @@ export const PurchasesPage: React.FC = () => {
             </button>
             <button
               type="button"
-              onClick={() => { console.log('[COSMETIC MODAL] Save Purchase clicked'); handleSave(); }}
+              onClick={() => { 
+                console.log('[COSMETIC MODAL] Save Purchase clicked', { 
+                  isProcessing, 
+                  itemsLen: items?.length, 
+                  cosmeticItemsLen: cosmeticItems?.length, 
+                  selectedSupplier,
+                  disabled: isProcessing || ((items || []).length === 0 && cosmeticItems.length === 0) || !selectedSupplier
+                }); 
+                handleSave(); 
+              }}
               disabled={isProcessing || ((items || []).length === 0 && cosmeticItems.length === 0) || !selectedSupplier}
               className="px-5 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl text-sm font-medium transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
