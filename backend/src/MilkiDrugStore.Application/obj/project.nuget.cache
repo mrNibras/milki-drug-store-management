@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "2LA/hWjNYuUkdVv8BIg/PYUXKv6BWnczO0CMTZpblohMD2Nd47Xs1xIloMv4muoauQeUQnKZDTqEBmBD0ONX+w==",
+  "dgSpecHash": "Jpj1C9vi/OJKdFSNGY6JKERJ84p4+yxOiKreBH2Ihx32uaoExpE1AOZeooGZTr3B4SZ0phd7Xp84JzgjQ4lWFw==",
   "success": true,
   "projectFilePath": "/home/mrnibra/milki-drug-store-management/backend/src/MilkiDrugStore.Application/MilkiDrugStore.Application.csproj",
   "expectedPackageFiles": [

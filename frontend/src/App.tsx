@@ -54,8 +54,8 @@ function AppContent() {
     let cancelled = false;
     (async () => {
       try {
-        const { getSettings } = await import('./services/settingsApi');
-        const s = await getSettings();
+        const { getPublicSettings } = await import('./services/settingsApi');
+        const s = await getPublicSettings();
         if (!cancelled && s.language) {
           setLanguage(s.language === 'am' ? 'am' : 'en');
         }

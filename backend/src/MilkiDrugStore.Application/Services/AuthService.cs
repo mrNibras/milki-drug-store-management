@@ -324,6 +324,23 @@ public class AuthService : IAuthService
         return query.FirstOrDefault();
     }
 
+    public async Task<PublicSettingsResponse?> GetPublicSettingsAsync(int? branchId = null)
+    {
+        var query = (await _unitOfWork.Settings.GetAllAsync()).AsQueryable();
+        if (branchId.HasValue)
+            query = query.Where(s => s.BranchId == branchId.Value);
+        var settings = await query.FirstOrDefaultAsync();
+        if (settings == null)
+            return null;
+
+        return new PublicSettingsResponse
+        {
+            PharmacyName = settings.PharmacyName,
+            Language = settings.Language,
+            Currency = settings.Currency
+        };
+    }
+
     public async Task<Settings> UpdateSettingsAsync(UpdateSettingsRequest request, int userId, int? branchId = null)
     {
         var query = (await _unitOfWork.Settings.GetAllAsync()).AsQueryable();

@@ -312,6 +312,7 @@ export const COSMETIC_CATEGORIES: CosmeticCategoryValue[] = [
 ];
 
 export interface CosmeticPurchaseItem {
+  id: string;
   productType: 'cosmetic';
   categoryId: string;
   brandName: string;

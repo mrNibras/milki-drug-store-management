@@ -74,6 +74,13 @@ public class UpdateSettingsRequest
     public string BatchSelectionMode { get; set; } = "AutomaticFefo";
 }
 
+public class PublicSettingsResponse
+{
+    public string PharmacyName { get; set; } = string.Empty;
+    public string Language { get; set; } = "English";
+    public string Currency { get; set; } = "ETB";
+}
+
 public class ChangePasswordRequest
 {
     public string CurrentPassword { get; set; } = string.Empty;

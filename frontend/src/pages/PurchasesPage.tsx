@@ -97,6 +97,7 @@ export const PurchasesPage: React.FC = () => {
   });
 
   const createEmptyCosmeticItem = (): CosmeticPurchaseItem => ({
+    id: `temp_cosmetic_${new Date().getTime()}_${Math.random()}`,
     productType: 'cosmetic',
     categoryId: '',
     brandName: '',
@@ -155,9 +156,9 @@ export const PurchasesPage: React.FC = () => {
     }));
   };
 
-  const handleCosmeticItemChange = (index: number, field: keyof CosmeticPurchaseItem, value: string) => {
-    setCosmeticItems((items || []).map((item, i) => {
-      if (i !== index) return item;
+  const handleCosmeticItemChange = (id: string, field: keyof CosmeticPurchaseItem, value: string) => {
+    setCosmeticItems((items || []).map(item => {
+      if (item.id !== id) return item;
       return { ...item, [field]: value, errors: [] };
     }));
   };
@@ -166,8 +167,8 @@ export const PurchasesPage: React.FC = () => {
     setCosmeticItems([...cosmeticItems, createEmptyCosmeticItem()]);
   };
 
-  const handleRemoveCosmeticRow = (index: number) => {
-    setCosmeticItems(cosmeticItems.filter((_, i) => i !== index));
+  const handleRemoveCosmeticRow = (id: string) => {
+    setCosmeticItems(cosmeticItems.filter(item => item.id !== id));
   };
 
   const validateCosmeticItems = (): boolean => {
@@ -181,10 +182,10 @@ export const PurchasesPage: React.FC = () => {
       if (!item.sellingPrice || Number(item.sellingPrice) < 0) errors.push('Invalid selling price');
       if (Number(item.buyingPrice) > Number(item.sellingPrice)) errors.push('Selling price must not exceed buying price');
       if (!item.lowStock || Number(item.lowStock) < 0) errors.push('Invalid low stock threshold');
-      const duplicate = cosmeticItems.find((i, idx) => 
-        idx !== cosmeticItems.indexOf(item) &&
+      const duplicate = cosmeticItems.find(i => 
+        i.id !== item.id &&
         i.brandName.toLowerCase() === item.brandName.toLowerCase() &&
-        i.batchNumber === item.batchNumber
+        i.expiryDate === item.expiryDate
       );
       if (duplicate) errors.push('Duplicate batch');
       if (errors.length > 0) isValid = false;
@@ -1044,19 +1045,19 @@ export const PurchasesPage: React.FC = () => {
                   <div />
                 </div>
 
-                {cosmeticItems.map((item, index) => (
+                {cosmeticItems.map((item) => (
                   <div
-                    key={index}
+                    key={item.id}
                     className={`rounded-lg border p-3 transition-colors ${
                       isDark ? 'bg-gray-800/50 border-gray-700 hover:border-gray-600' : 'bg-white border-gray-200 hover:border-gray-300'
                     } ${item.errors.length > 0 ? isDark ? 'border-red-500/50 bg-red-900/10' : 'border-red-400 bg-red-50/50' : ''}`}
                   >
                     <div className="flex items-center justify-between mb-3 xl:hidden">
                       <span className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                        Item #{index + 1}
+                        Item #{cosmeticItems.findIndex(i => i.id === item.id) + 1}
                       </span>
                       <button
-                        onClick={() => handleRemoveCosmeticRow(index)}
+                        onClick={() => handleRemoveCosmeticRow(item.id)}
                         className={`text-xs font-medium px-2 py-1 rounded-lg transition-colors ${
                           isDark ? 'text-red-400 hover:bg-red-900/30' : 'text-red-500 hover:bg-red-100'
                         }`}
@@ -1072,7 +1073,7 @@ export const PurchasesPage: React.FC = () => {
                         </label>
                         <select
                           value={item.categoryId}
-                          onChange={(e) => handleCosmeticItemChange(index, 'categoryId', e.target.value)}
+                          onChange={(e) => handleCosmeticItemChange(item.id, 'categoryId', e.target.value)}
                           className={`${itemInputClass} ${item.errors.some(e => e.includes('Category')) ? 'border-red-400' : ''}`}
                         >
                           <option value="">Select Category</option>
@@ -1089,7 +1090,7 @@ export const PurchasesPage: React.FC = () => {
                         <input
                           type="text"
                           value={item.brandName}
-                          onChange={(e) => handleCosmeticItemChange(index, 'brandName', e.target.value)}
+                          onChange={(e) => handleCosmeticItemChange(item.id, 'brandName', e.target.value)}
                           placeholder="Brand name"
                           className={`${itemInputClass} ${item.errors.some(e => e.includes('Brand')) ? 'border-red-400' : ''}`}
                         />
@@ -1102,7 +1103,7 @@ export const PurchasesPage: React.FC = () => {
                         <input
                           type="number"
                           value={item.quantity}
-                          onChange={(e) => handleCosmeticItemChange(index, 'quantity', e.target.value)}
+                          onChange={(e) => handleCosmeticItemChange(item.id, 'quantity', e.target.value)}
                           placeholder="0"
                           min="0"
                           className={`${itemInputClass} ${item.errors.some(e => e.includes('quantity')) ? 'border-red-400' : ''}`}
@@ -1116,7 +1117,7 @@ export const PurchasesPage: React.FC = () => {
                         <input
                           type="number"
                           value={item.buyingPrice}
-                          onChange={(e) => handleCosmeticItemChange(index, 'buyingPrice', e.target.value)}
+                          onChange={(e) => handleCosmeticItemChange(item.id, 'buyingPrice', e.target.value)}
                           placeholder="0.00"
                           min="0"
                           step="0.01"
@@ -1131,7 +1132,7 @@ export const PurchasesPage: React.FC = () => {
                         <input
                           type="number"
                           value={item.sellingPrice}
-                          onChange={(e) => handleCosmeticItemChange(index, 'sellingPrice', e.target.value)}
+                          onChange={(e) => handleCosmeticItemChange(item.id, 'sellingPrice', e.target.value)}
                           placeholder="0.00"
                           min="0"
                           step="0.01"
@@ -1146,7 +1147,7 @@ export const PurchasesPage: React.FC = () => {
                         <input
                           type="number"
                           value={item.lowStock}
-                          onChange={(e) => handleCosmeticItemChange(index, 'lowStock', e.target.value)}
+                          onChange={(e) => handleCosmeticItemChange(item.id, 'lowStock', e.target.value)}
                           placeholder="10"
                           min="0"
                           className={itemInputClass}
@@ -1155,7 +1156,7 @@ export const PurchasesPage: React.FC = () => {
 
                       <div className="hidden xl:flex justify-center">
                         <button
-                          onClick={() => handleRemoveCosmeticRow(index)}
+                          onClick={() => handleRemoveCosmeticRow(item.id)}
                           className={`p-2 rounded-lg transition-colors ${isDark ? 'hover:bg-red-900/30 text-red-400' : 'hover:bg-red-100 text-red-500'}`}
                         >
                           <X className="h-4 w-4" />
@@ -1171,7 +1172,7 @@ export const PurchasesPage: React.FC = () => {
                       <input
                         type="date"
                         value={item.expiryDate}
-                        onChange={(e) => handleCosmeticItemChange(index, 'expiryDate', e.target.value)}
+                        onChange={(e) => handleCosmeticItemChange(item.id, 'expiryDate', e.target.value)}
                         className={itemInputClass}
                       />
                     </div>
@@ -1203,8 +1204,8 @@ export const PurchasesPage: React.FC = () => {
               </div>
               <ul className="space-y-1">
                 {cosmeticItems.filter(i => i.errors.length > 0).map((item, itemIdx) => (
-                  <li key={itemIdx} className="text-xs text-red-400">
-                    Item #{cosmeticItems.indexOf(item) + 1}: {item.errors.join(', ')}
+                  <li key={item.id} className="text-xs text-red-400">
+                    Item #{cosmeticItems.findIndex(i => i.id === item.id) + 1}: {item.errors.join(', ')}
                   </li>
                 ))}
               </ul>

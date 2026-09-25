@@ -14,6 +14,7 @@ public interface IAuthService
     Task<UserResponse?> UpdateUserAsync(int id, UpdateUserRequest request);
     Task DeleteUserAsync(int id);
     Task<Settings?> GetSettingsAsync(int? branchId = null);
+    Task<PublicSettingsResponse?> GetPublicSettingsAsync(int? branchId = null);
     Task<Settings> UpdateSettingsAsync(UpdateSettingsRequest request, int userId, int? branchId = null);
     Task<LoginResponse?> RefreshTokenAsync(RefreshTokenRequest request);
     Task<ForgotPasswordResponse> RequestPasswordResetAsync(ForgotPasswordRequest request);

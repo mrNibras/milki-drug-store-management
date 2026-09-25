@@ -20,6 +20,16 @@ public class SettingsController : ControllerBase
         _logger = logger;
     }
 
+    [HttpGet("public")]
+    public async Task<IActionResult> GetPublicSettings()
+    {
+        var branchId = GetBranchId();
+        var settings = await _authService.GetPublicSettingsAsync(branchId > 0 ? branchId : null);
+        if (settings == null)
+            return NotFound(new { message = "Settings not found" });
+        return Ok(settings);
+    }
+
     [Authorize(Roles = "Admin")]
     [HttpGet]
     public async Task<IActionResult> GetSettings()

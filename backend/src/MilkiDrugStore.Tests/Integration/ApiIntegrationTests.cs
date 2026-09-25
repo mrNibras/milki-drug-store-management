@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
@@ -14,6 +15,7 @@ using MilkiDrugStore.Domain.Entities;
 using MilkiDrugStore.Infrastructure.Services;
 using MilkiDrugStore.Application.DTOs.Auth;
 using MilkiDrugStore.Application.DTOs.Medicine;
+using MilkiDrugStore.Domain.Enums;
 using Xunit;
 
 namespace MilkiDrugStore.Tests.Integration;
@@ -22,7 +24,8 @@ public class ApiIntegrationTests : IAsyncLifetime
 {
     private readonly WebApplicationFactory<Program> _factory;
     private readonly HttpClient _client;
-    private string _authToken = string.Empty;
+    private string _adminToken = string.Empty;
+    private string _pharmacistToken = string.Empty;
 
     public ApiIntegrationTests()
     {
@@ -123,18 +126,70 @@ public class ApiIntegrationTests : IAsyncLifetime
         if (!await db.Users.AnyAsync())
         {
             var adminRole = await db.Roles.SingleAsync(r => r.Name == "Admin");
+            var pharmacistRole = await db.Roles.SingleAsync(r => r.Name == "Pharmacist");
             var branch = await db.Branches.FirstAsync();
-            db.Users.Add(new User
+            db.Users.AddRange(
+                new User
+                {
+                    FullName = "Admin User",
+                    Email = "admin@milki.com",
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin123"),
+                    RoleId = adminRole.RoleId,
+                    BranchId = branch.BranchId,
+                    IsApproved = true,
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow
+                },
+                new User
+                {
+                    FullName = "Pharmacist User",
+                    Email = "pharmacist@milki.com",
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("Pharmacist123"),
+                    RoleId = pharmacistRole.RoleId,
+                    BranchId = branch.BranchId,
+                    IsApproved = true,
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow
+                }
+            );
+            await db.SaveChangesAsync();
+        }
+        else
+        {
+            // Ensure both users exist even if seeding ran first
+            var adminRole = await db.Roles.SingleAsync(r => r.Name == "Admin");
+            var pharmacistRole = await db.Roles.SingleAsync(r => r.Name == "Pharmacist");
+            var branch = await db.Branches.FirstAsync();
+
+            if (!await db.Users.AnyAsync(u => u.Email == "admin@milki.com"))
             {
-                FullName = "Admin User",
-                Email = "admin@milki.com",
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin123"),
-                RoleId = adminRole.RoleId,
-                BranchId = branch.BranchId,
-                IsApproved = true,
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow
-            });
+                db.Users.Add(new User
+                {
+                    FullName = "Admin User",
+                    Email = "admin@milki.com",
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin123"),
+                    RoleId = adminRole.RoleId,
+                    BranchId = branch.BranchId,
+                    IsApproved = true,
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow
+                });
+            }
+
+            if (!await db.Users.AnyAsync(u => u.Email == "pharmacist@milki.com"))
+            {
+                db.Users.Add(new User
+                {
+                    FullName = "Pharmacist User",
+                    Email = "pharmacist@milki.com",
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("Pharmacist123"),
+                    RoleId = pharmacistRole.RoleId,
+                    BranchId = branch.BranchId,
+                    IsApproved = true,
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow
+                });
+            }
             await db.SaveChangesAsync();
         }
 
@@ -158,17 +213,40 @@ public class ApiIntegrationTests : IAsyncLifetime
             await db.SaveChangesAsync();
         }
 
-        var loginRequest = new LoginRequest
+        // Seed Settings
+        if (!await db.Settings.AnyAsync())
         {
-            Email = "admin@milki.com",
-            Password = "Admin123"
-        };
-        var loginResponse = await _client.PostAsJsonAsync("/api/auth/login", loginRequest);
-        if (loginResponse.StatusCode == HttpStatusCode.OK)
+            var branch = await db.Branches.FirstAsync();
+            db.Settings.Add(new Settings
+            {
+                PharmacyName = "Test Pharmacy",
+                Address = "Test Address",
+                Phone = "0912345678",
+                Email = "test@pharmacy.com",
+                Language = "English",
+                LowStockThreshold = 10,
+                ExpiryAlertMonths = 6,
+                Currency = "ETB",
+                BatchSelectionMode = BatchSelectionMode.AutomaticFefo,
+                BranchId = branch.BranchId
+            });
+            await db.SaveChangesAsync();
+        }
+
+        var adminLogin = new LoginRequest { Email = "admin@milki.com", Password = "Admin123" };
+        var adminResponse = await _client.PostAsJsonAsync("/api/auth/login", adminLogin);
+        if (adminResponse.StatusCode == HttpStatusCode.OK)
         {
-            var loginData = await loginResponse.Content.ReadFromJsonAsync<LoginResponse>();
-            _authToken = loginData?.Token ?? string.Empty;
-            _client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _authToken);
+            var data = await adminResponse.Content.ReadFromJsonAsync<LoginResponse>();
+            _adminToken = data?.Token ?? string.Empty;
+        }
+
+        var pharmacistLogin = new LoginRequest { Email = "pharmacist@milki.com", Password = "Pharmacist123" };
+        var pharmacistResponse = await _client.PostAsJsonAsync("/api/auth/login", pharmacistLogin);
+        if (pharmacistResponse.StatusCode == HttpStatusCode.OK)
+        {
+            var data = await pharmacistResponse.Content.ReadFromJsonAsync<LoginResponse>();
+            _pharmacistToken = data?.Token ?? string.Empty;
         }
     }
 
@@ -252,7 +330,7 @@ public class ApiIntegrationTests : IAsyncLifetime
     public async Task GetCategories_Should_Return_BuiltIn_And_Custom()
     {
         var request = new HttpRequestMessage(HttpMethod.Get, "/api/catalog/categories");
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _authToken);
+        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _adminToken);
         var response = await _client.SendAsync(request);
         var content = await response.Content.ReadAsStringAsync();
 
@@ -269,7 +347,7 @@ public class ApiIntegrationTests : IAsyncLifetime
     public async Task GetUnitTypes_Should_Return_BuiltIn_And_Custom()
     {
         var request = new HttpRequestMessage(HttpMethod.Get, "/api/catalog/unit-types");
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _authToken);
+        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _adminToken);
         var response = await _client.SendAsync(request);
         var content = await response.Content.ReadAsStringAsync();
 
@@ -285,6 +363,7 @@ public class ApiIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task CustomCategoryAndUnitType_Should_Persist_And_Not_Duplicate()
     {
+        _client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _adminToken);
         var create = new CreateMedicineRequest
         {
             BrandName = "Test Supplements",
@@ -326,9 +405,78 @@ public class ApiIntegrationTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.OK, duplicateResponse.StatusCode);
 
         var categoriesAfter = await (await _client.GetAsync("/api/catalog/categories")).Content.ReadAsStringAsync();
-        Assert.Equal(1, System.Text.RegularExpressions.Regex.Matches(categoriesAfter, "Supplements").Count);
+        Assert.Single(System.Text.RegularExpressions.Regex.Matches(categoriesAfter, "Supplements"));
 
         var unitTypesAfter = await (await _client.GetAsync("/api/catalog/unit-types")).Content.ReadAsStringAsync();
-        Assert.Equal(1, System.Text.RegularExpressions.Regex.Matches(unitTypesAfter, "Sachet").Count);
+        Assert.Single(System.Text.RegularExpressions.Regex.Matches(unitTypesAfter, "Sachet"));
+    }
+
+    [Fact]
+    public async Task GetPublicSettings_AsAdmin_Should_Return_200()
+    {
+        _client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _adminToken);
+        var response = await _client.GetAsync("/api/settings/public");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetPublicSettings_AsPharmacist_Should_Return_200()
+    {
+        _client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _pharmacistToken);
+        var response = await _client.GetAsync("/api/settings/public");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetPublicSettings_WithoutAuth_Should_Return_401()
+    {
+        _client.DefaultRequestHeaders.Authorization = null;
+        var response = await _client.GetAsync("/api/settings/public");
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetSettings_AsPharmacist_Should_Return_403()
+    {
+        _client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _pharmacistToken);
+        var response = await _client.GetAsync("/api/settings");
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetSettings_AsAdmin_Should_Return_200()
+    {
+        _client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _adminToken);
+        var response = await _client.GetAsync("/api/settings");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetPublicSettings_Response_Contains_Only_Public_Fields()
+    {
+        _client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _adminToken);
+        var response = await _client.GetAsync("/api/settings/public");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var content = await response.Content.ReadAsStringAsync();
+        var json = JsonDocument.Parse(content).RootElement;
+
+        Assert.True(json.TryGetProperty("pharmacyName", out _), "Response must contain pharmacyName");
+        Assert.True(json.TryGetProperty("language", out _), "Response must contain language");
+        Assert.True(json.TryGetProperty("currency", out _), "Response must contain currency");
+
+        // Verify NO sensitive fields are present
+        Assert.False(json.TryGetProperty("address", out _), "Response must NOT contain address");
+        Assert.False(json.TryGetProperty("phone", out _), "Response must NOT contain phone");
+        Assert.False(json.TryGetProperty("email", out _), "Response must NOT contain email");
+        Assert.False(json.TryGetProperty("lowStockThreshold", out _), "Response must NOT contain lowStockThreshold");
+        Assert.False(json.TryGetProperty("expiryAlertMonths", out _), "Response must NOT contain expiryAlertMonths");
+        Assert.False(json.TryGetProperty("batchSelectionMode", out _), "Response must NOT contain batchSelectionMode");
+        Assert.False(json.TryGetProperty("branchId", out _), "Response must NOT contain branchId");
     }
 }
