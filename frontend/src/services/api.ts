@@ -101,7 +101,12 @@ api.interceptors.response.use(
     }
 
     if (status === 401) {
-      clearAuthAndRedirect();
+      // Only clear auth for non-retried, non-auth requests that weren't handled by refresh logic above.
+      // Requests with _retry=true already went through refresh; if they still 401, surface the error.
+      // Auth endpoints (login/refresh) should not trigger logout.
+      if (originalRequest && !originalRequest._retry && !isAuthEndpoint) {
+        clearAuthAndRedirect();
+      }
     }
     return Promise.reject(error);
   }
