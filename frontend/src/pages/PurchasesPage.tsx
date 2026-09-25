@@ -38,6 +38,24 @@ export const PurchasesPage: React.FC = () => {
   const [lastPurchaseNumber, setLastPurchaseNumber] = useState('');
   const [paymentStatus, setPaymentStatus] = useState<'paid' | 'partial' | 'unpaid'>('paid');
 
+  // DIAGNOSTIC: Page mount/unmount
+  useEffect(() => {
+    console.log('[PURCHASES PAGE] MOUNTED');
+    return () => {
+      console.log('[PURCHASES PAGE] UNMOUNTED');
+    };
+  }, []);
+
+  // DIAGNOSTIC: Track cosmeticItems changes
+  useEffect(() => {
+    console.log('[COSMETIC] STATE CHANGED', cosmeticItems);
+  }, [cosmeticItems]);
+
+  // DIAGNOSTIC: Track showCosmeticModal changes
+  useEffect(() => {
+    console.log('[COSMETIC MODAL] showCosmeticModal changed', showCosmeticModal);
+  }, [showCosmeticModal]);
+
   useEffect(() => {
     fetchPurchases();
     fetchSuppliers();
@@ -71,6 +89,7 @@ export const PurchasesPage: React.FC = () => {
   const totalItems = (items || []).filter(i => i.brandName && i.quantity).length + (cosmeticItems || []).filter(i => i.brandName && i.quantity).length;
 
   const resetForm = () => {
+    console.log('[PURCHASES] resetForm called');
     setSelectedSupplier('');
     setPurchaseDate(new Date().toISOString().split('T')[0]);
     setItems([]);
@@ -157,21 +176,48 @@ export const PurchasesPage: React.FC = () => {
   };
 
   const handleCosmeticItemChange = (id: string, field: keyof CosmeticPurchaseItem, value: string) => {
-    setCosmeticItems((items || []).map(item => {
-      if (item.id !== id) return item;
-      return { ...item, [field]: value, errors: [] };
-    }));
+    console.log('[COSMETIC] handleCosmeticItemChange called', { id, field, value, currentItems: cosmeticItems });
+    if (field === 'categoryId') {
+      console.log('[COSMETIC CATEGORY] CHANGE START', { id, value });
+    }
+    setCosmeticItems((prevItems) => {
+      console.log('[COSMETIC] setCosmeticItems prev', prevItems);
+      const next = prevItems.map(item => {
+        if (item.id !== id) return item;
+        const updated = { ...item, [field]: value, errors: [] };
+        if (field === 'categoryId') {
+          console.log('[COSMETIC CATEGORY] ITEM UPDATED', { id, oldCategory: item.categoryId, newCategory: value });
+        }
+        return updated;
+      });
+      console.log('[COSMETIC] setCosmeticItems next', next);
+      if (field === 'categoryId') {
+        console.log('[COSMETIC CATEGORY] STATE UPDATED');
+      }
+      return next;
+    });
   };
 
   const handleAddCosmeticRow = () => {
-    setCosmeticItems([...cosmeticItems, createEmptyCosmeticItem()]);
+    console.log('[COSMETIC] handleAddCosmeticRow called');
+    setCosmeticItems((prev) => {
+      const next = [...prev, createEmptyCosmeticItem()];
+      console.log('[COSMETIC] handleAddCosmeticRow next', next);
+      return next;
+    });
   };
 
   const handleRemoveCosmeticRow = (id: string) => {
-    setCosmeticItems(cosmeticItems.filter(item => item.id !== id));
+    console.log('[COSMETIC] handleRemoveCosmeticRow called', { id });
+    setCosmeticItems((prev) => {
+      const next = prev.filter(item => item.id !== id);
+      console.log('[COSMETIC] handleRemoveCosmeticRow next', next);
+      return next;
+    });
   };
 
   const validateCosmeticItems = (): boolean => {
+    console.log('[COSMETIC] validateCosmeticItems called', cosmeticItems);
     let isValid = true;
     const validatedItems = cosmeticItems.map(item => {
       const errors: string[] = [];
@@ -191,6 +237,7 @@ export const PurchasesPage: React.FC = () => {
       if (errors.length > 0) isValid = false;
       return { ...item, errors };
     });
+    console.log('[COSMETIC] validateCosmeticItems validatedItems', validatedItems);
     setCosmeticItems(validatedItems);
     return isValid;
   };
@@ -225,6 +272,7 @@ export const PurchasesPage: React.FC = () => {
   };
 
   const handleSave = async () => {
+    console.log('[PURCHASES] handleSave called', { items: items.length, cosmeticItems: cosmeticItems.length, selectedSupplier });
     if (!selectedSupplier) { alert('Please select a supplier'); return; }
     if ((items || []).length === 0 && (cosmeticItems || []).length === 0) { alert('Please add at least one item'); return; }
     if ((items || []).length > 0 && !validateItems()) { return; }
@@ -357,7 +405,7 @@ export const PurchasesPage: React.FC = () => {
             <ShoppingCart className="h-4 w-4" /> Bulk Purchase Entry
           </button>
           <button
-            onClick={() => { setShowCosmeticModal(true); }}
+            onClick={() => { console.log('[COSMETIC MODAL] Open clicked'); setShowCosmeticModal(true); }}
             className="px-4 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl text-sm font-medium transition-all shadow-lg shadow-purple-200 dark:shadow-purple-900/30 flex items-center gap-2"
           >
             <Sparkles className="h-4 w-4" /> Add Cosmetics
@@ -550,6 +598,7 @@ export const PurchasesPage: React.FC = () => {
                 Medicine Items ({(items || []).length})
               </h4>
               <button
+                type="button"
                 onClick={handleAddRow}
                 className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-medium transition-colors flex items-center gap-1"
               >
@@ -582,6 +631,7 @@ export const PurchasesPage: React.FC = () => {
                         Item #{index + 1}
                       </span>
                       <button
+                        type="button"
                         onClick={() => handleRemoveRow(item.id)}
                         className={`text-xs font-medium px-2 py-1 rounded-lg transition-colors ${
                           isDark ? 'text-red-400 hover:bg-red-900/30' : 'text-red-500 hover:bg-red-100'
@@ -714,6 +764,7 @@ export const PurchasesPage: React.FC = () => {
 
                       <div className="hidden xl:flex justify-center">
                         <button
+                          type="button"
                           onClick={() => handleRemoveRow(item.id)}
                           className={`p-2 rounded-lg transition-colors ${isDark ? 'hover:bg-red-900/30 text-red-400' : 'hover:bg-red-100 text-red-500'}`}
                         >
@@ -891,6 +942,7 @@ export const PurchasesPage: React.FC = () => {
           {/* Actions */}
           <div className={`flex justify-end gap-3 pt-4 border-t ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
             <button
+              type="button"
               onClick={() => { setShowBulkModal(false); setItems([]); }}
               className={`px-5 py-2.5 rounded-xl text-sm font-medium transition-colors ${
                 isDark ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -899,6 +951,7 @@ export const PurchasesPage: React.FC = () => {
               Cancel
             </button>
             <button
+              type="button"
               onClick={handleSave}
               disabled={isProcessing || (items || []).length === 0 || !selectedSupplier}
               className="px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl text-sm font-medium transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
@@ -1007,7 +1060,7 @@ export const PurchasesPage: React.FC = () => {
       </Modal>
 
       {/* ========== COSMETIC MODAL ========== */}
-      <Modal isOpen={showCosmeticModal} onClose={() => setShowCosmeticModal(false)} title="Add Cosmetics" size="2xl">
+      <Modal isOpen={showCosmeticModal} onClose={() => { console.log('[COSMETIC MODAL] onClose (backdrop/x)'); setShowCosmeticModal(false); }} title="Add Cosmetics" size="2xl">
         <div className="space-y-5">
           <div className="flex items-center gap-4 pb-2">
             <div className={`flex h-14 w-14 items-center justify-center rounded-xl ${isDark ? 'bg-purple-900/30 text-purple-400' : 'bg-purple-100 text-purple-600'}`}>
@@ -1026,6 +1079,7 @@ export const PurchasesPage: React.FC = () => {
                 Cosmetic Items ({cosmeticItems.length})
               </h4>
               <button
+                type="button"
                 onClick={handleAddCosmeticRow}
                 className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-medium transition-colors flex items-center gap-1"
               >
@@ -1057,6 +1111,7 @@ export const PurchasesPage: React.FC = () => {
                         Item #{cosmeticItems.findIndex(i => i.id === item.id) + 1}
                       </span>
                       <button
+                        type="button"
                         onClick={() => handleRemoveCosmeticRow(item.id)}
                         className={`text-xs font-medium px-2 py-1 rounded-lg transition-colors ${
                           isDark ? 'text-red-400 hover:bg-red-900/30' : 'text-red-500 hover:bg-red-100'
@@ -1156,6 +1211,7 @@ export const PurchasesPage: React.FC = () => {
 
                       <div className="hidden xl:flex justify-center">
                         <button
+                          type="button"
                           onClick={() => handleRemoveCosmeticRow(item.id)}
                           className={`p-2 rounded-lg transition-colors ${isDark ? 'hover:bg-red-900/30 text-red-400' : 'hover:bg-red-100 text-red-500'}`}
                         >
@@ -1215,7 +1271,8 @@ export const PurchasesPage: React.FC = () => {
           {/* Actions */}
           <div className={`flex justify-end gap-3 pt-4 border-t ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
             <button
-              onClick={() => { setShowCosmeticModal(false); setCosmeticItems([]); }}
+              type="button"
+              onClick={() => { console.log('[COSMETIC MODAL] Cancel clicked'); setShowCosmeticModal(false); setCosmeticItems([]); }}
               className={`px-5 py-2.5 rounded-xl text-sm font-medium transition-colors ${
                 isDark ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
@@ -1223,7 +1280,8 @@ export const PurchasesPage: React.FC = () => {
               Cancel
             </button>
             <button
-              onClick={handleSave}
+              type="button"
+              onClick={() => { console.log('[COSMETIC MODAL] Save Purchase clicked'); handleSave(); }}
               disabled={isProcessing || ((items || []).length === 0 && cosmeticItems.length === 0) || !selectedSupplier}
               className="px-5 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl text-sm font-medium transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
