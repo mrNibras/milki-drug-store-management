@@ -226,12 +226,13 @@ export const PurchasesPage: React.FC = () => {
       if (!item.quantity || Number(item.quantity) <= 0) errors.push('Invalid quantity');
       if (!item.buyingPrice || Number(item.buyingPrice) < 0) errors.push('Invalid buying price');
       if (!item.sellingPrice || Number(item.sellingPrice) < 0) errors.push('Invalid selling price');
-      if (Number(item.buyingPrice) > Number(item.sellingPrice)) errors.push('Selling price must not exceed buying price');
+      // Selling price can be higher than buying price (profit)
       if (!item.lowStock || Number(item.lowStock) < 0) errors.push('Invalid low stock threshold');
       const duplicate = cosmeticItems.find(i => 
         i.id !== item.id &&
         i.brandName.toLowerCase() === item.brandName.toLowerCase() &&
-        i.expiryDate === item.expiryDate
+        i.expiryDate === item.expiryDate &&
+        item.expiryDate !== '' // Don't treat empty expiry as duplicate
       );
       if (duplicate) errors.push('Duplicate batch');
       if (errors.length > 0) isValid = false;
@@ -1097,7 +1098,7 @@ export const PurchasesPage: React.FC = () => {
                   <div className={isDark ? 'text-gray-400' : 'text-gray-500'}>Qty</div>
                   <div className={isDark ? 'text-gray-400' : 'text-gray-500'}>Buying Price</div>
                   <div className={isDark ? 'text-gray-400' : 'text-gray-500'}>Selling Price</div>
-                  <div className={isDark ? 'text-gray-400' : 'text-gray-500'}>Expire Date</div>
+                  <div className={isDark ? 'text-gray-400' : 'text-gray-500'}>Low Stock Threshold</div>
                   <div />
                 </div>
 
@@ -1199,7 +1200,7 @@ export const PurchasesPage: React.FC = () => {
 
                       <div>
                         <label className={`text-xs font-medium mb-1 xl:hidden block ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                          Low Stock
+                          Low Stock Threshold
                         </label>
                         <input
                           type="number"
@@ -1225,7 +1226,7 @@ export const PurchasesPage: React.FC = () => {
                     {/* Expiry Date (optional) */}
                     <div className="mt-3">
                       <label className={`text-xs font-medium mb-1 block ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                        Expire Date <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>(optional)</span>
+                        Expiry Date <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>(optional)</span>
                       </label>
                       <input
                         type="date"
