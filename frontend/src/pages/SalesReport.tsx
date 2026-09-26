@@ -6,45 +6,45 @@ import { formatCurrency, formatDate } from '../utils/helpers';
 import { BarChart3 } from 'lucide-react';
 
 const SalesReport: React.FC = () => {
-  const { sales, fetchSales, error, loading } = useAppStore();
+  const { sales, fetchSales, salesReport, fetchSalesReport, error, loading } = useAppStore();
   const { theme } = useThemeStore();
   const isDark = theme === 'dark';
   const [dateRange, setDateRange] = useState('weekly');
 
   useEffect(() => {
     if (!sales || !sales.length) fetchSales();
-  }, [fetchSales, sales]);
+    fetchSalesReport(dateRange);
+  }, [fetchSales, fetchSalesReport, dateRange]);
 
-  const salesByDate = useMemo(() => {
-    const grouped: Record<string, { sales: number; profit: number; count: number }> = {};
-    (sales || []).forEach(s => {
-      const date = s.saleDate.split('T')[0];
-      if (!grouped[date]) grouped[date] = { sales: 0, profit: 0, count: 0 };
-      grouped[date].sales += s.totalAmount;
-      grouped[date].profit += s.profit;
-      grouped[date].count += 1;
-    });
-    return Object.entries(grouped)
-      .map(([date, data]) => ({ date, ...data }))
-      .sort((a, b) => a.date.localeCompare(b.date));
-  }, [sales]);
+  const reportData = salesReport[dateRange] || [];
+
+  const chartData = useMemo(() => reportData.map(r => ({
+    label: r.label,
+    sales: r.sales,
+    profit: r.profit,
+    transactions: r.transactionCount,
+  })), [reportData]);
+
+  const filteredTotalSales = useMemo(() => reportData.reduce((s, r) => s + r.sales, 0), [reportData]);
+  const filteredTotalProfit = useMemo(() => reportData.reduce((s, r) => s + r.profit, 0), [reportData]);
+  const filteredTotalTransactions = useMemo(() => reportData.reduce((s, r) => s + r.transactionCount, 0), [reportData]);
 
   const filteredSales = useMemo(() => {
     const now = new Date();
     const today = now.toISOString().split('T')[0];
-    
+
     const startOfWeek = new Date(now);
     const dayOfWeek = startOfWeek.getDay();
     const diff = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
     startOfWeek.setDate(startOfWeek.getDate() - diff);
     startOfWeek.setHours(0, 0, 0, 0);
-    
+
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const startOfYear = new Date(now.getFullYear(), 0, 1);
 
     return (sales || []).filter(sale => {
       const saleDate = new Date(sale.saleDate);
-      
+
       switch (dateRange) {
         case 'daily':
           return sale.saleDate.startsWith(today);
@@ -60,12 +60,10 @@ const SalesReport: React.FC = () => {
     }).sort((a, b) => new Date(b.saleDate).getTime() - new Date(a.saleDate).getTime());
   }, [sales, dateRange]);
 
-  const filteredTotalSales = useMemo(() => filteredSales.reduce((s, sale) => s + sale.totalAmount, 0), [filteredSales]);
-  const filteredTotalProfit = useMemo(() => filteredSales.reduce((s, sale) => s + sale.profit, 0), [filteredSales]);
-  const filteredTotalTransactions = filteredSales.length;
+  const reportLoading = loading[`report_${dateRange}`] || false;
 
-  if (loading.sales) {
-    return <div className="text-center py-10">Loading sales data...</div>;
+  if (reportLoading) {
+    return <div className="text-center py-10">Loading report data...</div>;
   }
 
   if (error) {
@@ -104,11 +102,11 @@ const SalesReport: React.FC = () => {
       <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl border p-6`}>
         <h3 className={`text-lg font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>{dateRange.charAt(0).toUpperCase() + dateRange.slice(1)} Sales Overview</h3>
         <ResponsiveContainer width="100%" height={350}>
-          <BarChart data={salesByDate}>
+          <BarChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#374151' : '#f0f0f0'} />
-            <XAxis dataKey="date" stroke={isDark ? '#9ca3af' : '#9ca3af'} fontSize={12} />
-            <YAxis stroke={isDark ? '#9ca3af' : '#9ca3af'} fontSize={12} tickFormatter={(value) => formatCurrency(Number(value), 0)} />
-            <Tooltip contentStyle={{ borderRadius: '12px', backgroundColor: isDark ? '#1f2937' : '#ffffff', border: `1px solid ${isDark ? '#374151' : '#e5e7eb'}` }} formatter={(value: number) => [formatCurrency(value), null]} />
+            <XAxis dataKey="label" stroke={isDark ? '#9ca3af' : '#9ca3af'} fontSize={12} />
+            <YAxis stroke={isDark ? '#9ca3af' : '#9ca3af'} fontSize={12} tickFormatter={(value) => formatCurrency(Number(value))} />
+            <Tooltip contentStyle={{ borderRadius: '12px', backgroundColor: isDark ? '#1f2937' : '#ffffff', border: `1px solid ${isDark ? '#374151' : '#e5e7eb'}` }} formatter={(value: any) => [formatCurrency(value), null]} />
             <Legend />
             <Bar dataKey="sales" fill="#10B981" radius={[4, 4, 0, 0]} name="Sales" />
             <Bar dataKey="profit" fill="#3B82F6" radius={[4, 4, 0, 0]} name="Profit" />
@@ -148,8 +146,8 @@ const SalesReport: React.FC = () => {
             <tfoot>
               <tr className={`border-t-2 ${isDark ? 'border-gray-600 bg-gray-700/50' : 'border-gray-200 bg-gray-50'}`}>
                 <td colSpan={4} className={`px-6 py-3 text-sm font-semibold text-left ${isDark ? 'text-white' : 'text-gray-900'}`}>Total ({filteredSales.length} transaction{filteredSales.length !== 1 ? 's' : ''})</td>
-                <td className={`px-6 py-3 text-sm font-bold text-right ${isDark ? 'text-white' : 'text-gray-900'}`}>{formatCurrency(filteredTotalSales)}</td>
-                <td className="px-6 py-3 text-sm font-bold text-right text-emerald-500">{formatCurrency(filteredTotalProfit)}</td>
+                <td className={`px-6 py-3 text-sm font-bold text-right ${isDark ? 'text-white' : 'text-gray-900'}`}>{formatCurrency(filteredSales.reduce((s, sale) => s + sale.totalAmount, 0))}</td>
+                <td className="px-6 py-3 text-sm font-bold text-right text-emerald-500">{formatCurrency(filteredSales.reduce((s, sale) => s + sale.profit, 0))}</td>
               </tr>
             </tfoot>
           )}

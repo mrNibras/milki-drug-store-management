@@ -16,7 +16,11 @@ public class SaleRepository : Repository<Sale>, ISaleRepository
             .Include(s => s.Items)
                 .ThenInclude(i => i.Medicine)
             .Include(s => s.Items)
+                .ThenInclude(i => i.Cosmetic)
+            .Include(s => s.Items)
                 .ThenInclude(i => i.Batch)
+            .Include(s => s.Items)
+                .ThenInclude(i => i.CosmeticBatch)
             .Include(s => s.User)
             .AsQueryable());
     }
@@ -26,6 +30,10 @@ public class SaleRepository : Repository<Sale>, ISaleRepository
         return await _dbSet
             .Include(s => s.Items)
                 .ThenInclude(i => i.Medicine)
+            .Include(s => s.Items)
+                .ThenInclude(i => i.Cosmetic)
+            .Include(s => s.Items)
+                .ThenInclude(i => i.CosmeticBatch)
             .Include(s => s.User)
             .FirstOrDefaultAsync(s => s.SaleId == id);
     }

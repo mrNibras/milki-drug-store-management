@@ -15,6 +15,7 @@ public class DashboardSummaryResponse
 public class SalesReportResponse
 {
     public DateTime Date { get; set; }
+    public string Label { get; set; } = string.Empty;
     public decimal Sales { get; set; }
     public decimal Profit { get; set; }
     public int TransactionCount { get; set; }

@@ -4,27 +4,45 @@ import { useThemeStore } from '../store/themeStore';
 import { formatCurrency } from '../utils/helpers';
 
 const InventoryReport: React.FC = () => {
-  const { medicines, fetchMedicines, error, loading } = useAppStore();
+  const { medicines, cosmetics, fetchMedicines, fetchCosmetics, error, loading } = useAppStore();
   const { theme } = useThemeStore();
   const isDark = theme === 'dark';
 
   useEffect(() => {
     if (!medicines || !medicines.length) fetchMedicines();
-  }, [fetchMedicines, medicines]);
+    fetchCosmetics();
+  }, [fetchMedicines, fetchCosmetics, medicines]);
 
   const inventoryData = useMemo(() => {
-    return (medicines || []).map(m => {
+    const medicineData = (medicines || []).map(m => {
       const totalQuantity = m.batches.reduce((s, b) => s + b.quantity, 0);
       const totalValue = m.batches.reduce((s, b) => s + (b.quantity * b.purchasePrice), 0);
       return {
         name: m.name,
         category: m.categoryName,
+        type: 'medicine' as const,
         quantity: totalQuantity,
         value: totalValue,
         status: totalQuantity === 0 ? 'Out of Stock' : totalQuantity <= m.lowStockThreshold ? 'Low Stock' : 'In Stock',
       };
-    }).sort((a, b) => a.quantity - b.quantity);
-  }, [medicines]);
+    });
+
+    const cosmeticData = (cosmetics || []).map(c => {
+      const totalQuantity = c.batches.reduce((s, b) => s + b.balance, 0);
+      const totalValue = c.batches.reduce((s, b) => s + (b.balance * b.buyingPrice), 0);
+      const threshold = c.batches.length > 0 ? Math.min(...c.batches.map(b => b.lowStockThreshold)) : 0;
+      return {
+        name: c.productName,
+        category: c.categoryName,
+        type: 'cosmetic' as const,
+        quantity: totalQuantity,
+        value: totalValue,
+        status: totalQuantity === 0 ? 'Out of Stock' : totalQuantity <= threshold ? 'Low Stock' : 'In Stock',
+      };
+    });
+
+    return [...medicineData, ...cosmeticData].sort((a, b) => a.quantity - b.quantity);
+  }, [medicines, cosmetics]);
 
   const totalInventoryValue = useMemo(() => inventoryData.reduce((s, i) => s + i.value, 0), [inventoryData]);
   const outOfStockItems = useMemo(() => inventoryData.filter(i => i.status === 'Out of Stock').length, [inventoryData]);

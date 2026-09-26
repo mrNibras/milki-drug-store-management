@@ -7,28 +7,38 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { useAppStore } from '../store/appStore';
 import { useThemeStore } from '../store/themeStore';
 import { formatCurrency, formatDate, formatDateTime, getDaysUntilExpiry } from '../utils/helpers';
+import { SaleItem } from '../types';
 
 const COLORS = ['#10B981', '#3B82F6', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#6B7280'];
 
+const getItemKey = (item: SaleItem): string => {
+  if (item.productType === 'cosmetic') {
+    return `cosmetic-${item.cosmeticId || item.id}`;
+  }
+  return `medicine-${item.medicineId || item.id}`;
+};
+
 export const DashboardPage: React.FC = () => {
-  const { medicines, sales, notifications, auditLogs, fetchMedicines, fetchSales, fetchNotifications, fetchAuditLogs, currentUser, loading } = useAppStore();
+  const { medicines, cosmetics, sales, notifications, auditLogs, fetchMedicines, fetchCosmetics, fetchSales, fetchNotifications, fetchAuditLogs, currentUser } = useAppStore();
   const { theme } = useThemeStore();
   const isDark = theme === 'dark';
   const isAdmin = currentUser?.role === 'admin';
 
   useEffect(() => {
     fetchMedicines();
+    fetchCosmetics();
     fetchNotifications();
     if (isAdmin) {
       fetchSales();
       fetchAuditLogs();
     }
-  }, [fetchMedicines, fetchSales, fetchNotifications, fetchAuditLogs, isAdmin]);
+  }, [fetchMedicines, fetchCosmetics, fetchSales, fetchNotifications, fetchAuditLogs, isAdmin]);
 
-  // Calculate stats
-  const totalMedicines = (medicines || []).length;
+  const totalProducts = ((medicines || []).length) + ((cosmetics || []).length);
   const totalInventoryValue = (medicines || []).reduce((sum, m) => {
     return sum + (m.batches || []).reduce((bSum, b) => bSum + ((b.quantity || 0) * (b.purchasePrice || 0)), 0);
+  }, 0) + (cosmetics || []).reduce((sum, c) => {
+    return sum + (c.batches || []).reduce((bSum, b) => bSum + ((b.balance || 0) * (b.buyingPrice || 0)), 0);
   }, 0);
 
   const today = new Date().toISOString().split('T')[0];
@@ -48,6 +58,10 @@ export const DashboardPage: React.FC = () => {
   const lowStockCount = (medicines || []).filter(m => {
     const totalQty = (m.batches || []).reduce((sum, b) => sum + (b.quantity || 0), 0);
     return totalQty > 0 && totalQty <= (m.lowStockThreshold || 0);
+  }).length + (cosmetics || []).filter(c => {
+    const totalQty = (c.batches || []).reduce((sum, b) => sum + (b.balance || 0), 0);
+    const threshold = (c.batches || []).length > 0 ? Math.min(...c.batches.map(b => b.lowStockThreshold || 0)) : 0;
+    return totalQty > 0 && totalQty <= threshold;
   }).length;
 
   const expiringCount = (medicines || []).filter(m =>
@@ -55,23 +69,37 @@ export const DashboardPage: React.FC = () => {
       const days = getDaysUntilExpiry(b.expiryDate);
       return days > 0 && days <= 180;
     })
+  ).length + (cosmetics || []).filter(c =>
+    (c.batches || []).some(b => {
+      const days = getDaysUntilExpiry(b.expiryDate || '');
+      return days > 0 && days <= 180;
+    })
   ).length;
 
   const outOfStockCount = (medicines || []).filter(m =>
     (m.batches || []).every(b => b.quantity === 0)
+  ).length + (cosmetics || []).filter(c =>
+    (c.batches || []).every(b => b.balance === 0)
   ).length;
 
   const recentSales = [...(sales || [])].sort((a, b) => new Date(b.saleDate).getTime() - new Date(a.saleDate).getTime()).slice(0, 5);
   const unreadNotifications = (notifications || []).filter(n => !n.isRead);
 
-  // Inventory by category
-  const inventoryByCategory = (medicines || []).reduce((acc, m) => {
-    const totalQty = (m.batches || []).reduce((sum, b) => sum + (b.quantity || 0), 0);
-    const existing = acc.find(a => a.name === m.categoryName);
+  const inventoryByCategory = [...(medicines || []), ...(cosmetics || [])].reduce((acc, item) => {
+    let totalQty: number;
+    let catName: string;
+    if ('cosmeticId' in item) {
+      totalQty = (item.batches || []).reduce((sum, b) => sum + (b.balance || 0), 0);
+      catName = item.categoryName;
+    } else {
+      totalQty = (item.batches || []).reduce((sum, b) => sum + (b.quantity || 0), 0);
+      catName = item.categoryName;
+    }
+    const existing = acc.find(a => a.name === catName);
     if (existing) {
       existing.value += totalQty;
     } else {
-      acc.push({ name: m.categoryName, value: totalQty });
+      acc.push({ name: catName, value: totalQty });
     }
     return acc;
   }, [] as { name: string; value: number }[]);
@@ -79,16 +107,17 @@ export const DashboardPage: React.FC = () => {
   // Most selling items for current month
   const mostSellingItems = useMemo(() => {
     const currentMonth = new Date().toISOString().slice(0, 7);
-    const monthlySales = (sales || []).filter(s => s.saleDate?.startsWith(currentMonth));
+    const monthlySalesData = (sales || []).filter(s => s.saleDate?.startsWith(currentMonth));
 
     const itemSales: Record<string, { name: string; quantity: number; revenue: number }> = {};
-    monthlySales.forEach(sale => {
+    monthlySalesData.forEach(sale => {
       (sale.items || []).forEach(item => {
-        if (!itemSales[item.medicineId]) {
-          itemSales[item.medicineId] = { name: item.brandName, quantity: 0, revenue: 0 };
+        const key = getItemKey(item);
+        if (!itemSales[key]) {
+          itemSales[key] = { name: item.brandName, quantity: 0, revenue: 0 };
         }
-        itemSales[item.medicineId].quantity += item.quantity || 0;
-        itemSales[item.medicineId].revenue += item.totalPrice || 0;
+        itemSales[key].quantity += item.quantity || 0;
+        itemSales[key].revenue += item.totalPrice || 0;
       });
     });
 
@@ -98,7 +127,7 @@ export const DashboardPage: React.FC = () => {
   }, [sales]);
 
   const statsCards = [
-    { label: 'Total Medicines', value: totalMedicines, icon: <Pill className="h-6 w-6" />, color: 'from-blue-500 to-blue-600', change: '+12%', up: true },
+    { label: 'Total Products', value: totalProducts, icon: <Pill className="h-6 w-6" />, color: 'from-blue-500 to-blue-600', change: '+12%', up: true },
     { label: 'Inventory Value', value: formatCurrency(totalInventoryValue), icon: <Package className="h-6 w-6" />, color: 'from-emerald-500 to-emerald-600', change: '+8%', up: true },
     { label: "Today's Sales", value: formatCurrency(todaySales), icon: <ShoppingCart className="h-6 w-6" />, color: 'from-violet-500 to-violet-600', change: '+5%', up: true },
     { label: 'Monthly Sales', value: formatCurrency(monthlySales), icon: <DollarSign className="h-6 w-6" />, color: 'from-amber-500 to-orange-500', change: '+15%', up: true },
@@ -106,7 +135,7 @@ export const DashboardPage: React.FC = () => {
     { label: 'Low Stock', value: lowStockCount, icon: <AlertTriangle className="h-6 w-6" />, color: 'from-red-500 to-red-600', change: '-2', up: false },
     { label: 'Expiring Soon', value: expiringCount, icon: <Clock className="h-6 w-6" />, color: 'from-orange-500 to-amber-500', change: '', up: true },
     { label: 'Out of Stock', value: outOfStockCount, icon: <Package className="h-6 w-6" />, color: 'from-gray-500 to-gray-600', change: '', up: false },
-  ].filter(card => isAdmin || ['Total Medicines', 'Low Stock', 'Expiring Soon', 'Out of Stock'].includes(card.label));
+  ].filter(card => isAdmin || ['Total Products', 'Low Stock', 'Expiring Soon', 'Out of Stock'].includes(card.label));
 
   return (
     <div className="space-y-6">
@@ -232,7 +261,7 @@ export const DashboardPage: React.FC = () => {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h3 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>Most Selling Items</h3>
-            <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Top 5 medicines this month</p>
+            <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Top 5 products this month</p>
           </div>
           <Award className="h-5 w-5 text-amber-500" />
         </div>

@@ -3,6 +3,14 @@ import { Award } from 'lucide-react';
 import { useAppStore } from '../store/appStore';
 import { useThemeStore } from '../store/themeStore';
 import { formatCurrency } from '../utils/helpers';
+import { SaleItem } from '../types';
+
+const getItemKey = (item: SaleItem): string => {
+  if (item.productType === 'cosmetic') {
+    return `cosmetic-${item.cosmeticId || item.id}`;
+  }
+  return `medicine-${item.medicineId || item.id}`;
+};
 
 const MostSellingReport: React.FC = () => {
   const { sales, fetchSales, loading, error } = useAppStore();
@@ -19,11 +27,12 @@ const MostSellingReport: React.FC = () => {
       const month = sale.saleDate.slice(0, 7);
       if (!months[month]) months[month] = {};
       sale.items.forEach(item => {
-        if (!months[month][item.medicineId]) {
-          months[month][item.medicineId] = { name: item.brandName, quantity: 0, revenue: 0 };
+        const key = getItemKey(item);
+        if (!months[month][key]) {
+          months[month][key] = { name: item.brandName, quantity: 0, revenue: 0 };
         }
-        months[month][item.medicineId].quantity += item.quantity;
-        months[month][item.medicineId].revenue += item.totalPrice;
+        months[month][key].quantity += item.quantity;
+        months[month][key].revenue += item.totalPrice;
       });
     });
     const result: Record<string, { name: string; quantity: number; revenue: number }[]> = {};
@@ -37,11 +46,12 @@ const MostSellingReport: React.FC = () => {
     const itemSales: Record<string, { name: string; quantity: number; revenue: number }> = {};
     (sales || []).forEach(sale => {
       sale.items.forEach(item => {
-        if (!itemSales[item.medicineId]) {
-          itemSales[item.medicineId] = { name: item.brandName, quantity: 0, revenue: 0 };
+        const key = getItemKey(item);
+        if (!itemSales[key]) {
+          itemSales[key] = { name: item.brandName, quantity: 0, revenue: 0 };
         }
-        itemSales[item.medicineId].quantity += item.quantity;
-        itemSales[item.medicineId].revenue += item.totalPrice;
+        itemSales[key].quantity += item.quantity;
+        itemSales[key].revenue += item.totalPrice;
       });
     });
     return Object.values(itemSales).sort((a, b) => b.quantity - a.quantity).slice(0, 10);

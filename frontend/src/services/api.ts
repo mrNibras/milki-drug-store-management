@@ -329,6 +329,19 @@ export interface DashboardSummaryResponse {
   outOfStockCount: number;
 }
 
+export interface SalesReportResponse {
+  date: string;
+  label: string;
+  sales: number;
+  profit: number;
+  transactionCount: number;
+}
+
+export const fetchSalesReport = async (period: string): Promise<SalesReportResponse[]> => {
+  const res = await api.get<SalesReportResponse[]>(`/reports/sales/${period}`);
+  return res.data;
+};
+
 export interface NotificationResponse {
   notificationId: number;
   title: string;

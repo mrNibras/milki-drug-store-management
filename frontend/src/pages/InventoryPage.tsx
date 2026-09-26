@@ -1,62 +1,136 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Search, Package, AlertTriangle, CheckCircle, Layers, Tag } from 'lucide-react';
+import { Search, Package, AlertTriangle, CheckCircle, Layers, Tag, Sparkle } from 'lucide-react';
 import { useAppStore } from '../store/appStore';
 import { useThemeStore } from '../store/themeStore';
 import { Badge } from '../components/ui/Badge';
+import { Medicine, Cosmetic } from '../types';
 import { formatDate, getDaysUntilExpiry, getExpiryStatus, getStockStatus, getStockColor, formatCurrency } from '../utils/helpers';
 
+interface UnifiedInventoryItem {
+  id: string;
+  productType: 'medicine' | 'cosmetic';
+  name: string;
+  genericName: string;
+  categoryId: string;
+  categoryName: string;
+  unitType: string;
+  lowStockThreshold: number;
+  batches: UnifiedBatch[];
+}
+
+interface UnifiedBatch {
+  id: string;
+  productId: string;
+  batchNumber: string;
+  purchasePrice: number;
+  sellingPrice: number;
+  quantity: number;
+  expiryDate: string;
+  createdAt: string;
+}
+
+const toUnifiedMedicine = (m: Medicine): UnifiedInventoryItem => ({
+  id: m.id,
+  productType: 'medicine',
+  name: m.name,
+  genericName: m.genericName,
+  categoryId: m.categoryId,
+  categoryName: m.categoryName,
+  unitType: m.unitType,
+  lowStockThreshold: m.lowStockThreshold,
+  batches: m.batches.map(b => ({
+    id: b.id,
+    productId: b.medicineId,
+    batchNumber: b.batchNumber,
+    purchasePrice: b.purchasePrice,
+    sellingPrice: b.sellingPrice,
+    quantity: b.quantity,
+    expiryDate: b.expiryDate,
+    createdAt: b.createdAt,
+  })),
+});
+
+const toUnifiedCosmetic = (c: Cosmetic): UnifiedInventoryItem => ({
+  id: String(c.cosmeticId),
+  productType: 'cosmetic',
+  name: c.productName,
+  genericName: c.description,
+  categoryId: String(c.categoryId),
+  categoryName: c.categoryName,
+  unitType: c.unitTypeName,
+  lowStockThreshold: c.batches.length > 0 ? Math.min(...c.batches.map(b => b.lowStockThreshold)) : 0,
+  batches: c.batches.map(b => ({
+    id: String(b.batchId),
+    productId: String(b.cosmeticId),
+    batchNumber: b.batchNumber,
+    purchasePrice: b.buyingPrice,
+    sellingPrice: b.sellingPrice,
+    quantity: b.balance,
+    expiryDate: b.expiryDate || '',
+    createdAt: b.dateReceived,
+  })),
+});
+
 export const InventoryPage: React.FC = () => {
-  const { medicines, categories, fetchMedicines, fetchCategories, currentUser, loading } = useAppStore();
+  const { medicines, cosmetics, categories, fetchMedicines, fetchCategories, fetchCosmetics, currentUser } = useAppStore();
   const { theme } = useThemeStore();
   const isDark = theme === 'dark';
   const isAdmin = currentUser?.role === 'admin';
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [typeFilter, setTypeFilter] = useState('all');
 
   useEffect(() => {
     fetchMedicines();
     fetchCategories();
-  }, [fetchMedicines, fetchCategories]);
+    fetchCosmetics();
+  }, [fetchMedicines, fetchCategories, fetchCosmetics]);
 
-  const filteredMedicines = useMemo(() => {
-    return (medicines || []).filter(medicine => {
-      const matchSearch = medicine.name?.toLowerCase().includes(search.toLowerCase()) ||
-        medicine.genericName?.toLowerCase().includes(search.toLowerCase()) ||
-        medicine.categoryName?.toLowerCase().includes(search.toLowerCase()) ||
-        (medicine.batches || []).some(b => b.batchNumber?.toLowerCase().includes(search.toLowerCase()));
-      
-      const matchCategory = categoryFilter === 'all' || medicine.categoryId === categoryFilter;
-      
-      const totalQty = (medicine.batches || []).reduce((sum, b) => sum + (b.quantity || 0), 0);
+  const inventoryItems = useMemo(() => {
+    const items: UnifiedInventoryItem[] = [];
+    (medicines || []).forEach(m => items.push(toUnifiedMedicine(m)));
+    (cosmetics || []).forEach(c => items.push(toUnifiedCosmetic(c)));
+    return items;
+  }, [medicines, cosmetics]);
+
+  const filteredItems = useMemo(() => {
+    return inventoryItems.filter(item => {
+      const matchSearch = item.name?.toLowerCase().includes(search.toLowerCase()) ||
+        item.genericName?.toLowerCase().includes(search.toLowerCase()) ||
+        item.categoryName?.toLowerCase().includes(search.toLowerCase()) ||
+        (item.batches || []).some(b => b.batchNumber?.toLowerCase().includes(search.toLowerCase()));
+
+      const matchCategory = categoryFilter === 'all' || item.categoryId === categoryFilter;
+      const matchType = typeFilter === 'all' || item.productType === typeFilter;
+
+      const totalQty = (item.batches || []).reduce((sum, b) => sum + (b.quantity || 0), 0);
       let matchStatus = true;
       if (statusFilter === 'expired') {
-        matchStatus = (medicine.batches || []).some(b => getDaysUntilExpiry(b.expiryDate) < 0 && b.quantity > 0);
+        matchStatus = (item.batches || []).some(b => getDaysUntilExpiry(b.expiryDate) < 0 && b.quantity > 0);
       } else if (statusFilter === 'expiring') {
-        matchStatus = (medicine.batches || []).some(b => {
+        matchStatus = (item.batches || []).some(b => {
           const days = getDaysUntilExpiry(b.expiryDate);
           return days >= 0 && days <= 180 && b.quantity > 0;
         });
       } else if (statusFilter === 'low') {
-        matchStatus = totalQty > 0 && totalQty <= medicine.lowStockThreshold;
+        matchStatus = totalQty > 0 && totalQty <= item.lowStockThreshold;
       } else if (statusFilter === 'out_of_stock') {
         matchStatus = totalQty === 0;
       }
 
-      return matchSearch && matchCategory && matchStatus;
+      return matchSearch && matchCategory && matchStatus && matchType;
     }).sort((a, b) => a.name.localeCompare(b.name));
-  }, [medicines, search, categoryFilter, statusFilter]);
+  }, [inventoryItems, search, categoryFilter, statusFilter, typeFilter]);
 
-  const totalItems = (medicines || []).reduce((sum, m) => sum + (m.batches || []).reduce((b, r) => b + (r.quantity || 0), 0), 0);
-  const totalInventoryValue = (medicines || []).reduce((sum, m) => sum + (m.batches || []).reduce((b, r) => b + ((r.quantity || 0) * (r.purchasePrice || 0)), 0), 0);
-  const totalSellingValue = (medicines || []).reduce((sum, m) => sum + (m.batches || []).reduce((b, r) => b + ((r.quantity || 0) * (r.sellingPrice || 0)), 0), 0);
-  const totalBatches = (medicines || []).reduce((sum, m) => sum + (m.batches || []).length, 0);
-  const lowStockCount = (medicines || []).filter(m => {
+  const totalItems = inventoryItems.reduce((sum, m) => sum + (m.batches || []).reduce((b, r) => b + (r.quantity || 0), 0), 0);
+  const totalInventoryValue = inventoryItems.reduce((sum, m) => sum + (m.batches || []).reduce((b, r) => b + ((r.quantity || 0) * (r.purchasePrice || 0)), 0), 0);
+  const totalSellingValue = inventoryItems.reduce((sum, m) => sum + (m.batches || []).reduce((b, r) => b + ((r.quantity || 0) * (r.sellingPrice || 0)), 0), 0);
+  const totalBatches = inventoryItems.reduce((sum, m) => sum + (m.batches || []).length, 0);
+  const lowStockCount = inventoryItems.filter(m => {
     const qty = (m.batches || []).reduce((s, b) => s + (b.quantity || 0), 0);
     return qty > 0 && qty <= m.lowStockThreshold;
   }).length;
-
-  const getMedicineStock = (m: typeof medicines[0]) => (m.batches || []).reduce((sum, b) => sum + (b.quantity || 0), 0);
 
   const thClass = `px-5 py-3 text-xs font-semibold uppercase whitespace-nowrap ${isDark ? 'text-gray-400' : 'text-gray-500'}`;
 
@@ -64,7 +138,7 @@ export const InventoryPage: React.FC = () => {
     <div className="space-y-6">
       <div>
         <h1 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Inventory Management</h1>
-        <p className={`${isDark ? 'text-gray-400' : 'text-gray-500'} mt-1`}>Medicines grouped by name with batch details</p>
+        <p className={`${isDark ? 'text-gray-400' : 'text-gray-500'} mt-1`}>Medicines and cosmetics with batch details</p>
       </div>
 
       {/* Stats */}
@@ -148,6 +222,14 @@ export const InventoryPage: React.FC = () => {
             <option value="all">All Categories</option>
             {(categories || []).map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
           </select>
+          <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}
+            className={`px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm ${
+              isDark ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'
+            }`}>
+            <option value="all">All Types</option>
+            <option value="medicine">Medicines</option>
+            <option value="cosmetic">Cosmetics</option>
+          </select>
           <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
             className={`px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm ${
               isDark ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'
@@ -167,7 +249,8 @@ export const InventoryPage: React.FC = () => {
           <table className="w-full">
             <thead>
               <tr className={isDark ? 'bg-gray-700' : 'bg-gray-50'}>
-                <th className={`${thClass} text-left`}>Brand Name</th>
+                <th className={`${thClass} text-left`}>Product Name</th>
+                <th className={`${thClass} text-left`}>Type</th>
                 <th className={`${thClass} text-left`}>Category</th>
                 <th className={`${thClass} text-left`}>Batch #</th>
                 <th className={`${thClass} text-left`}>Expiry Date</th>
@@ -179,10 +262,8 @@ export const InventoryPage: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredMedicines.map(medicine => {
-                const totalStock = getMedicineStock(medicine);
-                const stockStatus = getStockStatus(totalStock, medicine.lowStockThreshold);
-                const sortedBatches = [...medicine.batches].sort(
+              {filteredItems.map(item => {
+                const sortedBatches = [...item.batches].sort(
                   (a, b) => new Date(a.expiryDate).getTime() - new Date(b.expiryDate).getTime()
                 );
                 const batchCount = sortedBatches.length;
@@ -192,13 +273,12 @@ export const InventoryPage: React.FC = () => {
                   const isLastBatch = batchIndex === batchCount - 1;
                   const daysLeft = getDaysUntilExpiry(batch.expiryDate);
                   const expiryStatus = getExpiryStatus(batch.expiryDate);
-                  const batchStockStatus = getStockStatus(batch.quantity, medicine.lowStockThreshold);
+                  const batchStockStatus = getStockStatus(batch.quantity, item.lowStockThreshold);
                   const batchValue = batch.quantity * batch.purchasePrice;
-                  void stockStatus;
 
                   return (
                     <tr
-                      key={`${medicine.id}-${batch.id}`}
+                      key={`${item.id}-${batch.id}`}
                       className={`
                         ${isDark ? 'hover:bg-gray-700/30' : 'hover:bg-blue-50/30'}
                         ${isLastBatch 
@@ -207,7 +287,7 @@ export const InventoryPage: React.FC = () => {
                         }
                       `}
                     >
-                      {/* ===== MEDICINE NAME - ROWSPAN ===== */}
+                      {/* ===== PRODUCT NAME - ROWSPAN ===== */}
                       {isFirstBatch && (
                         <td
                           rowSpan={batchCount}
@@ -215,16 +295,34 @@ export const InventoryPage: React.FC = () => {
                         >
                           <div className="flex items-center gap-3 min-w-[200px]">
                             <div className={`flex h-10 w-10 items-center justify-center rounded-lg flex-shrink-0 ${
-                              isDark ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-100 text-blue-600'
+                              item.productType === 'cosmetic'
+                                ? (isDark ? 'bg-pink-900/30 text-pink-400' : 'bg-pink-100 text-pink-600')
+                                : (isDark ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-100 text-blue-600')
                             }`}>
-                              <Package className="h-5 w-5" />
+                              {item.productType === 'cosmetic' ? <Sparkle className="h-5 w-5" /> : <Package className="h-5 w-5" />}
                             </div>
                             <div>
-                              <p className={`font-bold whitespace-nowrap ${isDark ? 'text-white' : 'text-gray-900'}`}>{medicine.name}</p>
-                              <p className={`text-xs whitespace-nowrap ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{medicine.genericName}</p>
-                              <p className={`text-xs whitespace-nowrap ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{medicine.unitType}</p>
+                              <p className={`font-bold whitespace-nowrap ${isDark ? 'text-white' : 'text-gray-900'}`}>{item.name}</p>
+                              <p className={`text-xs whitespace-nowrap ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{item.genericName}</p>
+                              <p className={`text-xs whitespace-nowrap ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{item.unitType}</p>
                             </div>
                           </div>
+                        </td>
+                      )}
+
+                      {/* ===== PRODUCT TYPE - ROWSPAN ===== */}
+                      {isFirstBatch && (
+                        <td
+                          rowSpan={batchCount}
+                          className={`px-5 py-4 border-r align-top ${isDark ? 'border-r-gray-700 bg-gray-800/50' : 'border-r-gray-100 bg-gray-50/50'}`}
+                        >
+                          <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
+                            item.productType === 'cosmetic'
+                              ? (isDark ? 'bg-pink-900/30 text-pink-400' : 'bg-pink-100 text-pink-600')
+                              : (isDark ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-100 text-blue-700')
+                          }`}>
+                            {item.productType === 'cosmetic' ? 'Cosmetic' : 'Medicine'}
+                          </span>
                         </td>
                       )}
 
@@ -235,9 +333,9 @@ export const InventoryPage: React.FC = () => {
                           className={`px-5 py-4 border-r align-top ${isDark ? 'border-r-gray-700 bg-gray-800/50' : 'border-r-gray-100 bg-gray-50/50'}`}
                         >
                           <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
-                            isDark ? 'bg-violet-900/30 text-violet-400' : 'bg-violet-100 text-violet-600'
+                            isDark ? 'bg-violet-900/30 text-violet-400' : 'bg-violet-100 text-violet-700'
                           }`}>
-                            <Tag className="h-3 w-3" /> {medicine.categoryName}
+                            <Tag className="h-3 w-3" /> {item.categoryName}
                           </span>
                         </td>
                       )}
@@ -285,7 +383,7 @@ export const InventoryPage: React.FC = () => {
                       {/* ===== STOCK ===== */}
                       <td className="px-5 py-3 text-center">
                         <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap ${getStockColor(batchStockStatus)}`}>
-                          {batch.quantity} {medicine.unitType}{batch.quantity !== 1 ? 's' : ''}
+                          {batch.quantity} {item.unitType}{batch.quantity !== 1 ? 's' : ''}
                         </span>
                       </td>
 
@@ -319,10 +417,10 @@ export const InventoryPage: React.FC = () => {
           </table>
         </div>
 
-        {filteredMedicines.length === 0 && (
+        {filteredItems.length === 0 && (
           <div className="text-center py-16">
             <Package className={`h-16 w-16 mx-auto mb-4 ${isDark ? 'text-gray-600' : 'text-gray-300'}`} />
-            <p className={`text-lg font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>No medicines found</p>
+            <p className={`text-lg font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>No inventory items found</p>
             <p className={`text-sm mt-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Try adjusting your search or filters</p>
           </div>
         )}

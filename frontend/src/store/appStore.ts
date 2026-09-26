@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { User, Medicine, Supplier, Purchase, Sale, Notification, CartItem, PharmacySettings, AuditLog, Category, UnitType, Branch, CatalogOption, Cosmetic } from '../types';
-import { api, LoginRequest, LoginResponse, CreateSaleRequest, CreatePurchaseRequest, RecordDamageRequest, RecordExpiredRequest, ChangePasswordRequest, DamageResponse, ExpiredResponse, AuditLogResponse, BranchResponse, CreateBranchRequest, UpdateBranchRequest, CatalogOptionDto, CosmeticResponse } from '../services/api';
+import { api, LoginRequest, LoginResponse, CreateSaleRequest, CreatePurchaseRequest, RecordDamageRequest, RecordExpiredRequest, ChangePasswordRequest, DamageResponse, ExpiredResponse, AuditLogResponse, BranchResponse, CreateBranchRequest, UpdateBranchRequest, CatalogOptionDto, CosmeticResponse, SalesReportResponse, fetchSalesReport } from '../services/api';
 import { getSettings, updateSettings } from '../services/settingsApi';
 import { getDaysUntilExpiry, generateId } from '../utils/helpers';
 
@@ -49,6 +49,8 @@ interface AppState {
   sales: Sale[];
   fetchSales: () => Promise<void>;
   addSale: (sale: Sale) => Promise<void>;
+  salesReport: Record<string, SalesReportResponse[]>;
+  fetchSalesReport: (period: string) => Promise<void>;
 
   cart: CartItem[];
   addToCart: (item: CartItem) => void;
@@ -215,9 +217,12 @@ const toSale = (r: SaleResponse): Sale => ({
   items: r.items.map(i => ({
     id: String(i.saleItemId),
     saleId: String(r.saleId),
-    medicineId: String(i.medicineId),
+    productType: (i.productType as 'medicine' | 'cosmetic') || 'medicine',
+    medicineId: i.productId ? String(i.productId) : undefined,
+    cosmeticId: i.cosmeticId ? String(i.cosmeticId) : undefined,
     brandName: i.brandName,
     batchId: i.batchId ? String(i.batchId) : '',
+    cosmeticBatchId: i.cosmeticBatchId ? String(i.cosmeticBatchId) : '',
     quantity: i.quantity,
     unitPrice: i.unitPrice - (i.discountAmount ?? 0),
     standardUnitPrice: i.unitPrice,
@@ -259,6 +264,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   suppliers: [],
   purchases: [],
   sales: [],
+  salesReport: {},
   categories: [],
   unitTypes: [],
   isAuthenticated: false,
@@ -733,6 +739,20 @@ export const useAppStore = create<AppState>((set, get) => ({
       set({ error: e.response?.data?.message || 'Failed to add sale' });
       get().setLoading('sales', false);
       throw e;
+    }
+  },
+
+  fetchSalesReport: async (period) => {
+    get().setLoading(`report_${period}`, true); set({ error: null });
+    try {
+      const data = await fetchSalesReport(period);
+      set(state => ({
+        salesReport: { ...state.salesReport, [period]: data }
+      }));
+      get().setLoading(`report_${period}`, false);
+    } catch (e: any) {
+      set({ error: e.response?.data?.message || 'Failed to fetch sales report' });
+      get().setLoading(`report_${period}`, false);
     }
   },
 
