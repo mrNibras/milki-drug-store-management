@@ -1071,11 +1071,43 @@ export const PurchasesPage: React.FC = () => {
             </div>
             <div>
               <p className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>New Cosmetic Purchase</p>
-              <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Add cosmetic products to this purchase</p>
-            </div>
-          </div>
+             <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Add cosmetic products to this purchase</p>
+           </div>
+         </div>
 
-          {/* Cosmetic Items Table */}
+           {/* Supplier & Date */}
+           <div className={`p-5 rounded-xl ${isDark ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
+             <div className="grid grid-cols-2 gap-4">
+               <div>
+                 <label className={`flex items-center gap-2 text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                   <Truck className="h-4 w-4" /> Supplier <span className="text-red-500">*</span>
+                 </label>
+                 <select
+                   value={selectedSupplier}
+                   onChange={(e) => setSelectedSupplier(e.target.value)}
+                   className={inputClass}
+                 >
+                   <option value="">Select Supplier</option>
+                   {(suppliers || []).map(s => (
+                     <option key={s.id} value={s.id}>{s.name}</option>
+                   ))}
+                 </select>
+               </div>
+               <div>
+                 <label className={`flex items-center gap-2 text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                   <Calendar className="h-4 w-4" /> Purchase Date
+                 </label>
+                 <input
+                   type="date"
+                   value={purchaseDate}
+                   onChange={(e) => setPurchaseDate(e.target.value)}
+                   className={inputClass}
+                 />
+               </div>
+             </div>
+           </div>
+
+           {/* Cosmetic Items Table */}
           <div className={`rounded-xl border overflow-hidden ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
             <div className={`px-4 py-3 flex items-center justify-between ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
               <h4 className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
@@ -1282,6 +1314,14 @@ export const PurchasesPage: React.FC = () => {
             >
               Cancel
             </button>
+            {console.log('[SAVE PURCHASE DEBUG]', {
+              isProcessing,
+              selectedSupplier,
+              medicineItems: items.length,
+              cosmeticItems: cosmeticItems.length,
+              hasAnyItems: items.length > 0 || cosmeticItems.length > 0,
+              savePurchaseDisabled: isProcessing || ((items || []).length === 0 && cosmeticItems.length === 0) || !selectedSupplier
+            })}
             <button
               type="button"
               onClick={() => { 
