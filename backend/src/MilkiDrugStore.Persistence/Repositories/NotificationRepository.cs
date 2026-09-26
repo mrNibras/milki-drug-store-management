@@ -46,4 +46,14 @@ public class NotificationRepository : Repository<Notification>, INotificationRep
             .OrderByDescending(n => n.CreatedAt)
             .FirstOrDefaultAsync();
     }
+
+    public async Task<bool> HasNotificationTodayAsync(string notificationType, string brandName, int branchId)
+    {
+        var today = DateTime.UtcNow.Date;
+        return await _dbSet
+            .AnyAsync(n => n.NotificationType == notificationType
+                        && n.BranchId == branchId
+                        && n.Message.Contains(brandName)
+                        && n.CreatedAt >= today);
+    }
 }

@@ -31,6 +31,8 @@ public class NotificationService : INotificationService
         var query = notifications.AsQueryable();
         if (branchId.HasValue)
             query = query.Where(n => n.BranchId == branchId.Value);
+        query = query.OrderByDescending(n => n.IsRead)
+                     .ThenByDescending(n => n.CreatedAt);
         return query.Select(n => new NotificationResponse
         {
             NotificationId = n.NotificationId,
@@ -48,6 +50,7 @@ public class NotificationService : INotificationService
         var query = notifications.AsQueryable();
         if (branchId.HasValue)
             query = query.Where(n => n.BranchId == branchId.Value);
+        query = query.OrderByDescending(n => n.CreatedAt);
         return query.Select(n => new NotificationResponse
         {
             NotificationId = n.NotificationId,
@@ -116,7 +119,7 @@ public class NotificationService : INotificationService
 
             if (totalStock == 0 && medicine.IsActive)
             {
-                if (await _notificationRepo.GetActiveByTypeAndMedicineAsync(NotificationTypeStrings.OutOfStock, medicine.BrandName, branchId) == null)
+                if (!await _notificationRepo.HasNotificationTodayAsync(NotificationTypeStrings.OutOfStock, medicine.BrandName, branchId))
                 {
                     var notification = new Notification
                     {
@@ -130,7 +133,7 @@ public class NotificationService : INotificationService
             }
             else if (totalStock <= medicine.ReorderLevel && totalStock > 0)
             {
-                if (await _notificationRepo.GetActiveByTypeAndMedicineAsync(NotificationTypeStrings.LowStock, medicine.BrandName, branchId) == null)
+                if (!await _notificationRepo.HasNotificationTodayAsync(NotificationTypeStrings.LowStock, medicine.BrandName, branchId))
                 {
                     var notification = new Notification
                     {
@@ -157,7 +160,7 @@ public class NotificationService : INotificationService
 
             if (totalStock == 0 && cosmetic.IsActive)
             {
-                if (await _notificationRepo.GetActiveByTypeAndMedicineAsync(NotificationTypeStrings.OutOfStock, cosmetic.ProductName, branchId) == null)
+                if (!await _notificationRepo.HasNotificationTodayAsync(NotificationTypeStrings.OutOfStock, cosmetic.ProductName, branchId))
                 {
                     var notification = new Notification
                     {
@@ -171,7 +174,7 @@ public class NotificationService : INotificationService
             }
             else if (totalStock <= lowStockThreshold && totalStock > 0)
             {
-                if (await _notificationRepo.GetActiveByTypeAndMedicineAsync(NotificationTypeStrings.LowStock, cosmetic.ProductName, branchId) == null)
+                if (!await _notificationRepo.HasNotificationTodayAsync(NotificationTypeStrings.LowStock, cosmetic.ProductName, branchId))
                 {
                     var notification = new Notification
                     {

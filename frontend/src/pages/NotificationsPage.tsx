@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Bell, Check, CheckCheck, AlertTriangle, Info, Package, Clock } from 'lucide-react';
 import { useAppStore } from '../store/appStore';
 import { useThemeStore } from '../store/themeStore';
@@ -13,7 +13,14 @@ export const NotificationsPage: React.FC = () => {
   useEffect(() => {
     fetchNotifications();
   }, [fetchNotifications]);
-  const unreadCount = (notifications || []).filter(n => !n.isRead).length;
+   const unreadCount = (notifications || []).filter(n => !n.isRead).length;
+
+   const sortedNotifications = useMemo(() => {
+     return [...(notifications || [])].sort((a, b) => {
+       if (a.isRead !== b.isRead) return a.isRead ? 1 : -1;
+       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+     });
+   }, [notifications]);
 
   const getIcon = (type: string) => {
     switch (type) {
@@ -68,18 +75,18 @@ export const NotificationsPage: React.FC = () => {
             </div>
             <div>
               <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Total</p>
-              <p className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{(notifications || []).length}</p>
-            </div>
-          </div>
-        </div>
-        <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl border p-4`}>
-          <div className="flex items-center gap-3">
-            <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${isDark ? 'bg-amber-900/30 text-amber-400' : 'bg-amber-100 text-amber-600'}`}>
-              <AlertTriangle className="h-5 w-5" />
-            </div>
-            <div>
-              <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Low Stock</p>
-              <p className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{(notifications || []).filter(n => n.type === 'low_stock').length}</p>
+               <p className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{sortedNotifications.length}</p>
+             </div>
+           </div>
+         </div>
+         <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl border p-4`}>
+           <div className="flex items-center gap-3">
+             <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${isDark ? 'bg-amber-900/30 text-amber-400' : 'bg-amber-100 text-amber-600'}`}>
+               <AlertTriangle className="h-5 w-5" />
+             </div>
+             <div>
+               <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Low Stock</p>
+               <p className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{sortedNotifications.filter(n => n.type === 'low_stock').length}</p>
             </div>
           </div>
         </div>
@@ -90,7 +97,7 @@ export const NotificationsPage: React.FC = () => {
             </div>
             <div>
               <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Expiry</p>
-              <p className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{(notifications || []).filter(n => n.type === 'expiry').length}</p>
+               <p className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{sortedNotifications.filter(n => n.type === 'expiry').length}</p>
             </div>
           </div>
         </div>
@@ -101,7 +108,7 @@ export const NotificationsPage: React.FC = () => {
             </div>
             <div>
               <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Out of Stock</p>
-              <p className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{(notifications || []).filter(n => n.type === 'out_of_stock').length}</p>
+               <p className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{sortedNotifications.filter(n => n.type === 'out_of_stock').length}</p>
             </div>
           </div>
         </div>
@@ -110,13 +117,13 @@ export const NotificationsPage: React.FC = () => {
       {/* Notifications List */}
       <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl border overflow-hidden`}>
         <div className={`divide-y ${isDark ? 'divide-gray-700' : 'divide-gray-100'}`}>
-          {(notifications || []).length === 0 ? (
-            <div className="text-center py-16">
-              <Bell className={`h-12 w-12 mx-auto mb-3 ${isDark ? 'text-gray-600' : 'text-gray-300'}`} />
-              <p className={isDark ? 'text-gray-400' : 'text-gray-500'}>No notifications</p>
-            </div>
-          ) : (
-            (notifications || []).map(notification => (
+           {sortedNotifications.length === 0 ? (
+             <div className="text-center py-16">
+               <Bell className={`h-12 w-12 mx-auto mb-3 ${isDark ? 'text-gray-600' : 'text-gray-300'}`} />
+               <p className={isDark ? 'text-gray-400' : 'text-gray-500'}>No notifications</p>
+             </div>
+           ) : (
+             sortedNotifications.map(notification => (
               <div
                 key={notification.id}
                 className={`flex items-start gap-4 p-5 transition-colors ${getBgColor(notification.type, notification.isRead)} ${isDark ? 'hover:bg-gray-700/50' : 'hover:bg-gray-50'}`}

@@ -227,14 +227,27 @@ const toSale = (r: SaleResponse): Sale => ({
   })),
 });
 
-const toNotification = (r: NotificationResponse): Notification => ({
-  id: String(r.notificationId),
-  title: r.title,
-  message: r.message,
-  type: r.notificationType.toLowerCase() as any,
-  isRead: r.isRead,
-  createdAt: r.createdAt,
-});
+const toNotification = (r: NotificationResponse): Notification => {
+  const rawType = r.notificationType.toLowerCase();
+  let mappedType: 'low_stock' | 'out_of_stock' | 'expiry' | 'info';
+  if (rawType === 'expiry_alert') {
+    mappedType = 'expiry';
+  } else if (rawType === 'low_stock') {
+    mappedType = 'low_stock';
+  } else if (rawType === 'out_of_stock') {
+    mappedType = 'out_of_stock';
+  } else {
+    mappedType = 'info';
+  }
+  return {
+    id: String(r.notificationId),
+    title: r.title,
+    message: r.message,
+    type: mappedType,
+    isRead: r.isRead,
+    createdAt: r.createdAt,
+  };
+};
 
 export const useAppStore = create<AppState>((set, get) => ({
   currentUser: null,
