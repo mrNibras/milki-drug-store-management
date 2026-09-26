@@ -89,7 +89,17 @@ export const POSPage: React.FC = () => {
   }, 0);
 
   const handleAddToCart = (product: Medicine | Cosmetic) => {
-    const productType = (product as any).productType || 'medicine';
+    console.log('[POS ITEM CLICK]', {
+      item: product,
+      productType: (product as any).productType,
+      productId: (product as any).id,
+      medicineId: (product as any).medicineId,
+      cosmeticId: (product as any).cosmeticId,
+      cosmeticBatchId: (product as any).cosmeticBatchId,
+      sellingPrice: (product as any).sellingPrice,
+    });
+    const isCosmetic = (product as any).cosmeticId !== undefined;
+    const productType = (product as any).productType || (isCosmetic ? 'cosmetic' : 'medicine');
     
     if (productType === 'medicine') {
       const medicine = product as Medicine;
@@ -728,7 +738,7 @@ export const POSPage: React.FC = () => {
             </div>
             <div className="space-y-3 mb-6">
               {cart.map(item => (
-                <div key={`${item.medicineId}-${item.batchId}`} className={`flex items-center justify-between text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                <div key={item.productType === 'medicine' ? `${item.medicineId}-${item.batchId}` : `${item.cosmeticId}-${item.cosmeticBatchId}`} className={`flex items-center justify-between text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
                   <span>{item.brandName} × {item.quantity}</span>
                   <div className="text-right">
                     {item.discountAmount > 0 && (
