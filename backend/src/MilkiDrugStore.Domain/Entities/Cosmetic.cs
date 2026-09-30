@@ -2,6 +2,9 @@ namespace MilkiDrugStore.Domain.Entities;
 
 public class Cosmetic
 {
+    public List<DamageRecord> DamageRecords { get; set; } = new();
+    public List<ExpiredRecord> ExpiredRecords { get; set; } = new();
+
     public int CosmeticId { get; set; }
     public string ProductName { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;

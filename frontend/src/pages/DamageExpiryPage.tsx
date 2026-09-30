@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { AlertTriangle, Plus, Package, Clock, Trash2, Zap, CheckCircle, Layers } from 'lucide-react';
+import { AlertTriangle, Plus, Package, Clock, Trash2, Zap, CheckCircle, Layers, Pill } from 'lucide-react';
 import { useAppStore } from '../store/appStore';
 import { useThemeStore } from '../store/themeStore';
 import { Badge } from '../components/ui/Badge';
@@ -8,20 +8,61 @@ import { formatDate, getDaysUntilExpiry, generateId } from '../utils/helpers';
 import { DamageResponse, ExpiredResponse } from '../types';
 
 export const DamageExpiryPage: React.FC = () => {
-  const { medicines, fetchMedicines, damages, fetchDamages, recordDamage, expiredRecords, fetchExpired, recordExpired, currentUser, error, loading } = useAppStore();
+  const { medicines, fetchMedicines, cosmetics, fetchCosmetics, damages, fetchDamages, recordDamage, expiredRecords, fetchExpired, error } = useAppStore();
   const { theme } = useThemeStore();
   const isDark = theme === 'dark';
 
   useEffect(() => {
     fetchMedicines();
+    fetchCosmetics();
     fetchDamages();
     fetchExpired();
-  }, [fetchMedicines, fetchDamages, fetchExpired]);
+  }, [fetchMedicines, fetchCosmetics, fetchDamages, fetchExpired]);
   const [activeTab, setActiveTab] = useState<'expiring' | 'expired' | 'damages'>('expiring');
   const [showDamageModal, setShowDamageModal] = useState(false);
-  const [showExpiredModal, setShowExpiredModal] = useState(false);
-  const [damageForm, setDamageForm] = useState({ medicineId: '', batchId: '', quantity: '', reason: '' });
-  const [expiredForm, setExpiredForm] = useState({ medicineId: '', batchId: '', quantity: '' });
+  const [damageForm, setDamageForm] = useState({
+    productType: 'medicine' as 'medicine' | 'cosmetic',
+    productId: '',
+    batchId: '',
+    quantity: '',
+    reason: '',
+  });
+
+  // Batches available for damage, using the correct stock property per product
+  // type: MedicineBatch.quantity (RemainingQuantity) / CosmeticBatch.balance.
+  const damageOptions = useMemo(() => {
+    if (damageForm.productType === 'cosmetic') {
+      return (cosmetics || []).map(cosmetic => ({
+        id: cosmetic.cosmeticId,
+        name: cosmetic.productName,
+        unitType: cosmetic.unitTypeName,
+        batches: cosmetic.batches.map(batch => ({
+          id: batch.batchId,
+          batchNumber: batch.batchNumber,
+          quantity: batch.balance,
+          expiryDate: batch.expiryDate,
+          sellingPrice: batch.sellingPrice,
+        })),
+      }));
+    }
+
+    return (medicines || []).map(medicine => ({
+      id: Number(medicine.id),
+      name: medicine.name,
+      unitType: medicine.unitType,
+      batches: medicine.batches.map(batch => ({
+        id: Number(batch.id),
+        batchNumber: batch.batchNumber,
+        quantity: batch.quantity,
+        expiryDate: batch.expiryDate,
+        sellingPrice: batch.sellingPrice,
+      })),
+    }));
+  }, [cosmetics, medicines, damageForm.productType]);
+
+  const selectedProduct = damageOptions.find(p => String(p.id) === damageForm.productId);
+  const selectedBatch = selectedProduct?.batches.find(b => String(b.id) === damageForm.batchId);
+  const availableQuantity = selectedBatch?.quantity ?? 0;
 
   // Auto-detect expiring soon items (within 6 months / 180 days)
   const expiringMedicines = useMemo(() => {
@@ -57,39 +98,23 @@ export const DamageExpiryPage: React.FC = () => {
   }, [medicines]);
 
   const handleRecordDamage = async () => {
-    if (!damageForm.medicineId || !damageForm.batchId || !damageForm.quantity) return;
-    const medicine = (medicines || []).find(m => m.id === damageForm.medicineId);
-    const batch = medicine?.batches.find(b => b.id === damageForm.batchId);
-    if (!medicine || !batch) return;
+    const quantity = Number(damageForm.quantity);
+    if (!damageForm.productId || !damageForm.batchId || !damageForm.quantity) return;
+    if (!Number.isFinite(quantity) || quantity <= 0) return;
+    if (quantity > availableQuantity) return;
 
     try {
+      // Exactly one batch identifier is sent, matching the backend contract.
       await recordDamage({
-        batchId: Number(damageForm.batchId),
-        quantity: Number(damageForm.quantity),
+        batchId: damageForm.productType === 'medicine' ? Number(damageForm.batchId) : null,
+        cosmeticBatchId: damageForm.productType === 'cosmetic' ? Number(damageForm.batchId) : null,
+        quantity,
         reason: damageForm.reason,
       });
       setShowDamageModal(false);
-      setDamageForm({ medicineId: '', batchId: '', quantity: '', reason: '' });
+      setDamageForm({ productType: 'medicine', productId: '', batchId: '', quantity: '', reason: '' });
     } catch (e) {
       console.error('Failed to record damage', e);
-    }
-  };
-
-  const handleRecordExpired = async () => {
-    if (!expiredForm.medicineId || !expiredForm.batchId || !expiredForm.quantity) return;
-    const medicine = (medicines || []).find(m => m.id === expiredForm.medicineId);
-    const batch = medicine?.batches.find(b => b.id === expiredForm.batchId);
-    if (!medicine || !batch) return;
-
-    try {
-      await recordExpired({
-        batchId: Number(expiredForm.batchId),
-        quantity: Number(expiredForm.quantity),
-      });
-      setShowExpiredModal(false);
-      setExpiredForm({ medicineId: '', batchId: '', quantity: '' });
-    } catch (e) {
-      console.error('Failed to record expired', e);
     }
   };
 
@@ -109,7 +134,7 @@ export const DamageExpiryPage: React.FC = () => {
     <div className="space-y-6">
       <div>
         <h1 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Damage & Expiry Management</h1>
-        <p className={`${isDark ? 'text-gray-400' : 'text-gray-500'} mt-1`}>Auto-detected expiry tracking & manual damage recording</p>
+        <p className={`${isDark ? 'text-gray-400' : 'text-gray-500'} mt-1`}>Automatic expiry tracking & manual damage recording</p>
       </div>
 
       {/* Info Banner */}
@@ -119,7 +144,8 @@ export const DamageExpiryPage: React.FC = () => {
           <div>
             <p className={`text-sm font-medium ${isDark ? 'text-emerald-300' : 'text-emerald-700'}`}>Auto-Detection Enabled</p>
             <p className={`text-xs mt-1 ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>
-              Expiring soon and expired items are <strong>automatically detected</strong> from batch expiry dates. 
+              Expiring soon and expired items are <strong>automatically detected</strong> from batch expiry dates.
+              Expired medicine and cosmetic batches are written off <strong>automatically</strong> — no manual recording needed.
               Only <strong>damages</strong> need manual recording.
             </p>
           </div>
@@ -278,24 +304,17 @@ export const DamageExpiryPage: React.FC = () => {
         <div className="space-y-4">
           {/* Alert */}
           <div className={`rounded-xl p-4 border ${isDark ? 'bg-red-900/20 border-red-800' : 'bg-red-50 border-red-200'}`}>
-            <div className="flex items-start gap-3 justify-between">
-              <div className="flex items-start gap-3">
-                <AlertTriangle className="h-5 w-5 text-red-500 mt-0.5 flex-shrink-0" />
-                <div>
-                  <p className={`text-sm font-medium ${isDark ? 'text-red-300' : 'text-red-700'}`}>
-                    🚨 Auto-Detected: Expired Items
-                  </p>
-                  <p className={`text-xs mt-1 ${isDark ? 'text-red-400' : 'text-red-600'}`}>
-                    These items have passed their expiry date and should be removed from inventory immediately.
-                  </p>
-                </div>
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="h-5 w-5 text-red-500 mt-0.5 flex-shrink-0" />
+              <div>
+                <p className={`text-sm font-medium ${isDark ? 'text-red-300' : 'text-red-700'}`}>
+                  🚨 Auto-Detected: Expired Items
+                </p>
+                <p className={`text-xs mt-1 ${isDark ? 'text-red-400' : 'text-red-600'}`}>
+                  These items have passed their expiry date. The system removes them from available
+                  stock automatically, so no manual recording is required.
+                </p>
               </div>
-              <button
-                onClick={() => setShowExpiredModal(true)}
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-medium transition-colors flex items-center gap-2"
-              >
-                <Plus className="h-4 w-4" /> Record Expired
-              </button>
             </div>
           </div>
 
@@ -375,7 +394,8 @@ export const DamageExpiryPage: React.FC = () => {
               <table className="w-full">
                 <thead>
                   <tr className={isDark ? 'bg-gray-700' : 'bg-gray-50'}>
-                    <th className={thClass}>Brand Name</th>
+                    <th className={thClass}>Type</th>
+                    <th className={thClass}>Product</th>
                     <th className={thClass}>Batch</th>
                     <th className={thClass}>Quantity</th>
                     <th className={thClass}>Reason</th>
@@ -385,6 +405,11 @@ export const DamageExpiryPage: React.FC = () => {
                 <tbody className={`divide-y ${isDark ? 'divide-gray-700' : 'divide-gray-100'}`}>
                   {(damages || []).map(damage => (
                     <tr key={damage.damageId} className={isDark ? 'hover:bg-gray-700/50' : 'hover:bg-gray-50'}>
+                      <td className="px-6 py-3">
+                        <Badge variant={damage.productType === 'cosmetic' ? 'info' : 'warning'}>
+                          {damage.productType === 'cosmetic' ? 'Cosmetic' : 'Medicine'}
+                        </Badge>
+                      </td>
                       <td className={`px-6 py-3 font-medium text-sm ${isDark ? 'text-white' : ''}`}>{damage.brandName || '-'}</td>
                       <td className={`px-6 py-3 font-mono text-sm ${isDark ? 'text-gray-300' : ''}`}>{damage.batchNumber || '-'}</td>
                       <td className="px-6 py-3 text-sm text-red-500 font-semibold">{damage.quantity}</td>
@@ -422,16 +447,45 @@ export const DamageExpiryPage: React.FC = () => {
             <div className="space-y-4">
               <div>
                 <label className={labelClass}>
-                  <Package className="h-4 w-4" /> Brand <span className="text-red-500">*</span>
+                  <Package className="h-4 w-4" /> Product Type <span className="text-red-500">*</span>
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setDamageForm({ ...damageForm, productType: 'medicine', productId: '', batchId: '', quantity: '' })}
+                    className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${
+                      damageForm.productType === 'medicine'
+                        ? 'bg-orange-600 text-white'
+                        : isDark ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    Medicine
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDamageForm({ ...damageForm, productType: 'cosmetic', productId: '', batchId: '', quantity: '' })}
+                    className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${
+                      damageForm.productType === 'cosmetic'
+                        ? 'bg-orange-600 text-white'
+                        : isDark ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    Cosmetic
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label className={labelClass}>
+                  <Pill className="h-4 w-4" /> {damageForm.productType === 'cosmetic' ? 'Product' : 'Brand'} <span className="text-red-500">*</span>
                 </label>
                 <select
-                  value={damageForm.medicineId}
-                  onChange={e => setDamageForm({ ...damageForm, medicineId: e.target.value, batchId: '' })}
+                  value={damageForm.productId}
+                  onChange={e => setDamageForm({ ...damageForm, productId: e.target.value, batchId: '', quantity: '' })}
                   className={inputClass}
                 >
-                  <option value="">Select Brand</option>
-                  {(medicines || []).filter(m => m.batches.some(b => b.quantity > 0)).map(m => (
-                    <option key={m.id} value={m.id}>{m.name}</option>
+                  <option value="">Select {damageForm.productType === 'cosmetic' ? 'Product' : 'Brand'}</option>
+                  {damageOptions.filter(p => p.batches.some(b => b.quantity > 0)).map(p => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
                   ))}
                 </select>
               </div>
@@ -441,12 +495,16 @@ export const DamageExpiryPage: React.FC = () => {
                 </label>
                 <select
                   value={damageForm.batchId}
-                  onChange={e => setDamageForm({ ...damageForm, batchId: e.target.value })}
+                  onChange={e => setDamageForm({ ...damageForm, batchId: e.target.value, quantity: '' })}
                   className={inputClass}
                 >
                   <option value="">Select Batch</option>
-                  {(medicines || []).find(m => m.id === damageForm.medicineId)?.batches.filter(b => b.quantity > 0).map(b => (
-                    <option key={b.id} value={b.id}>{b.batchNumber} (Qty: {b.quantity})</option>
+                  {selectedProduct?.batches.filter(b => b.quantity > 0).map(b => (
+                    <option key={b.id} value={b.id}>
+                      {b.batchNumber} ({damageForm.productType === 'cosmetic' ? 'Balance' : 'Qty'}: {b.quantity})
+                      {b.sellingPrice != null ? ` | Price: ${b.sellingPrice}` : ''}
+                      {b.expiryDate ? ` | Exp: ${new Date(b.expiryDate).toLocaleDateString()}` : ''}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -456,11 +514,18 @@ export const DamageExpiryPage: React.FC = () => {
                 </label>
                 <input
                   type="number"
+                  min={1}
+                  max={availableQuantity || undefined}
                   value={damageForm.quantity}
                   onChange={e => setDamageForm({ ...damageForm, quantity: e.target.value })}
-                  placeholder="Enter damaged quantity"
+                  placeholder={selectedBatch ? `Available: ${availableQuantity}` : 'Enter damaged quantity'}
                   className={inputClass}
                 />
+                {selectedBatch && Number(damageForm.quantity) > availableQuantity && (
+                  <p className="mt-1 text-xs text-red-500">
+                    Only {availableQuantity} unit(s) available in this batch.
+                  </p>
+                )}
               </div>
               <div>
                 <label className={labelClass}>
@@ -485,86 +550,10 @@ export const DamageExpiryPage: React.FC = () => {
             </button>
             <button
               onClick={handleRecordDamage}
-              className="px-5 py-2.5 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white rounded-xl text-sm font-medium transition-all shadow-lg flex items-center gap-2"
+              disabled={!damageForm.productId || !damageForm.batchId || !damageForm.quantity || Number(damageForm.quantity) <= 0 || Number(damageForm.quantity) > availableQuantity}
+              className="px-5 py-2.5 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white rounded-xl text-sm font-medium transition-all shadow-lg flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Trash2 className="h-4 w-4" /> Record Damage
-            </button>
-          </div>
-        </div>
-      </Modal>
-
-      {/* ========== EXPIRED MODAL ========== */}
-      <Modal isOpen={showExpiredModal} onClose={() => setShowExpiredModal(false)} title="Record Expired Stock">
-        <div className="space-y-5">
-          <div className="flex items-center gap-4 pb-2">
-            <div className={`flex h-14 w-14 items-center justify-center rounded-xl ${isDark ? 'bg-red-900/30 text-red-400' : 'bg-red-100 text-red-600'}`}>
-              <AlertTriangle className="h-7 w-7" />
-            </div>
-            <div>
-              <p className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>Record Expired Stock</p>
-              <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Deduct expired items from inventory</p>
-            </div>
-          </div>
-
-          <div className={`p-5 rounded-xl ${isDark ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
-            <div className="space-y-4">
-              <div>
-                <label className={labelClass}>
-                  <Package className="h-4 w-4" /> Brand <span className="text-red-500">*</span>
-                </label>
-                <select
-                  value={expiredForm.medicineId}
-                  onChange={e => setExpiredForm({ ...expiredForm, medicineId: e.target.value, batchId: '' })}
-                  className={inputClass}
-                >
-                  <option value="">Select Brand</option>
-                  {(medicines || []).filter(m => m.batches.some(b => b.quantity > 0)).map(m => (
-                    <option key={m.id} value={m.id}>{m.name}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className={labelClass}>
-                  <Layers className="h-4 w-4" /> Batch <span className="text-red-500">*</span>
-                </label>
-                <select
-                  value={expiredForm.batchId}
-                  onChange={e => setExpiredForm({ ...expiredForm, batchId: e.target.value })}
-                  className={inputClass}
-                >
-                  <option value="">Select Batch</option>
-                  {(medicines || []).find(m => m.id === expiredForm.medicineId)?.batches.filter(b => b.quantity > 0).map(b => (
-                    <option key={b.id} value={b.id}>{b.batchNumber} (Qty: {b.quantity})</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className={labelClass}>
-                  Quantity <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="number"
-                  value={expiredForm.quantity}
-                  onChange={e => setExpiredForm({ ...expiredForm, quantity: e.target.value })}
-                  placeholder="Enter expired quantity"
-                  className={inputClass}
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className={`flex justify-end gap-3 pt-4 border-t ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
-            <button
-              onClick={() => setShowExpiredModal(false)}
-              className={`px-5 py-2.5 rounded-xl text-sm font-medium transition-colors ${isDark ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleRecordExpired}
-              className="px-5 py-2.5 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white rounded-xl text-sm font-medium transition-all shadow-lg flex items-center gap-2"
-            >
-              <AlertTriangle className="h-4 w-4" /> Record Expired
             </button>
           </div>
         </div>

@@ -26,6 +26,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<IInventoryService, InventoryService>();
+        services.AddScoped<IUserActivityService, UserActivityService>();
         services.AddScoped<IBranchService, BranchService>();
         services.AddScoped<IBackupService, BackupService>();
         services.AddScoped<ICosmeticService, CosmeticService>();

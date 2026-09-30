@@ -13,11 +13,27 @@ namespace MilkiDrugStore.Tests.Integration;
 
 public class PostgreSqlFixture : IAsyncLifetime
 {
+    /// <summary>
+    /// When set, the tests run against this already-running PostgreSQL instance
+    /// instead of starting a Testcontainers container. Useful in environments
+    /// where the Docker daemon can start containers but not stop them.
+    /// </summary>
+    public const string ExternalConnectionStringVariable = "MILKI_TEST_POSTGRES";
+
     public PostgreSqlContainer Container { get; private set; } = null!;
     public string ConnectionString { get; private set; } = string.Empty;
+    private bool _ownsContainer;
 
     public async Task InitializeAsync()
     {
+        var external = Environment.GetEnvironmentVariable(ExternalConnectionStringVariable);
+        if (!string.IsNullOrWhiteSpace(external))
+        {
+            ConnectionString = external;
+            _ownsContainer = false;
+            return;
+        }
+
         Container = new PostgreSqlBuilder()
             .WithImage("postgres:16-alpine")
             .WithDatabase("milki_test")
@@ -27,11 +43,13 @@ public class PostgreSqlFixture : IAsyncLifetime
 
         await Container.StartAsync();
         ConnectionString = Container.GetConnectionString();
+        _ownsContainer = true;
     }
 
     public async Task DisposeAsync()
     {
-        await Container.DisposeAsync();
+        if (_ownsContainer)
+            await Container.DisposeAsync();
     }
 
     public IServiceProvider CreateServiceProvider()

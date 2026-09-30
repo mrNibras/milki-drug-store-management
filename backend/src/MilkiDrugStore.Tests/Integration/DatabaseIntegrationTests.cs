@@ -1047,6 +1047,7 @@ public class DatabaseIntegrationTests : IClassFixture<PostgreSqlFixture>, IAsync
             new Repository<InventoryTransaction>(_dbContext),
             new Repository<MedicineBatch>(_dbContext),
             new Repository<Medicine>(_dbContext),
+            new Repository<CosmeticBatch>(_dbContext),
             new UnitOfWork(_dbContext),
             Mock.Of<IAuditLogService>());
 

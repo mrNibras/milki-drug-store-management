@@ -9,6 +9,9 @@ public class CosmeticRepository : Repository<Cosmetic>, ICosmeticRepository
 {
     public CosmeticRepository(AppDbContext context) : base(context) { }
 
+    // CosmeticBatch.Balance is a computed CLR property that the provider cannot
+    // translate, so stock is always expressed with the underlying columns.
+
     public async Task<IEnumerable<Cosmetic>> SearchAsync(string searchTerm)
     {
         return await _dbSet
@@ -21,7 +24,9 @@ public class CosmeticRepository : Repository<Cosmetic>, ICosmeticRepository
     {
         return await _dbSet
             .Include(c => c.Batches)
-            .Where(c => c.Batches.Sum(b => b.Balance) <= 10 && c.Batches.Sum(b => b.Balance) > 0)
+            .Where(c => c.Batches
+                .Where(b => b.QuantityReceived - b.QuantityIssued - b.QuantityDamaged - b.QuantityExpired > 0)
+                .Sum(b => b.QuantityReceived - b.QuantityIssued - b.QuantityDamaged - b.QuantityExpired) <= 10)
             .ToListAsync();
     }
 
@@ -30,7 +35,10 @@ public class CosmeticRepository : Repository<Cosmetic>, ICosmeticRepository
         var threshold = DateTime.UtcNow.AddMonths(months);
         return await _dbSet
             .Include(c => c.Batches)
-            .Where(c => c.Batches.Any(b => b.ExpiryDate <= threshold && b.Balance > 0))
+            .Where(c => c.Batches.Any(b =>
+                b.ExpiryDate != null
+                && b.ExpiryDate <= threshold
+                && b.QuantityReceived - b.QuantityIssued - b.QuantityDamaged - b.QuantityExpired > 0))
             .ToListAsync();
     }
 
@@ -38,7 +46,8 @@ public class CosmeticRepository : Repository<Cosmetic>, ICosmeticRepository
     {
         return await _dbSet
             .Include(c => c.Batches)
-            .Where(c => c.Batches.All(b => b.Balance <= 0))
+            .Where(c => !c.Batches.Any(b =>
+                b.QuantityReceived - b.QuantityIssued - b.QuantityDamaged - b.QuantityExpired > 0))
             .ToListAsync();
     }
 }

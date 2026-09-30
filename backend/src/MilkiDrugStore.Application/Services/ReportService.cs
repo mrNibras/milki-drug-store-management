@@ -61,9 +61,13 @@ namespace MilkiDrugStore.Application.Services
             var startEat = period.ToLower() switch
             {
                 "daily" => nowEat.Date,
-                "weekly" => nowEat.Date.AddDays(-(int)nowEat.DayOfWeek),
+                "weekly" => nowEat.Date.AddDays(-DaysSinceMonday(nowEat.DayOfWeek)),
                 "monthly" => new DateTime(nowEat.Year, nowEat.Month, 1),
-                "yearly" => new DateTime(nowEat.Year - 1, 9, 1),
+                // Current Ethiopian fiscal year (1 Sep - 31 Aug), matching the
+                // "current period" semantics of the other ranges. Anchoring this
+                // to the previous year would exclude every sale already made in
+                // the current fiscal year.
+                "yearly" => new DateTime(nowEat.Month >= 9 ? nowEat.Year : nowEat.Year - 1, 9, 1),
                 _ => nowEat.Date
             };
             var endEat = startEat;
@@ -87,6 +91,13 @@ namespace MilkiDrugStore.Application.Services
             var endUtc = TimeZoneInfo.ConvertTimeToUtc(endEat, EthiopiaTz);
             return (startUtc, endUtc);
         }
+
+        /// <summary>
+        /// Business weeks start on Monday. .NET numbers Sunday as 0, so the
+        /// weekday index is shifted before taking the modulus; otherwise weeks
+        /// would run Sunday-Saturday.
+        /// </summary>
+        private static int DaysSinceMonday(DayOfWeek dayOfWeek) => ((int)dayOfWeek + 6) % 7;
 
         private static string GetBucketLabel(DateTime bucketKeyUtc, string period)
         {
@@ -115,14 +126,18 @@ namespace MilkiDrugStore.Application.Services
             var saleEat = TimeZoneInfo.ConvertTimeFromUtc(saleDateUtc, EthiopiaTz);
             if (period == "daily")
             {
+                // The pharmacy trades 08:00-22:00, reported in two-hour buckets.
+                // Sales outside that window are clamped to the nearest edge
+                // bucket so their revenue is still counted rather than dropped.
                 var hour = saleEat.Hour;
-                var bucketStartHour = hour < 8 ? 0 : (hour < 14 ? 8 : (hour < 20 ? 14 : 20));
+                var effectiveHour = hour < 8 ? 8 : (hour >= 22 ? 21 : hour);
+                var bucketStartHour = effectiveHour - (effectiveHour % 2);
                 var bucketStartEat = saleEat.Date.AddHours(bucketStartHour);
                 return TimeZoneInfo.ConvertTimeToUtc(bucketStartEat, EthiopiaTz);
             }
             else if (period == "weekly")
             {
-                var weekStartEat = saleEat.Date.AddDays(-(int)saleEat.DayOfWeek);
+                var weekStartEat = saleEat.Date.AddDays(-DaysSinceMonday(saleEat.DayOfWeek));
                 return TimeZoneInfo.ConvertTimeToUtc(weekStartEat, EthiopiaTz);
             }
             else if (period == "monthly")

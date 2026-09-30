@@ -222,7 +222,11 @@ export interface PharmacySettings {
 
 export interface DamageResponse {
   damageId: number;
-  batchId: number;
+  productType: 'medicine' | 'cosmetic';
+  productId?: number | null;
+  batchId?: number | null;
+  cosmeticId?: number | null;
+  cosmeticBatchId?: number | null;
   quantity: number;
   reason: string;
   recordedBy: number;
@@ -233,7 +237,11 @@ export interface DamageResponse {
 
 export interface ExpiredResponse {
   expiredId: number;
-  batchId: number;
+  productType: 'medicine' | 'cosmetic';
+  productId?: number | null;
+  batchId?: number | null;
+  cosmeticId?: number | null;
+  cosmeticBatchId?: number | null;
   quantity: number;
   recordedDate: string;
   recordedBy: number;

@@ -27,6 +27,21 @@ public class ExpiryCheckBackgroundService : BackgroundService
             try
             {
                 using var scope = _serviceProvider.CreateScope();
+
+                // Automatic expiry: write off every medicine/cosmetic batch whose
+                // expiry date has passed. This replaces the removed manual
+                // "Record Expired" action.
+                var inventoryService = scope.ServiceProvider.GetRequiredService<IInventoryService>();
+                var expiredResult = await inventoryService.ProcessExpiredInventoryAsync(stoppingToken);
+                if (expiredResult.MedicineBatchesProcessed > 0 || expiredResult.CosmeticBatchesProcessed > 0)
+                {
+                    _logger.LogInformation(
+                        "Automatic expiry processed {MedicineCount} medicine batch(es) and {CosmeticCount} cosmetic batch(es), {Units} unit(s) written off.",
+                        expiredResult.MedicineBatchesProcessed,
+                        expiredResult.CosmeticBatchesProcessed,
+                        expiredResult.TotalUnitsExpired);
+                }
+
                 var medicineRepo = scope.ServiceProvider.GetRequiredService<IMedicineRepository>();
                 var cosmeticRepo = scope.ServiceProvider.GetRequiredService<ICosmeticRepository>();
                 var notificationRepo = scope.ServiceProvider.GetRequiredService<INotificationRepository>();

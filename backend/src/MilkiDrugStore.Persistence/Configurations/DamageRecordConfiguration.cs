@@ -11,8 +11,11 @@ public class DamageRecordConfiguration : IEntityTypeConfiguration<DamageRecord>
         builder.HasKey(d => d.DamageId);
         builder.Property(d => d.Reason).HasMaxLength(300);
         builder.HasOne(d => d.Batch).WithMany(b => b.DamageRecords).HasForeignKey(d => d.BatchId);
+        builder.HasOne(d => d.Cosmetic).WithMany(c => c.DamageRecords).HasForeignKey(d => d.CosmeticId);
+        builder.HasOne(d => d.CosmeticBatch).WithMany(b => b.DamageRecords).HasForeignKey(d => d.CosmeticBatchId);
         builder.HasOne(d => d.Branch).WithMany(b => b.DamageRecords).HasForeignKey(d => d.BranchId);
         builder.HasIndex(d => d.BatchId);
+        builder.HasIndex(d => d.CosmeticBatchId);
         builder.HasIndex(d => d.BranchId);
         builder.HasIndex(d => d.RecordedDate);
         builder.HasIndex(d => d.RecordedBy);

@@ -2,6 +2,7 @@ import React, { useMemo, useEffect } from 'react';
 import { useAppStore } from '../store/appStore';
 import { useThemeStore } from '../store/themeStore';
 import { formatCurrency } from '../utils/helpers';
+import { ResponsiveTable } from '../components/ui/ResponsiveTable';
 
 const InventoryReport: React.FC = () => {
   const { medicines, cosmetics, fetchMedicines, fetchCosmetics, error, loading } = useAppStore();
@@ -73,30 +74,32 @@ const InventoryReport: React.FC = () => {
         </div>
       </div>
       <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl border overflow-hidden`}>
-        <table className="w-full">
+        <ResponsiveTable>
+          <table className="w-full">
           <thead>
             <tr className={isDark ? 'bg-gray-700' : 'bg-gray-50'}>
-              <th className={`text-left px-6 py-3 text-xs font-semibold uppercase ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Brand Name</th>
-              <th className={`text-left px-6 py-3 text-xs font-semibold uppercase ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Category</th>
-              <th className={`text-right px-6 py-3 text-xs font-semibold uppercase ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Stock</th>
-              <th className={`text-right px-6 py-3 text-xs font-semibold uppercase ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Value</th>
-              <th className={`text-center px-6 py-3 text-xs font-semibold uppercase ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Status</th>
+              <th className={`text-left px-3 sm:px-6 py-3 text-xs font-semibold uppercase ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Brand Name</th>
+              <th className={`text-left px-3 sm:px-6 py-3 text-xs font-semibold uppercase ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Category</th>
+              <th className={`text-right px-3 sm:px-6 py-3 text-xs font-semibold uppercase ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Stock</th>
+              <th className={`text-right px-3 sm:px-6 py-3 text-xs font-semibold uppercase ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Value</th>
+              <th className={`text-center px-3 sm:px-6 py-3 text-xs font-semibold uppercase ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Status</th>
             </tr>
           </thead>
           <tbody className={`divide-y ${isDark ? 'divide-gray-700' : 'divide-gray-100'}`}>
             {inventoryData.map((item, i) => (
               <tr key={i} className={isDark ? 'hover:bg-gray-700/50' : 'hover:bg-gray-50'}>
-                <td className={`px-6 py-3 font-medium text-sm ${isDark ? 'text-white' : ''}`}>{item.name}</td>
-                <td className={`px-6 py-3 text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{item.category}</td>
-                <td className={`px-6 py-3 text-sm font-medium text-right ${isDark ? 'text-white' : ''}`}>{item.quantity}</td>
-                <td className={`px-6 py-3 text-sm text-right ${isDark ? 'text-gray-300' : ''}`}>{formatCurrency(item.value)}</td>
-                <td className="px-6 py-3 text-center">
+                <td className={`px-3 sm:px-6 py-3 font-medium text-sm ${isDark ? 'text-white' : ''}`}>{item.name}</td>
+                <td className={`px-3 sm:px-6 py-3 text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{item.category}</td>
+                <td className={`px-3 sm:px-6 py-3 text-sm font-medium text-right ${isDark ? 'text-white' : ''}`}>{item.quantity}</td>
+                <td className={`px-3 sm:px-6 py-3 text-sm text-right ${isDark ? 'text-gray-300' : ''}`}>{formatCurrency(item.value)}</td>
+                <td className="px-3 sm:px-6 py-3 text-center">
                   <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${item.status === 'Out of Stock' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' : item.status === 'Low Stock' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'}`}>{item.status}</span>
                 </td>
               </tr>
             ))}
           </tbody>
-        </table>
+          </table>
+        </ResponsiveTable>
       </div>
     </div>
   );

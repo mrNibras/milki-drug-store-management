@@ -20,7 +20,7 @@ public class DamagesController : ControllerBase
     public async Task<IActionResult> RecordDamage([FromBody] MilkiDrugStore.Application.DTOs.Sale.RecordDamageRequest request)
     {
         var userId = GetUserId();
-        await _inventoryService.RecordDamageAsync(request.BatchId, request.Quantity, request.Reason, userId);
+        await _inventoryService.RecordDamageAsync(request.BatchId, request.CosmeticBatchId, request.Quantity, request.Reason, userId);
         return Ok(new { message = "Damage recorded successfully" });
     }
 

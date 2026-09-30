@@ -4,6 +4,7 @@ import { useAppStore } from '../store/appStore';
 import { useThemeStore } from '../store/themeStore';
 import { formatCurrency } from '../utils/helpers';
 import { SaleItem } from '../types';
+import { ResponsiveTable } from '../components/ui/ResponsiveTable';
 
 const getItemKey = (item: SaleItem): string => {
   if (item.productType === 'cosmetic') {
@@ -73,17 +74,18 @@ const MostSellingReport: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl border overflow-hidden`}>
-        <div className={`px-6 py-4 border-b ${isDark ? 'border-gray-700' : 'border-gray-100'}`}>
+        <div className={`px-3 sm:px-6 py-4 border-b ${isDark ? 'border-gray-700' : 'border-gray-100'}`}>
           <div className="flex items-center gap-2"><Award className="h-5 w-5 text-amber-500" /><h3 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>Overall Top Selling Medicines</h3></div>
         </div>
-        <table className="w-full">
+        <ResponsiveTable>
+          <table className="w-full">
           <thead>
             <tr className={isDark ? 'bg-gray-700' : 'bg-gray-50'}>
-              <th className={`text-left px-6 py-3 text-xs font-semibold uppercase ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Rank</th>
-              <th className={`text-left px-6 py-3 text-xs font-semibold uppercase ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Brand Name</th>
-              <th className={`text-right px-6 py-3 text-xs font-semibold uppercase ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Units Sold</th>
-              <th className={`text-right px-6 py-3 text-xs font-semibold uppercase ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Revenue</th>
-              <th className={`text-left px-6 py-3 text-xs font-semibold uppercase ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Performance</th>
+              <th className={`text-left px-3 sm:px-6 py-3 text-xs font-semibold uppercase ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Rank</th>
+              <th className={`text-left px-3 sm:px-6 py-3 text-xs font-semibold uppercase ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Brand Name</th>
+              <th className={`text-right px-3 sm:px-6 py-3 text-xs font-semibold uppercase ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Units Sold</th>
+              <th className={`text-right px-3 sm:px-6 py-3 text-xs font-semibold uppercase ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Revenue</th>
+              <th className={`text-left px-3 sm:px-6 py-3 text-xs font-semibold uppercase ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Performance</th>
             </tr>
           </thead>
           <tbody className={`divide-y ${isDark ? 'divide-gray-700' : 'divide-gray-100'}`}>
@@ -93,11 +95,11 @@ const MostSellingReport: React.FC = () => {
               const medals = ['🥇', '🥈', '🥉'];
               return (
                 <tr key={item.name} className={isDark ? 'hover:bg-gray-700/50' : 'hover:bg-gray-50'}>
-                  <td className="px-6 py-4"><span className="text-lg">{medals[index] || `#${index + 1}`}</span></td>
-                  <td className={`px-6 py-4 font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{item.name}</td>
-                  <td className={`px-6 py-4 font-semibold text-right ${isDark ? 'text-white' : 'text-gray-900'}`}>{item.quantity}</td>
-                  <td className={`px-6 py-4 text-right ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{formatCurrency(item.revenue)}</td>
-                  <td className="px-6 py-4">
+                  <td className="px-3 sm:px-6 py-4"><span className="text-lg">{medals[index] || `#${index + 1}`}</span></td>
+                  <td className={`px-3 sm:px-6 py-4 font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{item.name}</td>
+                  <td className={`px-3 sm:px-6 py-4 font-semibold text-right ${isDark ? 'text-white' : 'text-gray-900'}`}>{item.quantity}</td>
+                  <td className={`px-3 sm:px-6 py-4 text-right ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{formatCurrency(item.revenue)}</td>
+                  <td className="px-3 sm:px-6 py-4">
                     <div className="flex items-center gap-2">
                       <div className={`flex-1 h-2 rounded-full ${isDark ? 'bg-gray-700' : 'bg-gray-200'}`}><div className="h-2 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500" style={{ width: `${percentage}%` }} /></div>
                       <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{Math.round(percentage)}%</span>
@@ -107,20 +109,22 @@ const MostSellingReport: React.FC = () => {
               );
             })}
           </tbody>
-        </table>
+          </table>
+        </ResponsiveTable>
       </div>
 
       <h3 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>Monthly Breakdown</h3>
       {Object.entries(mostSellingByMonth).map(([month, items]) => (
         <div key={month} className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl border overflow-hidden`}>
-          <div className={`px-6 py-4 border-b ${isDark ? 'border-gray-700' : 'border-gray-100'} ${isDark ? 'bg-gray-750' : 'bg-gray-50'}`}><h4 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{getMonthName(month)}</h4></div>
+          <div className={`px-3 sm:px-6 py-4 border-b ${isDark ? 'border-gray-700' : 'border-gray-100'} ${isDark ? 'bg-gray-750' : 'bg-gray-50'}`}><h4 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{getMonthName(month)}</h4></div>
+          <ResponsiveTable>
           <table className="w-full">
             <thead>
               <tr className={isDark ? 'bg-gray-700' : 'bg-gray-50'}>
-                <th className={`text-left px-6 py-3 text-xs font-semibold uppercase ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Rank</th>
-                <th className={`text-left px-6 py-3 text-xs font-semibold uppercase ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Brand Name</th>
-                <th className={`text-right px-6 py-3 text-xs font-semibold uppercase ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Units Sold</th>
-                <th className={`text-right px-6 py-3 text-xs font-semibold uppercase ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Revenue</th>
+                <th className={`text-left px-3 sm:px-6 py-3 text-xs font-semibold uppercase ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Rank</th>
+                <th className={`text-left px-3 sm:px-6 py-3 text-xs font-semibold uppercase ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Brand Name</th>
+                <th className={`text-right px-3 sm:px-6 py-3 text-xs font-semibold uppercase ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Units Sold</th>
+                <th className={`text-right px-3 sm:px-6 py-3 text-xs font-semibold uppercase ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Revenue</th>
               </tr>
             </thead>
             <tbody className={`divide-y ${isDark ? 'divide-gray-700' : 'divide-gray-100'}`}>
@@ -128,15 +132,16 @@ const MostSellingReport: React.FC = () => {
                 const medals = ['🥇', '🥈', '🥉'];
                 return (
                   <tr key={item.name} className={isDark ? 'hover:bg-gray-700/50' : 'hover:bg-gray-50'}>
-                    <td className="px-6 py-3"><span className="text-lg">{medals[index] || `#${index + 1}`}</span></td>
-                    <td className={`px-6 py-3 font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{item.name}</td>
-                    <td className={`px-6 py-3 font-semibold text-right ${isDark ? 'text-white' : 'text-gray-900'}`}>{item.quantity}</td>
-                    <td className={`px-6 py-3 text-right ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{formatCurrency(item.revenue)}</td>
+                    <td className="px-3 sm:px-6 py-3"><span className="text-lg">{medals[index] || `#${index + 1}`}</span></td>
+                    <td className={`px-3 sm:px-6 py-3 font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{item.name}</td>
+                    <td className={`px-3 sm:px-6 py-3 font-semibold text-right ${isDark ? 'text-white' : 'text-gray-900'}`}>{item.quantity}</td>
+                    <td className={`px-3 sm:px-6 py-3 text-right ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{formatCurrency(item.revenue)}</td>
                   </tr>
                 );
               })}
             </tbody>
           </table>
+          </ResponsiveTable>
         </div>
       ))}
     </div>

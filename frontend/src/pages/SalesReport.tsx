@@ -4,6 +4,7 @@ import { useAppStore } from '../store/appStore';
 import { useThemeStore } from '../store/themeStore';
 import { formatCurrency, formatDate } from '../utils/helpers';
 import { BarChart3 } from 'lucide-react';
+import { ResponsiveTable } from '../components/ui/ResponsiveTable';
 
 const SalesReport: React.FC = () => {
   const { sales, fetchSales, salesReport, fetchSalesReport, error, loading } = useAppStore();
@@ -119,39 +120,41 @@ const SalesReport: React.FC = () => {
           <h3 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>Sales Detail - {dateRange.charAt(0).toUpperCase() + dateRange.slice(1)}</h3>
           <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'} mt-1`}>Showing {filteredSales.length} transaction{filteredSales.length !== 1 ? 's' : ''}</p>
         </div>
-        <table className="w-full">
+        <ResponsiveTable>
+          <table className="w-full">
           <thead>
             <tr className={isDark ? 'bg-gray-700' : 'bg-gray-50'}>
-              <th className={`text-left px-6 py-3 text-xs font-semibold uppercase ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Sale #</th>
-              <th className={`text-left px-6 py-3 text-xs font-semibold uppercase ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Date</th>
-              <th className={`text-left px-6 py-3 text-xs font-semibold uppercase ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Cashier</th>
-              <th className={`text-left px-6 py-3 text-xs font-semibold uppercase ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Items</th>
-              <th className={`text-right px-6 py-3 text-xs font-semibold uppercase ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Total</th>
-              <th className={`text-right px-6 py-3 text-xs font-semibold uppercase ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Profit</th>
+              <th className={`text-left px-3 sm:px-6 py-3 text-xs font-semibold uppercase ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Sale #</th>
+              <th className={`text-left px-3 sm:px-6 py-3 text-xs font-semibold uppercase ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Date</th>
+              <th className={`text-left px-3 sm:px-6 py-3 text-xs font-semibold uppercase ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Cashier</th>
+              <th className={`text-left px-3 sm:px-6 py-3 text-xs font-semibold uppercase ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Items</th>
+              <th className={`text-right px-3 sm:px-6 py-3 text-xs font-semibold uppercase ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Total</th>
+              <th className={`text-right px-3 sm:px-6 py-3 text-xs font-semibold uppercase ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Profit</th>
             </tr>
           </thead>
           <tbody className={`divide-y ${isDark ? 'divide-gray-700' : 'divide-gray-100'}`}>
             {filteredSales.map(sale => (
               <tr key={sale.id} className={isDark ? 'hover:bg-gray-700/50' : 'hover:bg-gray-50'}>
-                <td className="px-6 py-3 font-mono text-sm text-blue-500">{sale.saleNumber}</td>
-                <td className={`px-6 py-3 text-sm ${isDark ? 'text-gray-300' : ''}`}>{formatDate(sale.saleDate)} <span className={`text-xs ml-2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{new Date(sale.saleDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span></td>
-                <td className={`px-6 py-3 text-sm ${isDark ? 'text-gray-300' : ''}`}>{sale.userName}</td>
-                <td className={`px-6 py-3 text-sm ${isDark ? 'text-gray-300' : ''}`}><span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${isDark ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-100 text-blue-700'}`}>{sale.items.reduce((sum, item) => sum + item.quantity, 0)} items</span></td>
-                <td className={`px-6 py-3 text-sm font-medium text-right ${isDark ? 'text-white' : ''}`}>{formatCurrency(sale.totalAmount)}</td>
-                <td className="px-6 py-3 text-sm font-medium text-right text-emerald-500">{formatCurrency(sale.profit)}</td>
+                <td className="px-3 sm:px-6 py-3 font-mono text-sm text-blue-500">{sale.saleNumber}</td>
+                <td className={`px-3 sm:px-6 py-3 text-sm ${isDark ? 'text-gray-300' : ''}`}>{formatDate(sale.saleDate)} <span className={`text-xs ml-2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{new Date(sale.saleDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span></td>
+                <td className={`px-3 sm:px-6 py-3 text-sm ${isDark ? 'text-gray-300' : ''}`}>{sale.userName}</td>
+                <td className={`px-3 sm:px-6 py-3 text-sm ${isDark ? 'text-gray-300' : ''}`}><span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${isDark ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-100 text-blue-700'}`}>{sale.items.reduce((sum, item) => sum + item.quantity, 0)} items</span></td>
+                <td className={`px-3 sm:px-6 py-3 text-sm font-medium text-right ${isDark ? 'text-white' : ''}`}>{formatCurrency(sale.totalAmount)}</td>
+                <td className="px-3 sm:px-6 py-3 text-sm font-medium text-right text-emerald-500">{formatCurrency(sale.profit)}</td>
               </tr>
             ))}
           </tbody>
           {filteredSales.length > 0 && (
             <tfoot>
               <tr className={`border-t-2 ${isDark ? 'border-gray-600 bg-gray-700/50' : 'border-gray-200 bg-gray-50'}`}>
-                <td colSpan={4} className={`px-6 py-3 text-sm font-semibold text-left ${isDark ? 'text-white' : 'text-gray-900'}`}>Total ({filteredSales.length} transaction{filteredSales.length !== 1 ? 's' : ''})</td>
-                <td className={`px-6 py-3 text-sm font-bold text-right ${isDark ? 'text-white' : 'text-gray-900'}`}>{formatCurrency(filteredSales.reduce((s, sale) => s + sale.totalAmount, 0))}</td>
-                <td className="px-6 py-3 text-sm font-bold text-right text-emerald-500">{formatCurrency(filteredSales.reduce((s, sale) => s + sale.profit, 0))}</td>
+                <td colSpan={4} className={`px-3 sm:px-6 py-3 text-sm font-semibold text-left ${isDark ? 'text-white' : 'text-gray-900'}`}>Total ({filteredSales.length} transaction{filteredSales.length !== 1 ? 's' : ''})</td>
+                <td className={`px-3 sm:px-6 py-3 text-sm font-bold text-right ${isDark ? 'text-white' : 'text-gray-900'}`}>{formatCurrency(filteredSales.reduce((s, sale) => s + sale.totalAmount, 0))}</td>
+                <td className="px-3 sm:px-6 py-3 text-sm font-bold text-right text-emerald-500">{formatCurrency(filteredSales.reduce((s, sale) => s + sale.profit, 0))}</td>
               </tr>
             </tfoot>
           )}
-        </table>
+          </table>
+        </ResponsiveTable>
         {filteredSales.length === 0 && (
           <div className="text-center py-12">
             <BarChart3 className={`h-12 w-12 mx-auto mb-3 ${isDark ? 'text-gray-600' : 'text-gray-300'}`} />

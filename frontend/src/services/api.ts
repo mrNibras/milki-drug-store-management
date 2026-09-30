@@ -14,6 +14,11 @@ api.interceptors.request.use((config) => {
   const token = localStorage.getItem('auth_token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
+  } else {
+    // A refresh may have populated the axios default header. Without this, a
+    // request made after logout would still carry the previous token.
+    delete config.headers.Authorization;
+    delete api.defaults.headers.common.Authorization;
   }
   return config;
 });
@@ -390,14 +395,12 @@ export interface ChangePasswordRequest {
 }
 
 export interface RecordDamageRequest {
-  batchId: number;
+  /** Medicine batch to damage. Mutually exclusive with cosmeticBatchId. */
+  batchId?: number | null;
+  /** Cosmetic batch to damage. Mutually exclusive with batchId. */
+  cosmeticBatchId?: number | null;
   quantity: number;
   reason: string;
-}
-
-export interface RecordExpiredRequest {
-  batchId: number;
-  quantity: number;
 }
 
 export interface BranchResponse {
@@ -429,7 +432,12 @@ export interface UpdateBranchRequest {
 
 export interface DamageResponse {
   damageId: number;
-  batchId: number;
+  /** "medicine" or "cosmetic". */
+  productType: 'medicine' | 'cosmetic';
+  productId?: number | null;
+  batchId?: number | null;
+  cosmeticId?: number | null;
+  cosmeticBatchId?: number | null;
   quantity: number;
   reason: string;
   recordedBy: number;
@@ -440,7 +448,12 @@ export interface DamageResponse {
 
 export interface ExpiredResponse {
   expiredId: number;
-  batchId: number;
+  /** "medicine" or "cosmetic". */
+  productType: 'medicine' | 'cosmetic';
+  productId?: number | null;
+  batchId?: number | null;
+  cosmeticId?: number | null;
+  cosmeticBatchId?: number | null;
   quantity: number;
   recordedDate: string;
   recordedBy: number;

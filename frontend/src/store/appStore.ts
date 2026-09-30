@@ -1,8 +1,11 @@
 import { create } from 'zustand';
 import { User, Medicine, Supplier, Purchase, Sale, Notification, CartItem, PharmacySettings, AuditLog, Category, UnitType, Branch, CatalogOption, Cosmetic } from '../types';
-import { api, LoginRequest, LoginResponse, CreateSaleRequest, CreatePurchaseRequest, RecordDamageRequest, RecordExpiredRequest, ChangePasswordRequest, DamageResponse, ExpiredResponse, AuditLogResponse, BranchResponse, CreateBranchRequest, UpdateBranchRequest, CatalogOptionDto, CosmeticResponse, SalesReportResponse, fetchSalesReport } from '../services/api';
+import { api, LoginRequest, LoginResponse, CreateSaleRequest, CreatePurchaseRequest, RecordDamageRequest, ChangePasswordRequest, DamageResponse, ExpiredResponse, AuditLogResponse, BranchResponse, CreateBranchRequest, UpdateBranchRequest, CatalogOptionDto, CosmeticResponse, SalesReportResponse, fetchSalesReport } from '../services/api';
 import { getSettings, updateSettings } from '../services/settingsApi';
 import { getDaysUntilExpiry, generateId } from '../utils/helpers';
+
+// Single-flight guard for refresh-token rotation (see refreshToken below).
+let refreshInFlight: Promise<boolean> | null = null;
 
 interface AppState {
   currentUser: User | null;
@@ -83,7 +86,6 @@ interface AppState {
 
   expiredRecords: ExpiredResponse[];
   fetchExpired: () => Promise<void>;
-  recordExpired: (data: RecordExpiredRequest) => Promise<void>;
 
   settings: PharmacySettings;
   fetchSettings: () => Promise<void>;
@@ -392,37 +394,51 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   refreshToken: async () => {
-    const refreshToken = localStorage.getItem('refresh_token');
-    if (!refreshToken) return false;
-    try {
-      const res = await api.post<LoginResponse>('/auth/refresh', { refreshToken });
-      const newToken = res.data.token;
-      const newRefresh = res.data.refreshToken;
-      localStorage.setItem('auth_token', newToken);
-      if (newRefresh) localStorage.setItem('refresh_token', newRefresh);
-      const user: User = {
-        id: String(res.data.userId),
-        fullName: res.data.fullName,
-        email: res.data.email,
-        role: (res.data.role?.toLowerCase() || 'pharmacist') as 'admin' | 'pharmacist',
-        branchId: res.data.branchId,
-        branchName: res.data.branchName,
-        isActive: true,
-        createdAt: new Date().toISOString(),
-      };
-      const branch: Branch = {
-        id: String(res.data.branchId),
-        name: res.data.branchName,
-        isActive: true,
-      };
-      localStorage.setItem('current_user', JSON.stringify(user));
-      localStorage.setItem('current_branch', JSON.stringify(branch));
-      set({ token: newToken, currentUser: user, currentBranch: branch });
-      return true;
-    } catch (e) {
-      logout();
-      return false;
-    }
+    // The backend rotates refresh tokens: presenting one twice fails. The 401
+    // interceptor already single-flights its own refresh, so share that guard
+    // here to stop the 7-hour timer and an interceptor refresh racing and
+    // invalidating the session.
+    if (refreshInFlight) return refreshInFlight;
+    refreshInFlight = (async () => {
+      const refreshToken = localStorage.getItem('refresh_token');
+      if (!refreshToken) return false;
+      try {
+        const res = await api.post<LoginResponse>('/auth/refresh', { refreshToken });
+        const newToken = res.data.token;
+        const newRefresh = res.data.refreshToken;
+        localStorage.setItem('auth_token', newToken);
+        if (newRefresh) localStorage.setItem('refresh_token', newRefresh);
+        const previousUser = get().currentUser;
+        const user: User = {
+          id: String(res.data.userId),
+          fullName: res.data.fullName,
+          // The refresh response does not carry an email, so keep the one we
+          // already have instead of overwriting it with undefined.
+          email: previousUser?.email ?? '',
+          role: (res.data.role?.toLowerCase() || 'pharmacist') as 'admin' | 'pharmacist',
+          branchId: res.data.branchId,
+          branchName: res.data.branchName,
+          isActive: true,
+          createdAt: previousUser?.createdAt ?? new Date().toISOString(),
+        };
+        const branch: Branch = {
+          id: String(res.data.branchId),
+          name: res.data.branchName,
+          isActive: true,
+        };
+        localStorage.setItem('current_user', JSON.stringify(user));
+        localStorage.setItem('current_branch', JSON.stringify(branch));
+        set({ token: newToken, currentUser: user, currentBranch: branch });
+        return true;
+      } catch (e) {
+        // Only a genuinely unusable refresh token should end the session.
+        logout();
+        return false;
+      } finally {
+        refreshInFlight = null;
+      }
+    })();
+    return refreshInFlight;
   },
 
   register: async (fullName: string, email: string, password: string) => {
@@ -890,7 +906,10 @@ export const useAppStore = create<AppState>((set, get) => ({
     try {
       await api.post('/damages', data);
       await get().fetchDamages();
+      // Damage may target either product type; refresh both so the affected
+      // stock stays consistent in the UI.
       await get().fetchMedicines();
+      await get().fetchCosmetics();
     } catch (e) {
       console.error('Failed to record damage', e);
       throw e;
@@ -904,16 +923,6 @@ export const useAppStore = create<AppState>((set, get) => ({
       set({ expiredRecords: res.data });
     } catch (e) {
       console.error('Failed to fetch expired records', e);
-    }
-  },
-  recordExpired: async (data) => {
-    try {
-      await api.post('/expired', data);
-      await get().fetchExpired();
-      await get().fetchMedicines();
-    } catch (e) {
-      console.error('Failed to record expired', e);
-      throw e;
     }
   },
 

@@ -279,7 +279,13 @@ public class AuthService : IAuthService
         if (request.IsActive.HasValue)
             user.IsActive = request.IsActive.Value;
 
+        var deactivated = request.IsActive.HasValue && !request.IsActive.Value && user.IsActive == false;
+
         await _userRepo.UpdateAsync(user);
+
+        if (deactivated)
+            await RevokeRefreshTokensAsync(id);
+
         await _unitOfWork.SaveChangesAsync();
 
         await _auditLog.LogAsync(id, $"Updated user: {user.FullName}", "Users", user.UserId);
@@ -311,9 +317,31 @@ public class AuthService : IAuthService
 
         user.IsActive = false;
         await _userRepo.UpdateAsync(user);
+
+        // Revoke outstanding refresh tokens so a deleted account cannot mint a
+        // new access token. History is kept (IsRevoked), not deleted.
+        await RevokeRefreshTokensAsync(id);
+
         await _unitOfWork.SaveChangesAsync();
 
         await _auditLog.LogAsync(id, $"Deactivated user: {user.FullName}", "Users", user.UserId);
+    }
+
+    private async Task RevokeRefreshTokensAsync(int userId)
+    {
+        var activeTokens = await _unitOfWork.RefreshTokens
+            .FindAsync(rt => rt.UserId == userId && !rt.IsRevoked);
+
+        foreach (var token in activeTokens)
+        {
+            token.IsRevoked = true;
+            await _unitOfWork.RefreshTokens.UpdateAsync(token);
+        }
+
+        if (activeTokens.Any())
+        {
+            _logger.LogInformation("Revoked {Count} refresh token(s) for user {UserId}", activeTokens.Count(), userId);
+        }
     }
 
     public async Task<Settings?> GetSettingsAsync(int? branchId = null)

@@ -47,7 +47,7 @@ export const ReportsPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Reports & Analytics</h1>
           <p className={`${isDark ? 'text-gray-400' : 'text-gray-500'} mt-1`}>View detailed business reports</p>

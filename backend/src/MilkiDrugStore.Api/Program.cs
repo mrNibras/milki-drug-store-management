@@ -158,8 +158,49 @@ builder.Services.AddAuthentication(options =>
         {
             OnAuthenticationFailed = context =>
             {
-                Console.WriteLine($"[AUTH-DEBUG] Token validation failed: {context.Exception}");
+                // Structured so a 401 seen in production can be attributed to a
+                // concrete reason (expired / bad signature / bad issuer / unknown
+                // key). Never logs the token or any secret.
+                var logger = context.HttpContext.RequestServices
+                    .GetRequiredService<ILoggerFactory>()
+                    .CreateLogger("MilkiDrugStore.Auth");
+                logger.LogWarning("JWT rejected. Reason={Reason} Path={Path} Message={Message}",
+                    context.Exception?.GetType().Name,
+                    context.HttpContext.Request.Path,
+                    context.Exception?.Message);
                 return System.Threading.Tasks.Task.CompletedTask;
+            },
+            // Single centralized revocation point: an already-issued JWT stays
+            // cryptographically valid until expiry, so every authenticated
+            // request re-checks the authoritative User.IsActive state.
+            OnTokenValidated = async context =>
+            {
+                var principal = context.Principal;
+                if (principal?.Identity?.IsAuthenticated != true)
+                    return;
+
+                var logger = context.HttpContext.RequestServices
+                    .GetRequiredService<ILoggerFactory>()
+                    .CreateLogger("MilkiDrugStore.Auth");
+
+                var userIdClaim = principal.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                if (!int.TryParse(userIdClaim, out var userId))
+                {
+                    logger.LogWarning("JWT rejected: subject claim missing or not an integer. Path={Path}",
+                        context.HttpContext.Request.Path);
+                    context.Fail("Invalid token subject.");
+                    return;
+                }
+
+                var userActivity = context.HttpContext.RequestServices
+                    .GetRequiredService<MilkiDrugStore.Application.Interfaces.IUserActivityService>();
+
+                if (!await userActivity.IsActiveAsync(userId, context.HttpContext.RequestAborted))
+                {
+                    logger.LogWarning("JWT rejected: user {UserId} is not active/approved. Path={Path}",
+                        userId, context.HttpContext.Request.Path);
+                    context.Fail("Account is no longer active.");
+                }
             }
         };
     });
