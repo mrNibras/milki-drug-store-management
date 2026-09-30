@@ -21,6 +21,19 @@ public class SalesReportResponse
     public int TransactionCount { get; set; }
 }
 
+/// <summary>
+/// The business period a sales report covers, in UTC. The report chart and the
+/// detail table must both use this window so they cannot disagree.
+/// </summary>
+public class SalesPeriodBoundsResponse
+{
+    public string Period { get; set; } = string.Empty;
+    public DateTime StartUtc { get; set; }
+    public DateTime EndUtc { get; set; }
+    public string StartLocal { get; set; } = string.Empty;
+    public string EndLocal { get; set; } = string.Empty;
+}
+
 public class InventoryReportResponse
 {
     public int ProductId { get; set; }

@@ -347,6 +347,25 @@ export const fetchSalesReport = async (period: string): Promise<SalesReportRespo
   return res.data;
 };
 
+export interface SalesPeriodBounds {
+  period: string;
+  startUtc: string;
+  endUtc: string;
+  startLocal: string;
+  endLocal: string;
+}
+
+/**
+ * The business window the sales report covers for a period, resolved by the
+ * backend in Ethiopian time. The detail table must use this rather than the
+ * browser clock, otherwise a user outside Ethiopia sees a different set of rows
+ * than the chart above it.
+ */
+export const fetchSalesPeriodBounds = async (period: string): Promise<SalesPeriodBounds> => {
+  const res = await api.get<SalesPeriodBounds>(`/reports/sales/${period}/bounds`);
+  return res.data;
+};
+
 export interface NotificationResponse {
   notificationId: number;
   title: string;

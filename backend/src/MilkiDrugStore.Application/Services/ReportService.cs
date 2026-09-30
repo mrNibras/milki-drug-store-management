@@ -219,8 +219,7 @@ namespace MilkiDrugStore.Application.Services
             };
         }
 
-        public async Task<IEnumerable<SalesReportResponse>> GetSalesReportAsync(string period, int? branchId = null)
-        {
+        public async Task<IEnumerable<SalesReportResponse>> GetSalesReportAsync(string period, int? branchId = null)        {
             var sales = (await _saleRepo.GetAllAsync()).ToList();
             if (branchId.HasValue)
                 sales = sales.Where(s => s.BranchId == branchId.Value).ToList();
@@ -230,7 +229,6 @@ namespace MilkiDrugStore.Application.Services
 
             if (filtered.Count == 0)
                 return new List<SalesReportResponse>();
-
             return filtered
                 .GroupBy(s => GetBucketKey(s.SaleDate, period.ToLower()))
                 .Select(g => new SalesReportResponse
@@ -243,6 +241,22 @@ namespace MilkiDrugStore.Application.Services
                 })
                 .OrderBy(r => r.Date)
                 .ToList();
+        }
+
+        public Task<SalesPeriodBoundsResponse> GetSalesPeriodBoundsAsync(string period)
+        {
+            var normalized = (period ?? string.Empty).ToLowerInvariant();
+            var (startUtc, endUtc) = GetPeriodBounds(normalized, DateTime.UtcNow);
+            return Task.FromResult(new SalesPeriodBoundsResponse
+            {
+                Period = normalized,
+                StartUtc = startUtc,
+                EndUtc = endUtc,
+                // Human-readable Ethiopian equivalents, so a client never has to
+                // re-derive the business window from a UTC instant.
+                StartLocal = TimeZoneInfo.ConvertTimeFromUtc(startUtc, EthiopiaTz).ToString("yyyy-MM-dd HH:mm:ss"),
+                EndLocal = TimeZoneInfo.ConvertTimeFromUtc(endUtc, EthiopiaTz).ToString("yyyy-MM-dd HH:mm:ss")
+            });
         }
 
         public async Task<IEnumerable<InventoryReportResponse>> GetInventoryReportAsync(int? branchId = null)

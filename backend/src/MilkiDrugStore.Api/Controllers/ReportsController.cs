@@ -33,6 +33,18 @@ public class ReportsController : ControllerBase
         return Ok(result);
     }
 
+    /// <summary>
+    /// The business window <see cref="GetSalesReport"/> covers for a period, so a
+    /// client can render detail rows from the same window instead of guessing
+    /// from the browser clock. Available even when the period has no sales.
+    /// </summary>
+    [HttpGet("sales/{period}/bounds")]
+    public async Task<IActionResult> GetSalesPeriodBounds(string period)
+    {
+        var bounds = await _reportService.GetSalesPeriodBoundsAsync(period);
+        return Ok(bounds);
+    }
+
     [HttpGet("inventory")]
     public async Task<IActionResult> GetInventoryReport([FromQuery] int? branchId)
     {

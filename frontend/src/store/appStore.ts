@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { User, Medicine, Supplier, Purchase, Sale, Notification, CartItem, PharmacySettings, AuditLog, Category, UnitType, Branch, CatalogOption, Cosmetic } from '../types';
-import { api, LoginRequest, LoginResponse, CreateSaleRequest, CreatePurchaseRequest, RecordDamageRequest, ChangePasswordRequest, DamageResponse, ExpiredResponse, AuditLogResponse, BranchResponse, CreateBranchRequest, UpdateBranchRequest, CatalogOptionDto, CosmeticResponse, SalesReportResponse, fetchSalesReport } from '../services/api';
+import { api, LoginRequest, LoginResponse, CreateSaleRequest, CreatePurchaseRequest, RecordDamageRequest, ChangePasswordRequest, DamageResponse, ExpiredResponse, AuditLogResponse, BranchResponse, CreateBranchRequest, UpdateBranchRequest, CatalogOptionDto, CosmeticResponse, SalesReportResponse, fetchSalesReport, SalesPeriodBounds, fetchSalesPeriodBounds } from '../services/api';
 import { getSettings, updateSettings } from '../services/settingsApi';
 import { getDaysUntilExpiry, generateId } from '../utils/helpers';
 
@@ -53,6 +53,7 @@ interface AppState {
   fetchSales: () => Promise<void>;
   addSale: (sale: Sale) => Promise<void>;
   salesReport: Record<string, SalesReportResponse[]>;
+  salesReportBounds: Record<string, SalesPeriodBounds>;
   fetchSalesReport: (period: string) => Promise<void>;
 
   cart: CartItem[];
@@ -267,6 +268,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   purchases: [],
   sales: [],
   salesReport: {},
+  salesReportBounds: {},
   categories: [],
   unitTypes: [],
   isAuthenticated: false,
@@ -762,8 +764,17 @@ export const useAppStore = create<AppState>((set, get) => ({
     get().setLoading(`report_${period}`, true); set({ error: null });
     try {
       const data = await fetchSalesReport(period);
+      // Fetched alongside the buckets so the detail table can filter on the same
+      // business window the backend charted, instead of the browser's clock.
+      let bounds: SalesPeriodBounds | null = null;
+      try {
+        bounds = await fetchSalesPeriodBounds(period);
+      } catch {
+        bounds = null;
+      }
       set(state => ({
-        salesReport: { ...state.salesReport, [period]: data }
+        salesReport: { ...state.salesReport, [period]: data },
+        salesReportBounds: bounds ? { ...state.salesReportBounds, [period]: bounds } : state.salesReportBounds
       }));
       get().setLoading(`report_${period}`, false);
     } catch (e: any) {

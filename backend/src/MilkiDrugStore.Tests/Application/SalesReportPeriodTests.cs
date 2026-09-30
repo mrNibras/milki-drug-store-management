@@ -1,3 +1,4 @@
+using System.Globalization;
 using FluentAssertions;
 using MilkiDrugStore.Application.Interfaces;
 using MilkiDrugStore.Application.Services;
@@ -130,6 +131,73 @@ public class SalesReportPeriodTests
         report.Should().HaveCount(3);
         report.Select(r => r.Label).Should().OnlyContain(l => l.StartsWith("W"));
         report.Sum(r => r.Sales).Should().Be(300m);
+    }
+
+    [Fact]
+    public async Task PeriodBounds_MatchTheBucketedReportWindow()
+    {
+        var service = CreateService(new[]
+        {
+            SaleAt(TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, EthiopiaTz).Date.AddHours(9))
+        });
+
+        foreach (var period in new[] { "daily", "weekly", "monthly", "yearly" })
+        {
+            var bounds = await service.GetSalesPeriodBoundsAsync(period);
+            bounds.Period.Should().Be(period);
+            bounds.StartUtc.Should().BeBefore(bounds.EndUtc);
+
+            // A sale inside the window must also be charted by the report.
+            var inWindow = new Sale
+            {
+                SaleDate = bounds.StartUtc.AddMinutes(1),
+                TotalAmount = 50m,
+                TotalProfit = 10m
+            };
+            var report = await CreateService(new[] { inWindow }).GetSalesReportAsync(period);
+            report.Should().ContainSingle($"the report for '{period}' must cover the same window as its bounds");
+        }
+    }
+
+    [Fact]
+    public async Task PeriodBounds_AreIndependentOfSalesVolume()
+    {
+        // The detail table needs the window even when the period has no sales,
+        // which is why bounds cannot be carried on the report rows.
+        var bounds = await CreateService(Array.Empty<Sale>())
+            .GetSalesPeriodBoundsAsync("yearly");
+
+        bounds.Period.Should().Be("yearly");
+        bounds.StartLocal.Should().NotBeNullOrWhiteSpace();
+        bounds.EndLocal.Should().NotBeNullOrWhiteSpace();
+    }
+
+    [Fact]
+    public async Task Yearly_PeriodBoundsStartOnSeptemberFirst()
+    {
+        var bounds = await CreateService(Array.Empty<Sale>())
+            .GetSalesPeriodBoundsAsync("yearly");
+
+        // StartLocal is an Ethiopian wall-clock string: yyyy-MM-dd HH:mm:ss.
+        var startLocal = DateTime.ParseExact(
+            bounds.StartLocal, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
+        startLocal.Month.Should().Be(9);
+        startLocal.Day.Should().Be(1);
+
+        var endLocal = DateTime.ParseExact(
+            bounds.EndLocal, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
+        endLocal.Month.Should().Be(8);
+    }
+
+    [Fact]
+    public async Task Weekly_PeriodBoundsStartOnMonday()
+    {
+        var bounds = await CreateService(Array.Empty<Sale>())
+            .GetSalesPeriodBoundsAsync("weekly");
+
+        var startLocal = DateTime.ParseExact(
+            bounds.StartLocal, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
+        startLocal.DayOfWeek.Should().Be(DayOfWeek.Monday);
     }
 
     [Fact]

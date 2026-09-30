@@ -7,7 +7,7 @@ import { BarChart3 } from 'lucide-react';
 import { ResponsiveTable } from '../components/ui/ResponsiveTable';
 
 const SalesReport: React.FC = () => {
-  const { sales, fetchSales, salesReport, fetchSalesReport, error, loading } = useAppStore();
+  const { sales, fetchSales, salesReport, salesReportBounds, fetchSalesReport, error, loading } = useAppStore();
   const { theme } = useThemeStore();
   const isDark = theme === 'dark';
   const [dateRange, setDateRange] = useState('weekly');
@@ -30,36 +30,22 @@ const SalesReport: React.FC = () => {
   const filteredTotalProfit = useMemo(() => reportData.reduce((s, r) => s + r.profit, 0), [reportData]);
   const filteredTotalTransactions = useMemo(() => reportData.reduce((s, r) => s + r.transactionCount, 0), [reportData]);
 
+  // The detail table is filtered with the same business window the backend
+  // charted (Ethiopian time), so the table and the chart can never disagree.
+  // Falling back to the raw list is only for the brief moment before the
+  // bounds request resolves.
+  const bounds = salesReportBounds?.[dateRange];
   const filteredSales = useMemo(() => {
-    const now = new Date();
-    const today = now.toISOString().split('T')[0];
-
-    const startOfWeek = new Date(now);
-    const dayOfWeek = startOfWeek.getDay();
-    const diff = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-    startOfWeek.setDate(startOfWeek.getDate() - diff);
-    startOfWeek.setHours(0, 0, 0, 0);
-
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const startOfYear = new Date(now.getFullYear(), 0, 1);
-
-    return (sales || []).filter(sale => {
-      const saleDate = new Date(sale.saleDate);
-
-      switch (dateRange) {
-        case 'daily':
-          return sale.saleDate.startsWith(today);
-        case 'weekly':
-          return saleDate >= startOfWeek;
-        case 'monthly':
-          return saleDate >= startOfMonth;
-        case 'yearly':
-          return saleDate >= startOfYear;
-        default:
-          return true;
-      }
-    }).sort((a, b) => new Date(b.saleDate).getTime() - new Date(a.saleDate).getTime());
-  }, [sales, dateRange]);
+    if (!bounds) return sales || [];
+    const start = new Date(bounds.startUtc).getTime();
+    const end = new Date(bounds.endUtc).getTime();
+    return (sales || [])
+      .filter(sale => {
+        const t = new Date(sale.saleDate).getTime();
+        return t >= start && t <= end;
+      })
+      .sort((a, b) => new Date(b.saleDate).getTime() - new Date(a.saleDate).getTime());
+  }, [sales, bounds]);
 
   const reportLoading = loading[`report_${dateRange}`] || false;
 
@@ -98,6 +84,11 @@ const SalesReport: React.FC = () => {
             {range.charAt(0).toUpperCase() + range.slice(1)}
           </button>
         ))}
+        {bounds && (
+          <span className={`ml-auto self-center text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+            Business period (EAT): {bounds.startLocal} → {bounds.endLocal}
+          </span>
+        )}
       </div>
 
       <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl border p-6`}>
