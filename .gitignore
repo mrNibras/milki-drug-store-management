@@ -25,7 +25,6 @@ npm-debug.log*
 *.suo
 *.ntvs*
 *.njsproj
-*.sln
 *.sw?
 
 # OS files
@@ -34,3 +33,7 @@ Thumbs.db
 
 # Cache
 .cache/
+
+# Test artifacts
+**/TestResults/
+*.trx

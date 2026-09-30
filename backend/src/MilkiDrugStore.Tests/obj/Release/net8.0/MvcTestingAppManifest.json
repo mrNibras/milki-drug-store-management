@@ -1,7 +1,0 @@
-{
-  "MilkiDrugStore.Api, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "\/home\/mrnibra\/milki-drug-store-management\/backend\/src\/MilkiDrugStore.Api",
-  "MilkiDrugStore.Application, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "\/home\/mrnibra\/milki-drug-store-management\/backend\/src\/MilkiDrugStore.Application",
-  "MilkiDrugStore.Domain, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "\/home\/mrnibra\/milki-drug-store-management\/backend\/src\/MilkiDrugStore.Domain",
-  "MilkiDrugStore.Infrastructure, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "\/home\/mrnibra\/milki-drug-store-management\/backend\/src\/MilkiDrugStore.Infrastructure",
-  "MilkiDrugStore.Persistence, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "\/home\/mrnibra\/milki-drug-store-management\/backend\/src\/MilkiDrugStore.Persistence"
-}

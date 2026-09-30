@@ -1,3 +1,0 @@
-﻿<Project>
-  <Import Project="../buildMultiTargeting/MilkiDrugStore.Api.props" />
-</Project>
