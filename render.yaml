@@ -41,7 +41,7 @@ services:
         value: "1095"
       - key: Retention__NotificationRetentionDays
         value: "180"
-    healthCheckPath: /health
+    healthCheckPath: /api/health
     disk:
       name: milki-data
       mountPath: /var/data
