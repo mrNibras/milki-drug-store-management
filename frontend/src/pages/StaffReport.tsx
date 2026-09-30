@@ -39,7 +39,7 @@ const StaffReport: React.FC = () => {
   }
 
   return (
-    <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl border overflow-hidden`}>
+    <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl border overflow-hidden min-w-0`}>
       <ResponsiveTable>
         <table className="w-full">
         <thead>

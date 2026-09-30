@@ -72,7 +72,7 @@ const MostSellingReport: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 min-w-0">
       <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl border overflow-hidden`}>
         <div className={`px-3 sm:px-6 py-4 border-b ${isDark ? 'border-gray-700' : 'border-gray-100'}`}>
           <div className="flex items-center gap-2"><Award className="h-5 w-5 text-amber-500" /><h3 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>Overall Top Selling Medicines</h3></div>

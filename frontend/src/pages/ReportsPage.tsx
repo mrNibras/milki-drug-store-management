@@ -46,32 +46,38 @@ export const ReportsPage: React.FC = () => {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 min-w-0">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
+        <div className="min-w-0">
           <h1 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Reports & Analytics</h1>
           <p className={`${isDark ? 'text-gray-400' : 'text-gray-500'} mt-1`}>View detailed business reports</p>
         </div>
-        <Button variant="secondary">
+        <Button variant="secondary" className="flex-shrink-0">
           <Download className="h-4 w-4" /> Export
         </Button>
       </div>
 
-      {/* Tabs */}
-      <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl border p-1 flex gap-1 overflow-x-auto`}>
-        {tabs.map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
-              activeTab === tab.id
-                ? 'bg-blue-600 text-white shadow-sm'
-                : isDark ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-600 hover:bg-gray-100'
-            }`}
-          >
-            {tab.icon} {tab.label}
-          </button>
-        ))}
+      {/* Tabs. The scroll container must be the parent of the flex row, and every
+          tab must be shrink-0: a shrinkable flex item ignores whitespace-nowrap
+          and its text spills into the neighbouring tab instead of scrolling. */}
+      <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl border p-1 min-w-0`}>
+        <div className="overflow-x-auto">
+          <div className="flex min-w-max gap-1">
+            {tabs.map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex flex-shrink-0 items-center gap-2 px-4 py-3 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+                  activeTab === tab.id
+                    ? 'bg-blue-600 text-white shadow-sm'
+                    : isDark ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                {tab.icon} {tab.label}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* Report Content */}

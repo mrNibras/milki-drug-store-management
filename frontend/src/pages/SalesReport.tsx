@@ -58,8 +58,8 @@ const SalesReport: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div className="space-y-6 min-w-0">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 min-w-0">
         <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl border p-5`}>
           <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
             {dateRange.charAt(0).toUpperCase() + dateRange.slice(1)} Revenue
@@ -78,20 +78,31 @@ const SalesReport: React.FC = () => {
         </div>
       </div>
 
-      <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl border p-4 flex gap-2`}>
-        {['daily', 'weekly', 'monthly', 'yearly'].map(range => (
-          <button key={range} onClick={() => setDateRange(range)} className={`px-4 py-2 rounded-lg text-sm font-medium ${dateRange === range ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : isDark ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-600 hover:bg-gray-100'}`}>
-            {range.charAt(0).toUpperCase() + range.slice(1)}
-          </button>
-        ))}
+      {/* Period selector and the resolved business window are stacked on mobile.
+          Forcing them into one flex row made the long date string compete with
+          the buttons for horizontal space and overflowed narrow screens. */}
+      <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl border p-4 min-w-0 flex flex-col sm:flex-row sm:items-center gap-2`}>
+        <div className="overflow-x-auto min-w-0 -mx-1 px-1">
+          <div className="flex min-w-max gap-2">
+            {['daily', 'weekly', 'monthly', 'yearly'].map(range => (
+              <button
+                key={range}
+                onClick={() => setDateRange(range)}
+                className={`flex-shrink-0 whitespace-nowrap px-4 py-2.5 rounded-lg text-sm font-medium ${dateRange === range ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : isDark ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-600 hover:bg-gray-100'}`}
+              >
+                {range.charAt(0).toUpperCase() + range.slice(1)}
+              </button>
+            ))}
+          </div>
+        </div>
         {bounds && (
-          <span className={`ml-auto self-center text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+          <span className={`text-xs min-w-0 break-words whitespace-normal sm:ml-auto sm:self-center sm:text-right ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
             Business period (EAT): {bounds.startLocal} → {bounds.endLocal}
           </span>
         )}
       </div>
 
-      <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl border p-6`}>
+      <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl border p-6 min-w-0`}>
         <h3 className={`text-lg font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>{dateRange.charAt(0).toUpperCase() + dateRange.slice(1)} Sales Overview</h3>
         <ResponsiveContainer width="100%" height={350}>
           <BarChart data={chartData}>
@@ -106,7 +117,7 @@ const SalesReport: React.FC = () => {
         </ResponsiveContainer>
       </div>
 
-      <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl border overflow-hidden`}>
+      <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl border overflow-hidden min-w-0`}>
         <div className={`px-6 py-4 border-b ${isDark ? 'border-gray-700' : 'border-gray-100'}`}>
           <h3 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>Sales Detail - {dateRange.charAt(0).toUpperCase() + dateRange.slice(1)}</h3>
           <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'} mt-1`}>Showing {filteredSales.length} transaction{filteredSales.length !== 1 ? 's' : ''}</p>

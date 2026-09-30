@@ -41,7 +41,7 @@ const SupplierReport: React.FC = () => {
   }
 
   return (
-    <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl border overflow-hidden`}>
+    <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl border overflow-hidden min-w-0`}>
       <div className={`px-6 py-4 border-b ${isDark ? 'border-gray-700' : 'border-gray-100'}`}>
         <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Financial data calculated from purchase records</p>
       </div>

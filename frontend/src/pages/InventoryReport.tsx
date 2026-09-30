@@ -58,7 +58,7 @@ const InventoryReport: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 min-w-0">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl border p-5`}>
           <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Total Inventory Value</p>
