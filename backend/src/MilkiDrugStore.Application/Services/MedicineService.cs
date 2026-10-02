@@ -47,6 +47,7 @@ public class MedicineService : IMedicineService
 
         var medicines = query
             .Include(m => m.Batches)
+                .ThenInclude(b => b.Supplier)
             .OrderBy(m => m.BrandName)
             .ToList();
 
@@ -64,7 +65,7 @@ public class MedicineService : IMedicineService
     public async Task<MedicineResponse?> GetByIdAsync(int id, int? branchId = null)
     {
         var medicines = await _medicineRepo.FindAsync(m => m.ProductId == id);
-        var medicine = medicines.Include(m => m.Batches).FirstOrDefault();
+        var medicine = medicines.Include(m => m.Batches).ThenInclude(b => b.Supplier).FirstOrDefault();
         if (medicine == null) return null;
 
         if (branchId.HasValue)
@@ -155,7 +156,7 @@ public class MedicineService : IMedicineService
     public async Task<MedicineResponse> AddBatchAsync(AddBatchRequest request, int userId, int? branchId = null)
     {
         var medicines = await _medicineRepo.FindAsync(m => m.ProductId == request.ProductId);
-        var medicine = medicines.Include(m => m.Batches).FirstOrDefault();
+        var medicine = medicines.Include(m => m.Batches).ThenInclude(b => b.Supplier).FirstOrDefault();
         if (medicine == null) throw new Exception("Medicine not found");
 
         var batch = new MedicineBatch
@@ -326,7 +327,7 @@ public class MedicineService : IMedicineService
                 ExpiryDate = b.ExpiryDate,
                 ManufacturingDate = b.ManufacturingDate,
                 SupplierId = b.SupplierId,
-                SupplierName = b.Supplier?.SupplierName ?? ""
+                SupplierName = b.Supplier?.SupplierName
             }).ToList()
         };
     }

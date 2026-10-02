@@ -127,8 +127,14 @@ const toMedicine = (r: MedicineResponse): Medicine => ({
     purchasePrice: b.purchasePrice,
     sellingPrice: b.sellingPrice,
     quantity: b.remainingQuantity,
+    quantityReceived: b.quantityReceived,
+    quantityIssued: b.quantityIssued,
+    quantityDamaged: b.quantityDamaged,
+    quantityExpired: b.quantityExpired,
     expiryDate: b.expiryDate,
     createdAt: b.dateReceived,
+    supplierId: b.supplierId,
+    supplierName: b.supplierName,
   })),
 });
 
@@ -163,6 +169,7 @@ const toCosmetic = (r: CosmeticResponse): Cosmetic => ({
     lowStockThreshold: b.lowStockThreshold,
     branchId: b.branchId,
     supplierId: b.supplierId,
+    supplierName: b.supplierName,
     remarks: b.remarks,
   })),
 });

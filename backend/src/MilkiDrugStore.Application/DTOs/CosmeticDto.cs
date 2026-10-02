@@ -36,6 +36,7 @@ public class BatchResponse
     public int LowStockThreshold { get; set; }
     public int BranchId { get; set; }
     public int? SupplierId { get; set; }
+    public string? SupplierName { get; set; }
     public string? Remarks { get; set; }
 }
 

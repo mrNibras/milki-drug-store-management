@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Search, Package, AlertTriangle, CheckCircle, Layers, Tag, Sparkle } from 'lucide-react';
+import { Search, Package, AlertTriangle, CheckCircle, Layers, Tag, Sparkle, Truck } from 'lucide-react';
 import { useAppStore } from '../store/appStore';
 import { useThemeStore } from '../store/themeStore';
 import { Badge } from '../components/ui/Badge';
@@ -16,6 +16,8 @@ interface UnifiedInventoryItem {
   unitType: string;
   lowStockThreshold: number;
   batches: UnifiedBatch[];
+  /** Distinct supplier names across every batch, in batch order. Empty when no batch has a supplier. */
+  supplierNames: string[];
 }
 
 interface UnifiedBatch {
@@ -25,9 +27,31 @@ interface UnifiedBatch {
   purchasePrice: number;
   sellingPrice: number;
   quantity: number;
+  quantityReceived: number;
+  quantityIssued: number;
+  quantityDamaged: number;
   expiryDate: string;
   createdAt: string;
+  /** Authoritative supplier for this exact batch, resolved from the batch's purchase. Null when genuinely unset. */
+  supplierName: string | null;
 }
+
+const UNSPECIFIED_SUPPLIER = 'Not specified';
+
+/** Collects the distinct, non-empty supplier names of a product's batches without inventing a fallback. */
+const collectSupplierNames = (batches: UnifiedBatch[]): string[] => {
+  const seen = new Set<string>();
+  const names: string[] = [];
+  batches.forEach(b => {
+    const name = b.supplierName?.trim();
+    if (!name) return;
+    const key = name.toLowerCase();
+    if (seen.has(key)) return;
+    seen.add(key);
+    names.push(name);
+  });
+  return names;
+};
 
 const toUnifiedMedicine = (m: Medicine): UnifiedInventoryItem => ({
   id: m.id,
@@ -45,9 +69,14 @@ const toUnifiedMedicine = (m: Medicine): UnifiedInventoryItem => ({
     purchasePrice: b.purchasePrice,
     sellingPrice: b.sellingPrice,
     quantity: b.quantity,
+    quantityReceived: b.quantityReceived ?? 0,
+    quantityIssued: b.quantityIssued ?? 0,
+    quantityDamaged: b.quantityDamaged ?? 0,
     expiryDate: b.expiryDate,
     createdAt: b.createdAt,
+    supplierName: b.supplierName?.trim() || null,
   })),
+  supplierNames: [],
 });
 
 const toUnifiedCosmetic = (c: Cosmetic): UnifiedInventoryItem => ({
@@ -66,9 +95,14 @@ const toUnifiedCosmetic = (c: Cosmetic): UnifiedInventoryItem => ({
     purchasePrice: b.buyingPrice,
     sellingPrice: b.sellingPrice,
     quantity: b.balance,
+    quantityReceived: b.quantityReceived,
+    quantityIssued: b.quantityIssued,
+    quantityDamaged: b.quantityDamaged,
     expiryDate: b.expiryDate || '',
     createdAt: b.dateReceived,
+    supplierName: b.supplierName?.trim() || null,
   })),
+  supplierNames: [],
 });
 
 export const InventoryPage: React.FC = () => {
@@ -91,7 +125,8 @@ export const InventoryPage: React.FC = () => {
     const items: UnifiedInventoryItem[] = [];
     (medicines || []).forEach(m => items.push(toUnifiedMedicine(m)));
     (cosmetics || []).forEach(c => items.push(toUnifiedCosmetic(c)));
-    return items;
+    // Summarise every distinct supplier behind a product's batches, never just the first one.
+    return items.map(item => ({ ...item, supplierNames: collectSupplierNames(item.batches) }));
   }, [medicines, cosmetics]);
 
   const filteredItems = useMemo(() => {
@@ -99,6 +134,7 @@ export const InventoryPage: React.FC = () => {
       const matchSearch = item.name?.toLowerCase().includes(search.toLowerCase()) ||
         item.genericName?.toLowerCase().includes(search.toLowerCase()) ||
         item.categoryName?.toLowerCase().includes(search.toLowerCase()) ||
+        item.supplierNames.some(s => s.toLowerCase().includes(search.toLowerCase())) ||
         (item.batches || []).some(b => b.batchNumber?.toLowerCase().includes(search.toLowerCase()));
 
       const matchCategory = categoryFilter === 'all' || item.categoryId === categoryFilter;
@@ -253,9 +289,11 @@ export const InventoryPage: React.FC = () => {
                 <th className={`${thClass} text-left`}>Type</th>
                 <th className={`${thClass} text-left`}>Category</th>
                 <th className={`${thClass} text-left`}>Batch #</th>
+                <th className={`${thClass} text-left`}>Supplier</th>
                 <th className={`${thClass} text-left`}>Expiry Date</th>
                 {isAdmin && <th className={`${thClass} text-right`}>Purchase Price</th>}
                 {isAdmin && <th className={`${thClass} text-right`}>Selling Price</th>}
+                <th className={`${thClass} text-center`}>Rec/Iss/Dmg</th>
                 <th className={`${thClass} text-center`}>Stock</th>
                 {isAdmin && <th className={`${thClass} text-right`}>Batch Value</th>}
                 <th className={`${thClass} text-center`}>Status</th>
@@ -301,10 +339,31 @@ export const InventoryPage: React.FC = () => {
                             }`}>
                               {item.productType === 'cosmetic' ? <Sparkle className="h-5 w-5" /> : <Package className="h-5 w-5" />}
                             </div>
-                            <div>
+                            <div className="min-w-0">
                               <p className={`font-bold whitespace-nowrap ${isDark ? 'text-white' : 'text-gray-900'}`}>{item.name}</p>
                               <p className={`text-xs whitespace-nowrap ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{item.genericName}</p>
                               <p className={`text-xs whitespace-nowrap ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{item.unitType}</p>
+                              {/* Summary of every supplier behind this product's batches, never a single arbitrary one. */}
+                              <div
+                                className="mt-1.5 flex items-start gap-1.5 max-w-[240px]"
+                                title={item.supplierNames.join(', ') || UNSPECIFIED_SUPPLIER}
+                              >
+                                <Truck className={`mt-0.5 h-3.5 w-3.5 flex-shrink-0 ${isDark ? 'text-slate-400' : 'text-slate-500'}`} />
+                                {item.supplierNames.length > 0 ? (
+                                  <p className={`text-xs leading-snug ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                                    {item.supplierNames.join(', ')}
+                                    {item.supplierNames.length > 1 && (
+                                      <span className={`ml-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                                        ({item.supplierNames.length} suppliers)
+                                      </span>
+                                    )}
+                                  </p>
+                                ) : (
+                                  <p className={`text-xs italic ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                                    {UNSPECIFIED_SUPPLIER}
+                                  </p>
+                                )}
+                              </div>
                             </div>
                           </div>
                         </td>
@@ -355,6 +414,25 @@ export const InventoryPage: React.FC = () => {
                         </div>
                       </td>
 
+                      {/* ===== SUPPLIER (authoritative, per batch) ===== */}
+                      <td className="px-5 py-3">
+                        {batch.supplierName ? (
+                          <div
+                            className="flex items-center gap-1.5 max-w-[220px]"
+                            title={batch.supplierName}
+                          >
+                            <Truck className={`h-3.5 w-3.5 flex-shrink-0 ${isDark ? 'text-slate-400' : 'text-slate-500'}`} />
+                            <span className={`text-sm truncate ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>
+                              {batch.supplierName}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className={`text-sm italic ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                            {UNSPECIFIED_SUPPLIER}
+                          </span>
+                        )}
+                      </td>
+
                       {/* ===== EXPIRY DATE ===== */}
                       <td className="px-5 py-3">
                         <p className={`text-sm whitespace-nowrap ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{formatDate(batch.expiryDate)}</p>
@@ -379,6 +457,21 @@ export const InventoryPage: React.FC = () => {
                         <span className="text-sm font-semibold">{batch.sellingPrice.toLocaleString()}</span>
                         <span className={`text-xs ml-1 font-normal ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>ETB</span>
                       </td>}
+
+                      {/* ===== RECEIVED / ISSUED / DAMAGED ===== */}
+                      <td className="px-5 py-3 whitespace-nowrap">
+                        <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                          {batch.quantityReceived}
+                        </span>
+                        <span className={`text-xs mx-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>/</span>
+                        <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                          {batch.quantityIssued}
+                        </span>
+                        <span className={`text-xs mx-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>/</span>
+                        <span className={`text-sm ${batch.quantityDamaged > 0 ? 'text-red-500' : (isDark ? 'text-gray-300' : 'text-gray-700')}`}>
+                          {batch.quantityDamaged}
+                        </span>
+                      </td>
 
                       {/* ===== STOCK ===== */}
                       <td className="px-5 py-3 text-center">

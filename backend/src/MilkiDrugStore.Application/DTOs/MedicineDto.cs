@@ -120,7 +120,7 @@ public class BatchResponse
     public DateTime? ManufacturingDate { get; set; }
     public DateTime DateReceived { get; set; }
     public int? SupplierId { get; set; }
-    public string SupplierName { get; set; } = string.Empty;
+    public string? SupplierName { get; set; }
 }
 
 public class MedicineSearchResponse

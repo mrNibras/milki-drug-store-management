@@ -52,8 +52,14 @@ export interface MedicineBatch {
   purchasePrice: number;
   sellingPrice: number;
   quantity: number;
+  quantityReceived?: number;
+  quantityIssued?: number;
+  quantityDamaged?: number;
+  quantityExpired?: number;
   expiryDate: string;
   createdAt: string;
+  supplierId?: number | null;
+  supplierName?: string | null;
 }
 
 export interface Supplier {
@@ -293,6 +299,7 @@ export interface CosmeticBatch {
   lowStockThreshold: number;
   branchId: number;
   supplierId?: number;
+  supplierName?: string | null;
   remarks?: string;
 }
 

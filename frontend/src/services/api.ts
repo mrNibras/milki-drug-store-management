@@ -210,7 +210,7 @@ export interface BatchResponse {
   expiryDate: string;
   dateReceived: string;
   supplierId?: number;
-  supplierName?: string;
+  supplierName?: string | null;
 }
 
 export interface SupplierResponse {
@@ -496,6 +496,7 @@ export interface CosmeticBatchResponse {
   lowStockThreshold: number;
   branchId: number;
   supplierId?: number;
+  supplierName?: string | null;
   remarks?: string;
 }
 

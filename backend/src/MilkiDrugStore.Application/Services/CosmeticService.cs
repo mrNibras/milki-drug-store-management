@@ -48,6 +48,7 @@ public class CosmeticService : ICosmeticService
 
         var cosmetics = query
             .Include(c => c.Batches)
+                .ThenInclude(b => b.Supplier)
             .OrderBy(c => c.ProductName)
             .ToList();
 
@@ -60,7 +61,7 @@ public class CosmeticService : ICosmeticService
         var query = cosmetics.AsQueryable();
         if (branchId.HasValue && branchId.Value > 0)
             query = query.Where(c => c.BranchId == branchId.Value);
-        var cosmetic = query.Include(c => c.Batches).FirstOrDefault();
+        var cosmetic = query.Include(c => c.Batches).ThenInclude(b => b.Supplier).FirstOrDefault();
         if (cosmetic == null) return null;
         return await MapToResponseAsync(cosmetic);
     }
@@ -139,7 +140,7 @@ public class CosmeticService : ICosmeticService
     public async Task<CosmeticResponse> AddBatchAsync(AddBatchRequest request, int userId)
     {
         var cosmetics = await _cosmeticRepo.FindAsync(c => c.CosmeticId == request.CosmeticId);
-        var cosmetic = cosmetics.Include(c => c.Batches).FirstOrDefault();
+        var cosmetic = cosmetics.Include(c => c.Batches).ThenInclude(b => b.Supplier).FirstOrDefault();
         if (cosmetic == null) throw new Exception("Cosmetic not found");
 
         var batch = new CosmeticBatch
@@ -244,6 +245,7 @@ public class CosmeticService : ICosmeticService
                 LowStockThreshold = b.LowStockThreshold,
                 BranchId = b.BranchId,
                 SupplierId = b.SupplierId,
+                SupplierName = b.Supplier?.SupplierName,
                 DateReceived = b.DateReceived
             }).ToList()
         };
