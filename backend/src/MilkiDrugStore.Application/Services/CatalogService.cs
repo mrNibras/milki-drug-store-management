@@ -155,7 +155,9 @@ public class CatalogService : ICatalogService
 
     public async Task<bool> IsValidCategoryIdAsync(int id)
     {
-        if (MedicineCatalog.IsBuiltInCategoryId(id))
+        // Cosmetic built-in categories live in their own negative id range, so they
+        // must be accepted here too or cosmetic create/update rejects valid ids.
+        if (MedicineCatalog.IsBuiltInCategoryId(id) || CosmeticCatalog.IsBuiltInCategoryId(id))
             return true;
 
         return await _categoryRepo.GetByIdAsync(id) != null;
@@ -171,7 +173,7 @@ public class CatalogService : ICatalogService
 
     public async Task<string> GetCategoryNameAsync(int id)
     {
-        var builtIn = MedicineCatalog.GetCategoryName(id);
+        var builtIn = ResolveBuiltInCategoryName(id);
         if (builtIn is not null)
             return builtIn;
 
@@ -196,7 +198,7 @@ public class CatalogService : ICatalogService
 
         foreach (var id in ids.Distinct())
         {
-            var builtIn = MedicineCatalog.GetCategoryName(id);
+            var builtIn = ResolveBuiltInCategoryName(id);
             if (builtIn is not null)
                 result[id] = builtIn;
             else
@@ -212,6 +214,14 @@ public class CatalogService : ICatalogService
 
         return result;
     }
+
+    /// <summary>
+    /// Resolves a built-in category name from either catalog. Medicine and cosmetic
+    /// built-ins use disjoint negative id ranges (medicines -1.., cosmetics -100..),
+    /// so the two lookups never collide for a given id.
+    /// </summary>
+    private static string? ResolveBuiltInCategoryName(int id)
+        => MedicineCatalog.GetCategoryName(id) ?? CosmeticCatalog.GetCategoryName(id);
 
     public async Task<IDictionary<int, string>> GetUnitTypeNamesAsync(IEnumerable<int> ids)
     {
