@@ -229,11 +229,25 @@ if (corsSettings.AllowedOrigins.Count > 0)
     });
 }
 
+builder.Services.AddHttpContextAccessor();
+
+// Supplier cost (inventory valuation / profit input) is omitted from JSON responses
+// for non-admin accounts. The accessor is resolved after Build() and read at
+// serialization time, when the web host is running.
+IHttpContextAccessor? jsonHttpContextAccessor = null;
+
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
         options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+        options.JsonSerializerOptions.TypeInfoResolver = new System.Text.Json.Serialization.Metadata.DefaultJsonTypeInfoResolver
+        {
+            Modifiers =
+            {
+                typeInfo => MilkiDrugStore.Api.Infrastructure.RestrictedFinancialFields.Apply(typeInfo, jsonHttpContextAccessor)
+            }
+        };
     });
 
 builder.Services.AddEndpointsApiExplorer();
@@ -271,6 +285,9 @@ builder.Services.AddControllers(options =>
 });
 
 var app = builder.Build();
+
+// Used by the JSON contract to read the caller's role while serializing responses.
+jsonHttpContextAccessor = app.Services.GetRequiredService<IHttpContextAccessor>();
 
 // Apply migrations and seed database.
 using (var scope = app.Services.CreateScope())
