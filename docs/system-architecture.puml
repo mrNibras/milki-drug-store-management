@@ -1,0 +1,40 @@
+@startuml
+left to right direction
+skinparam componentStyle rectangle
+skinparam packageStyle rectangle
+
+actor "Administrator / Pharmacist" as Staff
+
+node "Vercel / Browser Client" as Client {
+  component "React 19 SPA\nTypeScript, React Router\nZustand, Axios, JWT refresh" as Web
+}
+
+node "Render Web Service\nDocker · ASP.NET Core 8" as Backend {
+  component "API Layer\nControllers, JWT and role authorization,\nCORS and exception handling" as Api
+  component "Application Layer\nServices, MediatR commands/queries,\nvalidation and DTO mapping" as App
+  component "Domain Layer\nEntities, business rules, enums,\nexceptions and repository contracts" as Domain
+  component "Persistence Layer\nEF Core, AppDbContext, repositories,\nUnit of Work and migrations" as Persistence
+  component "Infrastructure Adapters\nSMTP email, file storage, backup,\nmonitoring and logging" as Infrastructure
+  component "Hosted Background Services\nExpiry checks, notification checks,\nretention cleanup" as Jobs
+}
+
+database "Render PostgreSQL\nNpgsql" as Database
+cloud "SMTP Email Provider" as SMTP
+cloud "AWS S3\n(local storage provider also supported)" as S3
+
+Staff --> Web : uses browser UI
+Web --> Api : HTTPS · REST/JSON\nBearer JWT
+Api --> App : dispatch request
+App --> Domain : applies rules
+App --> Persistence : reads and writes
+Persistence --> Database : EF Core / Npgsql
+App ..> Infrastructure : injected service adapters
+Jobs --> App : scheduled workflows
+Infrastructure --> SMTP : password reset email
+Infrastructure --> S3 : file storage
+
+note bottom of Backend
+  The backend modules and hosted services run together
+  in one ASP.NET Core API process (modular monolith).
+end note
+@enduml

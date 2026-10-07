@@ -45,6 +45,8 @@ public class FinancialFieldAuthorizationTests : IAsyncLifetime
     private const string PharmacistEmail = "pharmacist@milki.com";
     private const string PharmacistPassword = "Pharmacist123";
 
+    private const string JwtSecret = "test_secret_key_at_least_32_chars_long";
+
     public FinancialFieldAuthorizationTests(ITestOutputHelper output)
     {
         _output = output;
@@ -57,6 +59,10 @@ public class FinancialFieldAuthorizationTests : IAsyncLifetime
         // process environment must already point at a writable directory.
         Environment.SetEnvironmentVariable("DataDirectory", testDir);
         Environment.SetEnvironmentVariable("BackupDirectory", Path.Combine(testDir, "backups"));
+        Environment.SetEnvironmentVariable("JwtSettings__Secret", JwtSecret);
+        Environment.SetEnvironmentVariable("JwtSettings__Issuer", "TestIssuer");
+        Environment.SetEnvironmentVariable("JwtSettings__Audience", "TestAudience");
+        Environment.SetEnvironmentVariable("JwtSettings__ExpiryMinutes", "60");
 
         _factory = new WebApplicationFactory<Program>()
             .WithWebHostBuilder(builder =>
@@ -66,7 +72,7 @@ public class FinancialFieldAuthorizationTests : IAsyncLifetime
                 {
                     config.AddInMemoryCollection(new[]
                     {
-                        new KeyValuePair<string, string?>("JwtSettings:Secret", "test_secret_key_at_least_32_chars_long"),
+                        new KeyValuePair<string, string?>("JwtSettings:Secret", JwtSecret),
                         new KeyValuePair<string, string?>("JwtSettings:Issuer", "TestIssuer"),
                         new KeyValuePair<string, string?>("JwtSettings:Audience", "TestAudience"),
                         new KeyValuePair<string, string?>("JwtSettings:ExpiryMinutes", "60"),
@@ -280,7 +286,10 @@ public class FinancialFieldAuthorizationTests : IAsyncLifetime
         using var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
         var response = await client.GetAsync(path);
-        return (response.StatusCode, await response.Content.ReadAsStringAsync());
+        var body = await response.Content.ReadAsStringAsync();
+        if (response.StatusCode != HttpStatusCode.OK)
+            _output.WriteLine($"GET {path} -> {(int)response.StatusCode}: {body}");
+        return (response.StatusCode, body);
     }
 
     /// <summary>
@@ -415,7 +424,7 @@ public class FinancialFieldAuthorizationTests : IAsyncLifetime
 
     [Theory]
     [InlineData("/api/reports/inventory")]
-    [InlineData("/api/reports/profit")]
+    [InlineData("/api/reports/sales/daily")]
     [InlineData("/api/dashboard/summary")]
     [InlineData("/api/purchases")]
     [InlineData("/api/suppliers")]

@@ -126,6 +126,8 @@ builder.Services.AddOptions<EmailSettings>()
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 builder.Services.AddApplicationServices();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<MilkiDrugStore.Application.Interfaces.ICurrentUserService, MilkiDrugStore.Api.Services.CurrentUserService>();
 
 // JWT with strongly typed configuration.
 var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>()

@@ -31,7 +31,7 @@ public class BatchResponse
     public int Balance { get; set; }
     public DateTime? ExpiryDate { get; set; }
     public DateTime DateReceived { get; set; }
-    public decimal BuyingPrice { get; set; }
+    public decimal? BuyingPrice { get; set; }
     public decimal SellingPrice { get; set; }
     public int LowStockThreshold { get; set; }
     public int BranchId { get; set; }

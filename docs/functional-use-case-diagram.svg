@@ -1,0 +1,151 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2320" height="1220" viewBox="0 0 2320 1220" role="img" aria-labelledby="title desc">
+  <title id="title">Milki Drug Store Management System use case diagram</title>
+  <desc id="desc">A UML use case diagram showing Staff Member, Administrator, and Pharmacist actors and their interactions with the drug store management system.</desc>
+  <defs>
+    <marker id="openArrow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" orient="auto">
+      <path d="M 1 1 L 11 6 L 1 11" fill="#fbfdff" stroke="#526174" stroke-width="1.5"/>
+    </marker>
+    <marker id="includeArrow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" orient="auto">
+      <path d="M 1 1 L 11 6 L 1 11" fill="#ffffff" stroke="#64748b" stroke-width="1.5"/>
+    </marker>
+    <style>
+      text { font-family: Arial, Helvetica, sans-serif; fill: #172033; }
+      .frame { fill: #fbfdff; stroke: #334155; stroke-width: 3; }
+      .association { fill: none; stroke: #718096; stroke-width: 2.2; opacity: 0.78; }
+      .inheritance { fill: none; stroke: #526174; stroke-width: 2.5; marker-end: url(#openArrow); }
+      .dependency { fill: none; stroke: #64748b; stroke-width: 2.4; stroke-dasharray: 9 7; marker-end: url(#includeArrow); }
+      .staffUse { fill: #eaf3ff; stroke: #4274aa; stroke-width: 2.4; }
+      .adminUse { fill: #ecf8f0; stroke: #478262; stroke-width: 2.4; }
+      .discountUse { fill: #fff5df; stroke: #c28a26; stroke-width: 2.4; }
+      .actorLine { fill: none; stroke: #263548; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+      .actorHead { fill: #ffffff; stroke: #263548; stroke-width: 3; }
+      .caseLabel { font-size: 19px; text-anchor: middle; dominant-baseline: middle; font-weight: 500; }
+      .actorLabel { font-size: 20px; font-weight: 600; }
+    </style>
+  </defs>
+
+  <rect width="2320" height="1220" fill="#ffffff"/>
+  <text x="315" y="58" font-size="25" font-weight="700" fill="#263548">Functional Use Case Diagram</text>
+  <rect class="frame" x="300" y="180" width="1580" height="970" rx="18"/>
+
+  <!-- Actor generalization and associations are drawn behind the use cases. -->
+  <path class="inheritance" d="M 2050 46 L 2050 26 L 150 26 L 150 549"/>
+  <path class="inheritance" d="M 175 934 L 252 934 L 252 650 L 174 626"/>
+
+  <!-- Shared staff use cases -->
+  <path class="association" d="M 176 600 L 540 330"/>
+  <path class="association" d="M 176 600 L 540 420"/>
+  <path class="association" d="M 176 600 L 540 510"/>
+  <path class="association" d="M 176 600 L 540 600"/>
+  <path class="association" d="M 176 600 L 540 690"/>
+  <path class="association" d="M 176 600 L 540 780"/>
+  <path class="association" d="M 176 600 L 540 870"/>
+  <path class="association" d="M 176 600 L 540 960"/>
+  <path class="association" d="M 176 600 L 540 1050"/>
+
+  <!-- Administrator-only use cases -->
+  <path class="association" d="M 2024 96 L 1668 330"/>
+  <path class="association" d="M 2024 96 L 1668 435"/>
+  <path class="association" d="M 2024 96 L 1668 540"/>
+  <path class="association" d="M 2024 96 L 1668 645"/>
+  <path class="association" d="M 2024 96 L 1668 750"/>
+  <path class="association" d="M 2024 96 L 1668 855"/>
+  <path class="association" d="M 2024 96 L 1668 960"/>
+  <path class="association" d="M 2024 96 L 1668 1065"/>
+
+  <!-- Include and extend relationships -->
+  <path class="dependency" d="M 860 870 L 910 870 L 910 600 L 860 600"/>
+  <path class="dependency" d="M 945 905 L 860 870"/>
+
+  <!-- System boundary title -->
+  <text x="1090" y="222" font-size="28" font-weight="700" text-anchor="middle">Milki Drug Store Management System</text>
+  <text x="700" y="274" font-size="17" font-weight="700" letter-spacing="1.2" text-anchor="middle" fill="#52739a">STAFF FUNCTIONS</text>
+  <text x="1490" y="274" font-size="17" font-weight="700" letter-spacing="1.2" text-anchor="middle" fill="#4e7d61">ADMINISTRATOR FUNCTIONS</text>
+
+  <!-- Staff use cases -->
+  <ellipse class="staffUse" cx="700" cy="330" rx="160" ry="35"/>
+  <text class="caseLabel" x="700" y="330">Sign In / Sign Out</text>
+
+  <ellipse class="staffUse" cx="700" cy="420" rx="160" ry="35"/>
+  <text class="caseLabel" x="700" y="420">Recover Password</text>
+
+  <ellipse class="staffUse" cx="700" cy="510" rx="160" ry="35"/>
+  <text class="caseLabel" x="700" y="510">View Dashboard</text>
+
+  <ellipse class="staffUse" cx="700" cy="600" rx="160" ry="35"/>
+  <text class="caseLabel" x="700" y="600">Search Products</text>
+
+  <ellipse class="staffUse" cx="700" cy="690" rx="160" ry="35"/>
+  <text class="caseLabel" x="700" y="690">View Inventory</text>
+
+  <ellipse class="staffUse" cx="700" cy="780" rx="160" ry="35"/>
+  <text class="caseLabel" x="700" y="773">
+    <tspan x="700" dy="-5">View Batch and</tspan>
+    <tspan x="700" dy="23">Expiry Information</tspan>
+  </text>
+
+  <ellipse class="staffUse" cx="700" cy="870" rx="160" ry="35"/>
+  <text class="caseLabel" x="700" y="870">Process Sale</text>
+
+  <ellipse class="discountUse" cx="1080" cy="905" rx="135" ry="35"/>
+  <text class="caseLabel" x="1080" y="905">Apply Discount</text>
+
+  <ellipse class="staffUse" cx="700" cy="960" rx="160" ry="35"/>
+  <text class="caseLabel" x="700" y="953">
+    <tspan x="700" dy="-5">Record Damaged /</tspan>
+    <tspan x="700" dy="23">Lost Stock</tspan>
+  </text>
+
+  <ellipse class="staffUse" cx="700" cy="1050" rx="160" ry="35"/>
+  <text class="caseLabel" x="700" y="1050">View Notifications</text>
+
+  <!-- Administrator use cases -->
+  <ellipse class="adminUse" cx="1490" cy="330" rx="180" ry="36"/>
+  <text class="caseLabel" x="1490" y="330">Manage Medicines</text>
+
+  <ellipse class="adminUse" cx="1490" cy="435" rx="180" ry="36"/>
+  <text class="caseLabel" x="1490" y="435">Manage Cosmetics</text>
+
+  <ellipse class="adminUse" cx="1490" cy="540" rx="180" ry="36"/>
+  <text class="caseLabel" x="1490" y="540">Manage Categories</text>
+
+  <ellipse class="adminUse" cx="1490" cy="645" rx="180" ry="36"/>
+  <text class="caseLabel" x="1490" y="645">Manage Suppliers</text>
+
+  <ellipse class="adminUse" cx="1490" cy="750" rx="180" ry="36"/>
+  <text class="caseLabel" x="1490" y="750">Record Purchases</text>
+
+  <ellipse class="adminUse" cx="1490" cy="855" rx="180" ry="36"/>
+  <text class="caseLabel" x="1490" y="855">Manage Purchase Items</text>
+
+  <ellipse class="adminUse" cx="1490" cy="960" rx="180" ry="36"/>
+  <text class="caseLabel" x="1490" y="960">Manage Users and Roles</text>
+
+  <ellipse class="adminUse" cx="1490" cy="1065" rx="180" ry="36"/>
+  <text class="caseLabel" x="1490" y="1065">Generate Reports</text>
+
+  <!-- Relationship labels -->
+  <rect x="916" y="719" width="106" height="27" rx="5" fill="#ffffff"/>
+  <text x="969" y="738" font-size="16" text-anchor="middle" fill="#526174">&lt;&lt;include&gt;&gt;</text>
+  <rect x="868" y="919" width="92" height="27" rx="5" fill="#ffffff"/>
+  <text x="914" y="938" font-size="16" text-anchor="middle" fill="#526174">&lt;&lt;extend&gt;&gt;</text>
+
+  <!-- Actors -->
+  <g aria-label="Staff Member actor">
+    <circle class="actorHead" cx="150" cy="568" r="16"/>
+    <path class="actorLine" d="M 150 584 L 150 626 M 125 600 L 175 600 M 150 626 L 127 654 M 150 626 L 173 654"/>
+    <text class="actorLabel" x="150" y="682" text-anchor="middle">Staff Member</text>
+  </g>
+
+  <g aria-label="Pharmacist actor">
+    <circle class="actorHead" cx="150" cy="900" r="16"/>
+    <path class="actorLine" d="M 150 916 L 150 958 M 125 934 L 175 934 M 150 958 L 127 986 M 150 958 L 173 986"/>
+    <text class="actorLabel" x="150" y="1015" text-anchor="middle">Pharmacist</text>
+  </g>
+
+  <g aria-label="Administrator actor">
+    <circle class="actorHead" cx="2050" cy="62" r="16"/>
+    <path class="actorLine" d="M 2050 78 L 2050 122 M 2025 96 L 2075 96 M 2050 122 L 2027 151 M 2050 122 L 2073 151"/>
+    <text class="actorLabel" x="2090" y="105">Administrator</text>
+  </g>
+</svg>

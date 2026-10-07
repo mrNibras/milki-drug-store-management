@@ -16,6 +16,7 @@ public class CosmeticService : ICosmeticService
     private readonly IAuditLogService _auditLog;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<CosmeticService> _logger;
+    private readonly ICurrentUserService _currentUser;
 
     public CosmeticService(
         ICosmeticRepository cosmeticRepo,
@@ -23,7 +24,8 @@ public class CosmeticService : ICosmeticService
         ICatalogService catalog,
         IAuditLogService auditLog,
         IUnitOfWork unitOfWork,
-        ILogger<CosmeticService> logger)
+        ILogger<CosmeticService> logger,
+        ICurrentUserService currentUser)
     {
         _cosmeticRepo = cosmeticRepo;
         _batchRepo = batchRepo;
@@ -31,7 +33,16 @@ public class CosmeticService : ICosmeticService
         _auditLog = auditLog;
         _unitOfWork = unitOfWork;
         _logger = logger;
+        _currentUser = currentUser;
     }
+
+    /// <summary>
+    /// Buying price is what the pharmacy paid the supplier, so only
+    /// admins may receive it. Selling price stays available because the
+    /// POS prices cart lines from it.
+    /// </summary>
+    private bool CanSeeSupplierCost()
+        => _currentUser.CanViewFinancialCosts;
 
     public async Task<IEnumerable<CosmeticResponse>> GetAllAsync(string? search = null, int? categoryId = null, int? branchId = null)
     {
@@ -215,7 +226,7 @@ public class CosmeticService : ICosmeticService
         return MapToResponse(c, categoryNames, unitTypeNames);
     }
 
-    private static CosmeticResponse MapToResponse(Cosmetic c, IDictionary<int, string> categoryNames, IDictionary<int, string> unitTypeNames)
+    private CosmeticResponse MapToResponse(Cosmetic c, IDictionary<int, string> categoryNames, IDictionary<int, string> unitTypeNames)
     {
         return new CosmeticResponse
         {
@@ -240,7 +251,7 @@ public class CosmeticService : ICosmeticService
                 QuantityExpired = b.QuantityExpired,
                 Balance = b.Balance,
                 ExpiryDate = b.ExpiryDate,
-                BuyingPrice = b.BuyingPrice,
+                BuyingPrice = CanSeeSupplierCost() ? b.BuyingPrice : null,
                 SellingPrice = b.SellingPrice,
                 LowStockThreshold = b.LowStockThreshold,
                 BranchId = b.BranchId,

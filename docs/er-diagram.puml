@@ -1,0 +1,366 @@
+@startuml
+title Milki Drug Store Management System — ER Diagram
+left to right direction
+skinparam linetype ortho
+skinparam shadowing false
+skinparam entity {
+  BackgroundColor #FFFFFF
+  BorderColor #526276
+  FontColor #172C42
+  HeaderBackgroundColor #EAF0F5
+}
+hide circle
+
+entity "Roles" as Roles {
+  RoleId <<PK>>
+  Name
+}
+
+entity "Users" as Users {
+  UserId <<PK>>
+  FullName
+  Email
+  PasswordHash
+  RoleId <<FK>>
+  BranchId <<FK>>
+  IsApproved
+  IsActive
+  CreatedAt
+}
+
+entity "Branches" as Branches {
+  BranchId <<PK>>
+  BranchName
+  Location nullable
+  Phone nullable
+  Email nullable
+  Address nullable
+  IsActive
+  CreatedAt
+}
+
+entity "Settings" as Settings {
+  SettingId <<PK>>
+  BranchId <<FK>>
+  PharmacyName
+  Address
+  Phone
+  Email
+  Language
+  LowStockThreshold
+  ExpiryAlertMonths
+  Currency
+  BatchSelectionMode
+}
+
+entity "RefreshTokens" as RefreshTokens {
+  RefreshTokenId <<PK>>
+  Token
+  UserId <<FK>>
+  ExpiryDate
+  CreatedAt
+  IsRevoked
+}
+
+entity "PasswordResets" as PasswordResets {
+  PasswordResetId <<PK>>
+  Token
+  UserId <<FK>>
+  ExpiryDate
+  IsUsed
+  CreatedAt
+}
+
+entity "Categories" as Categories {
+  CategoryId <<PK>>
+  Name
+  IsActive
+  CreatedAt
+}
+
+entity "UnitTypes" as UnitTypes {
+  UnitTypeId <<PK>>
+  Name
+  Description nullable
+  IsActive
+}
+
+entity "Medicines" as Medicines {
+  ProductId <<PK>>
+  ProductCode
+  BrandName
+  GenericName
+  Strength nullable
+  DosageForm nullable
+  Barcode nullable
+  Manufacturer nullable
+  Description nullable
+  CategoryId
+  UnitTypeId
+  PurchasePrice
+  SellingPrice
+  ReorderLevel
+  IsActive
+  CreatedDate
+  UpdatedDate nullable
+}
+
+entity "Cosmetics" as Cosmetics {
+  CosmeticId <<PK>>
+  ProductName
+  Description
+  CategoryId
+  UnitTypeId
+  Price
+  IsActive
+  CreatedAt
+  UpdatedAt nullable
+  BranchId <<FK>>
+  SupplierId <<FK>> nullable
+}
+
+entity "Suppliers" as Suppliers {
+  SupplierId <<PK>>
+  SupplierName
+  Phone
+  Email
+  Address
+  PaymentStatus nullable
+  CreatedAt
+}
+
+entity "MedicineBatches" as MedicineBatches {
+  BatchId <<PK>>
+  ProductId <<FK>>
+  BranchId <<FK>>
+  BatchNumber
+  PurchasePrice
+  SellingPrice
+  QuantityReceived
+  QuantityIssued
+  QuantityDamaged
+  QuantityExpired
+  ExpiryDate
+  ManufacturingDate nullable
+  DateReceived
+  SupplierId <<FK>> nullable
+  Remarks nullable
+}
+
+entity "CosmeticBatches" as CosmeticBatches {
+  BatchId <<PK>>
+  CosmeticId <<FK>>
+  BranchId <<FK>>
+  BatchNumber
+  QuantityReceived
+  QuantityIssued
+  QuantityDamaged
+  QuantityExpired
+  ExpiryDate nullable
+  DateReceived
+  Remarks nullable
+  BuyingPrice
+  SellingPrice
+  LowStockThreshold
+  SupplierId <<FK>> nullable
+}
+
+entity "Purchases" as Purchases {
+  PurchaseId <<PK>>
+  PurchaseNumber
+  BranchId <<FK>>
+  SupplierId <<FK>>
+  PurchaseDate
+  TotalAmount
+  AmountPaid
+  AmountDue
+  PaymentStatus
+  PaymentMethod nullable
+  CreatedBy
+}
+
+entity "PurchaseItems" as PurchaseItems {
+  PurchaseItemId <<PK>>
+  PurchaseId <<FK>>
+  ProductId <<FK>> nullable
+  BatchId <<FK>> nullable
+  BatchNumber
+  Quantity
+  PurchasePrice
+  SubTotal
+  ExpiryDate nullable
+  CosmeticId <<FK>> nullable
+  CosmeticBatchId <<FK>> nullable
+}
+
+entity "Sales" as Sales {
+  SaleId <<PK>>
+  SaleNumber
+  BranchId <<FK>>
+  SaleDate
+  TotalAmount
+  TotalProfit
+  TotalDiscount
+  DiscountReason nullable
+  UserId <<FK>>
+  PaymentMethod
+  PaymentStatus
+  AmountPaid
+  AmountDue
+  ReferenceNumber nullable
+}
+
+entity "SaleItems" as SaleItems {
+  SaleItemId <<PK>>
+  SaleId <<FK>>
+  ProductId <<FK>> nullable
+  BatchId <<FK>> nullable
+  Quantity
+  UnitPrice
+  DiscountAmount
+  PurchasePrice
+  Profit
+  SubTotal
+  CosmeticId <<FK>> nullable
+  CosmeticBatchId <<FK>> nullable
+}
+
+entity "InventoryTransactions" as InventoryTransactions {
+  TransactionId <<PK>>
+  ProductId <<FK>> nullable
+  BatchId <<FK>> nullable
+  CosmeticId <<FK>> nullable
+  CosmeticBatchId <<FK>> nullable
+  UserId* <<FK>> nullable
+  TransactionType
+  Quantity
+  UnitPrice
+  ReferenceId nullable
+  ReferenceType nullable
+  CreatedBy
+  CreatedAt
+}
+
+entity "DamageRecords" as DamageRecords {
+  DamageId <<PK>>
+  BranchId <<FK>>
+  BatchId <<FK>> nullable
+  CosmeticId <<FK>> nullable
+  CosmeticBatchId <<FK>> nullable
+  Quantity
+  Reason
+  RecordedBy
+  RecordedDate
+}
+
+entity "ExpiredRecords" as ExpiredRecords {
+  ExpiredId <<PK>>
+  BranchId <<FK>>
+  BatchId <<FK>> nullable
+  CosmeticId <<FK>> nullable
+  CosmeticBatchId <<FK>> nullable
+  Quantity
+  RecordedDate
+  RecordedBy
+}
+
+entity "Notifications" as Notifications {
+  NotificationId <<PK>>
+  BranchId <<FK>>
+  Title
+  Message
+  NotificationType
+  IsRead
+  CreatedAt
+}
+
+entity "NotificationArchives" as NotificationArchives {
+  ArchiveId <<PK>>
+  OriginalNotificationId
+  BranchId <<FK>>
+  Title
+  Message
+  NotificationType
+  IsRead
+  CreatedAt
+  ArchivedAt
+  ArchivedBy
+}
+
+entity "AuditLogs" as AuditLogs {
+  AuditId <<PK>>
+  UserId <<FK>>
+  BranchId <<FK>> nullable
+  Action
+  TableName
+  RecordId nullable
+  CreatedAt
+}
+
+entity "AuditLogArchives" as AuditLogArchives {
+  ArchiveId <<PK>>
+  OriginalAuditId
+  UserId <<FK>>
+  BranchId <<FK>> nullable
+  Action
+  TableName
+  RecordId nullable
+  CreatedAt
+  ArchivedAt
+  ArchivedBy
+}
+
+Roles ||--o{ Users : RoleId
+Branches ||--o{ Users : BranchId
+Branches ||--|| Settings : BranchId
+Users ||--o{ RefreshTokens : UserId
+Users ||--o{ PasswordResets : UserId
+Medicines ||--o{ MedicineBatches : ProductId
+Branches ||--o{ MedicineBatches : BranchId
+Suppliers ||--o{ MedicineBatches : SupplierId
+Cosmetics ||--o{ CosmeticBatches : CosmeticId
+Branches ||--o{ CosmeticBatches : BranchId
+Suppliers ||--o{ CosmeticBatches : SupplierId
+Suppliers ||--o{ Cosmetics : SupplierId
+Branches ||--o{ Cosmetics : BranchId
+Branches ||--o{ Purchases : BranchId
+Suppliers ||--o{ Purchases : SupplierId
+Purchases ||--o{ PurchaseItems : PurchaseId
+Medicines ||--o{ PurchaseItems : ProductId
+MedicineBatches ||--o{ PurchaseItems : BatchId
+Cosmetics ||--o{ PurchaseItems : CosmeticId
+CosmeticBatches ||--o{ PurchaseItems : CosmeticBatchId
+Branches ||--o{ Sales : BranchId
+Users ||--o{ Sales : UserId
+Sales ||--o{ SaleItems : SaleId
+Medicines ||--o{ SaleItems : ProductId
+MedicineBatches ||--o{ SaleItems : BatchId
+Cosmetics ||--o{ SaleItems : CosmeticId
+CosmeticBatches ||--o{ SaleItems : CosmeticBatchId
+Medicines ||--o{ InventoryTransactions : ProductId
+MedicineBatches ||--o{ InventoryTransactions : BatchId
+Cosmetics ||--o{ InventoryTransactions : CosmeticId
+CosmeticBatches ||--o{ InventoryTransactions : CosmeticBatchId
+Users ||--o{ InventoryTransactions : UserId*
+Branches ||--o{ DamageRecords : BranchId
+MedicineBatches ||--o{ DamageRecords : BatchId
+Cosmetics ||--o{ DamageRecords : CosmeticId
+CosmeticBatches ||--o{ DamageRecords : CosmeticBatchId
+Branches ||--o{ ExpiredRecords : BranchId
+MedicineBatches ||--o{ ExpiredRecords : BatchId
+Cosmetics ||--o{ ExpiredRecords : CosmeticId
+CosmeticBatches ||--o{ ExpiredRecords : CosmeticBatchId
+Branches ||--o{ Notifications : BranchId
+Branches ||--o{ NotificationArchives : BranchId
+Users ||--o{ AuditLogs : UserId
+Branches ||--o{ AuditLogs : BranchId
+Users ||--o{ AuditLogArchives : UserId
+Branches ||--o{ AuditLogArchives : BranchId
+
+note bottom of Medicines
+CategoryId and UnitTypeId are application-managed identifiers, not foreign keys.
+end note
+note bottom of InventoryTransactions
+UserId is a nullable EF shadow foreign key; it is present in the database model.
+end note
+@enduml

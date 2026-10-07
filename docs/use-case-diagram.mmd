@@ -1,0 +1,191 @@
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#1e40af', 'primaryTextColor': '#fff', 'primaryBorderColor': '#1e40af', 'lineColor': '#64748b', 'secondaryColor': '#064e3b', 'tertiaryColor': '#fef3c7'}}}%%
+useCaseDiagram
+    %% Actors
+    actor "Pharmacist" as Pharmacist
+    actor "Admin" as Admin
+    actor "System" as System
+
+    %% Packages
+    package "Authentication & Security" {
+        usecase "UC-01: Login" as UC01
+        usecase "UC-02: Register (Pending Approval)" as UC02
+        usecase "UC-03: Change Password" as UC03
+        usecase "UC-04: Forgot/Reset Password" as UC04
+        usecase "UC-05: Token Refresh" as UC05
+        usecase "UC-06: Approve User (Admin)" as UC06
+    }
+
+    package "Point of Sale (POS)" {
+        usecase "UC-07: Search Products" as UC07
+        usecase "UC-08: Add to Cart (FEFO Batch)" as UC08
+        usecase "UC-09: Manage Cart (Qty, Discount)" as UC09
+        usecase "UC-10: Apply Discount (w/ Reason)" as UC10
+        usecase "UC-11: Process Sale (Multi-Payment)" as UC11
+        usecase "UC-12: Generate/Print Receipt" as UC12
+    }
+
+    package "Inventory Management" {
+        usecase "UC-13: View Unified Inventory" as UC13
+        usecase "UC-14: Filter/Search Inventory" as UC14
+        usecase "UC-15: View Batch Details" as UC15
+        usecase "UC-16: Monitor Low Stock" as UC16
+        usecase "UC-17: View Inventory Valuation" as UC17
+    }
+
+    package "Medicine Management" {
+        usecase "UC-18: Create Medicine" as UC18
+        usecase "UC-19: Update Medicine" as UC19
+        usecase "UC-20: Delete Medicine" as UC20
+        usecase "UC-21: Add Medicine Batch" as UC21
+    }
+
+    package "Cosmetic Management" {
+        usecase "UC-22: Create Cosmetic" as UC22
+        usecase "UC-23: Update Cosmetic" as UC23
+        usecase "UC-24: Delete Cosmetic" as UC24
+        usecase "UC-25: Add Cosmetic Batch" as UC25
+    }
+
+    package "Purchase Management" {
+        usecase "UC-26: View Purchases" as UC26
+        usecase "UC-27: Create Purchase Order" as UC27
+        usecase "UC-28: View Purchase Details" as UC28
+    }
+
+    package "Supplier Management" {
+        usecase "UC-29: View Suppliers" as UC29
+        usecase "UC-30: Create Supplier" as UC30
+        usecase "UC-31: Update Supplier" as UC31
+        usecase "UC-32: Delete Supplier" as UC32
+    }
+
+    package "Damage & Expiry Management" {
+        usecase "UC-33: View Expiring Soon (Auto)" as UC33
+        usecase "UC-34: View Expired Items (Auto)" as UC34
+        usecase "UC-35: Record Damage (Manual)" as UC35
+        usecase "UC-36: View Damage History" as UC36
+    }
+
+    package "Reports & Analytics" {
+        usecase "UC-37: Dashboard Summary" as UC37
+        usecase "UC-38: Sales Report" as UC38
+        usecase "UC-39: Most Selling Report" as UC39
+        usecase "UC-40: Inventory Report" as UC40
+        usecase "UC-41: Profit Report" as UC41
+        usecase "UC-42: Supplier Report" as UC42
+        usecase "UC-43: Staff Report" as UC43
+        usecase "UC-44: Export Reports" as UC44
+    }
+
+    package "Branch Management" {
+        usecase "UC-45: View Branches" as UC45
+        usecase "UC-46: Create Branch" as UC46
+        usecase "UC-47: Update Branch" as UC47
+        usecase "UC-48: Delete Branch" as UC48
+        usecase "UC-49: Switch Branch Context" as UC49
+    }
+
+    package "User Management" {
+        usecase "UC-50: View Users" as UC50
+        usecase "UC-51: Create User" as UC51
+        usecase "UC-52: Update User" as UC52
+        usecase "UC-53: Delete User" as UC53
+        usecase "UC-54: Approve User Registration" as UC54
+    }
+
+    package "Settings & Audit" {
+        usecase "UC-55: Manage System Settings" as UC55
+        usecase "UC-56: View Audit Logs" as UC56
+        usecase "UC-57: View Notifications" as UC57
+    }
+
+    %% Relationships - Pharmacist
+    Pharmacist --> UC01
+    Pharmacist --> UC03
+    Pharmacist --> UC04
+    Pharmacist --> UC05
+    Pharmacist --> UC07
+    Pharmacist --> UC08
+    Pharmacist --> UC09
+    Pharmacist --> UC10
+    Pharmacist --> UC11
+    Pharmacist --> UC12
+    Pharmacist --> UC13
+    Pharmacist --> UC14
+    Pharmacist --> UC15
+    Pharmacist --> UC16
+    Pharmacist --> UC33
+    Pharmacist --> UC34
+    Pharmacist --> UC35
+    Pharmacist --> UC36
+    Pharmacist --> UC49
+    Pharmacist --> UC57
+
+    %% Relationships - Admin (includes all Pharmacist capabilities)
+    Admin --> UC01
+    Admin --> UC02
+    Admin --> UC03
+    Admin --> UC04
+    Admin --> UC05
+    Admin --> UC06
+    Admin --> UC07
+    Admin --> UC08
+    Admin --> UC09
+    Admin --> UC10
+    Admin --> UC11
+    Admin --> UC12
+    Admin --> UC13
+    Admin --> UC14
+    Admin --> UC15
+    Admin --> UC16
+    Admin --> UC17
+    Admin --> UC18
+    Admin --> UC19
+    Admin --> UC20
+    Admin --> UC21
+    Admin --> UC22
+    Admin --> UC23
+    Admin --> UC24
+    Admin --> UC25
+    Admin --> UC26
+    Admin --> UC27
+    Admin --> UC28
+    Admin --> UC29
+    Admin --> UC30
+    Admin --> UC31
+    Admin --> UC32
+    Admin --> UC33
+    Admin --> UC34
+    Admin --> UC35
+    Admin --> UC36
+    Admin --> UC37
+    Admin --> UC38
+    Admin --> UC39
+    Admin --> UC40
+    Admin --> UC41
+    Admin --> UC42
+    Admin --> UC43
+    Admin --> UC44
+    Admin --> UC45
+    Admin --> UC46
+    Admin --> UC47
+    Admin --> UC48
+    Admin --> UC49
+    Admin --> UC50
+    Admin --> UC51
+    Admin --> UC52
+    Admin --> UC53
+    Admin --> UC54
+    Admin --> UC55
+    Admin --> UC56
+    Admin --> UC57
+
+    %% Relationships - System (Automated)
+    System --> UC33
+    System --> UC34
+
+    %% Include/Extend relationships
+    UC11 ..> UC07 : <<include>>
+    UC10 ..> UC11 : <<extend>>
+    UC05 ..> UC01 : <<include>>
+    UC35 ..> UC33 : <<extend>>

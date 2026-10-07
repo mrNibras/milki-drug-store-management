@@ -93,7 +93,7 @@ public class MedicineResponse
     public string CategoryName { get; set; } = string.Empty;
     public int UnitTypeId { get; set; }
     public string UnitTypeName { get; set; } = string.Empty;
-    public decimal PurchasePrice { get; set; }
+    public decimal? PurchasePrice { get; set; }
     public decimal SellingPrice { get; set; }
     public int ReorderLevel { get; set; }
     public bool IsActive { get; set; }
@@ -109,7 +109,7 @@ public class BatchResponse
     public int ProductId { get; set; }
     public int BranchId { get; set; }
     public string BatchNumber { get; set; } = string.Empty;
-    public decimal PurchasePrice { get; set; }
+    public decimal? PurchasePrice { get; set; }
     public decimal SellingPrice { get; set; }
     public int QuantityReceived { get; set; }
     public int QuantityIssued { get; set; }

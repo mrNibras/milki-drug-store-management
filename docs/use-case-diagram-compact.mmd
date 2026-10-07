@@ -1,0 +1,185 @@
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#1e40af', 'primaryTextColor': '#fff', 'primaryBorderColor': '#1e40af', 'lineColor': '#64748b', 'secondaryColor': '#064e3b', 'tertiaryColor': '#fef3c7'}}}%%
+useCaseDiagram
+    actor "Pharmacist" as Pharm
+    actor "Admin" as Admin
+    actor "System" as Sys
+
+    package "Auth & Security" {
+        usecase "Login" as UC01
+        usecase "Register" as UC02
+        usecase "Change Password" as UC03
+        usecase "Reset Password" as UC04
+        usecase "Token Refresh" as UC05
+        usecase "Approve User" as UC06
+    }
+
+    package "Point of Sale" {
+        usecase "Search Products" as UC07
+        usecase "Add to Cart (FEFO)" as UC08
+        usecase "Manage Cart" as UC09
+        usecase "Apply Discount" as UC10
+        usecase "Process Sale" as UC11
+        usecase "Print Receipt" as UC12
+    }
+
+    package "Inventory" {
+        usecase "View Inventory" as UC13
+        usecase "Filter/Search" as UC14
+        usecase "Batch Details" as UC15
+        usecase "Low Stock Monitor" as UC16
+        usecase "Valuation (Admin)" as UC17
+    }
+
+    package "Medicine Mgmt" {
+        usecase "Create Medicine" as UC18
+        usecase "Update Medicine" as UC19
+        usecase "Delete Medicine" as UC20
+        usecase "Add Batch" as UC21
+    }
+
+    package "Cosmetic Mgmt" {
+        usecase "Create Cosmetic" as UC22
+        usecase "Update Cosmetic" as UC23
+        usecase "Delete Cosmetic" as UC24
+        usecase "Add Batch" as UC25
+    }
+
+    package "Purchases" {
+        usecase "View Purchases" as UC26
+        usecase "Create Purchase" as UC27
+        usecase "Purchase Details" as UC28
+    }
+
+    package "Suppliers" {
+        usecase "View Suppliers" as UC29
+        usecase "Create Supplier" as UC30
+        usecase "Update Supplier" as UC31
+        usecase "Delete Supplier" as UC32
+    }
+
+    package "Damage & Expiry" {
+        usecase "Expiring Soon (Auto)" as UC33
+        usecase "Expired Items (Auto)" as UC34
+        usecase "Record Damage" as UC35
+        usecase "Damage History" as UC36
+    }
+
+    package "Reports" {
+        usecase "Dashboard" as UC37
+        usecase "Sales Report" as UC38
+        usecase "Most Selling" as UC39
+        usecase "Inventory Report" as UC40
+        usecase "Profit Report" as UC41
+        usecase "Supplier Report" as UC42
+        usecase "Staff Report" as UC43
+        usecase "Export" as UC44
+    }
+
+    package "Branches" {
+        usecase "View Branches" as UC45
+        usecase "Create Branch" as UC46
+        usecase "Update Branch" as UC47
+        usecase "Delete Branch" as UC48
+        usecase "Switch Branch" as UC49
+    }
+
+    package "Users" {
+        usecase "View Users" as UC50
+        usecase "Create User" as UC51
+        usecase "Update User" as UC52
+        usecase "Delete User" as UC53
+        usecase "Approve User" as UC54
+    }
+
+    package "Settings & Audit" {
+        usecase "System Settings" as UC55
+        usecase "Audit Logs" as UC56
+        usecase "Notifications" as UC57
+    }
+
+    Pharm --> UC01
+    Pharm --> UC03
+    Pharm --> UC04
+    Pharm --> UC05
+    Pharm --> UC07
+    Pharm --> UC08
+    Pharm --> UC09
+    Pharm --> UC10
+    Pharm --> UC11
+    Pharm --> UC12
+    Pharm --> UC13
+    Pharm --> UC14
+    Pharm --> UC15
+    Pharm --> UC16
+    Pharm --> UC33
+    Pharm --> UC34
+    Pharm --> UC35
+    Pharm --> UC36
+    Pharm --> UC49
+    Pharm --> UC57
+
+    Admin --> UC01
+    Admin --> UC02
+    Admin --> UC03
+    Admin --> UC04
+    Admin --> UC05
+    Admin --> UC06
+    Admin --> UC07
+    Admin --> UC08
+    Admin --> UC09
+    Admin --> UC10
+    Admin --> UC11
+    Admin --> UC12
+    Admin --> UC13
+    Admin --> UC14
+    Admin --> UC15
+    Admin --> UC16
+    Admin --> UC17
+    Admin --> UC18
+    Admin --> UC19
+    Admin --> UC20
+    Admin --> UC21
+    Admin --> UC22
+    Admin --> UC23
+    Admin --> UC24
+    Admin --> UC25
+    Admin --> UC26
+    Admin --> UC27
+    Admin --> UC28
+    Admin --> UC29
+    Admin --> UC30
+    Admin --> UC31
+    Admin --> UC32
+    Admin --> UC33
+    Admin --> UC34
+    Admin --> UC35
+    Admin --> UC36
+    Admin --> UC37
+    Admin --> UC38
+    Admin --> UC39
+    Admin --> UC40
+    Admin --> UC41
+    Admin --> UC42
+    Admin --> UC43
+    Admin --> UC44
+    Admin --> UC45
+    Admin --> UC46
+    Admin --> UC47
+    Admin --> UC48
+    Admin --> UC49
+    Admin --> UC50
+    Admin --> UC51
+    Admin --> UC52
+    Admin --> UC53
+    Admin --> UC54
+    Admin --> UC55
+    Admin --> UC56
+    Admin --> UC57
+
+    Sys --> UC33
+    Sys --> UC34
+
+    UC11 ..> UC07 : <<include>>
+    UC10 ..> UC11 : <<extend>>
+    UC05 ..> UC01 : <<include>>
+    UC35 ..> UC33 : <<extend>>

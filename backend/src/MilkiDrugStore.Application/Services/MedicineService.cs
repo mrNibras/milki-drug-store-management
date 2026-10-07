@@ -15,17 +15,28 @@ public class MedicineService : IMedicineService
     private readonly ICatalogService _catalog;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IAuditLogService _auditLog;
+    private readonly ICurrentUserService _currentUser;
 
     public MedicineService(IRepository<Medicine> medicineRepo,
         IRepository<MedicineBatch> batchRepo, ICatalogService catalog,
-        IUnitOfWork unitOfWork, IAuditLogService auditLog)
+        IUnitOfWork unitOfWork, IAuditLogService auditLog,
+        ICurrentUserService currentUser)
     {
         _medicineRepo = medicineRepo;
         _batchRepo = batchRepo;
         _catalog = catalog;
         _unitOfWork = unitOfWork;
         _auditLog = auditLog;
+        _currentUser = currentUser;
     }
+
+    /// <summary>
+    /// Supplier cost is the input to inventory valuation and profit, so only
+    /// admins may receive it. The POS needs the selling price to complete a
+    /// sale, so selling price is deliberately not restricted here.
+    /// </summary>
+    private bool CanSeeSupplierCost()
+        => _currentUser.CanViewFinancialCosts;
 
     public async Task<IEnumerable<MedicineResponse>> GetAllAsync(string? search = null, int? categoryId = null, int? branchId = null)
     {
@@ -288,7 +299,7 @@ public class MedicineService : IMedicineService
         return MapToResponse(m, categoryNames, unitTypeNames);
     }
 
-    private static MedicineResponse MapToResponse(Medicine m, IDictionary<int, string> categoryNames, IDictionary<int, string> unitTypeNames)
+    private MedicineResponse MapToResponse(Medicine m, IDictionary<int, string> categoryNames, IDictionary<int, string> unitTypeNames)
     {
         return new MedicineResponse
         {
@@ -305,7 +316,7 @@ public class MedicineService : IMedicineService
             CategoryName = categoryNames.TryGetValue(m.CategoryId, out var categoryName) ? categoryName : "",
             UnitTypeId = m.UnitTypeId,
             UnitTypeName = unitTypeNames.TryGetValue(m.UnitTypeId, out var unitTypeName) ? unitTypeName : "",
-            PurchasePrice = m.PurchasePrice,
+            PurchasePrice = CanSeeSupplierCost() ? m.PurchasePrice : null,
             SellingPrice = m.SellingPrice,
             ReorderLevel = m.ReorderLevel,
              IsActive = m.IsActive,
@@ -317,7 +328,7 @@ public class MedicineService : IMedicineService
                 BatchId = b.BatchId,
                 ProductId = b.ProductId,
                 BatchNumber = b.BatchNumber,
-                PurchasePrice = b.PurchasePrice,
+                PurchasePrice = CanSeeSupplierCost() ? b.PurchasePrice : null,
                 SellingPrice = b.SellingPrice,
                 QuantityReceived = b.QuantityReceived,
                 QuantityIssued = b.QuantityIssued,

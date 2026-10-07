@@ -1,0 +1,63 @@
+@startuml
+left to right direction
+skinparam componentStyle rectangle
+skinparam packageStyle rectangle
+
+actor "Administrator / Pharmacist" as Staff
+
+node "React Browser Application" as Client {
+  component "Functional pages\nAuthentication · POS · inventory\nadmin pages · dashboard · reports" as Web
+}
+
+node "ASP.NET Core API Host" as Backend {
+  component "API Surface and Shared Security\nREST controllers · JWT · role checks\nCORS · exception handling" as Api
+
+  package "Functional Modules" as Modules {
+    component "Product Catalog\nMedicines · cosmetics · categories" as Catalog
+    component "Inventory and Batches\nStock · batch tracking · FEFO" as Inventory
+    component "POS and Sales\nDiscounts · payment records · receipts" as Sales
+    component "Purchases and Suppliers\nStock receipts · supplier records" as Purchases
+    component "Damage and Expiry\nDamage records · expiry tracking" as Damage
+    component "Notifications\nLow-stock · expiry alerts" as Notifications
+    component "User and Branch Management\nAccounts · roles · branches" as Users
+    component "Dashboard and Reporting\nSales · profit · inventory · staff" as Reports
+    component "Settings and Audit\nConfiguration · audit · backup" as Admin
+  }
+
+  component "Shared Runtime Services\nExpiry / notification / retention jobs\nSMTP · file storage · monitoring · logging" as Runtime
+  component "Shared Persistence\nEF Core · repositories · Unit of Work" as Persistence
+}
+
+database "PostgreSQL" as Database
+
+Staff --> Web : uses
+Web --> Api : HTTPS REST/JSON
+Api --> Catalog : routes requests
+Api --> Inventory
+Api --> Sales
+Api --> Purchases
+Api --> Damage
+Api --> Notifications
+Api --> Users
+Api --> Reports
+Api --> Admin
+
+Catalog --> Inventory : product data
+Sales --> Inventory : deduct stock
+Purchases --> Inventory : receive stock
+Inventory --> Damage : batch / expiry data
+Inventory --> Notifications : stock / expiry alerts
+Damage --> Notifications : expiry alerts
+Reports ..> Sales : reads
+Reports ..> Inventory : reads
+Reports ..> Purchases : reads
+Reports ..> Users : reads
+
+Modules ..> Runtime : shared services
+Modules --> Persistence : shared data access
+Persistence --> Database : Npgsql
+
+note bottom of Backend
+  These modules run together in the ASP.NET Core API host.
+end note
+@enduml

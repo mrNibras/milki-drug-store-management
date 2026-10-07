@@ -1,0 +1,139 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2460" height="1320" viewBox="0 0 2460 1320" role="img" aria-labelledby="title desc">
+  <title id="title">Milki Drug Store Management System architecture</title>
+  <desc id="desc">Three-tier client-server system showing the React browser client, layered ASP.NET Core API host, PostgreSQL database, SMTP email provider, and S3 file storage.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" orient="auto">
+      <path d="M 1 1 L 11 6 L 1 11 Z" fill="#526174"/>
+    </marker>
+    <marker id="dashedArrow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" orient="auto">
+      <path d="M 1 1 L 11 6 L 1 11 Z" fill="#ffffff" stroke="#7c6aad" stroke-width="1.5"/>
+    </marker>
+    <style>
+      text { font-family: Arial, Helvetica, sans-serif; fill: #172033; }
+      .host { fill: #f8fafc; stroke: #334155; stroke-width: 3; }
+      .client { fill: #edf4ff; stroke: #4778ad; stroke-width: 2.5; }
+      .api { fill: #eaf3ff; stroke: #4274aa; stroke-width: 2.4; }
+      .app { fill: #f2edff; stroke: #7965a8; stroke-width: 2.4; }
+      .domain { fill: #edf7f0; stroke: #4f8664; stroke-width: 2.4; }
+      .data { fill: #eaf7f7; stroke: #47828b; stroke-width: 2.4; }
+      .jobs { fill: #fff1f1; stroke: #b86161; stroke-width: 2.4; }
+      .infra { fill: #fff5e7; stroke: #b77b25; stroke-width: 2.4; }
+      .external { fill: #ffffff; stroke: #65758b; stroke-width: 2.4; }
+      .edge { fill: none; stroke: #526174; stroke-width: 3; marker-end: url(#arrow); }
+      .adapterEdge { fill: none; stroke: #7c6aad; stroke-width: 2.7; stroke-dasharray: 10 7; marker-end: url(#dashedArrow); }
+      .title { font-size: 34px; font-weight: 700; }
+      .subtitle { font-size: 20px; fill: #526174; }
+      .boxTitle { font-size: 23px; font-weight: 700; text-anchor: middle; }
+      .body { font-size: 18px; text-anchor: middle; fill: #344256; }
+      .bodyLeft { font-size: 18px; fill: #344256; }
+      .edgeLabel { font-size: 16px; font-weight: 600; text-anchor: middle; fill: #4b596d; }
+    </style>
+  </defs>
+
+  <rect width="2460" height="1320" fill="#ffffff"/>
+  <text class="title" x="55" y="62">3.3 System Architecture</text>
+  <text class="subtitle" x="57" y="101">Browser-based client/server · three-tier · layered modular monolith</text>
+
+  <!-- Main deployment boundaries -->
+  <rect class="host" x="900" y="150" width="1020" height="1060" rx="20"/>
+  <text x="940" y="204" font-size="25" font-weight="700">Render Web Service · Docker · ASP.NET Core 8</text>
+  <text x="940" y="235" font-size="16" fill="#526174">API, application, domain, persistence and infrastructure modules run together</text>
+
+  <!-- Connections, behind component boxes -->
+  <path class="edge" d="M 285 505 L 365 505"/>
+  <path class="edge" d="M 650 515 L 950 365"/>
+  <path class="edge" d="M 1300 365 L 1460 365"/>
+  <path class="edge" d="M 1460 400 L 1405 400 L 1405 665 L 1300 665"/>
+  <path class="edge" d="M 1655 460 L 1655 570"/>
+  <path class="edge" d="M 1850 665 L 2040 665"/>
+  <path class="adapterEdge" d="M 1848 405 L 1880 405 L 1880 950 L 1850 950"/>
+  <path class="edge" d="M 950 930 L 925 930 L 925 250 L 1655 250 L 1655 275"/>
+  <path class="edge" d="M 1850 920 L 2040 900"/>
+  <path class="edge" d="M 1850 1010 L 2040 1080"/>
+
+  <!-- User -->
+  <rect class="external" x="40" y="405" width="245" height="200" rx="18"/>
+  <circle cx="162" cy="449" r="17" fill="none" stroke="#263548" stroke-width="3"/>
+  <path d="M 162 466 L 162 501 M 140 482 L 184 482 M 162 501 L 144 522 M 162 501 L 180 522" fill="none" stroke="#263548" stroke-width="3" stroke-linecap="round"/>
+  <text class="boxTitle" x="162" y="558">Store Staff</text>
+  <text class="body" x="162" y="585">Administrator · Pharmacist</text>
+  <text class="edgeLabel" x="325" y="491">uses</text>
+
+  <!-- Client tier -->
+  <rect class="client" x="365" y="300" width="285" height="430" rx="18"/>
+  <text class="boxTitle" x="507" y="342">Vercel / Browser</text>
+  <line x1="390" y1="362" x2="625" y2="362" stroke="#a9c1df" stroke-width="2"/>
+  <text x="507" y="403" font-size="22" font-weight="700" text-anchor="middle">React 19 SPA</text>
+  <text x="507" y="442" font-size="17" text-anchor="middle" fill="#526174">Presentation tier</text>
+  <text class="body" x="507" y="492">TypeScript · React Router</text>
+  <text class="body" x="507" y="532">Pages and reusable UI</text>
+  <text class="body" x="507" y="572">Zustand client state</text>
+  <text class="body" x="507" y="612">Axios REST client</text>
+  <text class="body" x="507" y="652">JWT and token refresh</text>
+  <rect x="691" y="398" width="200" height="72" rx="9" fill="#ffffff" stroke="#d8dee8"/>
+  <text class="edgeLabel" x="791" y="426">HTTPS · REST/JSON</text>
+  <text class="edgeLabel" x="791" y="451">Bearer JWT</text>
+
+  <!-- Backend components -->
+  <rect class="api" x="950" y="275" width="350" height="185" rx="16"/>
+  <text class="boxTitle" x="1125" y="316">API Layer</text>
+  <text class="body" x="1125" y="354">ASP.NET Core controllers</text>
+  <text class="body" x="1125" y="385">JWT and role authorization</text>
+  <text class="body" x="1125" y="416">CORS · exception handling</text>
+  <text class="edgeLabel" x="1380" y="348">dispatch</text>
+
+  <rect class="app" x="1460" y="275" width="390" height="185" rx="16"/>
+  <text class="boxTitle" x="1655" y="316">Application Layer</text>
+  <text class="body" x="1655" y="354">Application services</text>
+  <text class="body" x="1655" y="385">MediatR commands and queries</text>
+  <text class="body" x="1655" y="416">Validation · DTO mapping</text>
+  <text class="edgeLabel" x="1378" y="548">uses domain rules</text>
+  <text class="edgeLabel" x="1695" y="523">read / write</text>
+
+  <rect class="domain" x="950" y="570" width="350" height="190" rx="16"/>
+  <text class="boxTitle" x="1125" y="612">Domain Layer</text>
+  <text class="body" x="1125" y="651">Entities and business rules</text>
+  <text class="body" x="1125" y="682">Enums and domain exceptions</text>
+  <text class="body" x="1125" y="713">Repository contracts</text>
+
+  <rect class="data" x="1460" y="570" width="390" height="190" rx="16"/>
+  <text class="boxTitle" x="1655" y="612">Persistence Layer</text>
+  <text class="body" x="1655" y="651">EF Core · AppDbContext</text>
+  <text class="body" x="1655" y="682">Repositories · Unit of Work</text>
+  <text class="body" x="1655" y="713">Migrations · Npgsql provider</text>
+  <text class="edgeLabel" x="1945" y="646">SQL</text>
+
+  <rect class="jobs" x="950" y="870" width="350" height="185" rx="16"/>
+  <text class="boxTitle" x="1125" y="912">Hosted Background Jobs</text>
+  <text class="body" x="1125" y="951">Expiry checks</text>
+  <text class="body" x="1125" y="982">Notification checks</text>
+  <text class="body" x="1125" y="1013">Retention cleanup</text>
+  <text x="1125" y="1039" font-size="15" text-anchor="middle" fill="#6b5960">Run inside the API host</text>
+
+  <rect class="infra" x="1460" y="870" width="390" height="185" rx="16"/>
+  <text class="boxTitle" x="1655" y="912">Infrastructure Adapters</text>
+  <text class="body" x="1655" y="951">SMTP email · S3 / local files</text>
+  <text class="body" x="1655" y="982">Backup · database monitoring</text>
+  <text class="body" x="1655" y="1013">Structured logging</text>
+  <text x="1887" y="682" font-size="15" text-anchor="middle" fill="#6b5c89" transform="rotate(90 1887 682)">injected adapters</text>
+
+  <!-- External data and integration services -->
+  <rect class="external" x="2040" y="555" width="340" height="205" rx="18"/>
+  <ellipse cx="2210" cy="606" rx="75" ry="20" fill="#eef7f3" stroke="#4f8664" stroke-width="2.3"/>
+  <path d="M 2135 606 L 2135 674 C 2135 697 2285 697 2285 674 L 2285 606 M 2135 640 C 2135 663 2285 663 2285 640" fill="#eef7f3" stroke="#4f8664" stroke-width="2.3"/>
+  <text class="boxTitle" x="2210" y="722">PostgreSQL</text>
+  <text class="body" x="2210" y="746">Render-managed database</text>
+
+  <rect class="external" x="2040" y="825" width="340" height="145" rx="18"/>
+  <text class="boxTitle" x="2210" y="875">SMTP Provider</text>
+  <text class="body" x="2210" y="915">Password reset email</text>
+  <text class="edgeLabel" x="1947" y="883">email</text>
+
+  <rect class="external" x="2040" y="1000" width="340" height="160" rx="18"/>
+  <text class="boxTitle" x="2210" y="1050">AWS S3</text>
+  <text class="body" x="2210" y="1090">Configured file storage</text>
+  <text class="body" x="2210" y="1120">Local provider also supported</text>
+
+  <!-- Boundary captions -->
+  <text x="940" y="1150" font-size="16" fill="#526174">Three tiers: browser presentation · ASP.NET Core application · PostgreSQL data</text>
+</svg>
