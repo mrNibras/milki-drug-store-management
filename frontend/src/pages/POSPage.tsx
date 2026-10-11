@@ -43,6 +43,7 @@ export const POSPage: React.FC = () => {
   const [amountPaid, setAmountPaid] = useState('');
   const [referenceNumber, setReferenceNumber] = useState('');
   const [paymentError, setPaymentError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   const isAdmin = currentUser?.role === 'admin';
   const maxDiscountPercent = isAdmin ? MAX_ADMIN_DISCOUNT_PERCENT : MAX_PHARMACIST_DISCOUNT_PERCENT;
@@ -173,6 +174,8 @@ export const POSPage: React.FC = () => {
 
   const handleCheckout = async () => {
     if (cart.length === 0) return;
+    // Prevent duplicate submissions while a sale is already in flight.
+    if (submitting) return;
 
     if (cartTotalDiscount > 0 && !cartDiscountReason) {
       setShowDiscountReason(true);
@@ -225,9 +228,10 @@ export const POSPage: React.FC = () => {
     };
     sale.items.forEach(item => item.saleId = sale.id);
 
+    setSubmitting(true);
     try {
       const saleResponse = await addSale(sale);
-      
+
       // Build receipt from cart snapshot + authoritative backend response
       const receiptSale: Sale = {
         id: String(saleResponse.saleId),
@@ -278,7 +282,8 @@ export const POSPage: React.FC = () => {
     } catch (e: any) {
       console.error('SALE ERROR:', e.response?.data || e.message);
       setPaymentError(e.response?.data?.message || 'Failed to complete sale');
-      return;
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -827,15 +832,17 @@ export const POSPage: React.FC = () => {
             <div className="flex gap-3">
               <button
                 onClick={() => setShowCheckout(false)}
-                className={`flex-1 py-3 rounded-xl font-medium transition-colors min-h-[44px] ${isDark ? 'border border-gray-600 text-gray-300 hover:bg-gray-700' : 'border border-gray-300 text-gray-700 hover:bg-gray-50'}`}
+                disabled={submitting}
+                className={`flex-1 py-3 rounded-xl font-medium transition-colors min-h-[44px] ${isDark ? 'border border-gray-600 text-gray-300 hover:bg-gray-700' : 'border border-gray-300 text-gray-700 hover:bg-gray-500'}`}
               >
                 Cancel
               </button>
               <button
                 onClick={handleCheckout}
-                className="flex-1 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl font-medium transition-all shadow-lg flex items-center justify-center gap-2 min-h-[44px]"
+                disabled={submitting}
+                className="flex-1 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl font-medium transition-all shadow-lg flex items-center justify-center gap-2 min-h-[44px] disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                <Check className="h-5 w-5" /> Confirm
+                <Check className="h-5 w-5" /> {submitting ? 'Submitting...' : 'Confirm'}
               </button>
             </div>
           </div>

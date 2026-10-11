@@ -757,7 +757,11 @@ export const useAppStore = create<AppState>((set, get) => ({
       console.log('SALE REQUEST:', JSON.stringify(payload, null, 2));
       const res = await api.post<SaleResponse>('/sales', payload);
       console.log('SALE RESPONSE:', res.data);
-      await get().fetchSales();
+
+      // Refresh the sales list in the background. The POS confirmation UI must
+      // not wait for the full history reload before it can close; the sale is
+      // already committed server-side, so the response above is authoritative.
+      get().fetchSales();
       return res.data;
     } catch (e: any) {
       console.error('SALE ERROR:', e.response?.data || e.message);
