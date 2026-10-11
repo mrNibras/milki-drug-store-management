@@ -1,0 +1,131 @@
+@startuml
+left to right direction
+skinparam backgroundColor #F4F7FB
+skinparam shadowing true
+skinparam roundcorner 14
+skinparam classAttributeIconSize 0
+skinparam defaultFontName Inter
+skinparam defaultFontSize 15
+skinparam class {
+  BackgroundColor #FFFFFF
+  BorderColor #D5DFEA
+  FontColor #1E3047
+  ArrowColor #71849B
+}
+skinparam packageStyle rectangle
+
+title Milki Drug Store Management System\nCore sale and inventory class diagram
+
+package "Sales and store context" #FAF8FF {
+  class User {
+    +UserId: int
+    +FullName: string
+    +Email: string
+    +RoleId: int
+    +BranchId: int
+  }
+
+  class Sale {
+    +SaleId: int
+    +SaleNumber: string
+    +BranchId: int
+    +UserId: int
+    +TotalAmount: decimal
+    +TotalDiscount: decimal
+    +PaymentStatus: string
+    +Items: List<SaleItem>
+  }
+
+  class SaleItem {
+    +SaleItemId: int
+    +SaleId: int
+    +ProductId: int?
+    +BatchId: int?
+    +CosmeticId: int?
+    +CosmeticBatchId: int?
+    +Quantity: int
+    +UnitPrice: decimal
+    +SubTotal: decimal
+  }
+
+  class Branch {
+    +BranchId: int
+    +BranchName: string
+    +Location: string?
+    +Sales: List<Sale>
+  }
+}
+
+package "Products and batches" #F5FAFF {
+  class Medicine {
+    +ProductId: int
+    +ProductCode: string
+    +BrandName: string
+    +GenericName: string
+    +SellingPrice: decimal
+    +ReorderLevel: int
+    +Batches: List<MedicineBatch>
+  }
+
+  class MedicineBatch {
+    +BatchId: int
+    +ProductId: int
+    +BranchId: int
+    +BatchNumber: string
+    +QuantityIssued: int
+    +RemainingQuantity: int {derived}
+    +ExpiryDate: DateTime
+  }
+
+  class Cosmetic {
+    +CosmeticId: int
+    +ProductName: string
+    +BranchId: int
+    +SupplierId: int?
+    +Price: decimal
+    +Batches: List<CosmeticBatch>
+  }
+
+  class CosmeticBatch {
+    +BatchId: int
+    +CosmeticId: int
+    +BranchId: int
+    +BatchNumber: string
+    +QuantityIssued: int
+    +Balance: int {derived}
+    +ExpiryDate: DateTime?
+  }
+}
+
+package "Stock traceability" #F2FBF9 {
+  class InventoryTransaction {
+    +TransactionId: int
+    +TransactionType: string
+    +Quantity: int
+    +UnitPrice: decimal
+    +ReferenceType: string?
+    +CreatedAt: DateTime
+  }
+}
+
+User "1" -- "0..*" Sale : records
+Branch "1" -- "0..*" Sale : serves
+Sale "1" *-- "0..*" SaleItem : contains
+SaleItem "0..*" --> "0..1" MedicineBatch : medicine line
+SaleItem "0..*" --> "0..1" CosmeticBatch : cosmetic line
+Medicine "1" -- "0..*" MedicineBatch : batches
+Cosmetic "1" -- "0..*" CosmeticBatch : batches
+MedicineBatch "0..1" --> "0..*" InventoryTransaction : stock movements
+CosmeticBatch "0..1" --> "0..*" InventoryTransaction : stock movements
+
+note bottom of SaleItem
+  A sale line stores either medicine identifiers
+  or cosmetic identifiers and the corresponding batch.
+end note
+
+note bottom of InventoryTransaction
+  The transaction may reference either a medicine batch
+  or a cosmetic batch. Quantity and reference type describe
+  the stock movement.
+end note
+@enduml

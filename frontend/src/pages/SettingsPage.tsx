@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Save, Building2, Bell, Database, Globe, Shield, Download, Upload, Key, Languages } from 'lucide-react';
 import { useAppStore } from '../store/appStore';
 import { useThemeStore } from '../store/themeStore';
@@ -19,6 +19,7 @@ export const SettingsPage: React.FC = () => {
   const [isBackingUp, setIsBackingUp] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
   const restoreFileInputRef = React.useRef<HTMLInputElement>(null);
+  const initializedRef = useRef(false);
 
   const handleBackup = async () => {
     setIsBackingUp(true);
@@ -66,9 +67,30 @@ export const SettingsPage: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchSettings();
-    setFormData({ ...settings });
-  }, [fetchSettings, settings]);
+    // Fetch settings once on mount. Do NOT include `settings` in the
+    // dependency array: doing so would re-run this effect every time the
+    // store updates, which resets the form and destroys in-progress typing.
+    if (initializedRef.current) return;
+    initializedRef.current = true;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        await fetchSettings();
+      } catch (e) {
+        // fetchSettings already logs internally; keep the page usable.
+      }
+      if (cancelled) return;
+      // Only seed the form from the store after the fetch resolves, so the
+      // user's in-flight edits are not clobbered by a re-render.
+      setFormData({ ...useAppStore.getState().settings });
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchSettings]);
 
   const handleSave = async () => {
     try {

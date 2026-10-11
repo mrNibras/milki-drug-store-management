@@ -1,0 +1,35 @@
+@startuml
+ title Activity Diagram — Process Sale
+ start
+ :Pharmacist searches catalog and selects medicines/cosmetics;
+ :Enter quantities, payment details, optional discount and reason;
+ :POS sends POST /api/sales with access token;
+ if (JWT valid and request has sale items?) then (yes)
+   :Begin transaction and allocate sale number;
+   while (More sale items?) is (yes)
+     :Load eligible in-branch batches
+(ordered by expiry; honor manual selection where enabled);
+     if (Sufficient available stock?) then (yes)
+       :Apply role-based discount limit;
+       :Update batch quantity and stage sale line
+and inventory transaction;
+     else (no)
+       :Rollback transaction and return HTTP 400;
+       stop
+     endif
+   endwhile (no)
+   if (Discount applied without a reason?) then (yes)
+     :Rollback transaction and return HTTP 400;
+     stop
+   else (no)
+     :Calculate sale totals, profit and payment status;
+     :Save sale and sale items; commit transaction;
+     :Write audit log and evaluate low-stock thresholds;
+     :Return SaleResponse (HTTP 200) and show receipt;
+     stop
+   endif
+ else (no)
+   :Reject request (HTTP 401 for JWT / HTTP 400 for invalid items);
+   stop
+ endif
+@enduml

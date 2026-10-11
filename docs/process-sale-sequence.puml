@@ -1,0 +1,53 @@
+@startuml
+title Sequence Diagram — Process Sale
+autonumber
+actor Pharmacist
+participant "React POS" as POS
+participant "ASP.NET Core\nSalesController" as API
+participant MediatR as Mediator
+participant "CreateSaleCommandHandler" as Handler
+participant SaleService as Service
+participant "EF Core Repositories /\nUnit of Work" as Persistence
+database PostgreSQL as DB
+participant AuditLogService as Audit
+
+Pharmacist -> POS: Select items and quantities; enter payment/discount
+POS -> API: POST /api/sales + Bearer JWT
+API -> API: Authorize JWT; read user, role and branch claims
+API -> Mediator: CreateSaleCommand(request, claims)
+Mediator -> Handler: Handle(command)
+Handler -> Service: CreateAsync(request, userId, role, branchId)
+Service -> Persistence: Begin transaction; allocate sale number
+Persistence -> DB: Read sale sequence and branch settings
+DB --> Persistence: Sequence and settings
+loop For each requested sale item
+  Service -> Persistence: Load eligible branch batches
+  Persistence -> DB: Query available batches ordered by expiry
+  DB --> Persistence: Batch rows
+  Service -> Persistence: Stage batch issue and inventory transaction
+end
+Service -> Service: Apply discount rules; calculate totals and payment status
+alt Insufficient stock or discount reason missing
+  Service -> Persistence: Roll back transaction
+  Service --> Handler: Throw business exception
+  API --> POS: HTTP 400 Bad Request
+else All sale checks pass
+  Service -> Persistence: Add Sale and SaleItems; SaveChanges
+  Persistence -> DB: Insert sale and generate SaleId
+  DB --> Persistence: SaleId
+  Service -> Persistence: Set SaleId on items; SaveChanges and commit
+  Persistence -> DB: Persist items and inventory changes; COMMIT
+  DB --> Persistence: Commit complete
+  Service -> Audit: Log sale creation
+  Service --> Handler: SaleResponse
+  Handler --> Mediator: SaleResponse
+  Mediator --> API: SaleResponse
+  API --> POS: HTTP 200 + SaleResponse
+  POS --> Pharmacist: Display completed sale / receipt
+end
+
+note over API,POS
+  Invalid or missing JWT returns HTTP 401.
+  Invalid request items return HTTP 400.
+end note
+@enduml

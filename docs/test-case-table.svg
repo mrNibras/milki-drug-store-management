@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2000" height="980" viewBox="0 0 2000 980">
+<rect width="2000" height="980" fill="#f5f7fa"/>
+<rect x="40" y="35" width="1920" height="910" rx="24" fill="#ffffff" stroke="#d6e0e9"/>
+<text x="85" y="105" font-family="Arial,sans-serif" font-size="40" font-weight="700" fill="#172c42">Backend test run summary</text>
+<text x="85" y="148" font-family="Arial,sans-serif" font-size="21" fill="#53677c">Milki Drug Store Management System • .NET 8 • xUnit • PostgreSQL Testcontainers • 10 Oct 2026</text>
+<rect x="85" y="185" width="350" height="96" rx="16" fill="#e9f6ee"/><text x="260" y="225" text-anchor="middle" font-family="Arial,sans-serif" font-size="34" font-weight="700" fill="#207245">235 PASSED</text><text x="260" y="257" text-anchor="middle" font-family="Arial,sans-serif" font-size="18" fill="#53677c">of 252 executed</text>
+<rect x="455" y="185" width="350" height="96" rx="16" fill="#fff0ee"/><text x="630" y="225" text-anchor="middle" font-family="Arial,sans-serif" font-size="34" font-weight="700" fill="#b33b32">17 FAILED</text><text x="630" y="257" text-anchor="middle" font-family="Arial,sans-serif" font-size="18" fill="#53677c">0 skipped</text>
+<rect x="825" y="185" width="1075" height="96" rx="16" fill="#eef3f8"/><text x="865" y="224" font-family="Arial,sans-serif" font-size="21" font-weight="700" fill="#334a60">Failure cause</text><text x="865" y="255" font-family="Arial,sans-serif" font-size="19" fill="#53677c">17 fixture setup failures: ICurrentUserService missing; assertions not reached</text>
+<rect x="85" y="320" width="1815" height="54" rx="9" fill="#193b55"/>
+<text x="120" y="355" font-family="Arial,sans-serif" font-size="20" font-weight="700" fill="#ffffff">Representative test scenario</text><text x="1730" y="355" text-anchor="middle" font-family="Arial,sans-serif" font-size="20" font-weight="700" fill="#ffffff">RESULT</text>
+<rect x="85" y="416" width="1815" height="54" fill="#f4f7fa"/>
+<text x="120" y="451" font-family="Arial,sans-serif" font-size="20" fill="#26394b">Sale with full payment is marked paid</text>
+<text x="1730" y="451" text-anchor="middle" font-family="Arial,sans-serif" font-size="20" font-weight="700" fill="#207245">PASS</text>
+<rect x="85" y="470" width="1815" height="54" fill="#ffffff"/>
+<text x="120" y="505" font-family="Arial,sans-serif" font-size="20" fill="#26394b">Sale with partial payment is marked partial</text>
+<text x="1730" y="505" text-anchor="middle" font-family="Arial,sans-serif" font-size="20" font-weight="700" fill="#207245">PASS</text>
+<rect x="85" y="524" width="1815" height="54" fill="#f4f7fa"/>
+<text x="120" y="559" font-family="Arial,sans-serif" font-size="20" fill="#26394b">Pharmacist discount is capped by role</text>
+<text x="1730" y="559" text-anchor="middle" font-family="Arial,sans-serif" font-size="20" font-weight="700" fill="#207245">PASS</text>
+<rect x="85" y="578" width="1815" height="54" fill="#ffffff"/>
+<text x="120" y="613" font-family="Arial,sans-serif" font-size="20" fill="#26394b">Damage beyond stock is rejected without partial write</text>
+<text x="1730" y="613" text-anchor="middle" font-family="Arial,sans-serif" font-size="20" font-weight="700" fill="#207245">PASS</text>
+<rect x="85" y="632" width="1815" height="54" fill="#f4f7fa"/>
+<text x="120" y="667" font-family="Arial,sans-serif" font-size="20" fill="#26394b">Repeated expiry processing does not duplicate records</text>
+<text x="1730" y="667" text-anchor="middle" font-family="Arial,sans-serif" font-size="20" font-weight="700" fill="#207245">PASS</text>
+<rect x="85" y="686" width="1815" height="54" fill="#ffffff"/>
+<text x="120" y="721" font-family="Arial,sans-serif" font-size="20" fill="#26394b">FEFO orders the earliest expiry first</text>
+<text x="1730" y="721" text-anchor="middle" font-family="Arial,sans-serif" font-size="20" font-weight="700" fill="#207245">PASS</text>
+<rect x="85" y="740" width="1815" height="54" fill="#f4f7fa"/>
+<text x="120" y="775" font-family="Arial,sans-serif" font-size="20" fill="#26394b">Sale persists across a fresh DbContext</text>
+<text x="1730" y="775" text-anchor="middle" font-family="Arial,sans-serif" font-size="20" font-weight="700" fill="#207245">PASS</text>
+<rect x="85" y="794" width="1815" height="54" fill="#ffffff"/>
+<text x="120" y="829" font-family="Arial,sans-serif" font-size="20" fill="#26394b">Cosmetic category integration fixture</text>
+<text x="1730" y="829" text-anchor="middle" font-family="Arial,sans-serif" font-size="20" font-weight="700" fill="#b33b32">FAIL¹</text>
+<rect x="85" y="848" width="1815" height="54" fill="#f4f7fa"/>
+<text x="120" y="883" font-family="Arial,sans-serif" font-size="20" fill="#26394b">Supplier association integration fixture</text>
+<text x="1730" y="883" text-anchor="middle" font-family="Arial,sans-serif" font-size="20" font-weight="700" fill="#b33b32">FAIL¹</text>
+<text x="90" y="938" font-family="Arial,sans-serif" font-size="17" fill="#53677c">¹ Fixture cannot resolve ICurrentUserService, so the named assertions did not execute. Full run used isolated Testcontainers databases; no production DB.</text>
+</svg>
