@@ -8,7 +8,7 @@ public class SupplierPaymentConfiguration : IEntityTypeConfiguration<SupplierPay
 {
     public void Configure(EntityTypeBuilder<SupplierPayment> builder)
     {
-        builder HasKey(sp => sp.SupplierPaymentId);
+        builder.HasKey(sp => sp.SupplierPaymentId);
         builder.Property(sp => sp.Amount).HasPrecision(18, 2);
         builder.Property(sp => sp.PaymentMethod).HasPrecision(20).IsRequired();
         builder.Property(sp => sp.ReferenceNumber).HasPrecision(100);
@@ -17,12 +17,12 @@ public class SupplierPaymentConfiguration : IEntityTypeConfiguration<SupplierPay
         builder.HasIndex(sp => sp.PaymentDate);
 
         builder.HasOne(sp => sp.Supplier)
-            .WithOne(s => s.SupplierPayments)
+            .WithMany(s => s.SupplierPayments)
             .HasConstraintName("FK_SupplierPayment_Supplier")
             .OnDelete(DeleteBehavior.NoAction);
 
         builder.HasOne(sp => sp.Branch)
-            .WithOne(b => b.SupplierPayments)
+            .WithMany(b => b.SupplierPayments)
             .HasConstraintName("FK_SupplierPayment_Branch")
             .OnDelete(DeleteBehavior.NoAction);
 

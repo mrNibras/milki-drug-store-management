@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Logging;
 using MilkiDrugStore.Application.Interfaces;
-using MilkiDrugStore.ApplicationDTOs.SupplierPayment;
+using MilkiDrugStore.Application.DTOs.SupplierPayment;
 using MilkiDrugStore.Domain.Entities;
 using MilkiDrugStore.Domain.Interfaces;
 using MilkiDrugStore.Domain.Interfaces.Repositories;
@@ -89,7 +89,7 @@ public class SupplierPaymentService : ISupplierPaymentService
 
     public async Task<SupplierDebtSummaryResponse?> GetSupplierDebtAsync(int supplierId, int? branchId = null)
     {
-        var supplier = await _supplierService GetByIdAsync(supplierId);
+        var supplier = await _supplierService.GetByIdAsync(supplierId);
         if (supplier == null) return null;
 
         var purchases = await _purchaseRepo.GetBySupplierAsync(supplierId, branchId);
@@ -214,7 +214,7 @@ public class SupplierPaymentService : ISupplierPaymentService
             throw new InvalidOperationException(
                 $"The sum of allocations ({allocationSum}) must equal the payment amount ({request.Amount}).");
 
-        var supplier = await _supplierService GetByIdAsync(request.SupplierId);
+        var supplier = await _supplierService.GetByIdAsync(request.SupplierId);
         if (supplier == null)
             throw new KeyNotFoundException($"Supplier with ID {request.SupplierId} was not found.");
 
@@ -297,7 +297,7 @@ public class SupplierPaymentService : ISupplierPaymentService
             // Update each affected purchase's paid amount and status.
             foreach (var alloc in request.Allocations)
             {
-                var purchase = await _purchaseRepo GetByIdAsync(alloc.PurchaseId);
+                var purchase = await _purchaseRepo.GetByIdAsync(alloc.PurchaseId);
                 if (purchase == null) continue;
 
                 purchase.AmountPaid += alloc.AllocatedAmount;

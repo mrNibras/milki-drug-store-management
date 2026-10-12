@@ -45,6 +45,7 @@ public class SupplierService : ISupplierService
             Phone = request.Phone,
             Email = request.Email,
             Address = request.Address,
+            ContactPerson = request.ContactPerson,
             PaymentStatus = request.PaymentStatus ?? "Outstanding",
             CreatedAt = DateTime.UtcNow
         };
@@ -98,6 +99,7 @@ public class SupplierService : ISupplierService
             Phone = s.Phone,
             Email = s.Email,
             Address = s.Address,
+            ContactPerson = s.ContactPerson,
             PaymentStatus = s.PaymentStatus,
             CreatedAt = s.CreatedAt
         };
