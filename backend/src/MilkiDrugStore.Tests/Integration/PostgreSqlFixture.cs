@@ -72,7 +72,20 @@ public class PostgreSqlFixture : IAsyncLifetime
 
         services.AddLogging();
         services.AddScoped<IBackupService, BackupService>();
+        
+        // Register ICurrentUserService for tests (mock implementation)
+        services.AddScoped<ICurrentUserService, TestCurrentUserService>();
 
         return services.BuildServiceProvider();
+    }
+    
+    // Simple test implementation of ICurrentUserService
+    private class TestCurrentUserService : ICurrentUserService
+    {
+        public int UserId => 1;
+        public string Email => "test@test.com";
+        public string Role => "Admin";
+        public int BranchId => 1;
+        public bool CanViewFinancialCosts => true;
     }
 }

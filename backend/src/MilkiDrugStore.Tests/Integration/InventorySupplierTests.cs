@@ -59,10 +59,21 @@ public class InventorySupplierTests : IClassFixture<PostgreSqlFixture>, IAsyncLi
         services.AddScoped<IMedicineService, MedicineService>();
         services.AddScoped<ICosmeticService, CosmeticService>();
         services.AddScoped<IPurchaseService, PurchaseService>();
+        services.AddScoped<ICurrentUserService, TestCurrentUserService>();
         services.AddSingleton(_auditLog);
         services.AddLogging();
 
         _serviceProvider = services.BuildServiceProvider();
+    }
+    
+    // Simple test implementation of ICurrentUserService
+    private class TestCurrentUserService : ICurrentUserService
+    {
+        public int UserId => 1;
+        public string Email => "test@test.com";
+        public string Role => "Admin";
+        public int BranchId => 1;
+        public bool CanViewFinancialCosts => true;
     }
 
     /// <summary>
