@@ -1156,30 +1156,35 @@ namespace MilkiDrugStore.Persistence.Migrations
 
                     b.Property<string>("Address")
                         .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                        .HasPrecision(255)
+                        .HasColumnType("text");
+
+                    b.Property<string>("ContactPerson")
+                        .IsRequired()
+                        .HasPrecision(100)
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Email")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasPrecision(100)
+                        .HasColumnType("text");
 
                     b.Property<string>("PaymentStatus")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                        .HasPrecision(50)
+                        .HasColumnType("text");
 
                     b.Property<string>("Phone")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                        .HasPrecision(50)
+                        .HasColumnType("text");
 
                     b.Property<string>("SupplierName")
                         .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("character varying(150)");
+                        .HasPrecision(150)
+                        .HasColumnType("text");
 
                     b.HasKey("SupplierId");
 
@@ -1190,6 +1195,92 @@ namespace MilkiDrugStore.Persistence.Migrations
                     b.HasIndex("SupplierName");
 
                     b.ToTable("Suppliers");
+                });
+
+            modelBuilder.Entity("MilkiDrugStore.Domain.Entities.SupplierPayment", b =>
+                {
+                    b.Property<int>("SupplierPaymentId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("SupplierPaymentId"));
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<int>("BranchId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("CreatedBy")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("CreatedByUserUserId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Notes")
+                        .HasPrecision(500)
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("PaymentDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("PaymentMethod")
+                        .IsRequired()
+                        .HasPrecision(20)
+                        .HasColumnType("text");
+
+                    b.Property<string>("ReferenceNumber")
+                        .HasPrecision(100)
+                        .HasColumnType("text");
+
+                    b.Property<int>("SupplierId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("SupplierPaymentId");
+
+                    b.HasIndex("BranchId");
+
+                    b.HasIndex("CreatedByUserUserId");
+
+                    b.HasIndex("PaymentDate");
+
+                    b.HasIndex("SupplierId");
+
+                    b.ToTable("SupplierPayments");
+                });
+
+            modelBuilder.Entity("MilkiDrugStore.Domain.Entities.SupplierPaymentItem", b =>
+                {
+                    b.Property<int>("SupplierPaymentItemId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("SupplierPaymentItemId"));
+
+                    b.Property<decimal>("AllocatedAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("PurchaseId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("SupplierPaymentId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("SupplierPaymentItemId");
+
+                    b.HasIndex("PurchaseId");
+
+                    b.HasIndex("SupplierPaymentId");
+
+                    b.ToTable("SupplierPaymentItems");
                 });
 
             modelBuilder.Entity("MilkiDrugStore.Domain.Entities.UnitType", b =>
@@ -1630,6 +1721,54 @@ namespace MilkiDrugStore.Persistence.Migrations
                     b.Navigation("Branch");
                 });
 
+            modelBuilder.Entity("MilkiDrugStore.Domain.Entities.SupplierPayment", b =>
+                {
+                    b.HasOne("MilkiDrugStore.Domain.Entities.Branch", "Branch")
+                        .WithMany("SupplierPayments")
+                        .HasForeignKey("BranchId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired()
+                        .HasConstraintName("FK_SupplierPayment_Branch");
+
+                    b.HasOne("MilkiDrugStore.Domain.Entities.User", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserUserId");
+
+                    b.HasOne("MilkiDrugStore.Domain.Entities.Supplier", "Supplier")
+                        .WithMany("SupplierPayments")
+                        .HasForeignKey("SupplierId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired()
+                        .HasConstraintName("FK_SupplierPayment_Supplier");
+
+                    b.Navigation("Branch");
+
+                    b.Navigation("CreatedByUser");
+
+                    b.Navigation("Supplier");
+                });
+
+            modelBuilder.Entity("MilkiDrugStore.Domain.Entities.SupplierPaymentItem", b =>
+                {
+                    b.HasOne("MilkiDrugStore.Domain.Entities.Purchase", "Purchase")
+                        .WithMany("SupplierPaymentItems")
+                        .HasForeignKey("PurchaseId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired()
+                        .HasConstraintName("FK_SupplierPaymentItem_Purchase");
+
+                    b.HasOne("MilkiDrugStore.Domain.Entities.SupplierPayment", "SupplierPayment")
+                        .WithMany("Items")
+                        .HasForeignKey("SupplierPaymentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_SupplierPaymentItem_SupplierPayment");
+
+                    b.Navigation("Purchase");
+
+                    b.Navigation("SupplierPayment");
+                });
+
             modelBuilder.Entity("MilkiDrugStore.Domain.Entities.User", b =>
                 {
                     b.HasOne("MilkiDrugStore.Domain.Entities.Branch", "Branch")
@@ -1666,6 +1805,8 @@ namespace MilkiDrugStore.Persistence.Migrations
                     b.Navigation("Sales");
 
                     b.Navigation("Settings");
+
+                    b.Navigation("SupplierPayments");
 
                     b.Navigation("Users");
                 });
@@ -1725,6 +1866,8 @@ namespace MilkiDrugStore.Persistence.Migrations
             modelBuilder.Entity("MilkiDrugStore.Domain.Entities.Purchase", b =>
                 {
                     b.Navigation("Items");
+
+                    b.Navigation("SupplierPaymentItems");
                 });
 
             modelBuilder.Entity("MilkiDrugStore.Domain.Entities.Role", b =>
@@ -1742,6 +1885,13 @@ namespace MilkiDrugStore.Persistence.Migrations
                     b.Navigation("MedicineBatches");
 
                     b.Navigation("Purchases");
+
+                    b.Navigation("SupplierPayments");
+                });
+
+            modelBuilder.Entity("MilkiDrugStore.Domain.Entities.SupplierPayment", b =>
+                {
+                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("MilkiDrugStore.Domain.Entities.User", b =>

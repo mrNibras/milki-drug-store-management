@@ -21,6 +21,8 @@ public class GlobalExceptionFilter : IExceptionFilter
     public void OnException(ExceptionContext context)
     {
         var correlationId = context.HttpContext?.TraceIdentifier ?? "unknown";
+        var requestPath = context.HttpContext?.Request.Path ?? "unknown";
+        var requestMethod = context.HttpContext?.Request.Method ?? "unknown";
 
         var innerException = context.Exception.InnerException ?? context.Exception;
 
@@ -33,10 +35,22 @@ public class GlobalExceptionFilter : IExceptionFilter
             ? StatusCodes.Status400BadRequest
             : StatusCodes.Status500InternalServerError;
 
-        // Always log the full exception server-side for diagnostics.
+        // Always log the full exception server-side for diagnostics with full context.
         _logger.LogError(context.Exception,
-            "Unhandled exception (CorrelationId: {CorrelationId}, Status: {StatusCode})",
-            correlationId, statusCode);
+            "Unhandled exception (CorrelationId: {CorrelationId}, Method: {Method}, Path: {Path}, Status: {StatusCode}, ExceptionType: {ExceptionType}, InnerExceptionType: {InnerExceptionType})",
+            correlationId, requestMethod, requestPath, statusCode,
+            context.Exception.GetType().FullName,
+            innerException.GetType().FullName);
+
+        // Log additional diagnostic details for database-related exceptions.
+        if (context.Exception is Microsoft.EntityFrameworkCore.DbUpdateException dbEx)
+        {
+            _logger.LogError(dbEx,
+                "DbUpdateException details (CorrelationId: {CorrelationId}): InnerMessage={InnerMessage}, SqlState={SqlState}",
+                correlationId,
+                dbEx.InnerException?.Message,
+                (dbEx.InnerException as Npgsql.PostgresException)?.SqlState);
+        }
 
         // Determine the safe user-facing message.
         string message;
