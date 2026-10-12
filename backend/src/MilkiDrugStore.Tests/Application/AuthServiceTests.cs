@@ -130,7 +130,7 @@ public class AuthServiceTests
         result.Should().BeNull();
     }
 
-    [Fact]
+[Fact]
     public async Task RefreshTokenAsync_UnapprovedUser_ReturnsNull()
     {
         var refreshToken = new RefreshToken { Token = "rt1", UserId = 1, ExpiryDate = DateTime.UtcNow.AddDays(7), IsRevoked = false };
@@ -141,5 +141,135 @@ public class AuthServiceTests
 
         var result = await _sut.RefreshTokenAsync(new RefreshTokenRequest { RefreshToken = "rt1" });
         result.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task CreateUserAsync_InvalidFullNameWithDigits_ThrowsException()
+    {
+        var request = new CreateUserRequest
+        {
+            FullName = "John 2 Smith",
+            Email = "john@example.com",
+            Password = "Pass123",
+            RoleId = 1,
+            BranchId = 1
+        };
+        _userRepo.Setup(r => r.FindAsync(It.IsAny<System.Linq.Expressions.Expression<System.Func<User, bool>>>()))
+            .ReturnsAsync(new List<User>().AsQueryable());
+
+        Func<Task> act = () => _sut.CreateUserAsync(request);
+        await act.Should().ThrowAsync<Exception>().WithMessage("*letters*");
+    }
+
+    [Fact]
+    public async Task CreateUserAsync_InvalidFullNameWithSpecialChars_ThrowsException()
+    {
+        var request = new CreateUserRequest
+        {
+            FullName = "User@Name",
+            Email = "user@example.com",
+            Password = "Pass123",
+            RoleId = 1,
+            BranchId = 1
+        };
+        _userRepo.Setup(r => r.FindAsync(It.IsAny<System.Linq.Expressions.Expression<System.Func<User, bool>>>()))
+            .ReturnsAsync(new List<User>().AsQueryable());
+
+        Func<Task> act = () => _sut.CreateUserAsync(request);
+        await act.Should().ThrowAsync<Exception>().WithMessage("*letters*");
+    }
+
+    [Fact]
+    public async Task CreateUserAsync_ValidFullName_Succeeds()
+    {
+        var request = new CreateUserRequest
+        {
+            FullName = "Mary-Jane O'Connor",
+            Email = "mary@example.com",
+            Password = "Pass123",
+            RoleId = 1,
+            BranchId = 1
+        };
+        var role = new Role { RoleId = 1, Name = "Pharmacist" };
+        var branch = new Branch { BranchId = 1, BranchName = "Main" };
+        var createdUser = new User { UserId = 1, FullName = request.FullName, Email = request.Email };
+
+        _userRepo.Setup(r => r.FindAsync(It.IsAny<System.Linq.Expressions.Expression<System.Func<User, bool>>>()))
+            .ReturnsAsync(new List<User>().AsQueryable());
+        _roleRepo.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(role);
+        _branchRepo.Setup(b => b.GetAllAsync()).ReturnsAsync(new List<Branch> { branch }.AsQueryable());
+        _userRepo.Setup(r => r.AddAsync(It.IsAny<User>())).ReturnsAsync(createdUser);
+        _unitOfWork.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
+
+        var result = await _sut.CreateUserAsync(request);
+        result.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task RegisterAsync_InvalidFullNameWithDigits_ThrowsException()
+    {
+        var request = new RegisterRequest { FullName = "John 2 Smith", Email = "john2@example.com", Password = "Pass123" };
+        _userRepo.Setup(r => r.FindAsync(It.IsAny<System.Linq.Expressions.Expression<System.Func<User, bool>>>()))
+            .ReturnsAsync(new List<User>().AsQueryable());
+
+        Func<Task> act = () => _sut.RegisterAsync(request);
+        await act.Should().ThrowAsync<Exception>().WithMessage("*letters*");
+    }
+
+    [Fact]
+    public async Task RegisterAsync_InvalidFullNameWithSpecialChars_ThrowsException()
+    {
+        var request = new RegisterRequest { FullName = "User@Name", Email = "user2@example.com", Password = "Pass123" };
+        _userRepo.Setup(r => r.FindAsync(It.IsAny<System.Linq.Expressions.Expression<System.Func<User, bool>>>()))
+            .ReturnsAsync(new List<User>().AsQueryable());
+
+        Func<Task> act = () => _sut.RegisterAsync(request);
+        await act.Should().ThrowAsync<Exception>().WithMessage("*letters*");
+    }
+
+    [Fact]
+    public async Task RegisterAsync_ValidFullName_Succeeds()
+    {
+        var request = new RegisterRequest { FullName = "Abebe Bikila", Email = "abebe@example.com", Password = "Pass123" };
+        var role = new Role { RoleId = 2, Name = "Pharmacist" };
+        var branch = new Branch { BranchId = 1, BranchName = "Main" };
+        var createdUser = new User { UserId = 1, FullName = request.FullName, Email = request.Email };
+
+        _userRepo.Setup(r => r.FindAsync(It.IsAny<System.Linq.Expressions.Expression<System.Func<User, bool>>>()))
+            .ReturnsAsync(new List<User>().AsQueryable());
+        _roleRepo.Setup(r => r.FindAsync(It.IsAny<System.Linq.Expressions.Expression<System.Func<Role, bool>>>()))
+            .ReturnsAsync(new List<Role> { role }.AsQueryable());
+        _branchRepo.Setup(b => b.GetAllAsync()).ReturnsAsync(new List<Branch> { branch }.AsQueryable());
+        _userRepo.Setup(r => r.AddAsync(It.IsAny<User>())).ReturnsAsync(createdUser);
+        _unitOfWork.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
+
+        var result = await _sut.RegisterAsync(request);
+        result.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task UpdateUserAsync_InvalidFullNameWithDigits_ThrowsException()
+    {
+        var user = new User { UserId = 1, FullName = "Old Name", Email = "old@example.com" };
+        _userRepo.Setup(r => r.FindAsync(It.IsAny<System.Linq.Expressions.Expression<System.Func<User, bool>>>()))
+            .ReturnsAsync(new List<User> { user }.AsQueryable());
+
+        var request = new UpdateUserRequest { FullName = "John 2 Smith", Email = "new@example.com" };
+
+        Func<Task> act = () => _sut.UpdateUserAsync(1, request);
+        await act.Should().ThrowAsync<Exception>().WithMessage("*letters*");
+    }
+
+    [Fact]
+    public async Task UpdateUserAsync_InvalidFullNameWithSpecialChars_ThrowsException()
+    {
+        var user = new User { UserId = 1, FullName = "Old Name", Email = "old@example.com" };
+        _userRepo.Setup(r => r.FindAsync(It.IsAny<System.Linq.Expressions.Expression<System.Func<User, bool>>>()))
+            .ReturnsAsync(new List<User> { user }.AsQueryable());
+
+        var request = new UpdateUserRequest { FullName = "User@Name", Email = "new@example.com" };
+
+        Func<Task> act = () => _sut.UpdateUserAsync(1, request);
+        await act.Should().ThrowAsync<Exception>().WithMessage("*letters*");
     }
 }

@@ -16,8 +16,34 @@ public class RegisterRequestValidator : AbstractValidator<MilkiDrugStore.Applica
     public RegisterRequestValidator()
     {
         RuleFor(x => x.FullName).NotEmpty().MaximumLength(100);
+        RuleFor(x => x.FullName).Must(FullNameValidator.IsValidFullName)
+            .WithMessage("Full name must contain only letters, spaces, hyphens, and apostrophes. Digits and special characters are not allowed.");
         RuleFor(x => x.Email).NotEmpty().EmailAddress();
         RuleFor(x => x.Password).NotEmpty().MinimumLength(6);
+    }
+}
+
+public class CreateUserRequestValidator : AbstractValidator<MilkiDrugStore.Application.DTOs.Auth.CreateUserRequest>
+{
+    public CreateUserRequestValidator()
+    {
+        RuleFor(x => x.FullName).NotEmpty().MaximumLength(100);
+        RuleFor(x => x.FullName).Must(FullNameValidator.IsValidFullName)
+            .WithMessage("Full name must contain only letters, spaces, hyphens, and apostrophes. Digits and special characters are not allowed.");
+        RuleFor(x => x.Email).NotEmpty().EmailAddress();
+        RuleFor(x => x.Password).NotEmpty().MinimumLength(6);
+        RuleFor(x => x.RoleId).GreaterThan(0);
+    }
+}
+
+public class UpdateUserRequestValidator : AbstractValidator<MilkiDrugStore.Application.DTOs.Auth.UpdateUserRequest>
+{
+    public UpdateUserRequestValidator()
+    {
+        RuleFor(x => x.FullName).NotEmpty().MaximumLength(100);
+        RuleFor(x => x.FullName).Must(FullNameValidator.IsValidFullName)
+            .WithMessage("Full name must contain only letters, spaces, hyphens, and apostrophes. Digits and special characters are not allowed.");
+        RuleFor(x => x.Email).NotEmpty().EmailAddress();
     }
 }
 
@@ -86,5 +112,29 @@ public class CreateSupplierRequestValidator : AbstractValidator<MilkiDrugStore.A
         RuleFor(x => x.SupplierName).NotEmpty().MaximumLength(150);
         RuleFor(x => x.Phone).NotEmpty();
         RuleFor(x => x.Email).NotEmpty().EmailAddress();
+    }
+}
+
+public static class FullNameValidator
+{
+    /// <summary>
+    /// Returns true when <paramref name="fullName"/> contains only Unicode letters,
+    /// spaces, hyphens, and apostrophes after trimming. Digits, numeral systems,
+    /// and any other punctuation are rejected.
+    /// </summary>
+    public static bool IsValidFullName(string fullName)
+    {
+        if (string.IsNullOrWhiteSpace(fullName))
+            return false;
+
+        var trimmed = fullName.Trim();
+        if (trimmed.Length == 0 || trimmed.Length > 100)
+            return false;
+
+        return System.Text.RegularExpressions.Regex.IsMatch(
+            trimmed,
+            @"^[\p{L}\s'-]+$",
+            System.Text.RegularExpressions.RegexOptions.None,
+            TimeSpan.FromMilliseconds(100));
     }
 }

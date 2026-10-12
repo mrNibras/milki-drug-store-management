@@ -68,6 +68,7 @@ public class SupplierService : ISupplierService
         supplier.Phone = request.Phone;
         supplier.Email = request.Email;
         supplier.Address = request.Address;
+        supplier.ContactPerson = request.ContactPerson;
         supplier.PaymentStatus = request.PaymentStatus;
 
         await _supplierRepo.UpdateAsync(supplier);

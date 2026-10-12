@@ -180,7 +180,7 @@ const toSupplier = (r: SupplierResponse): Supplier => ({
   phone: r.phone,
   email: r.email,
   address: r.address,
-  contactPerson: '',
+  contactPerson: r.contactPerson || '',
   isActive: true,
   createdAt: r.createdAt,
 });

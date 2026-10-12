@@ -1,4 +1,5 @@
 using MilkiDrugStore.Application.DTOs.Auth;
+using MilkiDrugStore.Application.Validators;
 using MilkiDrugStore.Application.Interfaces;
 using MilkiDrugStore.Domain.Entities;
 using MilkiDrugStore.Domain.Enums;
@@ -122,6 +123,9 @@ public class AuthService : IAuthService
 
     public async Task<string> RegisterAsync(RegisterRequest request)
     {
+        if (!FullNameValidator.IsValidFullName(request.FullName))
+            throw new Exception("Full name must contain only letters, spaces, hyphens, and apostrophes. Digits and special characters are not allowed.");
+
         var normalizedEmail = NormalizeEmail(request.Email);
         var existing = (await _userRepo.FindAsync(u => u.Email == normalizedEmail)).FirstOrDefault();
         if (existing != null)
@@ -182,6 +186,9 @@ public class AuthService : IAuthService
 
         if (string.IsNullOrWhiteSpace(request.FullName))
             throw new Exception("Full name is required");
+
+        if (!FullNameValidator.IsValidFullName(request.FullName))
+            throw new Exception("Full name must contain only letters, spaces, hyphens, and apostrophes. Digits and special characters are not allowed.");
 
         if (string.IsNullOrWhiteSpace(request.Email))
             throw new Exception("Email is required");
@@ -264,11 +271,14 @@ public class AuthService : IAuthService
         }).ToList();
     }
 
-    public async Task<UserResponse?> UpdateUserAsync(int id, UpdateUserRequest request)
+public async Task<UserResponse?> UpdateUserAsync(int id, UpdateUserRequest request)
     {
         var users = await _userRepo.FindAsync(u => u.UserId == id);
         var user = users.FirstOrDefault();
         if (user == null) return null;
+
+        if (!FullNameValidator.IsValidFullName(request.FullName))
+            throw new Exception("Full name must contain only letters, spaces, hyphens, and apostrophes. Digits and special characters are not allowed.");
 
         user.FullName = request.FullName.Trim();
         user.Email = NormalizeEmail(request.Email);

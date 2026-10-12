@@ -30,6 +30,7 @@ export const UsersPage: React.FC = () => {
     isActive: true,
   });
   const [passwordError, setPasswordError] = useState('');
+  const [fullNameError, setFullNameError] = useState<string | null>(null);
   const [isToggling, setIsToggling] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formMessage, setFormMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -40,6 +41,7 @@ export const UsersPage: React.FC = () => {
   const resetForm = () => {
     setFormData({ fullName: '', email: '', role: 'pharmacist', password: '', confirmPassword: '', isActive: true });
     setPasswordError('');
+    setFullNameError(null);
     setFormMessage(null);
   };
 
@@ -60,8 +62,26 @@ export const UsersPage: React.FC = () => {
     return true;
   };
 
+  const validateFullName = (name: string): string | null => {
+    const trimmed = name.trim();
+    if (!trimmed) return 'Full name is required.';
+    // Allow Unicode letters (incl. Amharic), spaces, hyphens, apostrophes.
+    // Reject digits, numeral systems, and any other non-letter punctuation.
+    const validNameRegex = /^[\p{L}\s'-]+$/u;
+    if (!validNameRegex.test(trimmed)) {
+      return 'Full name must contain only letters, spaces, hyphens, and apostrophes. Digits and special characters are not allowed.';
+    }
+    if (trimmed.length > 100) return 'Full name must not exceed 100 characters.';
+    return null;
+  };
+
   const handleAddUser = async () => {
-    if (!formData.fullName || !formData.email) {
+    const fullNameError = validateFullName(formData.fullName);
+    if (fullNameError) {
+      setFormMessage({ type: 'error', text: fullNameError });
+      return;
+    }
+    if (!formData.email) {
       setFormMessage({ type: 'error', text: 'Full name and email are required.' });
       return;
     }
@@ -128,6 +148,12 @@ export const UsersPage: React.FC = () => {
 
   const handleUpdateUser = async () => {
     if (!selectedUser) return;
+
+    const fullNameError = validateFullName(formData.fullName);
+    if (fullNameError) {
+      setFormMessage({ type: 'error', text: fullNameError });
+      return;
+    }
 
     // Security check: Only Admins can assign Admin role
     if (currentUser?.role !== 'admin' && formData.role === 'admin' && selectedUser.role !== 'admin') {
@@ -389,10 +415,13 @@ export const UsersPage: React.FC = () => {
                 <input
                   type="text"
                   value={formData.fullName}
-                  onChange={e => setFormData({ ...formData, fullName: e.target.value })}
-                  className={inputClass}
+                  onChange={e => { setFormData({ ...formData, fullName: e.target.value }); setFullNameError(validateFullName(e.target.value)); }}
+                  className={`${inputClass} ${fullNameError ? 'border-red-500 focus:ring-red-500' : ''}`}
                   placeholder="Enter full name"
                 />
+                {fullNameError && (
+                  <p className="text-xs text-red-500 mt-1">{fullNameError}</p>
+                )}
                </div>
                <div>
                  <label className={`flex items-center gap-2 text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
@@ -572,9 +601,12 @@ export const UsersPage: React.FC = () => {
                   <input
                     type="text"
                     value={formData.fullName}
-                    onChange={e => setFormData({ ...formData, fullName: e.target.value })}
-                    className={inputClass}
+                    onChange={e => { setFormData({ ...formData, fullName: e.target.value }); setFullNameError(validateFullName(e.target.value)); }}
+                    className={`${inputClass} ${fullNameError ? 'border-red-500 focus:ring-red-500' : ''}`}
                   />
+                  {fullNameError && (
+                    <p className="text-xs text-red-500 mt-1">{fullNameError}</p>
+                  )}
                 </div>
                 <div>
                   <label className={`flex items-center gap-2 text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
