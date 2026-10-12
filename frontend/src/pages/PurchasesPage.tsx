@@ -62,6 +62,7 @@ export const PurchasesPage: React.FC = () => {
     fetchMedicines();
     fetchCategories();
   }, [fetchPurchases, fetchSuppliers, fetchMedicines, fetchCategories]);
+
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'bank_transfer' | 'mobile_money' | 'credit'>('cash');
   const [amountPaid, setAmountPaid] = useState('');
 
