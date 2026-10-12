@@ -32,6 +32,8 @@ public class AppDbContext : DbContext
     public DbSet<CosmeticBatch> CosmeticBatches => Set<CosmeticBatch>();
     public DbSet<AuditLogArchive> AuditLogArchives => Set<AuditLogArchive>();
     public DbSet<NotificationArchive> NotificationArchives => Set<NotificationArchive>();
+    public DbSet<SupplierPayment> SupplierPayments => Set<SupplierPayment>();
+    public DbSet<SupplierPaymentItem> SupplierPaymentItems => Set<SupplierPaymentItem>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

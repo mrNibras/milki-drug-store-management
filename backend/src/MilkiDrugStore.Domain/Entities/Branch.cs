@@ -20,4 +20,5 @@ public class Branch
     public List<AuditLog> AuditLogs { get; set; } = new();
     public List<Notification> Notifications { get; set; } = new();
     public Settings? Settings { get; set; }
+    public List<SupplierPayment> SupplierPayments { get; set; } = new();
 }

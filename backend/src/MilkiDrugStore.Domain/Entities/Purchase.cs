@@ -17,4 +17,5 @@ public class Purchase
     public Supplier? Supplier { get; set; }
     public Branch? Branch { get; set; }
     public List<PurchaseItem> Items { get; set; } = new();
+    public List<SupplierPaymentItem> SupplierPaymentItems { get; set; } = new();
 }

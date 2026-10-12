@@ -41,4 +41,17 @@ public class PurchaseRepository : Repository<Purchase>, IPurchaseRepository
 
         return maxSeq + 1;
     }
+
+    public async Task<IQueryable<Purchase>> GetBySupplierAsync(int supplierId, int? branchId = null)
+    {
+        var query = _dbSet
+            .Include(p => p.Supplier)
+            .Where(p => p.SupplierId == supplierId)
+            .AsQueryable();
+
+        if (branchId.HasValue)
+            query = query.Where(p => p.BranchId == branchId.Value);
+
+        return await Task.FromResult(query);
+    }
 }

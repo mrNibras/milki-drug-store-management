@@ -191,9 +191,14 @@ public class PurchaseService : IPurchaseService
         }
     }
 
-    public async Task<IEnumerable<PurchaseResponse>> GetAllAsync(int? branchId = null)
+public async Task<IEnumerable<PurchaseResponse>> GetAllAsync(int? branchId = null)
     {
-        var purchases = (await _purchaseRepo.GetAllAsync()).ToList();
+        // Eager-load the Supplier reference. Without it the navigation property
+        // is null (lazy loading is not enabled), so SupplierName would always
+        // serialize as an empty string in the purchase list.
+        var purchases = (await _purchaseRepo.GetAllAsync())
+            .Include(p => p.Supplier)
+            .ToList();
         var query = purchases.AsQueryable();
         if (branchId.HasValue)
             query = query.Where(p => p.BranchId == branchId.Value);

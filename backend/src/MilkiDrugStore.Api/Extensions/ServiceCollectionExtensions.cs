@@ -31,6 +31,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IBackupService, BackupService>();
         services.AddScoped<ICosmeticService, CosmeticService>();
         services.AddScoped<ICatalogService, CatalogService>();
+        services.AddScoped<ISupplierPaymentService, SupplierPaymentService>();
 
         services.AddScoped<IFileStorageService>(sp =>
         {
@@ -59,6 +60,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<INotificationRepository, NotificationRepository>();
         services.AddScoped<IAuditLogRepository, AuditLogRepository>();
         services.AddScoped<ICosmeticRepository, CosmeticRepository>();
+        services.AddScoped<ISupplierPaymentRepository, SupplierPaymentRepository>();
 
         return services;
     }
