@@ -24,34 +24,14 @@ public class DatabaseIntegrationTests : IClassFixture<PostgreSqlFixture>, IAsync
     public DatabaseIntegrationTests(PostgreSqlFixture fixture)
     {
         _fixture = fixture;
-
-        var services = new ServiceCollection();
-        services.AddDbContext<AppDbContext>(options =>
-            options.UseNpgsql(_fixture.ConnectionString, npgsql =>
-            {
-                npgsql.MigrationsAssembly("MilkiDrugStore.Persistence");
-            }));
-
-        services.AddScoped<IUnitOfWork, UnitOfWork>();
-        services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
-        services.AddScoped<IMedicineRepository, MedicineRepository>();
-        services.AddScoped<ISaleRepository, SaleRepository>();
-        services.AddScoped<IPurchaseRepository, PurchaseRepository>();
-        services.AddScoped<IInventoryTransactionRepository, InventoryTransactionRepository>();
-        services.AddScoped<INotificationRepository, NotificationRepository>();
-        services.AddScoped<IAuditLogRepository, AuditLogRepository>();
-        services.AddScoped<ICosmeticRepository, CosmeticRepository>();
-
-        services.AddLogging();
-
-        _serviceProvider = services.BuildServiceProvider();
+        _serviceProvider = (ServiceProvider)_fixture.CreateServiceProvider();
         _dbContext = _serviceProvider.GetRequiredService<AppDbContext>();
     }
 
     public async Task InitializeAsync()
     {
-        await _dbContext.Database.MigrateAsync();
-
+        // Migrations are already run by the fixture's CreateServiceProvider
+        // Just ensure seed data exists
         if (!await _dbContext.Roles.AnyAsync())
         {
             _dbContext.Roles.AddRange(
@@ -107,28 +87,32 @@ public class DatabaseIntegrationTests : IClassFixture<PostgreSqlFixture>, IAsync
 
         if (!await _dbContext.Users.AnyAsync())
         {
-            var adminRole = await _dbContext.Roles.FirstAsync(r => r.Name == "Admin");
-            var testBranch = await _dbContext.Branches.FirstAsync(b => b.BranchName == "Test Branch");
-            _dbContext.Users.Add(new User
+            var adminRole = await _dbContext.Roles.FirstOrDefaultAsync(r => r.Name == "Admin");
+            var testBranch = await _dbContext.Branches.FirstOrDefaultAsync(b => b.BranchName == "Test Branch");
+            if (adminRole != null && testBranch != null)
             {
-                FullName = "Test User",
-                Email = "testuser@test.com",
-                PasswordHash = "hash",
-                RoleId = adminRole.RoleId,
-                BranchId = testBranch.BranchId,
-                IsApproved = true,
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow
-            });
-            await _dbContext.SaveChangesAsync();
+                _dbContext.Users.Add(new User
+                {
+                    FullName = "Test User",
+                    Email = "testuser@test.com",
+                    PasswordHash = "hash",
+                    RoleId = adminRole.RoleId,
+                    BranchId = testBranch.BranchId,
+                    IsApproved = true,
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow
+                });
+                await _dbContext.SaveChangesAsync();
+            }
         }
     }
 
     public async Task DisposeAsync()
     {
+        // Don't drop schema - it's shared via the fixture
+        // Just clean up test data if needed
         if (_dbContext != null)
         {
-            await _dbContext.Database.ExecuteSqlRawAsync("DROP SCHEMA public CASCADE; CREATE SCHEMA public;");
             await _dbContext.DisposeAsync();
         }
 

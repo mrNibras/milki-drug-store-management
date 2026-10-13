@@ -44,6 +44,19 @@ public class PostgreSqlFixture : IAsyncLifetime
         await Container.StartAsync();
         ConnectionString = Container.GetConnectionString();
         _ownsContainer = true;
+
+        // Run migrations on the fresh database
+        var services = new ServiceCollection();
+        services.AddDbContext<AppDbContext>(options =>
+            options.UseNpgsql(ConnectionString, npgsql =>
+            {
+                npgsql.MigrationsAssembly("MilkiDrugStore.Persistence");
+            }));
+        var serviceProvider = services.BuildServiceProvider();
+        using var scope = serviceProvider.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        await dbContext.Database.MigrateAsync();
+        await serviceProvider.DisposeAsync();
     }
 
     public async Task DisposeAsync()
