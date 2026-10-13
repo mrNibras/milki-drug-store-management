@@ -29,8 +29,10 @@ export const sanitizeName = (input: string): string => {
 export const validateFullName = (fullName: string): string | null => {
   const trimmed = fullName.trim();
   if (!trimmed) return 'Full name is required.';
-  // Allow Unicode letters, spaces, hyphens, apostrophes. Reject digits and other punctuation.
-  const validNameRegex = /^[\p{L}\s'-]+$/u;
+  // Allow Unicode letters, combining marks, spaces, hyphens, apostrophes. Reject digits and other punctuation.
+  // Matches backend: ^[\p{L}\s'-]+$ (backend doesn't explicitly include \p{M} but \p{L} covers base letters)
+  // We include \p{M} for NFC/NFD equivalence in sanitized input.
+  const validNameRegex = /^[\p{L}\p{M}\s'-]+$/u;
   if (!validNameRegex.test(trimmed)) {
     return 'Full name must contain only letters, spaces, hyphens, and apostrophes. Digits and special characters are not allowed.';
   }
