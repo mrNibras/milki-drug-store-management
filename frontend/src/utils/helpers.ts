@@ -52,6 +52,27 @@ export const getMonthsUntilExpiry = (expiryDate: string): number => {
   }
 };
 
+export const isTokenExpired = (token: string | null): boolean => {
+  if (!token) return true;
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    const exp = payload.exp * 1000;
+    return Date.now() >= exp;
+  } catch {
+    return true;
+  }
+};
+
+export const getTokenExpiry = (token: string | null): number | null => {
+  if (!token) return null;
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload.exp * 1000;
+  } catch {
+    return null;
+  }
+};
+
 export const getExpiryStatus = (expiryDate: string): 'expired' | 'critical' | 'warning' | 'ok' => {
   const days = getDaysUntilExpiry(expiryDate);
   if (days < 0) return 'expired';

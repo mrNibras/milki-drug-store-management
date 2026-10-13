@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { config } from '../config';
+import { isTokenExpired } from '../utils/helpers';
 
 const API_BASE_URL = config.apiBaseUrl;
 
@@ -10,20 +11,6 @@ export const api = axios.create({
   },
 });
 
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('auth_token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  } else {
-    // A refresh may have populated the axios default header. Without this, a
-    // request made after logout would still carry the previous token.
-    delete config.headers.Authorization;
-    delete api.defaults.headers.common.Authorization;
-  }
-  return config;
-});
-
-// --- Refresh-token handling ---------------------------------------------
 let isRefreshing = false;
 let pendingQueue: { resolve: (token: string) => void; reject: (err: unknown) => void }[] = [];
 
@@ -44,6 +31,58 @@ const clearAuthAndRedirect = () => {
   }
 };
 
+const tryRefreshToken = async (): Promise<string | null> => {
+  const refreshToken = localStorage.getItem('refresh_token');
+  if (!refreshToken) return null;
+  try {
+    const res = await axios.post<{ token: string; refreshToken?: string }>(
+      `${API_BASE_URL}/api/auth/refresh`,
+      { refreshToken },
+      { headers: { 'Content-Type': 'application/json' } }
+    );
+    const newToken = res.data.token;
+    const newRefresh = res.data.refreshToken;
+    localStorage.setItem('auth_token', newToken);
+    if (newRefresh) localStorage.setItem('refresh_token', newRefresh);
+    return newToken;
+  } catch {
+    return null;
+  }
+};
+
+api.interceptors.request.use(async (config) => {
+  const token = localStorage.getItem('auth_token');
+
+  if (token && isTokenExpired(token)) {
+    if (!isRefreshing) {
+      isRefreshing = true;
+      const newToken = await tryRefreshToken();
+      isRefreshing = false;
+      if (newToken) {
+        config.headers.Authorization = `Bearer ${newToken}`;
+        api.defaults.headers.common.Authorization = `Bearer ${newToken}`;
+        processQueue(null, newToken);
+      } else {
+        clearAuthAndRedirect();
+      }
+    } else {
+      await new Promise<string>((resolve, reject) => {
+        pendingQueue.push({ resolve, reject });
+      }).then((newToken) => {
+        config.headers.Authorization = `Bearer ${newToken}`;
+      }).catch(() => {
+        clearAuthAndRedirect();
+      });
+    }
+  } else if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  } else {
+    delete config.headers.Authorization;
+    delete api.defaults.headers.common.Authorization;
+  }
+  return config;
+});
+
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -51,7 +90,6 @@ api.interceptors.response.use(
     const status = error.response?.status;
     const url: string = originalRequest?.url || '';
 
-    // 403 = authenticated but not allowed (role). Do NOT logout, just surface it.
     if (status === 403) {
       return Promise.reject(error);
     }
@@ -65,7 +103,6 @@ api.interceptors.response.use(
         return Promise.reject(error);
       }
 
-      // A refresh is already in flight — queue this request until it resolves.
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           pendingQueue.push({
@@ -82,7 +119,6 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        // Use a bare axios call so this request does not loop through the interceptor.
         const res = await axios.post<LoginResponse>(
           `${API_BASE_URL}/api/auth/refresh`,
           { refreshToken },
@@ -106,9 +142,6 @@ api.interceptors.response.use(
     }
 
     if (status === 401) {
-      // Only clear auth for non-retried, non-auth requests that weren't handled by refresh logic above.
-      // Requests with _retry=true already went through refresh; if they still 401, surface the error.
-      // Auth endpoints (login/refresh) should not trigger logout.
       if (originalRequest && !originalRequest._retry && !isAuthEndpoint) {
         clearAuthAndRedirect();
       }
@@ -345,7 +378,7 @@ export interface SalesReportResponse {
 export const fetchSalesReport = async (period: string): Promise<SalesReportResponse[]> => {
   const res = await api.get<SalesReportResponse[]>(`/reports/sales/${period}`);
   return res.data;
-};
+}
 
 export interface SalesPeriodBounds {
   period: string;
@@ -355,16 +388,10 @@ export interface SalesPeriodBounds {
   endLocal: string;
 }
 
-/**
- * The business window the sales report covers for a period, resolved by the
- * backend in Ethiopian time. The detail table must use this rather than the
- * browser clock, otherwise a user outside Ethiopia sees a different set of rows
- * than the chart above it.
- */
 export const fetchSalesPeriodBounds = async (period: string): Promise<SalesPeriodBounds> => {
   const res = await api.get<SalesPeriodBounds>(`/reports/sales/${period}/bounds`);
   return res.data;
-};
+}
 
 export interface NotificationResponse {
   notificationId: number;
@@ -414,9 +441,7 @@ export interface ChangePasswordRequest {
 }
 
 export interface RecordDamageRequest {
-  /** Medicine batch to damage. Mutually exclusive with cosmeticBatchId. */
   batchId?: number | null;
-  /** Cosmetic batch to damage. Mutually exclusive with batchId. */
   cosmeticBatchId?: number | null;
   quantity: number;
   reason: string;
@@ -451,7 +476,6 @@ export interface UpdateBranchRequest {
 
 export interface DamageResponse {
   damageId: number;
-  /** "medicine" or "cosmetic". */
   productType: 'medicine' | 'cosmetic';
   productId?: number | null;
   batchId?: number | null;
@@ -467,7 +491,6 @@ export interface DamageResponse {
 
 export interface ExpiredResponse {
   expiredId: number;
-  /** "medicine" or "cosmetic". */
   productType: 'medicine' | 'cosmetic';
   productId?: number | null;
   batchId?: number | null;
@@ -518,7 +541,6 @@ export interface CosmeticResponse {
   batches: CosmeticBatchResponse[];
 }
 
-// --- Settings / Backup / Restore -----------------------------------------
 export const backupDatabase = async (): Promise<Blob> => {
   const response = await api.get('/settings/backup', { responseType: 'blob' });
   return response.data;
@@ -532,7 +554,6 @@ export const restoreDatabase = async (file: File): Promise<void> => {
   });
 };
 
-// --- Cosmetics API ----------------------------------------------------------
 export interface CreateCosmeticRequest {
   productName: string;
   description?: string;
