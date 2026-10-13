@@ -1,5 +1,43 @@
 import { format, parseISO, differenceInDays, differenceInMonths } from 'date-fns';
 
+/**
+ * Sanitizes a name input by removing any characters that are not:
+ * - Unicode letters (\p{L}) including Latin, Amharic, Arabic, etc.
+ * - Unicode combining marks (\p{M}) for proper diacritic handling
+ * - Spaces (\s)
+ * - Hyphens (-)
+ * - Apostrophes (')
+ * 
+ * This matches the backend FullNameValidator regex: ^[\p{L}\s'-]+$
+ * 
+ * @param input - Raw input string from user
+ * @returns Sanitized string containing only allowed characters
+ */
+export const sanitizeName = (input: string): string => {
+  if (!input) return '';
+  // Allow Unicode letters, combining marks, spaces, hyphens, apostrophes
+  return input.replace(/[^\p{L}\p{M}\s'-]/gu, '');
+};
+
+/**
+ * Validates a full name against the allowed character set.
+ * Matches backend FullNameValidator.IsValidFullName.
+ * 
+ * @param fullName - Name to validate (will be trimmed)
+ * @returns Error message string if invalid, null if valid
+ */
+export const validateFullName = (fullName: string): string | null => {
+  const trimmed = fullName.trim();
+  if (!trimmed) return 'Full name is required.';
+  // Allow Unicode letters, spaces, hyphens, apostrophes. Reject digits and other punctuation.
+  const validNameRegex = /^[\p{L}\s'-]+$/u;
+  if (!validNameRegex.test(trimmed)) {
+    return 'Full name must contain only letters, spaces, hyphens, and apostrophes. Digits and special characters are not allowed.';
+  }
+  if (trimmed.length > 100) return 'Full name must not exceed 100 characters.';
+  return null;
+};
+
 export const formatDate = (date: string): string => {
   try {
     return format(parseISO(date), 'MMM dd, yyyy');

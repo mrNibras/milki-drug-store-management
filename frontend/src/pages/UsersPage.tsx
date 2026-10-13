@@ -5,7 +5,7 @@ import { useThemeStore } from '../store/themeStore';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import { Modal } from '../components/ui/Modal';
-import { formatDate, generateId } from '../utils/helpers';
+import { formatDate, generateId, sanitizeName, validateFullName as validateFullNameUtil } from '../utils/helpers';
 import { User } from '../types';
 import axios from 'axios';
 
@@ -62,21 +62,8 @@ export const UsersPage: React.FC = () => {
     return true;
   };
 
-  const validateFullName = (name: string): string | null => {
-    const trimmed = name.trim();
-    if (!trimmed) return 'Full name is required.';
-    // Allow Unicode letters (incl. Amharic), spaces, hyphens, apostrophes.
-    // Reject digits, numeral systems, and any other non-letter punctuation.
-    const validNameRegex = /^[\p{L}\s'-]+$/u;
-    if (!validNameRegex.test(trimmed)) {
-      return 'Full name must contain only letters, spaces, hyphens, and apostrophes. Digits and special characters are not allowed.';
-    }
-    if (trimmed.length > 100) return 'Full name must not exceed 100 characters.';
-    return null;
-  };
-
   const handleAddUser = async () => {
-    const fullNameError = validateFullName(formData.fullName);
+    const fullNameError = validateFullNameUtil(formData.fullName);
     if (fullNameError) {
       setFormMessage({ type: 'error', text: fullNameError });
       return;
@@ -149,7 +136,7 @@ export const UsersPage: React.FC = () => {
   const handleUpdateUser = async () => {
     if (!selectedUser) return;
 
-    const fullNameError = validateFullName(formData.fullName);
+    const fullNameError = validateFullNameUtil(formData.fullName);
     if (fullNameError) {
       setFormMessage({ type: 'error', text: fullNameError });
       return;
@@ -415,7 +402,7 @@ export const UsersPage: React.FC = () => {
                 <input
                   type="text"
                   value={formData.fullName}
-                  onChange={e => { setFormData({ ...formData, fullName: e.target.value }); setFullNameError(validateFullName(e.target.value)); }}
+                  onChange={e => { const sanitized = sanitizeName(e.target.value); setFormData({ ...formData, fullName: sanitized }); setFullNameError(validateFullNameUtil(sanitized)); }}
                   className={`${inputClass} ${fullNameError ? 'border-red-500 focus:ring-red-500' : ''}`}
                   placeholder="Enter full name"
                 />
@@ -601,7 +588,7 @@ export const UsersPage: React.FC = () => {
                   <input
                     type="text"
                     value={formData.fullName}
-                    onChange={e => { setFormData({ ...formData, fullName: e.target.value }); setFullNameError(validateFullName(e.target.value)); }}
+                    onChange={e => { const sanitized = sanitizeName(e.target.value); setFormData({ ...formData, fullName: sanitized }); setFullNameError(validateFullNameUtil(sanitized)); }}
                     className={`${inputClass} ${fullNameError ? 'border-red-500 focus:ring-red-500' : ''}`}
                   />
                   {fullNameError && (
