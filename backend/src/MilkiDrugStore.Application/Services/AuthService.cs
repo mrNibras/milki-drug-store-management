@@ -9,6 +9,8 @@ using MilkiDrugStore.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace MilkiDrugStore.Application.Services;
 
@@ -51,6 +53,13 @@ public class AuthService : IAuthService
 
     private static string NormalizeEmail(string email) =>
         email.Trim().ToLowerInvariant();
+
+    private static string ComputeTokenHash(string token)
+    {
+        using var sha256 = SHA256.Create();
+        var hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(token));
+        return Convert.ToHexString(hashBytes).ToLowerInvariant();
+    }
 
     public async Task<LoginResponse?> LoginAsync(LoginRequest request)
     {
@@ -125,6 +134,9 @@ public class AuthService : IAuthService
     {
         if (!FullNameValidator.IsValidFullName(request.FullName))
             throw new Exception("Full name must contain only letters, spaces, hyphens, and apostrophes. Digits and special characters are not allowed.");
+
+        if (!PasswordValidator.IsValid(request.Password, out var passwordError))
+            throw new Exception(passwordError);
 
         var normalizedEmail = NormalizeEmail(request.Email);
         var existing = (await _userRepo.FindAsync(u => u.Email == normalizedEmail)).FirstOrDefault();
@@ -241,6 +253,9 @@ public class AuthService : IAuthService
 
         if (!BCrypt.Net.BCrypt.Verify(currentPassword, user.PasswordHash))
             throw new Exception("Current password is incorrect");
+
+        if (!PasswordValidator.IsValid(newPassword, out var passwordError))
+            throw new Exception(passwordError);
 
         user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
         await _userRepo.UpdateAsync(user);
@@ -470,11 +485,13 @@ public async Task<UserResponse?> UpdateUserAsync(int id, UpdateUserRequest reque
         }
 
         var token = Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString("N");
+        var tokenHash = ComputeTokenHash(token);
         var expiry = DateTime.UtcNow.AddHours(1);
 
         await _passwordResetRepo.AddAsync(new PasswordReset
         {
-            Token = token,
+            Token = token, // Keep for migration period; will be removed in future migration
+            TokenHash = tokenHash,
             UserId = user.UserId,
             ExpiryDate = expiry,
             IsUsed = false,
@@ -489,8 +506,18 @@ public async Task<UserResponse?> UpdateUserAsync(int id, UpdateUserRequest reque
         {
             await _emailService.SendPasswordResetEmailAsync(user.Email, user.FullName, resetLink);
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "Failed to send password reset email to {Email}", user.Email);
+            // Invalidate the token since email failed - don't leave usable token orphaned
+            var failedResets = await _passwordResetRepo.FindAsync(pr => pr.TokenHash == tokenHash && !pr.IsUsed);
+            var failedReset = failedResets.FirstOrDefault();
+            if (failedReset != null)
+            {
+                failedReset.IsUsed = true;
+                await _passwordResetRepo.UpdateAsync(failedReset);
+                await _unitOfWork.SaveChangesAsync();
+            }
         }
 
         return new ForgotPasswordResponse { Message = "If an account with that email exists, a reset link has been sent." };
@@ -498,7 +525,18 @@ public async Task<UserResponse?> UpdateUserAsync(int id, UpdateUserRequest reque
 
     public async Task<string> ResetPasswordAsync(ResetPasswordRequest request)
     {
-        var resets = await _passwordResetRepo.FindAsync(pr => pr.Token == request.Token && !pr.IsUsed);
+        if (string.IsNullOrWhiteSpace(request.Token))
+            throw new Exception("Reset token is required.");
+
+        if (string.IsNullOrWhiteSpace(request.NewPassword))
+            throw new Exception("New password is required.");
+
+        // Validate password policy
+        if (!PasswordValidator.IsValid(request.NewPassword, out var passwordError))
+            throw new Exception(passwordError);
+
+        var tokenHash = ComputeTokenHash(request.Token);
+        var resets = await _passwordResetRepo.FindAsync(pr => pr.TokenHash == tokenHash && !pr.IsUsed);
         var reset = resets.FirstOrDefault();
         if (reset == null || reset.ExpiryDate < DateTime.UtcNow)
             throw new Exception("Invalid or expired reset token.");
@@ -507,12 +545,23 @@ public async Task<UserResponse?> UpdateUserAsync(int id, UpdateUserRequest reque
         if (user == null || !user.IsActive || !user.IsApproved)
             throw new Exception("User account is not active.");
 
-        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
-        await _userRepo.UpdateAsync(user);
+        // Use explicit transaction for atomicity
+        await _unitOfWork.BeginTransactionAsync();
+        try
+        {
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+            await _userRepo.UpdateAsync(user);
 
-        reset.IsUsed = true;
-        await _passwordResetRepo.UpdateAsync(reset);
-        await _unitOfWork.SaveChangesAsync();
+            reset.IsUsed = true;
+            await _passwordResetRepo.UpdateAsync(reset);
+            await _unitOfWork.SaveChangesAsync();
+            await _unitOfWork.CommitTransactionAsync();
+        }
+        catch
+        {
+            await _unitOfWork.RollbackTransactionAsync();
+            throw;
+        }
 
         await _auditLog.LogAsync(user.UserId, "Reset password via email link", "Users", user.UserId);
 

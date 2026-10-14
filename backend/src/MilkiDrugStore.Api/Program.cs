@@ -12,6 +12,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.RateLimiting;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -231,6 +233,39 @@ if (corsSettings.AllowedOrigins.Count > 0)
     });
 }
 
+// Rate limiting configuration
+builder.Services.AddRateLimiter(options =>
+{
+    // Forgot password: 3 requests per hour per IP
+    options.AddFixedWindowLimiter("ForgotPasswordPolicy", opts =>
+    {
+        opts.PermitLimit = 3;
+        opts.Window = TimeSpan.FromHours(1);
+        opts.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        opts.QueueLimit = 0;
+    });
+
+    // Reset password: 5 requests per hour per IP
+    options.AddFixedWindowLimiter("ResetPasswordPolicy", opts =>
+    {
+        opts.PermitLimit = 5;
+        opts.Window = TimeSpan.FromHours(1);
+        opts.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        opts.QueueLimit = 0;
+    });
+
+    // Global fallback
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.OnRejected = async (context, token) =>
+    {
+        context.HttpContext.Response.ContentType = "application/json";
+        await context.HttpContext.Response.WriteAsJsonAsync(new
+        {
+            message = "Too many requests. Please try again later."
+        }, cancellationToken: token);
+    };
+});
+
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
@@ -404,6 +439,7 @@ if (!string.IsNullOrEmpty(httpsPort) || app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowFrontend");
+app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 

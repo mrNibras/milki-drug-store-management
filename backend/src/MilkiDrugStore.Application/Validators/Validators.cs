@@ -19,7 +19,11 @@ public class RegisterRequestValidator : AbstractValidator<MilkiDrugStore.Applica
         RuleFor(x => x.FullName).Must(FullNameValidator.IsValidFullName)
             .WithMessage("Full name must contain only letters, spaces, hyphens, and apostrophes. Digits and special characters are not allowed.");
         RuleFor(x => x.Email).NotEmpty().EmailAddress();
-        RuleFor(x => x.Password).NotEmpty().MinimumLength(6);
+        RuleFor(x => x.Password).NotEmpty().Must(PasswordValidator.IsValid)
+            .WithMessage(p => {
+                PasswordValidator.IsValid(p.Password, out var msg);
+                return msg;
+            });
     }
 }
 
@@ -31,7 +35,11 @@ public class CreateUserRequestValidator : AbstractValidator<MilkiDrugStore.Appli
         RuleFor(x => x.FullName).Must(FullNameValidator.IsValidFullName)
             .WithMessage("Full name must contain only letters, spaces, hyphens, and apostrophes. Digits and special characters are not allowed.");
         RuleFor(x => x.Email).NotEmpty().EmailAddress();
-        RuleFor(x => x.Password).NotEmpty().MinimumLength(6);
+        RuleFor(x => x.Password).NotEmpty().Must(PasswordValidator.IsValid)
+            .WithMessage(p => {
+                PasswordValidator.IsValid(p.Password, out var msg);
+                return msg;
+            });
         RuleFor(x => x.RoleId).GreaterThan(0);
     }
 }
@@ -136,5 +144,69 @@ public static class FullNameValidator
             @"^[\p{L}\s'-]+$",
             System.Text.RegularExpressions.RegexOptions.None,
             TimeSpan.FromMilliseconds(100));
+    }
+}
+
+public static class PasswordValidator
+{
+    private const int MinLength = 8;
+    private const int MaxLength = 128;
+    private static readonly System.Text.RegularExpressions.Regex HasUpper = new(@"[A-Z]", System.Text.RegularExpressions.RegexOptions.Compiled);
+    private static readonly System.Text.RegularExpressions.Regex HasLower = new(@"[a-z]", System.Text.RegularExpressions.RegexOptions.Compiled);
+    private static readonly System.Text.RegularExpressions.Regex HasDigit = new(@"\d", System.Text.RegularExpressions.RegexOptions.Compiled);
+    private static readonly System.Text.RegularExpressions.Regex HasSpecial = new(@"[!@#$%^&*()_+\-=\[\]{};':""\\|,.<>\/?]", System.Text.RegularExpressions.RegexOptions.Compiled);
+
+    public static bool IsValid(string password, out string errorMessage)
+    {
+        errorMessage = string.Empty;
+
+        if (string.IsNullOrWhiteSpace(password))
+        {
+            errorMessage = "Password is required.";
+            return false;
+        }
+
+        if (password.Length < MinLength)
+        {
+            errorMessage = $"Password must be at least {MinLength} characters long.";
+            return false;
+        }
+
+        if (password.Length > MaxLength)
+        {
+            errorMessage = $"Password must not exceed {MaxLength} characters.";
+            return false;
+        }
+
+        if (!HasUpper.IsMatch(password))
+        {
+            errorMessage = "Password must contain at least one uppercase letter.";
+            return false;
+        }
+
+        if (!HasLower.IsMatch(password))
+        {
+            errorMessage = "Password must contain at least one lowercase letter.";
+            return false;
+        }
+
+        if (!HasDigit.IsMatch(password))
+        {
+            errorMessage = "Password must contain at least one digit.";
+            return false;
+        }
+
+        if (!HasSpecial.IsMatch(password))
+        {
+            errorMessage = "Password must contain at least one special character (!@#$%^&*()_+-=[]{};':\"\\|,.<>/?).";
+            return false;
+        }
+
+        return true;
+    }
+
+    public static bool IsValid(string password)
+    {
+        return IsValid(password, out _);
     }
 }

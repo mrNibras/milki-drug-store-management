@@ -30,8 +30,9 @@ export const ResetPasswordPage: React.FC = () => {
     setError('');
     setSuccess('');
 
-    if (password.length < 6) {
-      setError(t.common.passwordMinLength);
+    const passwordError = validatePassword(password);
+    if (passwordError) {
+      setError(passwordError);
       return;
     }
     if (password !== confirmPassword) {
@@ -49,6 +50,17 @@ export const ResetPasswordPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const validatePassword = (pwd: string): string | null => {
+    if (!pwd || pwd.trim().length === 0) return 'Password is required.';
+    if (pwd.length < 8) return 'Password must be at least 8 characters long.';
+    if (pwd.length > 128) return 'Password must not exceed 128 characters.';
+    if (!/[A-Z]/.test(pwd)) return 'Password must contain at least one uppercase letter.';
+    if (!/[a-z]/.test(pwd)) return 'Password must contain at least one lowercase letter.';
+    if (!/\d/.test(pwd)) return 'Password must contain at least one digit.';
+    if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>\/?]/.test(pwd)) return 'Password must contain at least one special character.';
+    return null;
   };
 
   return (
