@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { User, Medicine, Supplier, Purchase, Sale, Notification, CartItem, PharmacySettings, AuditLog, Category, UnitType, Branch, CatalogOption, Cosmetic } from '../types';
-import { api, LoginRequest, LoginResponse, CreateSaleRequest, CreatePurchaseRequest, RecordDamageRequest, ChangePasswordRequest, DamageResponse, ExpiredResponse, AuditLogResponse, BranchResponse, CreateBranchRequest, UpdateBranchRequest, CatalogOptionDto, CosmeticResponse, SalesReportResponse, fetchSalesReport, SalesPeriodBounds, fetchSalesPeriodBounds } from '../services/api';
+import { api, LoginRequest, LoginResponse, CreateSaleRequest, CreatePurchaseRequest, RecordDamageRequest, ChangePasswordRequest, DamageResponse, ExpiredResponse, AuditLogResponse, BranchResponse, CreateBranchRequest, UpdateBranchRequest, CatalogOptionDto, CosmeticResponse, SalesReportResponse, fetchSalesReport, SalesPeriodBounds, NotificationResponse, UserResponse, MedicineResponse, SupplierResponse, PurchaseResponse, SaleResponse, fetchSalesPeriodBounds } from '../services/api';
 import { getSettings, updateSettings } from '../services/settingsApi';
 import { getDaysUntilExpiry, generateId } from '../utils/helpers';
 
@@ -51,7 +51,7 @@ interface AppState {
 
   sales: Sale[];
   fetchSales: () => Promise<void>;
-  addSale: (sale: Sale) => Promise<void>;
+  addSale: (sale: Sale) => Promise<SaleResponse>;
   salesReport: Record<string, SalesReportResponse[]>;
   salesReportBounds: Record<string, SalesPeriodBounds>;
   fetchSalesReport: (period: string) => Promise<void>;
@@ -180,7 +180,7 @@ const toSupplier = (r: SupplierResponse): Supplier => ({
   phone: r.phone,
   email: r.email,
   address: r.address,
-  contactPerson: r.contactPerson || '',
+  contactPerson: (r as any).contactPerson || '',
   isActive: true,
   createdAt: r.createdAt,
 });
@@ -441,7 +441,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         return true;
       } catch (e) {
         // Only a genuinely unusable refresh token should end the session.
-        logout();
+        get().logout();
         return false;
       } finally {
         refreshInFlight = null;
@@ -574,10 +574,10 @@ export const useAppStore = create<AppState>((set, get) => ({
         brandName: medicine.name,
         genericName: medicine.genericName,
         categoryId: medicine.categoryId,
-        newCategoryName: medicine.newCategoryName,
+        newCategoryName: (medicine as any).newCategoryName,
         unitTypeId: medicine.unitTypeId,
-        newUnitTypeName: medicine.newUnitTypeName,
-        reorderLevel: medicine.lowStockThreshold,
+        newUnitTypeName: (medicine as any).newUnitTypeName,
+        reorderLevel: (medicine as any).reorderLevel ?? medicine.lowStockThreshold,
       });
       await get().fetchMedicines();
       await get().fetchCategories();
@@ -595,11 +595,11 @@ export const useAppStore = create<AppState>((set, get) => ({
         brandName: updates.name,
         genericName: updates.genericName,
         categoryId: Number(updates.categoryId),
-        newCategoryName: updates.newCategoryName,
+        newCategoryName: (updates as any).newCategoryName,
         unitTypeId: updates.unitTypeId,
-        newUnitTypeName: updates.newUnitTypeName,
-        reorderLevel: updates.reorderLevel,
-        isActive: updates.isActive,
+        newUnitTypeName: (updates as any).newUnitTypeName,
+        reorderLevel: (updates as any).reorderLevel ?? (updates as any).lowStockThreshold,
+        isActive: (updates as any).isActive,
       });
       await get().fetchMedicines();
       await get().fetchCategories();
@@ -953,6 +953,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     lowStockThreshold: 10,
     expiryAlertMonths: 6,
     currency: 'ETB',
+    language: 'English',
     address: 'Addis Ababa, Ethiopia',
     phone: '+251911223344',
     email: 'info@milki.com',

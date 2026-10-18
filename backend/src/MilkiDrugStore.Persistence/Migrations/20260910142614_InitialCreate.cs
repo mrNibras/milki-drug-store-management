@@ -363,6 +363,7 @@ namespace MilkiDrugStore.Persistence.Migrations
                     PasswordResetId = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     Token = table.Column<string>(type: "text", nullable: false),
+
                     UserId = table.Column<int>(type: "integer", nullable: false),
                     ExpiryDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     IsUsed = table.Column<bool>(type: "boolean", nullable: false),
@@ -385,7 +386,6 @@ namespace MilkiDrugStore.Persistence.Migrations
                 {
                     RefreshTokenId = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    Token = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
                     UserId = table.Column<int>(type: "integer", nullable: false),
                     ExpiryDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),

@@ -479,4 +479,73 @@ public class ApiIntegrationTests : IAsyncLifetime
         Assert.False(json.TryGetProperty("batchSelectionMode", out _), "Response must NOT contain batchSelectionMode");
         Assert.False(json.TryGetProperty("branchId", out _), "Response must NOT contain branchId");
     }
+
+    [Fact]
+    public async Task ForgotPassword_RegisteredAndUnregisteredEmail_ReturnEquivalentResponses()
+    {
+        var registered = new ForgotPasswordRequest { Email = "admin@milki.com" };
+        var unregistered = new ForgotPasswordRequest { Email = "nonexistent@example.com" };
+
+        var r1 = await _client.PostAsJsonAsync("/api/auth/forgot-password", registered);
+        var r2 = await _client.PostAsJsonAsync("/api/auth/forgot-password", unregistered);
+
+        Assert.Equal(HttpStatusCode.OK, r1.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, r2.StatusCode);
+        var m1 = await r1.Content.ReadFromJsonAsync<ForgotPasswordResponse>();
+        var m2 = await r2.Content.ReadFromJsonAsync<ForgotPasswordResponse>();
+        Assert.Equal(m1.Message, m2.Message);
+    }
+
+    [Fact]
+    public async Task ForgotPassword_ExceedsRateLimit_Returns429()
+    {
+        bool saw429 = false;
+        for (int i = 0; i < 20; i++)
+        {
+            var r = await _client.PostAsJsonAsync("/api/auth/forgot-password", new ForgotPasswordRequest { Email = $"user{i}@example.com" });
+            if (r.StatusCode == HttpStatusCode.TooManyRequests)
+            {
+                saw429 = true;
+                break;
+            }
+        }
+        Assert.True(saw429, "Expected HTTP 429 after exceeding forgot-password rate limit.");
+    }
+
+    [Fact]
+    public async Task ResetPassword_ExceedsRateLimit_Returns429()
+    {
+        bool saw429 = false;
+        for (int i = 0; i < 30; i++)
+        {
+            var r = await _client.PostAsJsonAsync("/api/auth/reset-password", new ResetPasswordRequest { Token = $"token{i}", NewPassword = "NewPass123!" });
+            if (r.StatusCode == HttpStatusCode.TooManyRequests)
+            {
+                saw429 = true;
+                break;
+            }
+        }
+        Assert.True(saw429, "Expected HTTP 429 after exceeding reset-password rate limit.");
+    }
+
+    [Fact]
+    public async Task ResetPassword_InvalidToken_ReturnsBadRequest()
+    {
+        var r = await _client.PostAsJsonAsync("/api/auth/reset-password", new ResetPasswordRequest { Token = "invalid-token", NewPassword = "NewPass123!" });
+        Assert.Equal(HttpStatusCode.BadRequest, r.StatusCode);
+    }
+
+    [Fact]
+    public async Task ResetPassword_WeakPassword_ReturnsBadRequest()
+    {
+        var r = await _client.PostAsJsonAsync("/api/auth/reset-password", new ResetPasswordRequest { Token = "any", NewPassword = "weak" });
+        Assert.Equal(HttpStatusCode.BadRequest, r.StatusCode);
+    }
+
+    [Fact]
+    public async Task ResetPassword_MissingToken_ReturnsBadRequest()
+    {
+        var r = await _client.PostAsJsonAsync("/api/auth/reset-password", new ResetPasswordRequest { Token = "", NewPassword = "NewPass123!" });
+        Assert.Equal(HttpStatusCode.BadRequest, r.StatusCode);
+    }
 }

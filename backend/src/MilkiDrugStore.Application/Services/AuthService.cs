@@ -9,6 +9,7 @@ using MilkiDrugStore.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using MilkiDrugStore.Persistence.Context;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -26,6 +27,7 @@ public class AuthService : IAuthService
     private readonly IUnitOfWork _unitOfWork;
     private readonly IAuditLogService _auditLog;
     private readonly ILogger<AuthService> _logger;
+    private readonly AppDbContext _context;
 
     public AuthService(
         IRepository<User> userRepo,
@@ -37,7 +39,8 @@ public class AuthService : IAuthService
         IConfiguration configuration,
         IUnitOfWork unitOfWork,
         IAuditLogService auditLog,
-        ILogger<AuthService> logger)
+        ILogger<AuthService> logger,
+        AppDbContext context)
     {
         _userRepo = userRepo;
         _roleRepo = roleRepo;
@@ -49,6 +52,7 @@ public class AuthService : IAuthService
         _unitOfWork = unitOfWork;
         _auditLog = auditLog;
         _logger = logger;
+        _context = context;
     }
 
     private static string NormalizeEmail(string email) =>
@@ -59,6 +63,16 @@ public class AuthService : IAuthService
         using var sha256 = SHA256.Create();
         var hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(token));
         return Convert.ToHexString(hashBytes).ToLowerInvariant();
+    }
+
+    // Generate a cryptographically secure reset token: 32 random bytes encoded as URL-safe Base64 (no padding).
+    private static string GenerateResetToken()
+    {
+        var bytes = RandomNumberGenerator.GetBytes(32);
+        return Convert.ToBase64String(bytes)
+            .TrimEnd('=')
+            .Replace('+', '-')
+            .Replace('/', '_');
     }
 
     public async Task<LoginResponse?> LoginAsync(LoginRequest request)
@@ -484,13 +498,12 @@ public async Task<UserResponse?> UpdateUserAsync(int id, UpdateUserRequest reque
             await _passwordResetRepo.UpdateAsync(pr);
         }
 
-        var token = Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString("N");
+        var token = GenerateResetToken();
         var tokenHash = ComputeTokenHash(token);
         var expiry = DateTime.UtcNow.AddHours(1);
 
         await _passwordResetRepo.AddAsync(new PasswordReset
         {
-            Token = token, // Keep for migration period; will be removed in future migration
             TokenHash = tokenHash,
             UserId = user.UserId,
             ExpiryDate = expiry,

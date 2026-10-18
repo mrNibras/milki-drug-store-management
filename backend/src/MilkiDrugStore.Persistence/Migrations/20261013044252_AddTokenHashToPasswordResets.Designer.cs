@@ -775,10 +775,6 @@ namespace MilkiDrugStore.Persistence.Migrations
                     b.Property<bool>("IsUsed")
                         .HasColumnType("boolean");
 
-                    b.Property<string>("Token")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.Property<string>("TokenHash")
                         .IsRequired()
                         .HasColumnType("text");
@@ -927,11 +923,6 @@ namespace MilkiDrugStore.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
                         .HasDefaultValue(false);
-
-                    b.Property<string>("Token")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
 
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
