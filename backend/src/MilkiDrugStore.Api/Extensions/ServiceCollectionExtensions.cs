@@ -1,12 +1,15 @@
 using Microsoft.Extensions.DependencyInjection;
 using MilkiDrugStore.Application.Services;
 using MilkiDrugStore.Application.Interfaces;
+using MilkiDrugStore.Application.Validators;
+using MilkiDrugStore.Application.Behaviors;
 using MilkiDrugStore.Domain.Interfaces.Repositories;
 using MilkiDrugStore.Domain.Interfaces;
 using MilkiDrugStore.Persistence.Repositories;
 using MilkiDrugStore.Infrastructure.Services;
 using MilkiDrugStore.Infrastructure.Logging;
 using MediatR;
+using FluentValidation;
 
 namespace MilkiDrugStore.Api.Extensions;
 
@@ -14,26 +17,26 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
-        services.AddScoped<IAuthService, AuthService>();
-        services.AddScoped<IMedicineService, MedicineService>();
-        services.AddScoped<ISaleService, SaleService>();
-        services.AddScoped<IPurchaseService, PurchaseService>();
-        services.AddScoped<ISupplierService, SupplierService>();
-        services.AddScoped<IReportService, ReportService>();
-        services.AddScoped<INotificationService, NotificationService>();
-        services.AddScoped<IDashboardService, DashboardService>();
-        services.AddScoped<IAuditLogService, AuditLogService>();
-        services.AddScoped<IJwtTokenService, JwtTokenService>();
-        services.AddScoped<IEmailService, EmailService>();
-        services.AddScoped<IInventoryService, InventoryService>();
-        services.AddScoped<IUserActivityService, UserActivityService>();
-        services.AddScoped<IBranchService, BranchService>();
-        services.AddScoped<IBackupService, BackupService>();
-        services.AddScoped<ICosmeticService, CosmeticService>();
-        services.AddScoped<ICatalogService, CatalogService>();
-        services.AddScoped<ISupplierPaymentService, SupplierPaymentService>();
+        services-registration.Add<IAuthService, AuthService>();
+        services-registration.Add<IMedicineService, MedicineService>();
+        services-registration.Add<ISaleService, SaleService>();
+        services-registration.Add<IPurchaseService, PurchaseService>();
+        services-registration.Add<ISupplierService, SupplierService>();
+        services-registration.Add<IReportService, ReportService>();
+        services-registration.Add<INotificationService, NotificationService>();
+        services-registration.Add<IDashboardService, DashboardService>();
+        services-registration.Add<IAuditLogService, AuditLogService>();
+        services-registration.Add<IJwtTokenService, JwtTokenService>();
+        services-registration.Add<IEmailService, EmailService>();
+        services-registration.Add<IInventoryService, InventoryService>();
+        services-registration.Add<IUserActivityService, UserActivityService>();
+        services-registration.Add<IBranchService, BranchService>();
+        services-registration.Add<IBackupService, BackupService>();
+        services-registration.Add<ICosmeticService, CosmeticService>();
+        services-registration.Add<ICatalogService, CatalogService>();
+        services-registration.Add<ISupplierPaymentService, SupplierPaymentService>();
 
-        services.AddScoped<IFileStorageService>(sp =>
+        services.Add<IFileStorageService>(sp =>
         {
             var config = sp.GetRequiredService<IConfiguration>();
             var provider = config.GetValue<string>("FileStorage:Provider") ?? "local";
@@ -46,21 +49,29 @@ public static class ServiceCollectionExtensions
             };
         });
 
-        services.AddScoped<IDatabaseMonitoringService, DatabaseMonitoringService>();
-        services.AddScoped<IRetentionService, RetentionService>();
+        services.Add<IDatabaseMonitoringService, DatabaseMonitoringService>();
+        services.Add<IRetentionService, RetentionService>();
 
-        services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(BackupService).Assembly));
+        // FluentValidation validators
+        services.AddValidatorsFromAssemblyContaining<CreateMedicineRequestValidator>();
 
-        services.AddScoped<IUnitOfWork, UnitOfWork>();
-        services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
-        services.AddScoped<IMedicineRepository, MedicineRepository>();
-        services.AddScoped<ISaleRepository, SaleRepository>();
-        services.AddScoped<IPurchaseRepository, PurchaseRepository>();
-        services.AddScoped<IInventoryTransactionRepository, InventoryTransactionRepository>();
-        services.AddScoped<INotificationRepository, NotificationRepository>();
-        services.AddScoped<IAuditLogRepository, AuditLogRepository>();
-        services.AddScoped<ICosmeticRepository, CosmeticRepository>();
-        services.AddScoped<ISupplierPaymentRepository, SupplierPaymentRepository>();
+        // MediatR pipeline behavior for command/query validation
+        services.AddMediatR(cfg =>
+        {
+            cfg.RegisterServicesFromAssembly(typeof(BackupService).Assembly);
+            cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+        });
+
+        services.Add<IUnitOfWork, UnitOfWork>();
+        services.Add(typeof(IRepository<>), typeof(Repository<>));
+        services.Add<IMedicineRepository, MedicineRepository>();
+        services.Add<ISaleRepository, SaleRepository>();
+        services.Add<IPurchaseRepository, PurchaseRepository>();
+        services.Add<IInventoryTransactionRepository, InventoryTransactionRepository>();
+        services.Add<INotificationRepository, NotificationRepository>();
+        services.Add<IAuditLogRepository, AuditLogRepository>();
+        services.Add<ICosmeticRepository, CosmeticRepository>();
+        services.Add<ISupplierPaymentRepository, SupplierPaymentRepository>();
 
         return services;
     }

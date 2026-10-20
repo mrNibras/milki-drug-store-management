@@ -56,18 +56,42 @@ public class UpdateUserRequestValidator : AbstractValidator<MilkiDrugStore.Appli
 }
 
 public class CreateMedicineRequestValidator : AbstractValidator<MilkiDrugStore.Application.DTOs.Medicine.CreateMedicineRequest>
-{
-    public CreateMedicineRequestValidator()
     {
-        RuleFor(x => x.BrandName).NotEmpty().MaximumLength(150);
-        RuleFor(x => x.CategoryId).NotEqual(0).When(x => string.IsNullOrWhiteSpace(x.NewCategoryName));
-        RuleFor(x => x.UnitTypeId).NotEqual(0).When(x => string.IsNullOrWhiteSpace(x.NewUnitTypeName));
-        RuleFor(x => x.NewCategoryName).Must(name => string.IsNullOrWhiteSpace(name) || !string.IsNullOrWhiteSpace(name.Trim()))
-            .WithMessage("Category name must not be blank.");
-        RuleFor(x => x.NewUnitTypeName).Must(name => string.IsNullOrWhiteSpace(name) || !string.IsNullOrWhiteSpace(name.Trim()))
-            .WithMessage("Unit type name must not be blank.");
+        public CreateMedicineRequestValidator()
+        {
+            RuleFor(x => x.BrandName).NotEmpty().MaximumLength(150);
+            RuleFor(x => x.BrandName).Must(BrandNameValidator.IsValid)
+                .WithMessage("Brand name must contain at least one letter and may contain letters and numbers only.");
+            RuleFor(x => x.GenericName).NotEmpty().MaximumLength(150);
+            RuleFor(x => x.GenericName).Must(GenericNameValidator.IsValid)
+                .WithMessage("Generic name must contain letters only.");
+            RuleFor(x => x.CategoryId).NotEqual(0).When(x => string.IsNullOrWhiteSpace(x.NewCategoryName));
+            RuleFor(x => x.UnitTypeId).NotEqual(0).When(x => string.IsNullOrWhiteSpace(x.NewUnitTypeName));
+            RuleFor(x => x.NewCategoryName).Must(name => string.IsNullOrWhiteSpace(name) || !string.IsNullOrWhiteSpace(name.Trim()))
+                .WithMessage("Category name must not be blank.");
+            RuleFor(x => x.NewUnitTypeName).Must(name => string.IsNullOrWhiteSpace(name) || !string.IsNullOrWhiteSpace(name.Trim()))
+                .WithMessage("Unit type name must not be blank.");
+        }
     }
-}
+
+    public class UpdateMedicineRequestValidator : AbstractValidator<MilkiDrugStore.Application.DTOs.Medicine.UpdateMedicineRequest>
+    {
+        public UpdateMedicineRequestValidator()
+        {
+            RuleFor(x => x.BrandName).NotEmpty().MaximumLength(150);
+            RuleFor(x => x.BrandName).Must(BrandNameValidator.IsValid)
+                .WithMessage("Brand name must contain at least one letter and may contain letters and numbers only.");
+            RuleFor(x => x.GenericName).NotEmpty().MaximumLength(150);
+            RuleFor(x => x.GenericName).Must(GenericNameValidator.IsValid)
+                .WithMessage("Generic name must contain letters only.");
+            RuleFor(x => x.CategoryId).NotEqual(0).When(x => string.IsNullOrWhiteSpace(x.NewCategoryName));
+            RuleFor(x => x.UnitTypeId).NotEqual(0).When(x => string.IsNullOrWhiteSpace(x.NewUnitTypeName));
+            RuleFor(x => x.NewCategoryName).Must(name => string.IsNullOrWhiteSpace(name) || !string.IsNullOrWhiteSpace(name.Trim()))
+                .WithMessage("Category name must not be blank.");
+            RuleFor(x => x.NewUnitTypeName).Must(name => string.IsNullOrWhiteSpace(name) || !string.IsNullOrWhiteSpace(name.Trim()))
+                .WithMessage("Unit type name must not be blank.");
+        }
+    }
 
 public class AddBatchRequestValidator : AbstractValidator<MilkiDrugStore.Application.DTOs.Medicine.AddBatchRequest>
 {
@@ -124,28 +148,88 @@ public class CreateSupplierRequestValidator : AbstractValidator<MilkiDrugStore.A
 }
 
 public static class FullNameValidator
-{
-    /// <summary>
-    /// Returns true when <paramref name="fullName"/> contains only Unicode letters,
-    /// spaces, hyphens, and apostrophes after trimming. Digits, numeral systems,
-    /// and any other punctuation are rejected.
-    /// </summary>
-    public static bool IsValidFullName(string fullName)
     {
-        if (string.IsNullOrWhiteSpace(fullName))
-            return false;
+        /// <summary>
+        /// Returns true when <paramref name="fullName"/> contains only Unicode letters,
+        /// spaces, hyphens, and apostrophes after trimming. Digits, numeral systems,
+        /// and any other punctuation are rejected.
+        /// </summary>
+        public static bool IsValidFullName(string fullName)
+        {
+            if (string.IsNullOrWhiteSpace(fullName))
+                return false;
 
-        var trimmed = fullName.Trim();
-        if (trimmed.Length == 0 || trimmed.Length > 100)
-            return false;
+            var trimmed = fullName.Trim();
+            if (trimmed.Length == 0 || trimmed.Length > 100)
+                return false;
 
-        return System.Text.RegularExpressions.Regex.IsMatch(
-            trimmed,
-            @"^[\p{L}\s'-]+$",
-            System.Text.RegularExpressions.RegexOptions.None,
-            TimeSpan.FromMilliseconds(100));
+            return System.Text.RegularExpressions.Regex.IsMatch(
+                trimmed,
+                @"^[\p{L}\s'-]+$",
+                System.Text.RegularExpressions.RegexOptions.None,
+                TimeSpan.FromMilliseconds(100));
+        }
     }
-}
+
+    public static class BrandNameValidator
+    {
+        private const int MaxLength = 150;
+        private static readonly System.Text.RegularExpressions.Regex AllowedChars = new(
+            @"^[\p{L}\p{M}\d]+$",
+            System.Text.RegularExpressions.RegexOptions.Compiled,
+            TimeSpan.FromMilliseconds(100));
+
+        /// <summary>
+        /// Returns true when <paramref name="brandName"/> contains only Unicode letters,
+        /// combining marks, and digits, and contains at least one letter.
+        /// Numbers-only values (e.g. "12345") are rejected.
+        /// </summary>
+        public static bool IsValid(string brandName)
+        {
+            if (string.IsNullOrWhiteSpace(brandName))
+                return false;
+
+            var trimmed = brandName.Trim();
+            if (trimmed.Length == 0 || trimmed.Length > MaxLength)
+                return false;
+
+            if (!AllowedChars.IsMatch(trimmed))
+                return false;
+
+            // Must contain at least one Unicode letter; the regex alone would allow digits only.
+            return System.Text.RegularExpressions.Regex.IsMatch(
+                trimmed,
+                @"[\p{L}]",
+                System.Text.RegularExpressions.RegexOptions.None,
+                TimeSpan.FromMilliseconds(100));
+        }
+    }
+
+    public static class GenericNameValidator
+    {
+        private const int MaxLength = 150;
+        private static readonly System.Text.RegularExpressions.Regex WordPattern = new(
+            @"^[\p{L}\p{M}]+(?: [\p{L}\p{M}]+)*$",
+            System.Text.RegularExpressions.RegexOptions.Compiled,
+            TimeSpan.FromMilliseconds(100));
+
+        /// <summary>
+        /// Returns true when <paramref name="genericName"/> contains only Unicode letters
+        /// and combining marks, with single spaces between words. Digits, punctuation,
+        /// leading/trailing/repeated spaces are rejected.
+        /// </summary>
+        public static bool IsValid(string genericName)
+        {
+            if (string.IsNullOrWhiteSpace(genericName))
+                return false;
+
+            var trimmed = genericName.Trim();
+            if (trimmed.Length == 0 || trimmed.Length > MaxLength)
+                return false;
+
+            return WordPattern.IsMatch(trimmed);
+        }
+    }
 
 public static class PasswordValidator
 {

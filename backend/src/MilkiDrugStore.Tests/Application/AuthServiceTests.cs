@@ -9,7 +9,9 @@ using MilkiDrugStore.Domain.Interfaces;
 using MilkiDrugStore.Domain.Enums;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore;
 using MilkiDrugStore.Application.DTOs.Auth;
+using MilkiDrugStore.Persistence.Context;
 
 namespace MilkiDrugStore.Tests.Application;
 
@@ -22,7 +24,7 @@ public class AuthServiceTests
     private readonly Mock<IJwtTokenService> _jwtService = new();
     private readonly Mock<IEmailService> _emailService = new();
     private readonly Mock<IConfiguration> _configuration = new();
-    private readonly Mock<IUnitOfWork> _unitOfWork = new();
+    private readonly Mock<IUnitOfWork> _UnitOfWork = new();
     private readonly Mock<IAuditLogService> _auditLog = new();
     private readonly Mock<ILogger<AuthService>> _logger = new();
     private readonly AuthService _sut;
@@ -45,7 +47,7 @@ public class AuthServiceTests
             _jwtService.Object,
             _emailService.Object,
             _configuration.Object,
-            _unitOfWork.Object,
+            _UnitOfWork.Object,
             _auditLog.Object,
             _logger.Object
         );

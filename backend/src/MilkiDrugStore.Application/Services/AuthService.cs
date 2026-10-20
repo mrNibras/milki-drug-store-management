@@ -26,8 +26,7 @@ public class AuthService : IAuthService
     private readonly IConfiguration _configuration;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IAuditLogService _auditLog;
-    private readonly ILogger<AuthService> _logger;
-    private readonly AppDbContext _context;
+private readonly ILogger<AuthService> _logger;
 
     public AuthService(
         IRepository<User> userRepo,
@@ -37,10 +36,9 @@ public class AuthService : IAuthService
         IJwtTokenService jwtTokenService,
         IEmailService emailService,
         IConfiguration configuration,
-        IUnitOfWork unitOfWork,
+        IUnitOfWork UnitOfWork,
         IAuditLogService auditLog,
-        ILogger<AuthService> logger,
-        AppDbContext context)
+        ILogger<AuthService> logger)
     {
         _userRepo = userRepo;
         _roleRepo = roleRepo;
@@ -49,10 +47,9 @@ public class AuthService : IAuthService
         _jwtTokenService = jwtTokenService;
         _emailService = emailService;
         _configuration = configuration;
-        _unitOfWork = unitOfWork;
+        _unitOfWork = UnitOfWork;
         _auditLog = auditLog;
         _logger = logger;
-        _context = context;
     }
 
     private static string NormalizeEmail(string email) =>

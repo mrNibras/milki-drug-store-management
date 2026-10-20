@@ -40,7 +40,8 @@ public class MedicineService : IMedicineService
 
     public async Task<IEnumerable<MedicineResponse>> GetAllAsync(string? search = null, int? categoryId = null, int? branchId = null)
     {
-        var query = (await _medicineRepo.GetAllAsync()).AsQueryable();
+        var query = (await _medicineRepo.GetAllAsync()).AsQueryable()
+            .Where(m => m.IsActive);
 
         if (!string.IsNullOrWhiteSpace(search))
         {
@@ -236,7 +237,9 @@ public class MedicineService : IMedicineService
     public async Task<IEnumerable<MedicineSearchResponse>> SearchAsync(string query, int? branchId = null)
     {
         var allMedicines = await _medicineRepo.GetAllAsync();
-        var medicines = allMedicines.AsQueryable();
+        var medicines = allMedicines
+            .Where(m => m.IsActive)
+            .AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(query))
         {
