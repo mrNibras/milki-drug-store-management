@@ -7,7 +7,10 @@ public class SaleItem
     public int? ProductId { get; set; }
     public int? BatchId { get; set; }
     public int Quantity { get; set; }
+    /// <summary>Actual final unit selling price after discount/override.</summary>
     public decimal UnitPrice { get; set; }
+    /// <summary>Standard (pre-discount) unit price at the time of sale.</summary>
+    public decimal StandardUnitPrice { get; set; }
     public decimal DiscountAmount { get; set; }
     public decimal PurchasePrice { get; set; }
     public decimal Profit { get; set; }

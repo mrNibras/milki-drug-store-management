@@ -196,7 +196,7 @@ public class SaleServiceTests
         result.TotalDiscount.Should().Be(20);
         result.Items.Should().HaveCount(1);
         result.Items[0].DiscountAmount.Should().Be(10);
-        result.Items[0].UnitPrice.Should().Be(100);
+        result.Items[0].UnitPrice.Should().Be(90);
     }
 
     [Fact]
@@ -236,7 +236,7 @@ public class SaleServiceTests
         result.TotalDiscount.Should().Be(10);
         result.Items.Should().HaveCount(1);
         result.Items[0].DiscountAmount.Should().Be(5);
-        result.Items[0].UnitPrice.Should().Be(100);
+        result.Items[0].UnitPrice.Should().Be(95.00m);
     }
 
     [Fact]

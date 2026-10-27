@@ -44,19 +44,25 @@ public class SaleResponse
 }
 
 public class SaleItemResponse
-{
-    public int SaleItemId { get; set; }
-    public int? ProductId { get; set; }
-    public string? ProductType { get; set; }
-    public string BrandName { get; set; } = string.Empty;
-    public int? BatchId { get; set; }
-    public int? CosmeticId { get; set; }
-    public int? CosmeticBatchId { get; set; }
-    public string BatchNumber { get; set; } = string.Empty;
-    public int Quantity { get; set; }
-    /// <summary>Standard (pre-discount) unit price.</summary>
-    public decimal UnitPrice { get; set; }
-    /// <summary>Per-unit discount applied.</summary>
-    public decimal DiscountAmount { get; set; }
-    public decimal SubTotal { get; set; }
-}
+    {
+        public int SaleItemId { get; set; }
+        public int? ProductId { get; set; }
+        public string? ProductType { get; set; }
+        public string BrandName { get; set; } = string.Empty;
+        public int? BatchId { get; set; }
+        public int? CosmeticId { get; set; }
+        public int? CosmeticBatchId { get; set; }
+        public string BatchNumber { get; set; } = string.Empty;
+        public int Quantity { get; set; }
+        /// <summary>Standard (pre-discount) unit price at the time of sale.</summary>
+        public decimal StandardUnitPrice { get; set; }
+        /// <summary>Actual final unit selling price after discount/override.</summary>
+        public decimal UnitPrice { get; set; }
+        /// <summary>Per-unit discount applied.</summary>
+        public decimal DiscountAmount { get; set; }
+        /// <summary>Actual purchase cost of the batch used for this sale.</summary>
+        public decimal PurchasePrice { get; set; }
+        /// <summary>Profit for this line item.</summary>
+        public decimal Profit { get; set; }
+        public decimal SubTotal { get; set; }
+    }

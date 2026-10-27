@@ -124,7 +124,7 @@ public class AuthServiceTests
     {
         var refreshToken = new RefreshToken { Token = "rt1", UserId = 1, ExpiryDate = DateTime.UtcNow.AddDays(7), IsRevoked = false };
         var user = new User { UserId = 1, IsActive = false, IsApproved = true };
-        _unitOfWork.Setup(u => u.RefreshTokens.FindAsync(It.IsAny<System.Linq.Expressions.Expression<System.Func<RefreshToken, bool>>>()))
+        _UnitOfWork.Setup(u => u.RefreshTokens.FindAsync(It.IsAny<System.Linq.Expressions.Expression<System.Func<RefreshToken, bool>>>()))
             .ReturnsAsync(new List<RefreshToken> { refreshToken }.AsQueryable());
         _userRepo.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(user);
 
@@ -137,7 +137,7 @@ public class AuthServiceTests
     {
         var refreshToken = new RefreshToken { Token = "rt1", UserId = 1, ExpiryDate = DateTime.UtcNow.AddDays(7), IsRevoked = false };
         var user = new User { UserId = 1, IsActive = true, IsApproved = false };
-        _unitOfWork.Setup(u => u.RefreshTokens.FindAsync(It.IsAny<System.Linq.Expressions.Expression<System.Func<RefreshToken, bool>>>()))
+        _UnitOfWork.Setup(u => u.RefreshTokens.FindAsync(It.IsAny<System.Linq.Expressions.Expression<System.Func<RefreshToken, bool>>>()))
             .ReturnsAsync(new List<RefreshToken> { refreshToken }.AsQueryable());
         _userRepo.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(user);
 
@@ -201,7 +201,7 @@ public class AuthServiceTests
         _roleRepo.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(role);
         _branchRepo.Setup(b => b.GetAllAsync()).ReturnsAsync(new List<Branch> { branch }.AsQueryable());
         _userRepo.Setup(r => r.AddAsync(It.IsAny<User>())).ReturnsAsync(createdUser);
-        _unitOfWork.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
+        _UnitOfWork.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
         var result = await _sut.CreateUserAsync(request);
         result.Should().NotBeNull();
@@ -243,7 +243,7 @@ public class AuthServiceTests
             .ReturnsAsync(new List<Role> { role }.AsQueryable());
         _branchRepo.Setup(b => b.GetAllAsync()).ReturnsAsync(new List<Branch> { branch }.AsQueryable());
         _userRepo.Setup(r => r.AddAsync(It.IsAny<User>())).ReturnsAsync(createdUser);
-        _unitOfWork.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
+        _UnitOfWork.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
         var result = await _sut.RegisterAsync(request);
         result.Should().NotBeNull();
@@ -284,9 +284,9 @@ public class AuthServiceTests
         _passwordResetRepo.Setup(r => r.FindAsync(It.IsAny<System.Linq.Expressions.Expression<System.Func<PasswordReset, bool>>>()))
             .ReturnsAsync(new List<PasswordReset> { reset }.AsQueryable());
         _userRepo.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(user);
-        _unitOfWork.Setup(u => u.BeginTransactionAsync()).Returns(Task.CompletedTask);
-        _unitOfWork.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
-        _unitOfWork.Setup(u => u.CommitTransactionAsync()).Returns(Task.CompletedTask);
+        _UnitOfWork.Setup(u => u.BeginTransactionAsync()).Returns(Task.CompletedTask);
+        _UnitOfWork.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
+        _UnitOfWork.Setup(u => u.CommitTransactionAsync()).Returns(Task.CompletedTask);
 
         var result = await _sut.ResetPasswordAsync(new ResetPasswordRequest { Token = token, NewPassword = "NewPass123!" });
         result.Should().Contain("success");
@@ -392,9 +392,9 @@ public class AuthServiceTests
         _passwordResetRepo.Setup(r => r.FindAsync(It.IsAny<System.Linq.Expressions.Expression<System.Func<PasswordReset, bool>>>()))
             .ReturnsAsync(new List<PasswordReset> { reset }.AsQueryable());
         _userRepo.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(user);
-        _unitOfWork.Setup(u => u.BeginTransactionAsync()).Returns(Task.CompletedTask);
-        _unitOfWork.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
-        _unitOfWork.Setup(u => u.CommitTransactionAsync()).Returns(Task.CompletedTask);
+        _UnitOfWork.Setup(u => u.BeginTransactionAsync()).Returns(Task.CompletedTask);
+        _UnitOfWork.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
+        _UnitOfWork.Setup(u => u.CommitTransactionAsync()).Returns(Task.CompletedTask);
 
         var result = await _sut.ResetPasswordAsync(new ResetPasswordRequest { Token = token, NewPassword = "NewPass123!" });
         result.Should().Contain("success");
@@ -416,7 +416,7 @@ public class AuthServiceTests
             .ReturnsAsync(new List<User> { user }.AsQueryable());
         _passwordResetRepo.Setup(r => r.FindAsync(It.IsAny<System.Linq.Expressions.Expression<System.Func<PasswordReset, bool>>>()))
             .ReturnsAsync(new List<PasswordReset>().AsQueryable());
-        _unitOfWork.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
+        _UnitOfWork.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
         _emailService.Setup(e => e.SendPasswordResetEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
             .ThrowsAsync(new InvalidOperationException("SMTP unavailable"));
 
@@ -434,7 +434,7 @@ public class AuthServiceTests
             r.TokenHash.Should().Be(expectedHash);
             r.TokenHash.Should().NotBe(token);
         });
-        _unitOfWork.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
+        _UnitOfWork.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
         _passwordResetRepo.Setup(r => r.FindAsync(It.IsAny<System.Linq.Expressions.Expression<System.Func<PasswordReset, bool>>>()))
             .ReturnsAsync(new List<PasswordReset>().AsQueryable());
 

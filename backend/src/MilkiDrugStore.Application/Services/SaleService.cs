@@ -112,7 +112,8 @@ public class SaleService : ISaleService
                             CosmeticId = batch.CosmeticId,
                             CosmeticBatchId = batch.BatchId,
                             Quantity = deductQty,
-                            UnitPrice = batch.SellingPrice,
+                            UnitPrice = effectiveUnitPrice,
+                            StandardUnitPrice = batch.SellingPrice,
                             DiscountAmount = discountPerUnit,
                             PurchasePrice = batch.BuyingPrice,
                             Profit = itemProfit,
@@ -173,7 +174,8 @@ public class SaleService : ISaleService
                         ProductId = item.ProductId,
                         BatchId = batch.BatchId,
                         Quantity = deductQty,
-                        UnitPrice = batch.SellingPrice,
+                        UnitPrice = effectiveUnitPrice,
+                        StandardUnitPrice = batch.SellingPrice,
                         DiscountAmount = discountPerUnit,
                         PurchasePrice = batch.PurchasePrice,
                         Profit = itemProfit,
@@ -401,8 +403,11 @@ public class SaleService : ISaleService
                 CosmeticBatchId = i.CosmeticBatchId,
                 BatchNumber = i.Batch?.BatchNumber ?? i.CosmeticBatch?.BatchNumber ?? "",
                 Quantity = i.Quantity,
+                StandardUnitPrice = i.StandardUnitPrice,
                 UnitPrice = i.UnitPrice,
                 DiscountAmount = i.DiscountAmount,
+                PurchasePrice = i.PurchasePrice,
+                Profit = i.Profit,
                 SubTotal = i.SubTotal
             }).ToList()
         };
