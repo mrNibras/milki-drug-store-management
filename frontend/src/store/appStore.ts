@@ -873,6 +873,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     const state = get();
     if (state.notifications.length > 0 || state.medicines.length === 0) return;
     const newNotifications: Notification[] = [];
+    const { formatExpiryCountdown } = require('../utils/expiryCountdown');
     state.medicines.forEach(medicine => {
       medicine.batches.forEach(batch => {
         const days = getDaysUntilExpiry(batch.expiryDate);
@@ -880,7 +881,7 @@ export const useAppStore = create<AppState>((set, get) => ({
           newNotifications.push({
             id: generateId(),
             title: 'Medicine Expiring Soon',
-            message: `${medicine.name} (Batch: ${batch.batchNumber}) expires in ${days} days`,
+            message: `${medicine.name} (Batch: ${batch.batchNumber}) - ${formatExpiryCountdown(batch.expiryDate)}`,
             type: 'expiry',
             isRead: false,
             createdAt: new Date().toISOString(),

@@ -5,7 +5,7 @@ import { useThemeStore } from '../store/themeStore';
 import { Modal } from '../components/ui/Modal';
 import { Badge } from '../components/ui/Badge';
 import { formatDate, generateId, formatCurrency } from '../utils/helpers';
-import { Supplier, SupplierFinancialSummary } from '../types';
+import { SupplierDebtModal } from '../components/supplier/SupplierDebtModal';
 
 export const SuppliersPage: React.FC = () => {
   const { suppliers, purchases, fetchSuppliers, fetchPurchases, addSupplier, updateSupplier, deleteSupplier, currentUser, error, loading } = useAppStore();
@@ -17,10 +17,8 @@ export const SuppliersPage: React.FC = () => {
     fetchPurchases();
   }, [fetchSuppliers, fetchPurchases]);
   const [search, setSearch] = useState('');
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [showDetailModal, setShowDetailModal] = useState(false);
-  const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
+  const [showDebtModal, setShowDebtModal] = useState(false);
+  const [selectedDebtSupplier, setSelectedDebtSupplier] = useState<Supplier | null>(null);
   const [formData, setFormData] = useState({ 
     name: '', 
     phone: '', 
@@ -101,9 +99,9 @@ export const SuppliersPage: React.FC = () => {
     setShowEditModal(true);
   };
 
-  const handleView = (supplier: Supplier) => {
-    setSelectedSupplier(supplier);
-    setShowDetailModal(true);
+  const handleViewDebt = (supplier: Supplier) => {
+    setSelectedDebtSupplier(supplier);
+    setShowDebtModal(true);
   };
 
   const handleSave = () => {
@@ -304,7 +302,10 @@ export const SuppliersPage: React.FC = () => {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center justify-end gap-1">
-                        <button onClick={() => handleView(supplier)} className={`p-1.5 rounded-lg transition-colors ${isDark ? 'hover:bg-blue-900/30 text-gray-400 hover:text-blue-400' : 'hover:bg-blue-50 text-gray-400 hover:text-blue-600'}`}>
+                        <button onClick={() => handleViewDebt(supplier)} className={`p-1.5 rounded-lg transition-colors ${isDark ? 'hover:bg-green-900/30 text-gray-400 hover:text-green-400' : 'hover:bg-green-50 text-gray-400 hover:text-green-600'}`} title="View Debt/Payments">
+                          <DollarSign className="h-4 w-4" />
+                        </button>
+                        <button onClick={() => { setSelectedSupplier(supplier); setShowDetailModal(true); }} className={`p-1.5 rounded-lg transition-colors ${isDark ? 'hover:bg-blue-900/30 text-gray-400 hover:text-blue-400' : 'hover:bg-blue-50 text-gray-400 hover:text-blue-600'}`}>
                           <Eye className="h-4 w-4" />
                         </button>
                         <button onClick={() => handleEdit(supplier)} className={`p-1.5 rounded-lg transition-colors ${isDark ? 'hover:bg-amber-900/30 text-gray-400 hover:text-amber-400' : 'hover:bg-amber-50 text-gray-400 hover:text-amber-600'}`}>
@@ -550,6 +551,16 @@ export const SuppliersPage: React.FC = () => {
           </div>
         )}
       </Modal>
+
+      <SupplierDebtModal
+        isOpen={showDebtModal}
+        onClose={() => setShowDebtModal(false)}
+        supplier={selectedDebtSupplier ? { id: selectedDebtSupplier.id, name: selectedDebtSupplier.name, phone: selectedDebtSupplier.phone } : null}
+        isDark={isDark}
+        onPaymentSuccess={() => {
+          fetchSuppliers();
+        }}
+      />
     </div>
   );
 };

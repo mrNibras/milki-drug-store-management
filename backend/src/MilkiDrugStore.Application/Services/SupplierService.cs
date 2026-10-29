@@ -69,7 +69,10 @@ public class SupplierService : ISupplierService
         supplier.Email = request.Email;
         supplier.Address = request.Address;
         supplier.ContactPerson = request.ContactPerson;
-        supplier.PaymentStatus = request.PaymentStatus;
+        if (request.PaymentStatus is not null)
+        {
+            supplier.PaymentStatus = request.PaymentStatus;
+        }
 
         await _supplierRepo.UpdateAsync(supplier);
         await _unitOfWork.SaveChangesAsync();

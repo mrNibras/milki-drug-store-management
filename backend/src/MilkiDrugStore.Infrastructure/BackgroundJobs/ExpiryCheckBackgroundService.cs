@@ -6,6 +6,8 @@ using MilkiDrugStore.Domain.Interfaces;
 using MilkiDrugStore.Domain.Entities;
 using MilkiDrugStore.Domain.Enums;
 using MilkiDrugStore.Application.Interfaces;
+using MilkiDrugStore.Application.Common;
+using MilkiDrugStore.Domain.Common;
 
 namespace MilkiDrugStore.Infrastructure.BackgroundJobs;
 
@@ -48,6 +50,7 @@ public class ExpiryCheckBackgroundService : BackgroundService
                 var branchRepo = scope.ServiceProvider.GetRequiredService<IRepository<Branch>>();
                 var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
 
+                var today = ExpiryCountdown.GetToday();
                 var expiringMedicines = await medicineRepo.GetExpiringAsync(6);
                 var expiringCosmetics = await cosmeticRepo.GetExpiringAsync(6);
                 var branches = (await branchRepo.GetAllAsync()).ToList();
@@ -62,7 +65,7 @@ public class ExpiryCheckBackgroundService : BackgroundService
                 {
                     // Determine the branch from the medicine's batches
                     var medicineBranchIds = medicine.Batches
-                        .Where(b => b.ExpiryDate <= DateTime.UtcNow.AddMonths(6) && b.QuantityReceived - b.QuantityIssued - b.QuantityDamaged - b.QuantityExpired > 0)
+                        .Where(b => DateOnly.FromDateTime(b.ExpiryDate) <= today.AddMonths(6) && b.QuantityReceived - b.QuantityIssued - b.QuantityDamaged - b.QuantityExpired > 0)
                         .Select(b => b.BranchId)
                         .Distinct()
                         .ToList();
@@ -78,11 +81,16 @@ public class ExpiryCheckBackgroundService : BackgroundService
 
                         if (!await notificationRepo.HasNotificationTodayAsync(NotificationTypeStrings.ExpiryAlert, medicine.BrandName, branchId))
                         {
+                            var batches = medicine.Batches.Where(b => b.BranchId == branchId && b.QuantityReceived - b.QuantityIssued - b.QuantityDamaged - b.QuantityExpired > 0)
+                                .OrderBy(b => b.ExpiryDate).ToList();
+                            var message = batches.Any() 
+                                ? $"{medicine.BrandName} - {ExpiryCountdown.FormatCountdown(DateOnly.FromDateTime(batches.First().ExpiryDate), today)}"
+                                : $"{medicine.BrandName} is expiring within 6 months";
                             await notificationRepo.AddAsync(new Notification
                             {
                                 BranchId = branchId,
                                 Title = "Expiry Alert",
-                                Message = $"{medicine.BrandName} is expiring within 6 months",
+                                Message = message,
                                 NotificationType = NotificationTypeStrings.ExpiryAlert
                             });
                         }
@@ -92,7 +100,7 @@ public class ExpiryCheckBackgroundService : BackgroundService
                 foreach (var cosmetic in expiringCosmetics)
                 {
                     var cosmeticBranchIds = cosmetic.Batches
-                        .Where(b => b.ExpiryDate <= DateTime.UtcNow.AddMonths(6) && b.Balance > 0)
+                        .Where(b => DateOnly.FromDateTime(b.ExpiryDate.Value) <= today.AddMonths(6) && b.Balance > 0)
                         .Select(b => b.BranchId)
                         .Distinct()
                         .ToList();
@@ -108,11 +116,16 @@ public class ExpiryCheckBackgroundService : BackgroundService
 
                         if (!await notificationRepo.HasNotificationTodayAsync(NotificationTypeStrings.ExpiryAlert, cosmetic.ProductName, branchId))
                         {
+                            var batches = cosmetic.Batches.Where(b => b.BranchId == branchId && b.Balance > 0)
+                                .OrderBy(b => b.ExpiryDate).ToList();
+                            var message = batches.Any()
+                                ? $"{cosmetic.ProductName} - {ExpiryCountdown.FormatCountdown(DateOnly.FromDateTime(batches.First().ExpiryDate.Value), today)}"
+                                : $"{cosmetic.ProductName} is expiring within 6 months";
                             await notificationRepo.AddAsync(new Notification
                             {
                                 BranchId = branchId,
                                 Title = "Cosmetic Expiry Alert",
-                                Message = $"{cosmetic.ProductName} is expiring within 6 months",
+                                Message = message,
                                 NotificationType = NotificationTypeStrings.ExpiryAlert
                             });
                         }
